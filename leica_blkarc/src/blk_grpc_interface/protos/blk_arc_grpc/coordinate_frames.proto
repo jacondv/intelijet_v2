@@ -1,0 +1,47 @@
+
+syntax = "proto3";
+
+package api.blk;
+
+/** Transformation matrix of a single sensor. */
+message SensorAffineMatrix {
+    repeated double elements = 1;       // [4*4] affine matrix.
+}
+
+/**
+ * Collection of all transformation matrices defining
+ * the relations between the coordinate frames of
+ * all relevant sensors.
+ */
+message AlignedExtrinsics
+{
+    SensorAffineMatrix slam_cam_front_transformation   = 1;
+    SensorAffineMatrix slam_cam_left_transformation    = 2;
+    SensorAffineMatrix slam_cam_right_transformation   = 3;
+
+    SensorAffineMatrix user_cam_transformation         = 4;
+
+    SensorAffineMatrix imu_transformation              = 5;
+
+    SensorAffineMatrix housing_ref_mark_transformation = 6;
+}
+
+/** Empty trigger message to get the set of transformation matrices. */
+message TransformationRequest
+{
+    // empty for now, will list all -> send complete set of AffineMatrix(s)
+}
+
+/**
+ * Provides information about how the coordinate systems / frames
+ * of different sensors are located and aligned.
+ */
+service CoordinateFrames {
+    /**
+     * Get the current set transformation data.
+     *
+     * Authorization Scopes:
+     *  - `calibration.transform`
+     */
+    rpc GetTransformationData(TransformationRequest) returns (AlignedExtrinsics);
+}

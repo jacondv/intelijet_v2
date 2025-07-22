@@ -1,0 +1,36 @@
+syntax = "proto3";
+
+import "google/protobuf/empty.proto";
+
+package api.blk;
+
+
+/**
+ * Allows a client to write certain annotations to the current capture file.
+ * These methods can only be used while a capture is in progress.
+ */
+service CaptureAnnotations {
+    /**
+     * Marks the beginning of a static pose. The device must be scanning to be able to start the pose.
+     *
+     * Error Codes:
+     *  - gRPC status 6 (ALREADY_EXISTS): If a static pose is already in progress.
+     *  - gRPC status 9 (FAILED_PRECONDITION): If the device is not in a capture.
+     *  - gRPC status 14 (UNAVAILABLE): If the static pose cannot be started for any other reason. This may be a transient condition and can be retried.
+     *
+     * Authorization Scopes:
+     *  - `capture`
+     */
+    rpc BeginStaticPose(google.protobuf.Empty) returns (google.protobuf.Empty);
+
+    /**
+     * Marks the end of a static pose. The caller is responsible for calling this method before starting to move again.
+     *
+     * Error Codes:
+     *  - gRPC status 9 (FAILED_PRECONDITION): If no static pose had previously begun or the device is not currently in a capture.
+     *
+     * Authorization Scopes:
+     *  - `capture`
+     */
+    rpc EndStaticPose(google.protobuf.Empty) returns (google.protobuf.Empty);
+}

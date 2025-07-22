@@ -1,0 +1,130 @@
+syntax = "proto3";
+
+import "google/protobuf/empty.proto";
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/wrappers.proto";
+
+package api.blk;
+
+
+message FaultReport {
+    enum RequiredUserAction{
+        /** Unknown user action required. */
+        UNKNOWN_ACTION = 0;
+        /** There is no action specified for this fault. */
+        NONE_SPECIFIED = 1;
+        /** No action is required, this is a transient fault and will clear itself. */
+        NO_ACTION = 2;
+        /** There has been an issue during a capture, but it can be retried. */
+        RETRY_SCAN = 3;
+        /** The fault needs to be acknowledged by the user but is recoverable. */
+        ACKNOWLEDGE = 4;
+        /** The device needs to be rebooted, after which the fault should be cleared. */
+        REBOOT_DEVICE = 5;
+        /** There is a severe issue that would require support, such as a broken hardware part. */
+        CONTACT_SUPPORT = 6;
+        /** The device is overheating and needs to cool down before continuing to be used. */
+        LET_DEVICE_COOL = 7;
+        /** The disk is full or nearly full. */
+        FREE_DEVICE_SPACE = 8;
+        /** The battery may be running out or otherwise presenting issues. */
+        REPLACE_BATTERY = 9;
+        /** The battery contacts may be dirty. */
+        CLEAN_BATTERY_CONTACTS = 10;
+    }
+    enum SeverityLevel {
+        /**
+         * The device is in a serious fault state very likely caused by mechanical issues.
+         * Scanning is not possible. A service report should be downloaded using the `Support` service.
+         * A reboot may clear the fault in some exceptional occasions.
+         */
+        BROKEN = 0;
+        /**
+         * The device is in a fault state likely caused by certain components being in an unexpected state.
+         * Scanning is not possible. A service report should be downloaded using the `Support` service.
+         * A reboot is usually enough to clear the fault.
+         */
+        DEGRADED = 1;
+        /**
+         * The device has experienced a minor fault but it can be recovered without the need to reboot.
+         * This fault type can be cleared by calling the `AcknowledgeFault` method or pressing the device button once.
+         */
+        RECOVERABLE_DEGRADED = 2;
+        /**
+         * A warning does not stop a running capture, but it does indicate that a requested action could not be performed.
+         * This could be the case if a detail camera image has been refused, a wi-fi connection could not be established
+         * or the walking speed is too high to keep the location confidence at an adequate level.
+         */
+        WARNING = 3;
+    }
+    /** Report ID, for debugging purposes. */
+    uint32 report_id = 1;
+    /** Unique string identifying the fault location. Also known as FLOC. */
+    string location = 2;
+    /** Numeric code describing the nature of the fault. */
+    uint32 code = 3;
+    /** Further details of the fault (US English only). */
+    string details = 4;
+    /** UTC system timestamp when the fault was reported for the first time. */
+    google.protobuf.Timestamp raised_at_time = 5;
+    /** User action required to resolve the fault. */
+    RequiredUserAction required_user_action = 6;
+    /** Severity level of the fault. */
+    SeverityLevel fault_severity = 7;
+}
+
+message AcknowledgeFaultRequest {
+    /**
+     * Unique string identifying the fault location. Also known as FLOC.
+     * If this field is empty, all recoverable faults will be cleared.
+     */
+    string location = 1;
+    /**
+     * Numeric code describing the nature of the fault.
+     * If this field is not set, all recoverable faults will be cleared from the selected location.
+     */
+    google.protobuf.UInt32Value code = 2;
+}
+
+message FaultReportList {
+    /** List of all currently active faults. */
+    repeated FaultReport faults = 1;
+}
+
+
+/**
+ * Allows a client to view active faults, get resolution advice and clear faults whenever possible.
+ * A particular fault is identified by the combination of a fault location (FLOC) and a fault code.
+ */
+service Fault {
+    /**
+     * Return a list of all currently active faults.
+     *
+     * Authorization Scopes:
+     *  - `info`
+     */
+    rpc GetFaultReport(google.protobuf.Empty) returns (FaultReportList);
+
+    /**
+     * Return all current faults on the device and stream any new faults raised after the stream was started.
+     * This stream can be started even if no faults are present.
+     *
+     * Authorization Scopes:
+     *  - `info`
+     */
+    rpc StreamFaultReport(google.protobuf.Empty) returns (stream FaultReport);
+
+    /**
+     * Acknowledges a fault on the device and clears it if the fault is recoverable.
+     * A fault is identified by a `location` + `code` pair.
+     *
+     * Error Codes:
+     *  - gRPC status 3 (INVALID_ARGUMENT): If one of the arguments provided is invalid. For example, the fault location is not recognised or has a wrong format.
+     *  - gRPC status 5 (NOT_FOUND): If the fault code specified cannot be found. For example, if there is no such fault active or the fault has already been acknowledged previously.
+     *  - gRPC status 9 (FAILED_PRECONDITION): If the specified fault is not recoverable, and thus cannot be acknowledged.
+     *
+     * Authorization Scopes:
+     *  - `info`
+     */
+    rpc AcknowledgeFault(AcknowledgeFaultRequest) returns (google.protobuf.Empty);
+}

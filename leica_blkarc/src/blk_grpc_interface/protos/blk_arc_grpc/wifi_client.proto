@@ -1,0 +1,241 @@
+syntax = "proto3";
+
+import "google/protobuf/empty.proto";
+import "google/protobuf/wrappers.proto";
+import "google/protobuf/timestamp.proto";
+
+package api.blk;
+
+
+enum Encryption {
+    /** Wi-fi Protected Access (WPA/WPA2/WPA3). A password is required. */
+    WPA = 0;
+    /** No protection. If a password is provided, it will be ignored. */
+    NONE = 1;
+}
+
+message NewWifiConnectionRequest {
+    /** Whether the network is protected or not. */
+    Encryption encryption = 1;
+    /** Network SSID. */
+    string ssid = 2;
+    /** Password or Preshared Key for the requested wi-fi network. */
+    google.protobuf.StringValue psk = 3;
+    /** Specify whether the device should reconnect to this network whenever it is in range. */
+    bool autoconnect = 4;
+}
+
+message KnownWifiConnectionRequest {
+    /** Network SSID. */
+    string ssid = 1;
+}
+
+message KnownWifiListResponse {
+    message KnownNetworkInfo {
+        /** Whether the network is protected or not. */
+        Encryption encryption = 1;
+        /** Network SSID. */
+        string ssid = 2;
+        /** Whether the network will be joined automatically whenever in range. */
+        bool autoconnect = 3;
+    }
+    /** List of all known wi-fi networks. */
+    repeated KnownNetworkInfo networks = 1;
+}
+
+message WifiReorderRequest {
+    /** List of network SSIDs in order of preference. Elements with a lower index will have higher priority. */
+    repeated string network_ssids = 1;
+}
+
+message WifiAutoconnectRequest {
+    /** Network SSID. */
+    string ssid = 1;
+    /** Whether the network will be joined automatically whenever in range. */
+    bool autoconnect = 2;
+}
+
+message ScanWifiNetworksResponse {
+    message ScanNetworkInfo {
+        /** Network SSID. */
+        string ssid = 1;
+        /** Strength of the signal in dBm */
+        int32 signal_strength = 2;
+        /** Whether the network is protected or not. */
+        Encryption security = 3;
+        /** Frequency in Hz */
+        int32 frequency = 4;
+    }
+    /**
+     * Each time the OS performs a wi-fi scan, this number increments.
+     * When polling for nearby networks, use this ID to identify
+     * if a new scan has been performed.
+     */
+    uint32 wifi_scan_id = 1;
+    /** Information about networks in range of the BLK device. */
+    repeated ScanNetworkInfo networks = 2;
+}
+
+message WifiDeleteRequest {
+    /** SSID of the network to be deleted. */
+    string ssid = 1;
+}
+
+message WifiConnectionHistoryRequest {
+    /** Filter the connection history by an SSID */
+    optional string ssid = 1;
+}
+
+enum WifiClientConnectionState {
+    // Not connected
+    NOT_CONNECTED = 0;
+    // The SSID does not exist nearby
+    NETWORK_NOT_FOUND = 1;
+    // The password was not accepted or a mac filter does not allow access
+    CONNECTION_REFUSED = 2;
+    // Connection associated, but no IP received
+    CONNECTED_NO_IP = 3;
+    // Successfully connected
+    CONNECTED = 4;
+    // Trying to associate
+    CONNECTING = 5;
+}
+
+message WifiConnectionHistoryResponse {
+    message ScanNetworkInfo {
+        /** Network SSID. */
+        string ssid = 1;
+        /** The event */
+        WifiClientConnectionState event = 2;
+        /** UTC time to set on the device. */
+        google.protobuf.Timestamp utc_timestamp = 3;
+    }
+    repeated ScanNetworkInfo events = 1;
+}
+
+message WifiClientStatusResponse {
+    /** Whether the BLK device is connected to a wi-fi network or not. */
+    WifiClientConnectionState connection_status = 1;
+    /** Network SSID. */
+    string ssid = 2;
+    /** Whether the network used (if any) allows the device to have access to the internet. */
+    bool internet_access = 3;
+    /** Network BSSID. */
+    string bssid = 4;
+}
+
+/**
+ * This service contains the functionality to control the wi-fi client mode. This includes
+ * connecting the BLK device to wireless networks, listing saved networks, rearranging by priority, etc.
+ */
+service WifiClient {
+    /**
+     * Connects the BLK device to the specified network using WPA/WPA2/WPA3.
+     * If the network was not known, it is saved. This will happen even if the network cannot be joined.
+     * If the network was already known, it is brought to the top of known networks (i.e. max priority).
+     * If there is a known network with the same SSID but different password, the password will be updated.
+     * The connection attempt is limited to 15 seconds. The method may block up to this time.
+     *
+     * Error Codes:
+     *  - gRPC status 8 (RESOURCE_EXHAUSTED): If device is already busy trying to establish a connection. The call can be retried after a few seconds.
+     *
+     * Authorization Scopes:
+     *  - `wifi`
+     */
+    rpc ConnectToNewWifiNetwork(NewWifiConnectionRequest) returns (WifiClientStatusResponse);
+
+    /**
+     * Connects to one of the saved networks manually using the stored key, if there is one.
+     * If the request is successful, the network will be brought to the top of known networks (i.e. max priority).
+     * This method will return immediately. Use `GetWifiClientStatus` to verify that the operation succeeded.
+     * The connection attempt is limited to 15 seconds. The method may block up to this time.
+     *
+     * Error Codes:
+     *  - gRPC status 5 (NOT_FOUND): If the requested network is not in the list of known networks.
+     *  - gRPC status 8 (RESOURCE_EXHAUSTED): If device is already busy trying to establish a connection. The call can be retried after a few seconds.
+     *
+     * Authorization Scopes:
+     *  - `wifi`
+     */
+    rpc ConnectToKnownWifiNetwork(KnownWifiConnectionRequest) returns (WifiClientStatusResponse);
+
+    /**
+     * Returns a list of the currently saved wi-fi networks, sorted by priority. Elements with a lower index will have a higher priority.
+     *
+     * Authorization Scopes:
+     *  - `wifi`
+     */
+    rpc GetKnownWifiNetworks(google.protobuf.Empty) returns (KnownWifiListResponse);
+
+    /**
+     * Allows the user to rearrange the priority of the saved networks.
+     * The list must contain exactly the same items as the output of `GetKnownWifiNetworks`, but can have a different order.
+     * Elements with a lower index have a higher priority if multiple networks are available.
+     *
+     * Error Codes:
+     *  - gRPC status 9 (FAILED_PRECONDITION): If the list does not contain exactly the same networks saved on the device.
+     *
+     * Authorization Scopes:
+     *  - `wifi`
+     */
+    rpc ReorderWifiNetworks(WifiReorderRequest) returns (google.protobuf.Empty);
+
+    /**
+     * Toggle whether a network should be automatically joined or not.
+     *
+     * Error Codes:
+     *  - gRPC status 5 (NOT_FOUND): If the selected network is not in the list of known networks.
+     *
+     * Authorization Scopes:
+     *  - `wifi`
+     */
+    rpc SetNetworkAutoconnect(WifiAutoconnectRequest) returns (google.protobuf.Empty);
+
+    /**
+     * Returns a list of nearby wi-fi networks detected in the last scan.
+     * A scan is performed periodically by the OS and the response includes a sequence number.
+     *
+     * Authorization Scopes:
+     *  - `wifi`
+     */
+    rpc ScanWifiNetworks(google.protobuf.Empty) returns (ScanWifiNetworksResponse);
+
+    /**
+     * Deletes a network from the list of currently saved networks.
+     * If the device is currently connected to the specified network, it will be disconnected first.
+     *
+     * Error Codes:
+     *  - gRPC status 5 (NOT_FOUND): If the selected network is not in the list of known networks.
+     *
+     * Authorization Scopes:
+     *  - `wifi`
+     */
+    rpc DeleteKnownWifiNetwork(WifiDeleteRequest) returns (google.protobuf.Empty);
+
+    /**
+     * Clears the list of known wi-fi networks.
+     * This also disconnects the device from the current network, if he is connected to one.
+     *
+     * Authorization Scopes:
+     *  - `wifi`
+     */
+    rpc ClearKnownWifiNetworks(google.protobuf.Empty) returns (google.protobuf.Empty);
+
+    /**
+     * Returns current information about the wi-fi client mode. Such as current wi-fi network and whether
+     * it has access to the internet.
+     *
+     * Authorization Scopes:
+     *  - `wifi`
+     */
+    rpc GetWifiClientStatus(google.protobuf.Empty) returns (WifiClientStatusResponse);
+
+    /**
+     * Returns the connection history optionally filtered by an SSID.
+     * Can be used to determine why a recent connection attempt failed.
+     *
+     * Authorization Scopes:
+     *  - `wifi`
+     */
+    rpc GetConnectionHistory(WifiConnectionHistoryRequest) returns (WifiConnectionHistoryResponse);
+}

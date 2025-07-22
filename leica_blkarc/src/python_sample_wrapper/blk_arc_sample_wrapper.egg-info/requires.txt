@@ -1,0 +1,6 @@
+
+[dev]
+pytest
+mypy
+pytest-cov
+mypy-protobuf

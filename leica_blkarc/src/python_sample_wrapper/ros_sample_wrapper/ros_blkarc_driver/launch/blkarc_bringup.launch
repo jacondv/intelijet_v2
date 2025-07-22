@@ -1,0 +1,13 @@
+<launch>
+
+    <arg name="sensor_name" doc="Name given to blk sensor" default="blkarc" />
+    <arg name="connection_type" doc="Connection type: 0 - wired (default), 1 - wireless" default="1" />
+    <arg name="scan_save_directory" doc="Directory to save scans to" default="$(env HOME)" />
+
+    <node pkg="ros_blkarc_driver" type="blkarc_ros_node" name="$(arg sensor_name)" output="screen">
+        <param name="sensor_name" type="str" value="$(arg sensor_name)" />
+        <param name="connection_type" type="int" value="$(arg connection_type)" />
+        <param name="scan_save_directory" type="str" value="$(arg scan_save_directory)" />
+    </node>
+
+</launch>

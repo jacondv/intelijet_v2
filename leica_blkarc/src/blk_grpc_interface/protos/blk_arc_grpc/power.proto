@@ -1,0 +1,52 @@
+syntax = "proto3";
+
+import "google/protobuf/empty.proto";
+
+package api.blk;
+
+
+message PowerStatusResponse {
+    enum BatteryAlert {
+        /** The device is not on battery power. */
+        NONE = 0;
+        /** The battery is operating normally. */
+        BATTERY_OK = 1;
+        /** The battery is low. */
+        BATTERY_LOW = 2;
+        /**
+         * The battery is critically low and should be replaced as soon as possible.
+         * Some functionality may not be available when the battery is at this level.
+         */
+        BATTERY_CRITICAL = 3;
+    }
+    enum PowerSource {
+        /** Power source could not be retrieved. */
+        UNKNOWN = 0;
+        /** The device is powered by a battery. */
+        BATTERY = 1;
+        /** The device is powered by an external power supply. */
+        EXTERNAL = 2;
+        /** The device is powered via USB only. Some functionality may not be available in this mode. */
+        USB = 3;
+    }
+    /** Charge level of the battery in the range f0.0 to f100.0. */
+    float battery_level_in_percent = 1;
+    /** Informs the user if the battery level is too low. */
+    BatteryAlert battery_alert = 2;
+    /** Power source the device is currently using. */
+    PowerSource power_source = 3;
+}
+
+
+/**
+ * Allows a user to retrieve information about the current power source of the BLK device.
+ */
+service Power {
+    /**
+     * Gets information about the power source and the battery level if applicable.
+     *
+     * Authorization Scopes:
+     *  - `info`
+     */
+    rpc GetPowerStatus(google.protobuf.Empty) returns (PowerStatusResponse);
+}

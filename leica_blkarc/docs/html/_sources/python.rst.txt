@@ -1,0 +1,10 @@
+API Documentation
+=====================
+
+BLK ARC Module API
+-----------------------------
+
+.. automodule:: blk_arc_sample_wrapper.blk_arc
+   :members:
+   :undoc-members:
+   :show-inheritance:

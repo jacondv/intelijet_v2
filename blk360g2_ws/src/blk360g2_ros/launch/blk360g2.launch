@@ -1,0 +1,3 @@
+<launch>
+	<node pkg="blk360g2_ros" name="blk360g2_start_scan_action" type="blk360g2_start_scan_action" />
+</launch>

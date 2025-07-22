@@ -1,0 +1,11 @@
+Metadata-Version: 2.1
+Name: blk_arc_grpc
+Version: 0.9.0
+Requires-Dist: grpcio==1.43.0
+Requires-Dist: grpcio-tools==1.38.1
+Requires-Dist: protobuf==3.19.4
+Provides-Extra: dev
+Requires-Dist: pytest; extra == "dev"
+Requires-Dist: mypy; extra == "dev"
+Requires-Dist: pytest-cov; extra == "dev"
+Requires-Dist: mypy-protobuf; extra == "dev"

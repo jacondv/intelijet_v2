@@ -1,0 +1,100 @@
+# Sample ROS Wrapper
+
+**ros_blkarc** is a collection of ROS packages for interfacing the BLK ARC using the python wrapper found under `src/python_sample_wrapper`. This guide assumes that you are already familiar with ROS.
+
+## System Requirements
+
+- Ubuntu 20.04 with ROS Noetic installed. For the installation, please refer to the [documentation provided by ROS](http://wiki.ros.org/noetic/Installation/Ubuntu).
+
+## Contained Packages
+
+- ros_blkarc_driver: ROS driver for the BLK ARC
+- ros_blkarc_msgs: Custom service and action messages for the BLK ARC
+
+## Installation
+
+1. Copy the whole API (BLKARC-Module-API) into the src folder of your [catkin workspace](http://wiki.ros.org/catkin/Tutorials/create_a_workspace).
+   - Alternatively, if you don't want to copy it into your catkin workspace, you would need to symlink the ROS packages to your catkin workspace.
+     - Replace the [BLKARC-Module-API directory] and [catkin workspace directory] accordingly and run following terminal commands
+       - `ln -s [BLKARC-Module-API directory]/src/python_sample_wrapper/ros_sample_wrapper/ros_blkarc/ [catkin workspace directory]/src/`
+       - `ln -s [BLKARC-Module-API directory]/src/python_sample_wrapper/ros_sample_wrapper/ros_blkarc_driver/ [catkin workspace directory]/src/`
+       - `ln -s [BLKARC-Module-API directory]/src/python_sample_wrapper/ros_sample_wrapper/ros_blkarc_msgs/ [catkin workspace directory]/src/`
+     - Example: For the first command, if both BLKARC-Module-API and catkin_ws folders are located in your home directory, run
+       - `ln -s ~/BLKARC-Module-API/src/python_sample_wrapper/ros_sample_wrapper/ros_blkarc/ ~/catkin_ws/src/`
+2. Install the BLKARC-Module-API following the instructions found in the beginning of this guide.
+3. Install the required catkin tools:
+   - `sudo apt-get install ros-noetic-catkin python3-catkin-tools`
+4. If you are using a virtual environment, you need to install additional packages:
+   - `python3 -m pip install -r src/python_sample_wrapper/ros_sample_wrapper/ros_blkarc/requirements.txt`
+5. Build the ROS packages. In your catkin workspace, run
+   - `catkin build ros_blkarc`
+   - `catkin build ros_blkarc_msgs`
+   - `catkin build ros_blkarc_driver`
+6. Remember to `source devel/setup.bash` your catkin workspace after building before you can start using the package.
+
+## Running the BLK ARC ROS Node
+
+1. Go to `src/python_sample_wrapper/ros_sample_wrapper/ros_blkarc_driver/launch/blkarc_bringup.launch` and change the necessary configuration information (e.g. connection_type) if necessary
+2. Connect your BLK ARC to your computer based on the connection type you specified in the launch file.
+3. Run `roslaunch ros_blkarc_driver blkarc_bringup.launch`
+   - If connected successfully, the message "[BLKARCROSWrapper] Successfully connected to BLK over ... connection" will be displayed in the terminal.
+4. Using a second terminal, you can now command the BLK ARC using the topics/services/actions shown below.
+
+## Available Topics, Services and Actions
+
+Below are the topics, services and actions available once the BLK ARC ROS Node has been launched, with terminal commands to call them. For more details on how to call the services/actions using Python 3 code, users can refer to the rostests found in `src/python_sample_wrapper/ros_sample_wrapper/ros_blkarc_driver/test`.
+
+**Note**: All topic/service/action names are namespaced with the sensor_name specified in `blkarc_bringup.launch`, which by default is set to `blkarc`. Please replace the `blkarc` in the provided commands below with the sensor_name you have specified yourself.
+
+### Services
+
+- /connect
+  - Description: Connect to the BLK ARC sensor
+  - Terminal command: `rosservice call /blkarc/connect`
+- /disconnect
+  - Description: Disconnect from the BLK ARC sensor
+  - Terminal command: `rosservice call /blkarc/disconnect`
+- /reboot
+  - Description: Reboot BLK ARC sensor. Wait around 45 seconds before attempting to connect to device again
+  - Terminal command: `rosservice call /blkarc/reboot`
+- /get_device_state
+  - Description: Provides the current state of the device, refer to GetDeviceState.srv for all possible states
+  - Terminal command: `rosservice call /blkarc/get_device_state`
+- /start_capture
+  - Description: Start a capture session, device must be in IDLE state (use /get_device_status service to ensure this) to start successfully
+  - Terminal command: `rosservice call /blkarc/start_capture`
+- /stop_capture
+  - Description: Stop a capture session
+  - Terminal command: `rosservice call /blkarc/stop_capture`
+- /begin_static_pose
+  - Description: Begin scanning in a static pose. A capture must have already started
+  - Terminal command: `rosservice call /blkarc/begin_static_pose`
+- /end_static_pose
+  - Description: End a static pose. BLK ARC must already be static pose scanning
+  - Terminal command: `rosservice call /blkarc/end_static_pose`
+- /trigger_detail_image
+  - Description: Trigger a detailed image. BLK ARC must already be scanning/ static pose scanning
+  - Terminal command: `rosservice call /blkarc/trigger_detail_image`
+- /download_scan
+  - Description: Download a scan with scan_id and save it to the directory specified by scan_save_directory in the launch file. Set scan_id to -1 to download the latest scan.
+  - Terminal command (replace 0 with a appropriate scan_id): `rosservice call /blkarc/download_scan "scan_id: 0"`
+
+### Actions
+
+- /timed_scan
+  - Description: Automatically runs a scan session with a duration of scan_time_seconds
+    - Note: You will not be able to use the other services until the action has completed or the action is cancelled
+  - Running from terminal:
+    - Sending goal: `rostopic pub -1 /blkarc/timed_scan/goal ros_blkarc_msgs/TimedScanActionGoal '{goal: {scan_time_seconds: 20}}'`
+    - Receiving feedback: `rostopic echo /blkarc/timed_scan/feedback`
+    - Cancel action midway: `rostopic pub -1 /blkarc/timed_scan/cancel actionlib_msgs/GoalID {}`
+
+## Troubleshooting
+
+- If there are issues with running the BLK ARC ROS Node, we recommend that you first ensure you can connect to the device using the BLK ARC Module API directly and successfully run the example scripts found under `src/python_sample_wrapper/examples`.
+
+## Running the rostests
+
+1. Go to `ros_blkarc_driver/test/test_setup.launch` and change the necessary configuration information (e.g. connection_type) if necessary.
+2. Connect your BLK ARC to your computer, either through USB or Wi-Fi, but not both. We recommend using USB connection for tests because during reboot test, Wifi connection will drop and you will have to manually reconnect yourself.
+3. In your catkin workspace, run `catkin test ros_blkarc_driver`.

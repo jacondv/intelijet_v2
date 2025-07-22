@@ -1,0 +1,69 @@
+                   Leica Geosystems AG. (“Leica Geosystems”)
+                           BLK ARC Module API License
+                          (20230703-BLKARC-MODULE-API)
+
+Copyright 2023 Leica Geosystems AG. All rights reserved.
+
+DOWNLOADING, INTEGRATING AND OTHERWISE USING THE SOFTWARE CONSTITUTES
+ACCEPTANCE OF THIS LICENSE. THE SOFTWARE MAY NOT BE USED EXCEPT AS EXPRESSLY
+AUTHORIZED UNDER THIS LICENSE.
+
+The Leica Geosystems BLK ARC Module API is protected by copyright law and
+international copyright treaties.
+
+1. License:  Subject to the terms and conditions of this agreement, you are
+hereby granted a non-exclusive, non-transferable, non-assignable,
+non-sublicensable, worldwide, revocable license to use, integrate, display,
+modify, create derivative works for and distribute in object code form the
+BLK ARC Module API.
+
+2. Conditions:
+
+(a) The BLK ARC Module API may not be combined or merged with other software
+in any manner that would cause the BLK ARC Module API to become subject to
+terms and conditions which differ from those of this license.
+
+(b) The BLK ARC Module API is licensed solely and exclusively for use with
+products offered for sale by Leica Geosystems AG. Use of the BLK ARC Module API
+with simulators and emulators is not prohibited so long as it is a software
+based simulation / emulation. Use with any other hardware is strictly
+prohibited.
+
+(c) Licensee shall not use the name or any trademark of Leica Geosystems AG
+(including those of its licensors) to endorse or promote products without prior
+written consent of the owner of the name or trademark.
+
+(d) Modified versions of the BLK ARC Module API must be conspicuously marked
+as such.
+
+(e) Use of the BLK ARC Module API with a BLK ARC may require the use of a
+license key, app token or similar item (“License Key”). License Keys may be
+separately issued by or on behalf of Leica Geosystems in its discretion.
+
+(f) This license shall be governed by the laws of Switzerland, without regard
+to its conflict of laws rules. The BLK ARC Module API shall only be used in
+compliance with all applicable laws and regulations, including without
+limitation export control laws.
+
+(g) All rights not expressly granted hereunder are reserved.
+
+3. WARRANTY DISCLAIMER: THE BLK ARC MODULE API AND ANY RELATED INFORMATION
+AND/OR ADVICE IS PROVIDED ON AN “AS IS” BASIS, WITHOUT REPRESENTATIONS,
+GUARANTEES OR WARRANTIES OF ANY KIND, EXPRESS OR IMPLIED, ORAL OR WRITTEN,
+INCLUDING WITHOUT LIMITATION, WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
+PARTICULAR PURPOSE, TITLE AND NON-INFRINGEMENT. Leica Geosystems AG has no
+obligation to provide software support or updates.
+
+4. LIMITATION OF LIABILITY: TO THE MAXIMUM EXTENT PERMITTED BY LAW
+LEICA GEOSYSTEMS (INCLUDING ITS LICENSORS) SHALL NOT BE LIABLE FOR ANY DAMAGES
+ARISING FROM OR RELATED TO THE BLK ARC MODULE API, ITS USE OR ANY RELATED
+INFORMATION AND/OR SERVICES, INCLUDING BUT NOT LIMITED TO ANY DIRECT, INDIRECT,
+INCIDENTAL, SPECIAL, PUNITIVE, EXEMPLARY, CONSEQUENTIAL OR ANALOGOUS DAMAGES
+(INCLUDING WITHOUT LIMITATION ANY DAMAGES RESULTING FROM LOSS OF USE, DATA,
+REVENUE, PROFITS, OR SAVINGS, COMPUTER DAMAGE OR ANY OTHER CAUSE), UNDER ANY
+LEGAL THEORY (INCLUDING WITHOUT LIMITATION CONTRACT, WARRANTY, TORT,
+NEGLIGENCE, STRICT OR PRODUCT LIABILITY), EVEN IF IT HAS BEEN INFORMED OF THE
+POSSIBILITY OF SUCH DAMAGES.  Some jurisdictions do not permit the exclusion or
+limitation of liability for consequential, incidental or other damages, and,
+as such, some portion of the above limitation may not apply. In such
+jurisdictions, liability is limited to the greatest extent permitted by law.

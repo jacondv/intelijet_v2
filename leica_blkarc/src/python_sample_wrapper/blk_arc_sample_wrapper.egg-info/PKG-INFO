@@ -1,0 +1,12 @@
+Metadata-Version: 2.1
+Name: blk_arc_sample_wrapper
+Version: 0.9.0
+Summary: The BLK ARC Module API is used to control and to communicate with BLK ARC devices.
+Home-page: https://shop.leica-geosystems.com/leica-blk/blk-arc
+Author: Alex Hönger, Teng Foong Lam, Pascal Schoppmann
+Author-email: alex.hoenger@hexagon.com, tengfoong.lam@hexagon.com, pascal.schoppmann@hexagon.com
+Provides-Extra: dev
+Requires-Dist: pytest; extra == "dev"
+Requires-Dist: mypy; extra == "dev"
+Requires-Dist: pytest-cov; extra == "dev"
+Requires-Dist: mypy-protobuf; extra == "dev"

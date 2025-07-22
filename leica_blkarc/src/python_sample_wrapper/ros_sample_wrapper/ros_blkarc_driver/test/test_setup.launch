@@ -1,0 +1,20 @@
+<launch>
+
+    <arg name="sensor_name" doc="Name given to blk sensor" default="test_blkarc" />
+    <arg name="connection_type" doc="Connection type: 0 - wired (default), 1 - wireless" default="1" />
+    <arg name="scan_save_directory" doc="Directory to save scans to" default="$(env HOME)" />
+    <arg name="run_blkarc_ros_node" doc="If true, will initialise blkarc_ros_node. Else, only initialise the required private rosparams" default = "true" />
+
+    <!-- Set sensor_name to be unscoped param to be accessed by test scripts -->
+    <param name="sensor_name" type="str" value="$(arg sensor_name)" />
+
+    <!-- Define the params in the sensor_name namespace. If run_blkarc_ros_node is set to true, initialise blkarc_ros_node (it will use the namespaced params as well) -->
+    <param name="$(arg sensor_name)/sensor_name" type="str" value="$(arg sensor_name)" />
+    <param name="$(arg sensor_name)/connection_type" type="int" value="$(arg connection_type)" />
+    <param name="$(arg sensor_name)/scan_save_directory" type="str" value="$(arg scan_save_directory)" />
+
+    <group if="$(arg run_blkarc_ros_node)">
+        <node pkg="ros_blkarc_driver" type="blkarc_ros_node" name="$(arg sensor_name)" output="screen"/>
+    </group>
+
+</launch>

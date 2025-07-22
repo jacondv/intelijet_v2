@@ -1,0 +1,17 @@
+# packages required to for the BLK ARC Module API
+cryptography==36.0.2
+grpcio==1.43.0
+grpcio-tools==1.38.1
+numpy==1.21.6
+numpy-quaternion==2022.4.3
+opencv-python==4.5.5.62
+open3d==0.14.1
+protobuf==3.19.4
+requests==2.26.0
+setuptools==47.1.0
+
+# packages required to run pytests
+pytest==6.2.4
+pytest-cov==4.0.0
+pytest-mock==3.10.0
+empy==3.3.4.0

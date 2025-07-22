@@ -1,0 +1,164 @@
+syntax = "proto3";
+
+import "google/protobuf/empty.proto";
+
+package api.blk;
+
+
+message APIVersionResponse {
+    /** Version of the gRPC API. */
+    string version = 1;
+}
+
+message SoftwareInfoResponse {
+    /**
+     * Map including all versions relevant to software components.
+     *
+     * The following keys will be included:
+     *  - head_assembly_fpga
+     *  - mcu
+     *  - main_fpga
+     *  - slam_api
+     *  - slam_engine
+     *  - capture_app
+     *  - capture_app_extended
+     *  - firmware            # A version identifier. The pattern for releases is "v1.1.1 (3)".
+     *  - firmware_created    # A date timestamp when the firware was build. The pattern is "YYYY-MM-DD".
+     *  - operating_system
+     */
+    map<string, string> sw_versions = 1;
+}
+
+message HardwareInfoResponse {
+    /**
+     * Map including all versions relevant to hardware components.
+     *
+     * The following keys will be included:
+     *  - edm_main_board
+     *  - edm_rx_board
+     *  - edm_slow_angle_board
+     *  - edm_tx_board
+     *  - lidar_serial_number
+     *  - lidar_rx_mb_uid
+     *  - lidar_slow_angle_uid
+     *  - lidar_fast_angle_tx_uid
+     *  - mcu_proc_id
+     *  - main_board
+     *  - slow_axis_motor_type
+     *  - imu_primary_serial
+     */
+    map<string, string> hw_versions = 1;
+}
+
+message CalibrationInfoResponse {
+    /**
+     * Map including all versions relevant to calibration files.
+     *
+     * The following keys will be included:
+     *  - imu_calibration
+     *  - camera_calibration
+     *  - edm_calibration
+     */
+    map<string, string> calib_versions = 1;
+}
+
+message SoftwareCapabilitiesResponse {
+    /**
+     * Map listing software capabilities, if present.
+     * Inclusion of a specific key in the response signals that a feature is
+     * available. The string in the entry is informational in nature.
+     *
+     * The following keys may be included:
+     *  - scan_annotation_support
+     *  - slam_confidence_estimates
+     *  - user_quested_pano_previews
+     *  - detail_images_deletable
+     */
+    map<string, string> capabilities = 1;
+}
+
+message ManufactureInfoResponse {
+    enum ProductType {
+        /* The device type is unknown */
+        Unknown = 0;
+        /* No head assemblies */
+        Handle = 1;
+        /* BLK2GO */
+        ALSTER = 2;
+        /* BLK ARC */
+        KIWI = 3;
+        /* BLK2GO PULSE */
+        FALCO = 4;
+        /* BLK2FLY */
+        ORIOLE = 5;
+    }
+    /** Product name of the device, for example "BLK2GO" or "BLK ARC". */
+    string device_name = 1;
+    /** Serial number of the device. */
+    string serial_number = 2;
+    /** Article number related to the device type. */
+    string article_number = 3;
+    /** Product type. Use this to uniquely identify a product type. */
+    ProductType product_type = 4;
+}
+
+
+/**
+ * Provides hardware, software and manufacture revision information.
+ */
+service About {
+    /**
+     * Returns the gRPC API version.
+     *
+     * Authorization Scopes:
+     *  - `info`
+     */
+    rpc GetAPIVersion(google.protobuf.Empty) returns (APIVersionResponse);
+
+    /**
+     * Returns a map with the versions of all available software components.
+     *
+     * Authorization Scopes:
+     *  - `info`
+     */
+    rpc GetSoftwareInfo(google.protobuf.Empty) returns (SoftwareInfoResponse);
+
+    /**
+     * Returns a map with the versions of the hardware components installed on the device.
+     *
+     * Authorization Scopes:
+     *  - `info`
+     */
+    rpc GetHardwareInfo(google.protobuf.Empty) returns (HardwareInfoResponse);
+
+    /**
+     * Returns a map with the versions of the calibration files on the device.
+     *
+     * Authorization Scopes:
+     *  - `info`
+     */
+    rpc GetCalibrationInfo(google.protobuf.Empty) returns (CalibrationInfoResponse);
+
+    /**
+     * Returns information related to the device manufacturing process, such as the serial number.
+     *
+     * Authorization Scopes:
+     *  - `info`
+     */
+    rpc GetManufactureInfo(google.protobuf.Empty) returns (ManufactureInfoResponse);
+
+    /**
+     * Returns information related to software capabilities. Certain features
+     * and GRPC APIs may be introduced and finalized later. In these cases, the
+     * capabilities map is a way for on-device software to inform connecting
+     * clients which features are available.
+     *
+     * After a while, availability of certain features becomes implicit in the
+     * GRPC API version or the On-device software version itself. At this
+     * point, entries from the capabilities map may be removed.
+     *
+     * Authorization Scopes:
+     *  - `info`
+     */
+    rpc GetSoftwareCapabilities(google.protobuf.Empty) returns (SoftwareCapabilitiesResponse);
+}

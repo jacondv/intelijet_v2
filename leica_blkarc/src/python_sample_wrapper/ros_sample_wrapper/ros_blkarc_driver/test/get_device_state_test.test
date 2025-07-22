@@ -1,0 +1,6 @@
+<launch>
+  <include file="$(find ros_blkarc_driver)/test/test_setup.launch">
+    <arg name="run_blkarc_ros_node" value="true"/>
+  </include>
+  <test test-name="test_get_device_state" pkg="ros_blkarc_driver" type="get_device_state_test.py"/>
+</launch>

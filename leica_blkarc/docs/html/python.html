@@ -1,0 +1,816 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>API Documentation &mdash; BLK ARC Module API 0.9.0 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/sphinx_highlight.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Workflow Examples" href="examples.html" />
+    <link rel="prev" title="Installation" href="installation.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            BLK ARC Module API
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="introduction.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="blk_arc.html">About the BLK ARC</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">API Documentation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#module-blk_arc_sample_wrapper.blk_arc">BLK ARC Module API</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#blk_arc_sample_wrapper.blk_arc.BLK_ARC"><code class="docutils literal notranslate"><span class="pre">BLK_ARC</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#blk_arc_sample_wrapper.blk_arc.BLK_ARC.connect"><code class="docutils literal notranslate"><span class="pre">BLK_ARC.connect()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#blk_arc_sample_wrapper.blk_arc.BLK_ARC.is_connected"><code class="docutils literal notranslate"><span class="pre">BLK_ARC.is_connected()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#blk_arc_sample_wrapper.blk_arc.BLK_ARC.disconnect"><code class="docutils literal notranslate"><span class="pre">BLK_ARC.disconnect()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#blk_arc_sample_wrapper.blk_arc.BLK_ARC.get_device_info"><code class="docutils literal notranslate"><span class="pre">BLK_ARC.get_device_info()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#blk_arc_sample_wrapper.blk_arc.BLK_ARC.get_firmware_version"><code class="docutils literal notranslate"><span class="pre">BLK_ARC.get_firmware_version()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#blk_arc_sample_wrapper.blk_arc.BLK_ARC.get_device_status"><code class="docutils literal notranslate"><span class="pre">BLK_ARC.get_device_status()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#blk_arc_sample_wrapper.blk_arc.BLK_ARC.get_free_disk_space_percentage"><code class="docutils literal notranslate"><span class="pre">BLK_ARC.get_free_disk_space_percentage()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#blk_arc_sample_wrapper.blk_arc.BLK_ARC.start_capture"><code class="docutils literal notranslate"><span class="pre">BLK_ARC.start_capture()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#blk_arc_sample_wrapper.blk_arc.BLK_ARC.stop_capture"><code class="docutils literal notranslate"><span class="pre">BLK_ARC.stop_capture()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#blk_arc_sample_wrapper.blk_arc.BLK_ARC.begin_static_pose"><code class="docutils literal notranslate"><span class="pre">BLK_ARC.begin_static_pose()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#blk_arc_sample_wrapper.blk_arc.BLK_ARC.end_static_pose"><code class="docutils literal notranslate"><span class="pre">BLK_ARC.end_static_pose()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#blk_arc_sample_wrapper.blk_arc.BLK_ARC.is_scanning"><code class="docutils literal notranslate"><span class="pre">BLK_ARC.is_scanning()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#blk_arc_sample_wrapper.blk_arc.BLK_ARC.is_in_static_pose"><code class="docutils literal notranslate"><span class="pre">BLK_ARC.is_in_static_pose()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#blk_arc_sample_wrapper.blk_arc.BLK_ARC.start_scan_data_stream"><code class="docutils literal notranslate"><span class="pre">BLK_ARC.start_scan_data_stream()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#blk_arc_sample_wrapper.blk_arc.BLK_ARC.list_scans"><code class="docutils literal notranslate"><span class="pre">BLK_ARC.list_scans()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#blk_arc_sample_wrapper.blk_arc.BLK_ARC.get_scan_info"><code class="docutils literal notranslate"><span class="pre">BLK_ARC.get_scan_info()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#blk_arc_sample_wrapper.blk_arc.BLK_ARC.delete_scan"><code class="docutils literal notranslate"><span class="pre">BLK_ARC.delete_scan()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#blk_arc_sample_wrapper.blk_arc.BLK_ARC.download_scan"><code class="docutils literal notranslate"><span class="pre">BLK_ARC.download_scan()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#blk_arc_sample_wrapper.blk_arc.BLK_ARC.trigger_detail_image"><code class="docutils literal notranslate"><span class="pre">BLK_ARC.trigger_detail_image()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#blk_arc_sample_wrapper.blk_arc.BLK_ARC.stream_pano_images_scanning"><code class="docutils literal notranslate"><span class="pre">BLK_ARC.stream_pano_images_scanning()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#blk_arc_sample_wrapper.blk_arc.BLK_ARC.stream_pano_images_idle"><code class="docutils literal notranslate"><span class="pre">BLK_ARC.stream_pano_images_idle()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#blk_arc_sample_wrapper.blk_arc.BLK_ARC.reboot"><code class="docutils literal notranslate"><span class="pre">BLK_ARC.reboot()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#blk_arc_sample_wrapper.blk_arc.BLK_ARC.power_status"><code class="docutils literal notranslate"><span class="pre">BLK_ARC.power_status()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#blk_arc_sample_wrapper.blk_arc.BLK_ARC.data_only_mode_active"><code class="docutils literal notranslate"><span class="pre">BLK_ARC.data_only_mode_active()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#blk_arc_sample_wrapper.blk_arc.BLK_ARC.get_time_from_clock_sources"><code class="docutils literal notranslate"><span class="pre">BLK_ARC.get_time_from_clock_sources()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#blk_arc_sample_wrapper.blk_arc.BLK_ARC.acknowledge_faults"><code class="docutils literal notranslate"><span class="pre">BLK_ARC.acknowledge_faults()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#blk_arc_sample_wrapper.blk_arc.BLK_ARC.wait_till_idle"><code class="docutils literal notranslate"><span class="pre">BLK_ARC.wait_till_idle()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#blk_arc_sample_wrapper.blk_arc.BLK_ARC.get_coordinate_frames"><code class="docutils literal notranslate"><span class="pre">BLK_ARC.get_coordinate_frames()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#blk_arc_sample_wrapper.blk_arc.BLK_ARC.reset_mask"><code class="docutils literal notranslate"><span class="pre">BLK_ARC.reset_mask()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#blk_arc_sample_wrapper.blk_arc.BLK_ARC.get_mask"><code class="docutils literal notranslate"><span class="pre">BLK_ARC.get_mask()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#blk_arc_sample_wrapper.blk_arc.BLK_ARC.download_mask"><code class="docutils literal notranslate"><span class="pre">BLK_ARC.download_mask()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#blk_arc_sample_wrapper.blk_arc.BLK_ARC.set_lidar_mask"><code class="docutils literal notranslate"><span class="pre">BLK_ARC.set_lidar_mask()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#blk_arc_sample_wrapper.blk_arc.BLK_ARC.set_slam_mask"><code class="docutils literal notranslate"><span class="pre">BLK_ARC.set_slam_mask()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#blk_arc_sample_wrapper.blk_arc.BLK_ARC.get_wifi_client_status"><code class="docutils literal notranslate"><span class="pre">BLK_ARC.get_wifi_client_status()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#blk_arc_sample_wrapper.blk_arc.BLK_ARC.scan_wifi_networks"><code class="docutils literal notranslate"><span class="pre">BLK_ARC.scan_wifi_networks()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#blk_arc_sample_wrapper.blk_arc.BLK_ARC.connect_wifi_network"><code class="docutils literal notranslate"><span class="pre">BLK_ARC.connect_wifi_network()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#blk_arc_sample_wrapper.blk_arc.BLK_ARC.get_known_wifi_networks"><code class="docutils literal notranslate"><span class="pre">BLK_ARC.get_known_wifi_networks()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#blk_arc_sample_wrapper.blk_arc.BLK_ARC.delete_known_wifi_network"><code class="docutils literal notranslate"><span class="pre">BLK_ARC.delete_known_wifi_network()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#blk_arc_sample_wrapper.blk_arc.BLK_ARC.clear_known_wifi_networks"><code class="docutils literal notranslate"><span class="pre">BLK_ARC.clear_known_wifi_networks()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#blk_arc_sample_wrapper.blk_arc.BLK_ARC.get_network_information"><code class="docutils literal notranslate"><span class="pre">BLK_ARC.get_network_information()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="examples.html">Workflow Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ros.html">Sample ROS Wrapper</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">BLK ARC Module API</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">API Documentation</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/python.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="api-documentation">
+<h1>API Documentation<a class="headerlink" href="#api-documentation" title="Permalink to this heading"></a></h1>
+<section id="module-blk_arc_sample_wrapper.blk_arc">
+<span id="blk-arc-module-api"></span><h2>BLK ARC Module API<a class="headerlink" href="#module-blk_arc_sample_wrapper.blk_arc" title="Permalink to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="blk_arc_sample_wrapper.blk_arc.BLK_ARC">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">blk_arc_sample_wrapper.blk_arc.</span></span><span class="sig-name descname"><span class="pre">BLK_ARC</span></span><a class="headerlink" href="#blk_arc_sample_wrapper.blk_arc.BLK_ARC" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>A simple API-layer to BLK ARC devices using the gRPC-interface.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="blk_arc_sample_wrapper.blk_arc.BLK_ARC.connect">
+<span class="sig-name descname"><span class="pre">connect</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">connection_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">ConnectionType.WIRED</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#blk_arc_sample_wrapper.blk_arc.BLK_ARC.connect" title="Permalink to this definition"></a></dt>
+<dd><p>Connects to a BLK ARC device.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>connection_type</strong> (<em>config.ConnectionType</em>) – Connection method of the BLK ARC (Wired or wireless).</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>True if a connection could be established, else False.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="blk_arc_sample_wrapper.blk_arc.BLK_ARC.is_connected">
+<span class="sig-name descname"><span class="pre">is_connected</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#blk_arc_sample_wrapper.blk_arc.BLK_ARC.is_connected" title="Permalink to this definition"></a></dt>
+<dd><p>Checks whether a device is currently connected.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>True if a device is currently connected, else False.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="blk_arc_sample_wrapper.blk_arc.BLK_ARC.disconnect">
+<span class="sig-name descname"><span class="pre">disconnect</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#blk_arc_sample_wrapper.blk_arc.BLK_ARC.disconnect" title="Permalink to this definition"></a></dt>
+<dd><p>Disconnects from a BLK ARC device.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>True if the device could be disconnected, else False.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="blk_arc_sample_wrapper.blk_arc.BLK_ARC.get_device_info">
+<span class="sig-name descname"><span class="pre">get_device_info</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#blk_arc_sample_wrapper.blk_arc.BLK_ARC.get_device_info" title="Permalink to this definition"></a></dt>
+<dd><p>Reads the name, the serial-number and the article-number from the device. See the proto definition for further documentation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Proto-message containing the device-information or None if the call failed.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>Optional[about_message.ManufactureInfoResponse]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="blk_arc_sample_wrapper.blk_arc.BLK_ARC.get_firmware_version">
+<span class="sig-name descname"><span class="pre">get_firmware_version</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#blk_arc_sample_wrapper.blk_arc.BLK_ARC.get_firmware_version" title="Permalink to this definition"></a></dt>
+<dd><p>Reads the firmware-version from the device.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Firmware version or None if the call failed.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>Optional[str]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="blk_arc_sample_wrapper.blk_arc.BLK_ARC.get_device_status">
+<span class="sig-name descname"><span class="pre">get_device_status</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#blk_arc_sample_wrapper.blk_arc.BLK_ARC.get_device_status" title="Permalink to this definition"></a></dt>
+<dd><p>Reads the status from the device. See the proto definition for further documentation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Proto-message containing the device-state or None if the call failed.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>Optional[device_message.DeviceStateResponse]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="blk_arc_sample_wrapper.blk_arc.BLK_ARC.get_free_disk_space_percentage">
+<span class="sig-name descname"><span class="pre">get_free_disk_space_percentage</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#blk_arc_sample_wrapper.blk_arc.BLK_ARC.get_free_disk_space_percentage" title="Permalink to this definition"></a></dt>
+<dd><p>Reads the free disk-space from the device.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Free disk-space percentage or None if the call failed.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>Optional[float]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="blk_arc_sample_wrapper.blk_arc.BLK_ARC.start_capture">
+<span class="sig-name descname"><span class="pre">start_capture</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#blk_arc_sample_wrapper.blk_arc.BLK_ARC.start_capture" title="Permalink to this definition"></a></dt>
+<dd><p>Starts capturing a new scan.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Proto-message containing the scan-id, starting time and a
+uuid of the started scan or None if the call failed.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>Optional[capture_message.StartCaptureResponse]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="blk_arc_sample_wrapper.blk_arc.BLK_ARC.stop_capture">
+<span class="sig-name descname"><span class="pre">stop_capture</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#blk_arc_sample_wrapper.blk_arc.BLK_ARC.stop_capture" title="Permalink to this definition"></a></dt>
+<dd><p>Stops the currently running scan.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Proto-message containing the scan-id, starting time, duration, a
+uuid and some other statistics of the finished scan or None if the call failed.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>Optional[capture_message.StopCaptureResponse]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="blk_arc_sample_wrapper.blk_arc.BLK_ARC.begin_static_pose">
+<span class="sig-name descname"><span class="pre">begin_static_pose</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#blk_arc_sample_wrapper.blk_arc.BLK_ARC.begin_static_pose" title="Permalink to this definition"></a></dt>
+<dd><p>Allows you to mark the start of a static pose while scanning. This enables you to process static-parts of the scan
+separately, which can result in improved accuraccy of the data.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>True if the start of a static scan could be marked in the running scan, else False.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="blk_arc_sample_wrapper.blk_arc.BLK_ARC.end_static_pose">
+<span class="sig-name descname"><span class="pre">end_static_pose</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#blk_arc_sample_wrapper.blk_arc.BLK_ARC.end_static_pose" title="Permalink to this definition"></a></dt>
+<dd><p>Allows you to mark the end of a static pose while scanning. See ‘begin_static_pose()’ for more details.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>True if the end of the static scan could be marked in the running scan, else False.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="blk_arc_sample_wrapper.blk_arc.BLK_ARC.is_scanning">
+<span class="sig-name descname"><span class="pre">is_scanning</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#blk_arc_sample_wrapper.blk_arc.BLK_ARC.is_scanning" title="Permalink to this definition"></a></dt>
+<dd><p>Returns whether a scan is ongoing.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>True if the call worked and a scan is ongoing, else False.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="blk_arc_sample_wrapper.blk_arc.BLK_ARC.is_in_static_pose">
+<span class="sig-name descname"><span class="pre">is_in_static_pose</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#blk_arc_sample_wrapper.blk_arc.BLK_ARC.is_in_static_pose" title="Permalink to this definition"></a></dt>
+<dd><p>Returns whether a static-scan is ongoing. Static-scans are started/stopped with ‘begin_static_pose()’
+and ‘end_static_pose()’.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>True if the call worked and a static-scan is ongoing, else False.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="blk_arc_sample_wrapper.blk_arc.BLK_ARC.start_scan_data_stream">
+<span class="sig-name descname"><span class="pre">start_scan_data_stream</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">max_point_frequency</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">enable_low_latency_trajectory</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#blk_arc_sample_wrapper.blk_arc.BLK_ARC.start_scan_data_stream" title="Permalink to this definition"></a></dt>
+<dd><p>Starts the streaming of scan-data. Scan-data contain the trajectory of the scanner and the pointcloud in scanner-frame.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>max_point_frequency</strong> (<em>int</em>) – Upper limit for the number of pointcloud-points which should be streamed. The maximum number
+you will be able to actually receive depends on various factors like the connection or the
+efficiency of the code receiving the points. The number of received points will always be
+smaller than this limit due to point-filtering on the scanner.</p></li>
+<li><p><strong>enable_low_latency_trajectory</strong> (<em>bool</em>) – Enables trajectory-output with lower latency compared to the slightly delayed
+SLAM-trajectory output. A lower latency is achieved by integration of IMU-data,
+thus also reducing the accuracy of the signal as compared to the usual
+SLAM-based output.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A generator streaming the scan-data or None
+if the call failed.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Optional[Generator[capture_message.CaptureStreamMessage, None, None]]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="blk_arc_sample_wrapper.blk_arc.BLK_ARC.list_scans">
+<span class="sig-name descname"><span class="pre">list_scans</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#blk_arc_sample_wrapper.blk_arc.BLK_ARC.list_scans" title="Permalink to this definition"></a></dt>
+<dd><p>Lists metadata of all the scans which are stored on the scanner.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A list of metadata of all the scans on the scanner or None if the
+call failed.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>Optional[List[scan_library_message.ItemInfo]]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="blk_arc_sample_wrapper.blk_arc.BLK_ARC.get_scan_info">
+<span class="sig-name descname"><span class="pre">get_scan_info</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">scan_id</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#blk_arc_sample_wrapper.blk_arc.BLK_ARC.get_scan_info" title="Permalink to this definition"></a></dt>
+<dd><p>Returns the metadata of a specific scan identified by its scan-id.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>scan_id</strong> (<em>int</em>) – The id of the scan.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Metadata of the specified scan or None if the call failed.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Optional[scan_library_message.ItemInfo]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="blk_arc_sample_wrapper.blk_arc.BLK_ARC.delete_scan">
+<span class="sig-name descname"><span class="pre">delete_scan</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">scan_id</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#blk_arc_sample_wrapper.blk_arc.BLK_ARC.delete_scan" title="Permalink to this definition"></a></dt>
+<dd><p>Deletes a scan from the scanner, identified by its scan-id.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>scan_id</strong> (<em>int</em>) – The id of the scan which should be deleted.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>True if the scan could be successfully deleted, else False.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="blk_arc_sample_wrapper.blk_arc.BLK_ARC.download_scan">
+<span class="sig-name descname"><span class="pre">download_scan</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">scan_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#blk_arc_sample_wrapper.blk_arc.BLK_ARC.download_scan" title="Permalink to this definition"></a></dt>
+<dd><p>Downloads a scan from the scanner to the device calling this method. The scan is identified by the scan-id.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>scan_id</strong> (<em>int</em>) – The id of the scan which should be deleted.</p></li>
+<li><p><strong>path</strong> (<em>Path</em>) – The path to the directory where the scan should be downloaded to.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>True if the scan could be successfully downloaded, else False.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="blk_arc_sample_wrapper.blk_arc.BLK_ARC.trigger_detail_image">
+<span class="sig-name descname"><span class="pre">trigger_detail_image</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#blk_arc_sample_wrapper.blk_arc.BLK_ARC.trigger_detail_image" title="Permalink to this definition"></a></dt>
+<dd><p>Triggers the capture of an image with the detailed-camera. Capturing a detail-image is only possible while
+a scan is ongoing. The image is stored in the scan (.b2g).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>True if the capture of the detail-image could be triggered, else False.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="blk_arc_sample_wrapper.blk_arc.BLK_ARC.stream_pano_images_scanning">
+<span class="sig-name descname"><span class="pre">stream_pano_images_scanning</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">count</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#blk_arc_sample_wrapper.blk_arc.BLK_ARC.stream_pano_images_scanning" title="Permalink to this definition"></a></dt>
+<dd><p>Starts the streaming of panoramic images during a scan.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>count</strong> (<em>int</em>) – Number of pano image triplets (Left, Front &amp; Right camera) to be streamed.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><dl class="simple">
+<dt>A generator streaming the panoramic</dt><dd><p>images or None if the call failed.</p>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Optional[Generator[imaging_message.ImageStreamResponse, None, None]]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="blk_arc_sample_wrapper.blk_arc.BLK_ARC.stream_pano_images_idle">
+<span class="sig-name descname"><span class="pre">stream_pano_images_idle</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">camera_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">count</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exposure_in_ms</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">-1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gain</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">-1</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#blk_arc_sample_wrapper.blk_arc.BLK_ARC.stream_pano_images_idle" title="Permalink to this definition"></a></dt>
+<dd><p>Starts the streaming of panoramic images while no scan is on-going.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>camera_id</strong> (<em>imaging_message.PanoramaCameraStreamRequest.CameraID</em>) – The ID of the camera of which the images
+should be streamed.</p></li>
+<li><p><strong>count</strong> (<em>int</em>) – Number of images to be streamed.</p></li>
+<li><p><strong>exposure_in_ms</strong> (<em>int</em>) – The exposure is the time the shutter stays open, expressed in milliseconds.
+A higher exposure value will generate a brighter image.</p></li>
+<li><p><strong>gain</strong> (<em>int</em>) – The gain is the equivalent of the ISO value in a camera. It artificially increases the
+brightness of the image without requiring a longer exposure.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><dl class="simple">
+<dt>A generator streaming the panoramic</dt><dd><p>images or None if the call failed.</p>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Optional[Generator[imaging_message.ImageStreamResponse, None, None]]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="blk_arc_sample_wrapper.blk_arc.BLK_ARC.reboot">
+<span class="sig-name descname"><span class="pre">reboot</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#blk_arc_sample_wrapper.blk_arc.BLK_ARC.reboot" title="Permalink to this definition"></a></dt>
+<dd><p>Triggers a reboot of the scanner. The reboot will take a while and you will loose conntection to the device.
+Therefore you must reconnect using ‘connect()’ once the scanner is running again.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>True if the reboot was triggered and the connection was closed, else False.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="blk_arc_sample_wrapper.blk_arc.BLK_ARC.power_status">
+<span class="sig-name descname"><span class="pre">power_status</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#blk_arc_sample_wrapper.blk_arc.BLK_ARC.power_status" title="Permalink to this definition"></a></dt>
+<dd><p>Reads information about the power-source from the scanner. This allows to determine whether the scanner
+is in USB-only mode (no scanning allowed) or properly connected to a power-supply.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A proto-message containing information about the power-source
+or None if the call failed.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>Optional[power_message.PowerStatusResponse]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="blk_arc_sample_wrapper.blk_arc.BLK_ARC.data_only_mode_active">
+<span class="sig-name descname"><span class="pre">data_only_mode_active</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#blk_arc_sample_wrapper.blk_arc.BLK_ARC.data_only_mode_active" title="Permalink to this definition"></a></dt>
+<dd><p>Returns whether the scanner is in USB-only mode (only connected by USB-cable). In this mode you can still
+interact with the scanner and download scans. However scanning is not possible.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>True if the call succeeded and the scanner is in data-only-mode, else False.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="blk_arc_sample_wrapper.blk_arc.BLK_ARC.get_time_from_clock_sources">
+<span class="sig-name descname"><span class="pre">get_time_from_clock_sources</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#blk_arc_sample_wrapper.blk_arc.BLK_ARC.get_time_from_clock_sources" title="Permalink to this definition"></a></dt>
+<dd><p>Reads the different clock-sources from the scanner. This can be used in order to establish time-synchronisation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A proto-message containing the time of all clock-sources
+or None if the call failed.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>Optional[clock_message.TimestampsResponse]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="blk_arc_sample_wrapper.blk_arc.BLK_ARC.acknowledge_faults">
+<span class="sig-name descname"><span class="pre">acknowledge_faults</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#blk_arc_sample_wrapper.blk_arc.BLK_ARC.acknowledge_faults" title="Permalink to this definition"></a></dt>
+<dd><p>Some less serious faults on the scanner are resolvable by acknowledgement. This call allows you to acknowledge
+all the active and acknowledgeable faults on the scanner. Please refer to the ‘fault_example.py’ for further
+documentation about the handling of faults on the scanner.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>True if it was possible to successfully acknowledge active faults, else False.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="blk_arc_sample_wrapper.blk_arc.BLK_ARC.wait_till_idle">
+<span class="sig-name descname"><span class="pre">wait_till_idle</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">timeout</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#blk_arc_sample_wrapper.blk_arc.BLK_ARC.wait_till_idle" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="blk_arc_sample_wrapper.blk_arc.BLK_ARC.get_coordinate_frames">
+<span class="sig-name descname"><span class="pre">get_coordinate_frames</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#blk_arc_sample_wrapper.blk_arc.BLK_ARC.get_coordinate_frames" title="Permalink to this definition"></a></dt>
+<dd><p>Reads the transformations between important coordinate-frames of the scanner.
+All transformations describe the transformation of the respective frame with respect to the
+baser-frame. The baser-frame is located in the middle of the dome of the scanner and is
+the frame of the streamed pointcloud-points. Also the trajectory tracks the baser-frame with
+respect to a gravity aligned global-frame.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A proto-message containing the transformations
+to different frames with respect to the baser-frame, or None if the call failed.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>Optional[coordinate_frames_message.AlignedExtrinsics]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="blk_arc_sample_wrapper.blk_arc.BLK_ARC.reset_mask">
+<span class="sig-name descname"><span class="pre">reset_mask</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mask_type</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#blk_arc_sample_wrapper.blk_arc.BLK_ARC.reset_mask" title="Permalink to this definition"></a></dt>
+<dd><p>Resets a custom mask on the scanner, which was previously set by ‘set_mask()’.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>mask_type</strong> (<em>masking_message.MaskIdentifier</em>) – The mask which should be reset.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>True if it was possible to reset the mask, else False.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="blk_arc_sample_wrapper.blk_arc.BLK_ARC.get_mask">
+<span class="sig-name descname"><span class="pre">get_mask</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mask_type</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#blk_arc_sample_wrapper.blk_arc.BLK_ARC.get_mask" title="Permalink to this definition"></a></dt>
+<dd><p>Gets a custom mask on the scanner, which was previously set by ‘set_mask()’.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>mask_type</strong> (<em>masking_message.MaskIdentifier</em>) – The mask which should be read.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The custom mask or None if the call failed.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Optional[masking_message.MaskDescription]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="blk_arc_sample_wrapper.blk_arc.BLK_ARC.download_mask">
+<span class="sig-name descname"><span class="pre">download_mask</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mask_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#blk_arc_sample_wrapper.blk_arc.BLK_ARC.download_mask" title="Permalink to this definition"></a></dt>
+<dd><p>Gets a custom mask on the scanner, which was previously set by ‘set_mask()’ and saves it as an image.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>mask_type</strong> (<em>masking_message.MaskIdentifier</em>) – The mask which should be read.</p></li>
+<li><p><strong>path</strong> (<em>Path</em>) – The filename and path where the image should be stored.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>True if it successfully saved the mask as an image, else False.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="blk_arc_sample_wrapper.blk_arc.BLK_ARC.set_lidar_mask">
+<span class="sig-name descname"><span class="pre">set_lidar_mask</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mask_filename</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#blk_arc_sample_wrapper.blk_arc.BLK_ARC.set_lidar_mask" title="Permalink to this definition"></a></dt>
+<dd><p>Sets a custom lidar mask on the scanner. This allows you to filter out pointcloud-points. Please refer to
+‘lidar_masking_example.py’ for an example on how to properly use masks.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>mask_filename</strong> (<em>Path</em>) – The path to the lidar mask image.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>True if it was possible to set the lidar mask, else False.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="blk_arc_sample_wrapper.blk_arc.BLK_ARC.set_slam_mask">
+<span class="sig-name descname"><span class="pre">set_slam_mask</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mask_filename</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">camera_id</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#blk_arc_sample_wrapper.blk_arc.BLK_ARC.set_slam_mask" title="Permalink to this definition"></a></dt>
+<dd><p>Sets a custom slam-camera mask on the scanner. This allows you to filter out pixels when colorizing the
+pointcloud-points. Please refer to ‘slam_camera_masking_example.py’ for an example on how to properly use
+slam-camera masks.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>mask_filename</strong> (<em>Path</em>) – The path to the slam camera mask image.</p></li>
+<li><p><strong>camera_id</strong> (<em>masking_message.MaskIdentifier</em>) – The camera id for which camera the mask should be used.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>True if it was possible to set the slam mask, else False.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="blk_arc_sample_wrapper.blk_arc.BLK_ARC.get_wifi_client_status">
+<span class="sig-name descname"><span class="pre">get_wifi_client_status</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#blk_arc_sample_wrapper.blk_arc.BLK_ARC.get_wifi_client_status" title="Permalink to this definition"></a></dt>
+<dd><p>Returns current information about the Wifi client mode, such as the currently connected Wifi network and whether it has access to the internet.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The Wifi client status response.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>Optional[wifi_client_message.WifiClientStatusResponse]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="blk_arc_sample_wrapper.blk_arc.BLK_ARC.scan_wifi_networks">
+<span class="sig-name descname"><span class="pre">scan_wifi_networks</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#blk_arc_sample_wrapper.blk_arc.BLK_ARC.scan_wifi_networks" title="Permalink to this definition"></a></dt>
+<dd><p>Returns a list of nearby Wifi networks detected in the last scan.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A list of all visible Wifi Networks.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>Optional[wifi_client_message.ScanWifiNetworksResponse]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="blk_arc_sample_wrapper.blk_arc.BLK_ARC.connect_wifi_network">
+<span class="sig-name descname"><span class="pre">connect_wifi_network</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ssid</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pwd</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">encryption</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">autoconnect</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#blk_arc_sample_wrapper.blk_arc.BLK_ARC.connect_wifi_network" title="Permalink to this definition"></a></dt>
+<dd><p>Connects the BLK ARC to the specified network using WPA/WPA2/WPA3 encryption. The connection attempt is limited to 15 seconds. The method may block up to this time.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A list of all visible Wifi Networks.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>Optional[wifi_client_message.WifiClientStatusResponse]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="blk_arc_sample_wrapper.blk_arc.BLK_ARC.get_known_wifi_networks">
+<span class="sig-name descname"><span class="pre">get_known_wifi_networks</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#blk_arc_sample_wrapper.blk_arc.BLK_ARC.get_known_wifi_networks" title="Permalink to this definition"></a></dt>
+<dd><p>Returns a list of the currently saved Wifi networks, sorted by priority.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A list of all known Wifi Networks.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>Optional[wifi_client_message.KnownWifiListResponse]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="blk_arc_sample_wrapper.blk_arc.BLK_ARC.delete_known_wifi_network">
+<span class="sig-name descname"><span class="pre">delete_known_wifi_network</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ssid</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#blk_arc_sample_wrapper.blk_arc.BLK_ARC.delete_known_wifi_network" title="Permalink to this definition"></a></dt>
+<dd><p>Deletes a network from the list of currently saved networks. If the device is currently connected to the specified network, it will be disconnected first.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>True if the service was successfully triggered. Attention: No feedback if the Wifi network got successfully deleted or not.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="blk_arc_sample_wrapper.blk_arc.BLK_ARC.clear_known_wifi_networks">
+<span class="sig-name descname"><span class="pre">clear_known_wifi_networks</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#blk_arc_sample_wrapper.blk_arc.BLK_ARC.clear_known_wifi_networks" title="Permalink to this definition"></a></dt>
+<dd><p>Clears the list of known Wifi networks. If the device is currently connected to a network, it will be disconnected first.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>True if the service was successfully triggered. Attention: No feedback if the Wifi networks got successfully cleared or not.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="blk_arc_sample_wrapper.blk_arc.BLK_ARC.get_network_information">
+<span class="sig-name descname"><span class="pre">get_network_information</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#blk_arc_sample_wrapper.blk_arc.BLK_ARC.get_network_information" title="Permalink to this definition"></a></dt>
+<dd><p>Get a list of the available BLK device network interfaces, paired with their respective IP.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A list of the available network interfaces.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>Optional[network_message.NetworkInformationResponse]</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="installation.html" class="btn btn-neutral float-left" title="Installation" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="examples.html" class="btn btn-neutral float-right" title="Workflow Examples" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Alex Hönger, Teng Foong Lam, Pascal Schoppmann.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

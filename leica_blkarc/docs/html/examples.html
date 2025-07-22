@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Workflow Examples &mdash; BLK ARC Module API 0.9.0 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/sphinx_highlight.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Sample ROS Wrapper" href="ros.html" />
+    <link rel="prev" title="API Documentation" href="python.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            BLK ARC Module API
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="introduction.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="blk_arc.html">About the BLK ARC</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="python.html">API Documentation</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Workflow Examples</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#capture-example">Capture Example</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#how-to-run-this-example">How to run this example:</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#coordinate-frames-example">Coordinate Frames Example</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id1">How to run this example:</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#fault-example">Fault Example</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id2">How to run this example:</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#imaging-example">Imaging Example</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id3">How to run this example:</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#panorama-image-stream-example">Panorama Image Stream Example</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id4">How to run this example:</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#lidar-masking-example">Lidar Masking Example</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id5">How to run this example:</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#pointcloud-accumulation-example">Pointcloud Accumulation Example</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id6">How to run this example:</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#reboot-data-only-example">Reboot Data Only Example</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id7">How to run this example:</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#record-scan-data-example">Record Scan-Data Example</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id8">How to run this example:</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#scans-handling-example">Scans Handling Example</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id9">How to run this example:</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#slam-camera-masking-example">SLAM Camera Masking Example</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#mask-creation">Mask Creation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id10">How to run this example:</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#status-example">Status Example</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id11">How to run this example:</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#wifi-client-example">Wifi Client Example</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id12">How to run this example:</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#network-example">Network Example</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id13">How to run this example:</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#timesync-example">Timesync Example</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id14">How to run this example:</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="ros.html">Sample ROS Wrapper</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">BLK ARC Module API</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Workflow Examples</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/examples.md.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section class="tex2jax_ignore mathjax_ignore" id="workflow-examples">
+<h1>Workflow Examples<a class="headerlink" href="#workflow-examples" title="Permalink to this heading"></a></h1>
+<p>Within the folder <code class="docutils literal notranslate"><span class="pre">src/python_sample_wrapper/examples/</span></code> several example-scripts demonstrate the general workflow on how to use the <code class="docutils literal notranslate"><span class="pre">blk_arc_sample_wrapper</span></code> python package.</p>
+<p>To execute an example, e.g. the capture example, make sure you followed the installation steps above and that you have activated the environment. Afterwards run the following command in your terminal:</p>
+<p><code class="docutils literal notranslate"><span class="pre">python3</span> <span class="pre">src/python_sample_wrapper/examples/capture_example.py</span></code></p>
+<section id="capture-example">
+<h2>Capture Example<a class="headerlink" href="#capture-example" title="Permalink to this heading"></a></h2>
+<p>This example demonstrates how to start and stop a scan. Additionally it shows how you can mark a static pose in the scan. Static poses allow you to mark parts of the scan where the scanner was stationary. This information can be used in post-processing in order to isolate the static poses and achieve a higher accuracy.</p>
+<section id="how-to-run-this-example">
+<h3>How to run this example:<a class="headerlink" href="#how-to-run-this-example" title="Permalink to this heading"></a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">python3</span> <span class="pre">src/python_sample_wrapper/examples/capture_example.py</span></code></p>
+</section>
+</section>
+<section id="coordinate-frames-example">
+<h2>Coordinate Frames Example<a class="headerlink" href="#coordinate-frames-example" title="Permalink to this heading"></a></h2>
+<p>This example shows how to read important extrinsics from the device.</p>
+<p>The reference-frame for all these transformations is the baser-frame, which is the frame in which the local lidar-points are streamed. Also the trajectory tracks the baser-frame.</p>
+<p>The transformations of the following frames can be read out with respect to the baser-frame:</p>
+<ul class="simple">
+<li><p>Front SLAM-camera</p></li>
+<li><p>Left SLAM-camera</p></li>
+<li><p>Right SLAM-camera</p></li>
+<li><p>User camera</p></li>
+<li><p>IMU</p></li>
+<li><p>Housing-Reference-Pin (See technical drawings above)</p></li>
+</ul>
+<section id="id1">
+<h3>How to run this example:<a class="headerlink" href="#id1" title="Permalink to this heading"></a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">python3</span> <span class="pre">src/python_sample_wrapper/examples/coordinate_frames_example.py</span></code></p>
+</section>
+</section>
+<section id="fault-example">
+<h2>Fault Example<a class="headerlink" href="#fault-example" title="Permalink to this heading"></a></h2>
+<p>This example shows how to read scanner-faults and how to deal with them based on the severity.</p>
+<section id="id2">
+<h3>How to run this example:<a class="headerlink" href="#id2" title="Permalink to this heading"></a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">python3</span> <span class="pre">src/python_sample_wrapper/examples/fault_example.py</span></code></p>
+</section>
+</section>
+<section id="imaging-example">
+<h2>Imaging Example<a class="headerlink" href="#imaging-example" title="Permalink to this heading"></a></h2>
+<p>This example shows how to capture a detail-image while scanning. The image is stored inside the <code class="docutils literal notranslate"><span class="pre">b2g</span></code>-file.</p>
+<section id="id3">
+<h3>How to run this example:<a class="headerlink" href="#id3" title="Permalink to this heading"></a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">python3</span> <span class="pre">src/python_sample_wrapper/examples/imaging_example.py</span></code></p>
+</section>
+</section>
+<section id="panorama-image-stream-example">
+<h2>Panorama Image Stream Example<a class="headerlink" href="#panorama-image-stream-example" title="Permalink to this heading"></a></h2>
+<p>These examples show how to stream panoramic images inside as well as outside of an active scan.</p>
+<section id="id4">
+<h3>How to run this example:<a class="headerlink" href="#id4" title="Permalink to this heading"></a></h3>
+<p>Stream panorama images while a scan is on-going:</p>
+<p><code class="docutils literal notranslate"><span class="pre">python3</span> <span class="pre">src/python_sample_wrapper/examples/pano_image_stream_scanning_example.py</span></code></p>
+<p>Stream panorama images while no scan is active:</p>
+<p><code class="docutils literal notranslate"><span class="pre">python3</span> <span class="pre">src/python_sample_wrapper/examples/pano_image_stream_idle_example.py</span></code></p>
+</section>
+</section>
+<section id="lidar-masking-example">
+<h2>Lidar Masking Example<a class="headerlink" href="#lidar-masking-example" title="Permalink to this heading"></a></h2>
+<p>This example introduces lidar-masks. Setting a mask allows you to filter out points from the scan which would land on your carrier or generally in areas you are not interested in. The example shows how to set, read and reset lidar masks.</p>
+<section id="id5">
+<h3>How to run this example:<a class="headerlink" href="#id5" title="Permalink to this heading"></a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">python3</span> <span class="pre">src/python_sample_wrapper/examples/lidar_masking_example.py</span></code></p>
+</section>
+</section>
+<section id="pointcloud-accumulation-example">
+<h2>Pointcloud Accumulation Example<a class="headerlink" href="#pointcloud-accumulation-example" title="Permalink to this heading"></a></h2>
+<p>This example demonstrates how to accumulate a pointcloud from the live-stream of local points and the trajectory. The pointcloud is visualized using <a class="reference external" href="http://www.open3d.org/">open3d</a> (see <code class="docutils literal notranslate"><span class="pre">requirements.txt</span></code> for the correct version).</p>
+<section id="id6">
+<h3>How to run this example:<a class="headerlink" href="#id6" title="Permalink to this heading"></a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">python3</span> <span class="pre">src/python_sample_wrapper/examples/pointcloud_accumulation_example.py</span></code></p>
+</section>
+</section>
+<section id="reboot-data-only-example">
+<h2>Reboot Data Only Example<a class="headerlink" href="#reboot-data-only-example" title="Permalink to this heading"></a></h2>
+<p>This example shows how to detect whether the device is in data-only mode (no power source connected). The example also shows how to reboot the device if the device is in data-only mode.</p>
+<section id="id7">
+<h3>How to run this example:<a class="headerlink" href="#id7" title="Permalink to this heading"></a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">python3</span> <span class="pre">src/python_sample_wrapper/examples/reboot_data_only_example.py</span></code></p>
+</section>
+</section>
+<section id="record-scan-data-example">
+<h2>Record Scan-Data Example<a class="headerlink" href="#record-scan-data-example" title="Permalink to this heading"></a></h2>
+<p>This example demonstrates how to read the scan-data (local points and trajectory) and store it inside a csv. This allows you to see how you can collect sample-data from the scanner.</p>
+<section id="id8">
+<h3>How to run this example:<a class="headerlink" href="#id8" title="Permalink to this heading"></a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">python3</span> <span class="pre">src/python_sample_wrapper/examples/record_scan_data_example.py</span></code></p>
+</section>
+</section>
+<section id="scans-handling-example">
+<h2>Scans Handling Example<a class="headerlink" href="#scans-handling-example" title="Permalink to this heading"></a></h2>
+<p>This example shows how to handle scans on the scanner. It shows how you can read the scans stored on the scanner, download a scan based on its ID and also how to delete scans on the scanner.</p>
+<section id="id9">
+<h3>How to run this example:<a class="headerlink" href="#id9" title="Permalink to this heading"></a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">python3</span> <span class="pre">src/python_sample_wrapper/examples/scans_handling_example.py</span></code></p>
+</section>
+</section>
+<section id="slam-camera-masking-example">
+<h2>SLAM Camera Masking Example<a class="headerlink" href="#slam-camera-masking-example" title="Permalink to this heading"></a></h2>
+<p>This example introduces camera-masks. Setting a camera-mask allows you to not accidently colorize pointcloud-points of the scan with colors of close structure on your carrier. The example shows how to set, read and reset camera masks.</p>
+<section id="mask-creation">
+<h3>Mask Creation<a class="headerlink" href="#mask-creation" title="Permalink to this heading"></a></h3>
+<p>In order to mask unwanted elements within panoramic images used for point cloud colorization during the post-processing, it is necessary to mount the BLK ARC in the final position on the carrier. Use the <code class="docutils literal notranslate"><span class="pre">pano_image_stream_scanning_example.py</span></code> to stream a triplet of the pano images and save them as a PNGs. Use GIMP or any other familiar image editting software to modify the panoramic image. Import one of the images in the workspace and create a new layer. Create a selection of the parts that should be masked, e.g. the visible parts of the carrier. Once the selection is ready, colour the interior of the selection with white colour (full white no transparency). This parts will be masked out. Later invert the selection and colorize the image in black (corresponds to visible parts). Export the black and white layer as an image in PNG format and apply the mask.</p>
+<p>Before applying the mask, check if the image is correct:</p>
+<ul class="simple">
+<li><p>Dimension of the image: 1456 x 1088</p></li>
+<li><p>White = the mask itself. This part of the image will not be used for colorization. The points overlapping with this part of the image will get black color information in final point cloud after post processing.</p></li>
+<li><p>Black = area of the image that will be used for the point cloud colorization in post processing.</p></li>
+<li><p>Format: png</p></li>
+</ul>
+</section>
+<section id="id10">
+<h3>How to run this example:<a class="headerlink" href="#id10" title="Permalink to this heading"></a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">python3</span> <span class="pre">src/python_sample_wrapper/examples/slam_camera_masking_example.py</span></code></p>
+</section>
+</section>
+<section id="status-example">
+<h2>Status Example<a class="headerlink" href="#status-example" title="Permalink to this heading"></a></h2>
+<p>This example shows how to read important state-information from the scanner. On one hand this are fields like the device-name or the serial-number and firmware-version. On the other hand also the state of the scanner, for example if it is scanning or not. It also shows how to read the free disk-space.</p>
+<section id="id11">
+<h3>How to run this example:<a class="headerlink" href="#id11" title="Permalink to this heading"></a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">python3</span> <span class="pre">src/python_sample_wrapper/examples/status_example.py</span></code></p>
+</section>
+</section>
+<section id="wifi-client-example">
+<h2>Wifi Client Example<a class="headerlink" href="#wifi-client-example" title="Permalink to this heading"></a></h2>
+<p>This example demonstrates how to connect the BLK ARC to a Wifi network and how to handle the Wifi client.</p>
+<section id="id12">
+<h3>How to run this example:<a class="headerlink" href="#id12" title="Permalink to this heading"></a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">python3</span> <span class="pre">src/python_sample_wrapper/examples/wifi_client_example.py</span></code></p>
+</section>
+</section>
+<section id="network-example">
+<h2>Network Example<a class="headerlink" href="#network-example" title="Permalink to this heading"></a></h2>
+<p>This example demonstrates how to get a list of the available BLK device network interfaces, paired with their respective IP and MAC addresses.</p>
+<section id="id13">
+<h3>How to run this example:<a class="headerlink" href="#id13" title="Permalink to this heading"></a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">python3</span> <span class="pre">src/python_sample_wrapper/examples/network_example.py</span></code></p>
+</section>
+</section>
+<section id="timesync-example">
+<h2>Timesync Example<a class="headerlink" href="#timesync-example" title="Permalink to this heading"></a></h2>
+<p>This example shows how to read the different clock-sources of the scanner. It then shows how to perform a simplified time-sync between the computer running the example and the scanner.</p>
+<section id="id14">
+<h3>How to run this example:<a class="headerlink" href="#id14" title="Permalink to this heading"></a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">python3</span> <span class="pre">src/python_sample_wrapper/examples/timesync_example.py</span></code></p>
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="python.html" class="btn btn-neutral float-left" title="API Documentation" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="ros.html" class="btn btn-neutral float-right" title="Sample ROS Wrapper" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Alex Hönger, Teng Foong Lam, Pascal Schoppmann.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,39 @@
+# Installation
+
+## Requirements
+
+The BLK ARC Module API requires BLK ARC **FW 4.0.0** and newer and is only supported on Ubuntu 20.04 and newer.
+
+To use the BLK ARC Module API, you need the following requirements installed on your system:
+
+- Python 3.8
+- pip package manager
+- virtualenv (pip install virtualenv)
+
+The required python packages are listed within the **requirements.txt** file and are automatically installed when running the setup_environment.sh bash script.
+
+## Setup & Installation
+
+To set up the environment, run the following command in a terminal:
+
+`source scripts/setup_environment.sh`
+
+This will create a virtual environment and installs the necessary dependencies for the BLK ARC Module API. Once the installation is done, the virtual environment will be activated automatically, and the BLK ARC Module API can be used.
+
+If the `setup_environment.sh` script has been excecuted once before, the virtual environment can be activated by running:
+
+`source .venv/bin/activate`
+
+We recommend using virtual environments to manage dependencies and avoid conflicts with other Python projects that may have been installed on your system.
+
+To show the details of the installed package and to verify that the installation was successfull, use the following command:
+
+`pip show blk_arc_sample_wrapper`
+
+## Testing the Code
+
+In order to test the BLK ARC Module API we use the [PyTest](https://docs.pytest.org/en/6.2.x/) framework (see requirements.txt).
+
+The pytests can be excecuted by running the following command:
+
+`pytest ./src/python_sample_wrapper/pytests/`

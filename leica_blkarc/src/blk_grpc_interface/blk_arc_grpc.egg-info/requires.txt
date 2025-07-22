@@ -1,0 +1,9 @@
+grpcio==1.43.0
+grpcio-tools==1.38.1
+protobuf==3.19.4
+
+[dev]
+pytest
+mypy
+pytest-cov
+mypy-protobuf

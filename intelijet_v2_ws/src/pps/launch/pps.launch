@@ -1,0 +1,17 @@
+<launch>
+	<!-- <node pkg="pps" name="dv_cloud_moving_least_square_process" type="dv_cloud_moving_least_square_process" /> -->
+	<node pkg="pps" name="dv_cloud_compare" type="dv_cloud_compare.py" />
+	<node pkg="pps" name="dv_cloud_preprocess" type="dv_cloud_preprocess.py" />
+	<node pkg="pps" name="dv_cloud_align" type="dv_cloud_align.py" />
+	<node pkg="pps" name="hmi_scan_command_handler" type="hmi_scan_command_handler.py" />
+
+    <node name="rviz" pkg="rviz" type="rviz" output="screen" args="-d $(find pps)/launch/rviz/raw_pre_scan.rviz" />
+	<!-- <include file="$(find ros_blkarc_driver)/launch/blkarc_bringup.launch" /> -->
+	<include file="$(find ui)/launch/ui.launch"/>
+
+	<!-- <node name="rosbag_recorder" pkg="rosbag" type="record" output="screen"
+			args="-O /mnt/c/work/projects/intelijet_v2/data/ros_2.bag
+				/pre_scan_0 /pre_scan_0/image
+				/post_scan_0 /post_scan_0/image" /> -->
+
+</launch>

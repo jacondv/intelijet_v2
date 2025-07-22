@@ -1,0 +1,5 @@
+hardware/lidar/common_lidar_interface
+/mnt/c/work/projects/intelijet_v2/intelijet_v2_ws/devel/.private/common_lidar_interface/lib/common_lidar_interface/lidar_bridge_node /mnt/c/work/projects/intelijet_v2/intelijet_v2_ws/devel/lib/common_lidar_interface/lidar_bridge_node
+/mnt/c/work/projects/intelijet_v2/intelijet_v2_ws/devel/.private/common_lidar_interface/lib/pkgconfig/common_lidar_interface.pc /mnt/c/work/projects/intelijet_v2/intelijet_v2_ws/devel/lib/pkgconfig/common_lidar_interface.pc
+/mnt/c/work/projects/intelijet_v2/intelijet_v2_ws/devel/.private/common_lidar_interface/share/common_lidar_interface/cmake/common_lidar_interfaceConfig-version.cmake /mnt/c/work/projects/intelijet_v2/intelijet_v2_ws/devel/share/common_lidar_interface/cmake/common_lidar_interfaceConfig-version.cmake
+/mnt/c/work/projects/intelijet_v2/intelijet_v2_ws/devel/.private/common_lidar_interface/share/common_lidar_interface/cmake/common_lidar_interfaceConfig.cmake /mnt/c/work/projects/intelijet_v2/intelijet_v2_ws/devel/share/common_lidar_interface/cmake/common_lidar_interfaceConfig.cmake

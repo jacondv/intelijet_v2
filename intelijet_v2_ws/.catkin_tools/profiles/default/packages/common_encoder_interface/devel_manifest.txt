@@ -1,0 +1,4 @@
+hardware/encoder/common_encoder_interface
+/mnt/c/work/projects/intelijet_v2/intelijet_v2_ws/devel/.private/common_encoder_interface/lib/pkgconfig/common_encoder_interface.pc /mnt/c/work/projects/intelijet_v2/intelijet_v2_ws/devel/lib/pkgconfig/common_encoder_interface.pc
+/mnt/c/work/projects/intelijet_v2/intelijet_v2_ws/devel/.private/common_encoder_interface/share/common_encoder_interface/cmake/common_encoder_interfaceConfig-version.cmake /mnt/c/work/projects/intelijet_v2/intelijet_v2_ws/devel/share/common_encoder_interface/cmake/common_encoder_interfaceConfig-version.cmake
+/mnt/c/work/projects/intelijet_v2/intelijet_v2_ws/devel/.private/common_encoder_interface/share/common_encoder_interface/cmake/common_encoder_interfaceConfig.cmake /mnt/c/work/projects/intelijet_v2/intelijet_v2_ws/devel/share/common_encoder_interface/cmake/common_encoder_interfaceConfig.cmake

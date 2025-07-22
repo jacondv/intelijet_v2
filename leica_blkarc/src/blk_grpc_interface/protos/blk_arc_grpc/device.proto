@@ -1,0 +1,92 @@
+syntax = "proto3";
+
+import "google/protobuf/empty.proto";
+import "google/protobuf/timestamp.proto";
+
+package api.blk;
+
+
+message DeviceStateResponse {
+    enum State {
+        /** The device is booting the operating system and is not yet ready. */
+        BOOTING = 0;
+        /** An Over-the-Air update is ongoing. A capture is not possible in this state. */
+        OTA_IN_PROGRESS = 1;
+        /** The main FPGA is being flashed. Cameras and head assembly are not available during this process. */
+        FLASHING_HW_MAIN = 2;
+        /** The head assembly is being flashed. The head assembly is not available during this process. */
+        FLASHING_HW_HEAD = 3;
+        /** The device is idle and ready to start a capture. */
+        IDLE = 4;
+        /**
+         * A capture is currently initialising.
+         * This state begins when the user requests the capture to be started and transitions into `CAPTURE_RUNNING`
+         * when the SLAM algorithm has been initialised. If this fails, the device will enter a `FAULT_DEGRADED` or
+         * `FAULT_RECOVERABLE_DEGRADED` state.
+         */
+        CAPTURE_STARTING = 5;
+        /** A capture is ongoing. Use `Capture.GetCaptureStatus` to get more detailed information. */
+        CAPTURE_RUNNING = 6;
+        /** A capture is running, and the device is in static mode. */
+        CAPTURE_RUNNING_STATIC = 12;
+        /** A capture has been given the order to stop and it is finalising, after which, the device will transition into `IDLE`. */
+        CAPTURE_STOPPING = 7;
+        /**
+         * The device has experienced a serious fault, likely caused by mechanical issues.
+         * Scanning is not possible in this state. A service report should be created and saved using the `Support` service.
+         * More information about the fault can be obtained using the `Fault` service. This fault may be recovered with a reboot in some cases.
+         */
+        FAULT_BROKEN = 8;
+        /**
+         * The device has experienced a fault, likely caused by components being in an unexpected state.
+         * Scanning is not possible in this state. A service report should be created and saved using the `Support` service.
+         * More information about the fault can be obtained using the `Fault` service. This fault should be fixed with a reboot.
+         */
+        FAULT_DEGRADED = 9;
+        /**
+         * The device has experience a fault that can be recovered without a reboot.
+         * This fault needs to be acknowledged using the `Fault` service or with a short button press.
+         */
+        FAULT_RECOVERABLE_DEGRADED = 10;
+        /**
+         * The device has been given the order to shut down or reboot and is preparing to do so.
+         * If the device is in this state, the client should be ready for the communication to be lost at any point in the near future.
+         */
+        SHUTDOWN = 11;
+        /**
+         * Device is running self check and No capture is possible in this state
+         */
+        SELF_CHECK_RUNNING = 13;
+    }
+    /** The current state of the device. */
+    State state = 1;
+    /** The UTC system time when the current state was entered. */
+    google.protobuf.Timestamp timestamp = 2;
+    /**
+     * Some device states are transient (such as firmware flashing) and have a progress indication (0-100).
+     * This field will be 0.0 for states without a progress information.
+     */
+    float state_progress = 3;
+    /** Description or additional details of the state (in English). Not every state includes this field. */
+    string state_details = 4;
+}
+
+
+/** Allows the user to retrieve information about the current state of a BLK device. */
+service Device {
+    /**
+     * Get the current device state.
+     *
+     * Authorization Scopes:
+     *  - `info`
+     */
+    rpc DeviceState(google.protobuf.Empty) returns (DeviceStateResponse);
+
+    /**
+     * Stream the current device state and all subsequent state changes.
+     *
+     * Authorization Scopes:
+     *  - `info`
+     */
+    rpc DeviceStateStream(google.protobuf.Empty) returns (stream DeviceStateResponse);
+}

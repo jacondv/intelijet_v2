@@ -1,0 +1,365 @@
+syntax = "proto3";
+
+import "google/protobuf/empty.proto";
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/duration.proto";
+
+package api.blk;
+
+
+/**
+ * Specify whether the images should be compressed or sent without any compression or interpolation.
+ * The actual format sent can be found in the `ImageStreamResponse.format` field.
+ */
+enum ImageCompression {
+    /** RAW image with no quality loss, such as BayerRG12. */
+    RAW = 0;
+    /** Compressed image format, for example JPEG. */
+    COMPRESSED = 1;
+}
+
+enum ExposureMode {
+    /** Set exposure time and gain automatically. */
+    AUTO = 0;
+    /**
+     * Set exposure time and gain automatically.
+     * The auto exposure algorithm will prefer exposure adjustments with a fixed low gain. This mode is for still devices only.
+     */
+    AUTO_STATIC = 1;
+    /**
+     * Set exposure time and gain manually.
+     */
+    MANUAL = 2;
+}
+
+enum ImageSize {
+    /** Full resolution image. */
+    FULL = 0;
+    /** Reduced resolution image. */
+    REDUCED = 1;
+}
+
+message ImageStreamRequest {
+    /**
+     * Number of images the BLK device should send before closing the stream.
+     * If this field is set to 0, images will be continuously sent until the client closes the stream.
+     *
+     * In case of panorama images streamed in triplets, count is interpreted and number of triplets
+     * rather than number of individual images (3 * count of images will be streamed)
+     */
+    uint32 count = 1;
+    /** Maximum number of images streamed per second,
+     * valid values range from 0 to 60, 0 is interpreted as no limit (stream as fast as possible)
+     *
+     * Note that NOT limiting frames according to transmission capacity may lead to unexpected
+     * behaviour: images can be arriving at slower rate, than at which they are captured and
+     * therefore their timestamp  offset to system time at the moment of their arrival
+     * will be growing over time.
+     */
+    uint32 max_frames_per_second = 2;
+    /** Allows user to enable or disable image compression. */
+    ImageCompression compression = 3;
+    /**
+     * Allows the caller to select exposure and gain manually.
+     * If `exposure_mode` is not set to `MANUAL`, `exposure_in_ms` and `gain` will be ignored.
+     * NOTE: If `exposure_mode` is set to `MANUAL` for a `panorama` image, an error will be thrown. See `StreamPanoramaImages`.
+     */
+    ExposureMode exposure_mode = 4;
+    /**
+     * The exposure is the time the shutter stays open, expressed in milliseconds. A higher exposure value will generate a brighter image.
+     * If `exposure_mode` is set to `MANUAL`, the exposure time can be specified. Otherwise, it will be ignored.
+     * If either `exposure_in_ms` or `gain` are 0 and `exposure_mode` is set to `MANUAL`, an error will be thrown.
+     * Valid values range from 1 to 970.
+     */
+    uint32 exposure_in_ms = 5;
+    /**
+     * The gain is the equivalent of the ISO value in a camera. It artificially increases the brightness of the image without requiring a longer exposure.
+     * If `exposure_mode` is set to `MANUAL`, the gain can be specified. Otherwise, it will be ignored.
+     * If either `exposure_in_ms` or `gain` are 0, an error will be thrown.
+     * Valid values are 100, 200, 400 and 800. Special case is value 1, interpreted as 100.
+     */
+    float gain = 6;
+    /** Specify whether the image should be sent in high or low resolution. */
+    ImageSize image_size = 7;
+}
+
+message PanoramaCameraStreamRequest {
+    /** The camera position is defined from the perspective of a user holding the device. */
+    enum CameraID {
+        /** Left panorama camera. */
+        CAM_LEFT = 0;
+        /** Front panorama camera. */
+        CAM_FRONT = 1;
+        /** Right panorama camera. */
+        CAM_RIGHT = 2;
+    }
+    /**
+     * Number of images the BLK device should stream.
+     * If `count` is set to 0, images will be continuously streamed until the client closes the stream.
+     */
+    uint32 count = 1;
+    /** Camera from which the images will be streamed. */
+    CameraID camera_id = 2;
+    /**
+     * Allows the caller to select exposure and gain manually.
+     * If `exposure_mode` is not set to `MANUAL`, `exposure_in_ms` and `gain` will be ignored.
+     */
+    ExposureMode exposure_mode = 3;
+    /**
+     * The exposure is the time the shutter stays open, expressed in milliseconds. A higher exposure value will generate a brighter image.
+     * If `exposure_mode` is set to `MANUAL`, the exposure time can be specified. Otherwise, it will be ignored.
+     * If either `exposure_in_ms` or `gain` are 0 and `exposure_mode` is set to `MANUAL`, an error will be thrown.
+     */
+    uint32 exposure_in_ms = 4;
+    /**
+     * The gain is the equivalent of the ISO value in a camera. It artificially increases the brightness of the image without requiring a longer exposure.
+     * If `exposure_mode` is set to `MANUAL`, the gain can be specified. Otherwise, it will be ignored.
+     * If either `exposure_in_ms` or `gain` are 0, an error will be thrown.
+     */
+    float gain = 5;
+}
+
+enum ImageFormat {
+    /** Panorama camera RAW format. */
+    BAYER_RG12 = 0;
+    /** Detail camera RAW format. */
+    BAYER_RG12G = 1;
+    /** JPEG compressed format. */
+    JPEG = 2;
+}
+
+message ImageStreamResponse {
+    /** UTC timestamp when image was taken, according to the system clock. */
+    google.protobuf.Timestamp timestamp = 1;
+    /** Specific format in which the image is encoded. */
+    ImageFormat format = 2;
+    /** Size of image data in bytes. */
+    uint32 data_size = 3;
+    /** Image width in pixels. */
+    uint32 width = 4;
+    /** Image height in pixels. */
+    uint32 height = 5;
+    /** Size of one line in bytes. Can be used to account for padding. */
+    uint32 row_stride = 6;
+    /** Actual bytes of the image, for RAW slam camera images including 16B of unmodified metadata
+     * (so called "trailer", containing exposure, camera ID and timestamp) at the end of the data
+     */
+    bytes data = 7;
+    /** Head assembly timestamp when image was taken. */
+    google.protobuf.Duration timestamp_head_assembly = 8;
+}
+
+message TakeDetailImageRequest {
+    /**
+     * If this field is set to `false`, a low-resolution preview will be sent via the `ImageEventStream` for the user to judge and decide whether to save it to disk.
+     * Otherwise, the message sent on the `ImageEventStream` will have an empty `preview` field and the image will be saved to disk immediately.
+     */
+    bool exclude_preview = 1;
+}
+
+message TakePanoramaImageRequest {
+    /**
+     * If this field is set to `false`, a low-resolution preview will be sent via the `ImageEventStream` for the user to judge and decide whether to save it to disk.
+     * Otherwise, the message sent on the `ImageEventStream` will have an empty `preview` field and the image will be saved to disk immediately.
+     */
+    bool exclude_preview = 1;
+}
+
+message TakeImageResponse {
+    /** Unique identifier for the image. This can be used to match the call to one of the messages in the `ImageEventStream`. */
+    string image_id = 1;
+}
+
+enum ImageType {
+    /** Image from the detail camera in the front of the device. */
+    DETAIL_IMAGE = 0;
+    /** Panoramic image composition made by combining the three panorama cameras on the device. */
+    PANORAMA_IMAGE = 1;
+}
+
+message ImageEvent {
+    /** Unique identifier for the image. This can be used to judge whether to save the image if a `preview` is present. */
+    string image_id = 1;
+    /** Whether the data payload is a Detail image or a Panorama image. */
+    ImageType type = 2;
+    /** Format of the data included in the message. */
+    ImageFormat format = 3;
+    /**
+     * Low-resolution preview of the image to allow the user to decide whether to save the image to disk or not.
+     * This field will be empty if the user set `exclude_preview` to `true` in the request.
+     */
+    bytes preview = 4;
+    /**
+     * When the time window to judge this picture will expire. If `JudgeImage` is not called before this time,
+     * the image will be automatically saved to disk. The timeout can be customised in the user configuration.
+     * This is a UTC timestamp based on the BLK device system time.
+     */
+    google.protobuf.Timestamp timeout = 5;
+    /** The scan ID of the associated capture. */
+    string scan_id = 6;
+    /** Head assembly timestamp when image was taken. */
+    google.protobuf.Duration timestamp_head_assembly = 7;
+}
+
+enum ImagePersistenceResult {
+    /** Image saved successfully. */
+    SAVED             = 0;
+    /** Failed to save image. */
+    FAILED_TO_SAVE    = 1;
+    /** Image discarded successfully. */
+    DISCARDED         = 2;
+}
+
+message ImagePersistenceEvent {
+    /** Unique identifier for an image, exactly as received from `TakeImageResponse` or `ImageEventStream`. */
+    string                   image_id                = 1;
+    /** Whether the image is a detail image or a panorama image. */
+    ImageType                type                    = 2;
+    /** Image persistence result. */
+    ImagePersistenceResult   result                  = 3;
+    /** The scan ID of the associated capture. */
+    string                   scan_id                 = 4;
+    /** Head assembly timestamp when image was taken. */
+    google.protobuf.Duration timestamp_head_assembly = 5;
+}
+
+message JudgeImageRequest {
+    /** Unique identifier for an image, exactly as received from `TakeImageResponse` or `ImageEventStream`. */
+    string image_id = 1;
+    /** If set to `true`, the detail image will be saved to disk, otherwise it will be discarded. */
+    bool accept = 2;
+    /** Whether the image is a detail image or a panorama image. */
+    ImageType type = 3;
+}
+
+message ImageEventsResponse {
+    oneof type {
+        /** When an image is taken. */
+        ImageEvent            judge   = 1;
+        /** When an image is either saved or discarded. */
+        ImagePersistenceEvent persist = 2;
+    }
+}
+
+/**
+ * The Imaging service allows a client to perform most operations related to detail and panorama images.
+ */
+service Imaging {
+    /**
+     * Streams a series of images from the detail camera of the BLK device.
+     *  - These images will not be persisted to disk.
+     *  - This method shall be called both during a capture or whilst the device is idle.
+     *
+     * Error Codes:
+     *  - gRPC status 3 (INVALID_ARGUMENT): If the request cannot be fulfilled by the system due to the arguments provided. The call could be retried with different arguments.
+     *  - gRPC status 4 (DEADLINE_EXCEEDED): If the request cannot be fulfilled in a timeout of 4 seconds.
+     *  - gRPC status 7 (PERMISSION_DENIED): If the caller token does not have access to the necessary scopes for the operation.
+     *  - gRPC status 9 (FAILED_PRECONDITION): If the device has any faults active that do not allow for camera image streaming.
+     *  - gRPC status 16 (UNAUTHENTICATED): If the caller has not provided any Authentication Token in the headers.
+     *
+     * Authorization Scopes:
+     *  - `imaging.stream.detail`
+     */
+    rpc StreamDetailImages(ImageStreamRequest) returns (stream ImageStreamResponse);
+
+    /**
+     * Streams a series of panorama images as a composition of the three panorama cameras of the BLK device.
+     *  - These images will not be persisted to disk.
+     *  - Streaming panorama images is only possible inside a scan.
+     *  - NOTE: Panorama images always use automatic exposure. No adjustment of `gain` or `exposure_in_ms` is possible.
+     *
+     * Error Codes:
+     *  - gRPC status 3 (INVALID_ARGUMENT): If the request cannot be fulfilled by the system due to the arguments provided. The call could be retried with different arguments. In particular, this will be thrown if `exposure_mode` is set to `MANUAL`.
+     *  - gRPC status 7 (PERMISSION_DENIED): If the caller token does not have access to the necessary scopes for the operation.
+     *  - gRPC status 9 (FAILED_PRECONDITION): If there is an ongoing capture or there is an active fault. The device must be in an `IDLE` state and no faults shall be present.
+     *  - gRPC status 16 (UNAUTHENTICATED): If the caller has not provided any Authentication Token in the headers.
+     *
+     * Authorization Scopes:
+     *  - `imaging.stream.panorama`
+     */
+    rpc StreamPanoramaImages(ImageStreamRequest) returns (stream ImageStreamResponse);
+
+    /**
+     * Streams a series of standard images from one of the panorama cameras on the device.
+     *  - These images will not be persisted to disk.
+     *  - Streaming panorama images is only possible outside a scan.
+     *  - Only RAW image streaming is supported for single camera streaming.
+     *
+     * Error Codes:
+     *  - gRPC status 3 (INVALID_ARGUMENT): If the request cannot be fulfilled by the system due to the arguments provided. The call could be retried with different arguments.
+     *  - gRPC status 7 (PERMISSION_DENIED): If the caller token does not have access to the necessary scopes for the operation.
+     *  - gRPC status 9 (FAILED_PRECONDITION): If there is an ongoing capture or there is an active fault. The device must be in an `IDLE` state and no faults shall be present.
+     *  - gRPC status 16 (UNAUTHENTICATED): If the caller has not provided any Authentication Token in the headers.
+     *
+     * Authorization Scopes:
+     *  - `imaging.stream.panorama`
+     */
+    rpc StreamPanoramaCamera(PanoramaCameraStreamRequest) returns (stream ImageStreamResponse);
+
+    /**
+     * Takes a single detail image during a capture. This can also be achieved using the button on the device.
+     * A detail image can be judged using `JudgeImage` if `exclude_preview` is set to `false`. Otherwise it will be persisted to disk straightaway.
+     * An image must be processed by the device and judged before being able to take another detail image.
+     *
+     * Error Codes:
+     *  - gRPC status 8 (RESOURCE_EXHAUSTED): If the previous image taken has not yet been processed and/or judged.
+     *  - gRPC status 9 (FAILED_PRECONDITION): If there is no capture ongoing.
+     *
+     * Authorization Scopes:
+     *  - `imaging`
+     */
+    rpc TakeDetailImage(TakeDetailImageRequest) returns (TakeImageResponse);
+
+    /**
+     * Takes a single panorama image during a capture. This can also be achieved using the button on the device.
+     * A panorama image can be judged using `JudgeImage` if `exclude_preview` is set to `false`. Otherwise it will be persisted to disk straightaway.
+     * An image must be processed by the device and judged before being able to take another panorama image.
+     *
+     * Error Codes:
+     *  - gRPC status 4 (DEADLINE_EXCEEDED): If the request cannot be fulfilled in a timeout of 4 seconds.
+     *  - gRPC status 8 (RESOURCE_EXHAUSTED): If the previous image taken has not yet been processed and/or judged.
+     *  - gRPC status 9 (FAILED_PRECONDITION): If there is no capture ongoing.
+     *
+     * Authorization Scopes:
+     *  - `imaging`
+     */
+    rpc TakePanoramaImage(TakePanoramaImageRequest) returns (TakeImageResponse);
+
+    /**
+     * Deprecated and scheduled for removal. Please use ImageEvents instead.
+     *
+     * Listening to this stream allows a client to get image previews whenever an image is taken, irrespective of the method used (physical device button, `TakeDetailImage` or `TakePanoramaImage`).
+     * Only images taken after the client starts listening will be streamed.
+     * This stream will be available regardless of whether there is an ongoing capture.
+     *
+     * Authorization Scopes:
+     *  - `imaging`
+     */
+    rpc ImageEventStream(google.protobuf.Empty) returns (stream ImageEvent);
+
+    /**
+     * Allows the user to accept or discard an image that has been taken recently as a part of a capture. If the
+     * timeout is exceeded, the image will be saved to disk automatically and can no longer be judged.
+     *
+     * Error Codes:
+     *  - gRPC status 4 (DEADLINE_EXCEEDED): If the specified timeout for judging an image has been exceeded and the image has already been saved to disk.
+     *  - gRPC status 5 (NOT_FOUND): If the specified `image_id` does not exist. This may also be caused by a wrong selection in the `type` field or if the image has already been judged.
+     *  - gRPC status 9 (FAILED_PRECONDITION): If no capture is in progress.
+     *
+     * Authorization Scopes:
+     *  - `imaging`
+     */
+    rpc JudgeImage(JudgeImageRequest) returns (google.protobuf.Empty);
+
+    /**
+     * Listening to this stream allows a client:
+     *  - To get image previews whenever an image is taken, irrespective of the method used (physical device button, `TakeDetailImage` or `TakePanoramaImage`).
+     *    Only images taken after the client starts listening will be streamed.
+     *  - To get image persistence status whether saved or discarded.
+     * This stream will be available regardless of whether there is an ongoing capture.
+     *
+     * Authorization Scopes:
+     *  - `imaging`
+     */
+     rpc ImageEvents(google.protobuf.Empty) returns (stream ImageEventsResponse);
+}

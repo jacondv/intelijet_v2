@@ -1,0 +1,8 @@
+# Goal
+---
+# Result
+bool success
+string message
+---
+# Feedback (tùy chọn, có thể bỏ trống)
+string status

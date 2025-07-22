@@ -1,0 +1,68 @@
+syntax = "proto3";
+
+import "google/protobuf/empty.proto";
+
+package api.blk;
+
+
+enum NetworkInterface {
+    /** USB network interface. */
+    USB = 0;
+    /** The wi-fi Access Point network interface. */
+    WIFI_AP = 1;
+    /** The wi-fi Client network interface. */
+    WIFI_CLIENT = 2;
+}
+
+message OverrideUSBGatewayRequest {
+    /**
+     * The IPv4 address where the BLK device will be available when connected through the USB network interface.
+     */
+    string ip_address = 1;
+}
+
+message NetworkInformationResponse {
+    message Interface {
+        /** Network interface. */
+        NetworkInterface network_interface = 1;
+        /** List of IPv4 addresses on the interface. */
+        repeated string ipv4 = 2;
+        /** List of IPv6 addresses on the interface. */
+        repeated string ipv6 = 3;
+        /** MAC address on the interface. */
+        string mac_address = 4;
+    }
+    /** List of enabled interfaces on the device. */
+    repeated Interface interfaces = 1;
+}
+
+
+/**
+ * This service contains the methods to retrieve network information and perform some basic network operations on the BLK devices.
+ */
+service Network {
+    /**
+     * Get a list of the available BLK device network interfaces, paired with their respective IP and MAC addresses.
+     *
+     * Error Codes:
+     *  - gRPC status 7 (PERMISSION_DENIED): If the caller token does not have access to the necessary scopes for the operation.
+     *  - gRPC status 16 (UNAUTHENTICATED): If the caller has not provided any Authentication Token in the headers.
+     *
+     * Authorization Scopes:
+     *  - `network.information`
+     */
+    rpc GetNetworkInformation(google.protobuf.Empty) returns (NetworkInformationResponse);
+
+    /**
+     * Override the gateway IP address used on the USB interface. The specified address is where the BLK device website and gRPC services will be available.
+     *
+     * Error Codes:
+     *  - gRPC status 3 (INVALID_ARGUMENT): If the IP address specified is not a valid IPv4 address.
+     *  - gRPC status 7 (PERMISSION_DENIED): If the caller token does not have access to the necessary scopes for the operation.
+     *  - gRPC status 16 (UNAUTHENTICATED): If the caller has not provided any Authentication Token in the headers.
+     *
+     * Authorization Scopes:
+     *  - `network.usb.gateway`
+     */
+    rpc OverrideUSBGateway(OverrideUSBGatewayRequest) returns (google.protobuf.Empty);
+}

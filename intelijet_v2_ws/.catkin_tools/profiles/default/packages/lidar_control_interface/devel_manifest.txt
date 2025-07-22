@@ -1,0 +1,4 @@
+hardware/lidar/lidar_control_interface
+/mnt/c/work/projects/intelijet_v2/intelijet_v2_ws/devel/.private/lidar_control_interface/lib/pkgconfig/lidar_control_interface.pc /mnt/c/work/projects/intelijet_v2/intelijet_v2_ws/devel/lib/pkgconfig/lidar_control_interface.pc
+/mnt/c/work/projects/intelijet_v2/intelijet_v2_ws/devel/.private/lidar_control_interface/share/lidar_control_interface/cmake/lidar_control_interfaceConfig-version.cmake /mnt/c/work/projects/intelijet_v2/intelijet_v2_ws/devel/share/lidar_control_interface/cmake/lidar_control_interfaceConfig-version.cmake
+/mnt/c/work/projects/intelijet_v2/intelijet_v2_ws/devel/.private/lidar_control_interface/share/lidar_control_interface/cmake/lidar_control_interfaceConfig.cmake /mnt/c/work/projects/intelijet_v2/intelijet_v2_ws/devel/share/lidar_control_interface/cmake/lidar_control_interfaceConfig.cmake

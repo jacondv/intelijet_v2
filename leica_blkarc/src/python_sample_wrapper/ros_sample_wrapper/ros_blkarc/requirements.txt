@@ -1,0 +1,4 @@
+defusedxml == 0.6.0
+empy == 3.3.2
+netifaces == 0.10.4
+rospkg == 1.4.0

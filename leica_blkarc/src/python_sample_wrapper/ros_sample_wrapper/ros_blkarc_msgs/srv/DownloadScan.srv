@@ -1,0 +1,10 @@
+# Request message
+int32 scan_id
+---
+# Response message
+bool success
+int32 scan_id
+string save_directory
+string filename
+int64 size_bytes
+string message

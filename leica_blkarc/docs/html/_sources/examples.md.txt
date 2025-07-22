@@ -1,0 +1,154 @@
+# Workflow Examples
+
+Within the folder `src/python_sample_wrapper/examples/` several example-scripts demonstrate the general workflow on how to use the `blk_arc_sample_wrapper` python package.
+
+To execute an example, e.g. the capture example, make sure you followed the installation steps above and that you have activated the environment. Afterwards run the following command in your terminal:
+
+`python3 src/python_sample_wrapper/examples/capture_example.py`
+
+## Capture Example
+
+This example demonstrates how to start and stop a scan. Additionally it shows how you can mark a static pose in the scan. Static poses allow you to mark parts of the scan where the scanner was stationary. This information can be used in post-processing in order to isolate the static poses and achieve a higher accuracy.
+
+### How to run this example:
+
+`python3 src/python_sample_wrapper/examples/capture_example.py`
+
+## Coordinate Frames Example
+
+This example shows how to read important extrinsics from the device.
+
+The reference-frame for all these transformations is the baser-frame, which is the frame in which the local lidar-points are streamed. Also the trajectory tracks the baser-frame.
+
+The transformations of the following frames can be read out with respect to the baser-frame:
+
+- Front SLAM-camera
+- Left SLAM-camera
+- Right SLAM-camera
+- User camera
+- IMU
+- Housing-Reference-Pin (See technical drawings above)
+
+### How to run this example:
+
+`python3 src/python_sample_wrapper/examples/coordinate_frames_example.py`
+
+## Fault Example
+
+This example shows how to read scanner-faults and how to deal with them based on the severity.
+
+### How to run this example:
+
+`python3 src/python_sample_wrapper/examples/fault_example.py`
+
+## Imaging Example
+
+This example shows how to capture a detail-image while scanning. The image is stored inside the `b2g`-file.
+
+### How to run this example:
+
+`python3 src/python_sample_wrapper/examples/imaging_example.py`
+
+## Panorama Image Stream Example
+
+These examples show how to stream panoramic images inside as well as outside of an active scan.
+
+### How to run this example:
+
+Stream panorama images while a scan is on-going:
+
+`python3 src/python_sample_wrapper/examples/pano_image_stream_scanning_example.py`
+
+Stream panorama images while no scan is active:
+
+`python3 src/python_sample_wrapper/examples/pano_image_stream_idle_example.py`
+
+## Lidar Masking Example
+
+This example introduces lidar-masks. Setting a mask allows you to filter out points from the scan which would land on your carrier or generally in areas you are not interested in. The example shows how to set, read and reset lidar masks.
+
+### How to run this example:
+
+`python3 src/python_sample_wrapper/examples/lidar_masking_example.py`
+
+## Pointcloud Accumulation Example
+
+This example demonstrates how to accumulate a pointcloud from the live-stream of local points and the trajectory. The pointcloud is visualized using [open3d](http://www.open3d.org/) (see `requirements.txt` for the correct version).
+
+### How to run this example:
+
+`python3 src/python_sample_wrapper/examples/pointcloud_accumulation_example.py`
+
+## Reboot Data Only Example
+
+This example shows how to detect whether the device is in data-only mode (no power source connected). The example also shows how to reboot the device if the device is in data-only mode.
+
+### How to run this example:
+
+`python3 src/python_sample_wrapper/examples/reboot_data_only_example.py`
+
+## Record Scan-Data Example
+
+This example demonstrates how to read the scan-data (local points and trajectory) and store it inside a csv. This allows you to see how you can collect sample-data from the scanner.
+
+### How to run this example:
+
+`python3 src/python_sample_wrapper/examples/record_scan_data_example.py`
+
+## Scans Handling Example
+
+This example shows how to handle scans on the scanner. It shows how you can read the scans stored on the scanner, download a scan based on its ID and also how to delete scans on the scanner.
+
+### How to run this example:
+
+`python3 src/python_sample_wrapper/examples/scans_handling_example.py`
+
+## SLAM Camera Masking Example
+
+This example introduces camera-masks. Setting a camera-mask allows you to not accidently colorize pointcloud-points of the scan with colors of close structure on your carrier. The example shows how to set, read and reset camera masks.
+
+### Mask Creation
+
+In order to mask unwanted elements within panoramic images used for point cloud colorization during the post-processing, it is necessary to mount the BLK ARC in the final position on the carrier. Use the `pano_image_stream_scanning_example.py` to stream a triplet of the pano images and save them as a PNGs. Use GIMP or any other familiar image editting software to modify the panoramic image. Import one of the images in the workspace and create a new layer. Create a selection of the parts that should be masked, e.g. the visible parts of the carrier. Once the selection is ready, colour the interior of the selection with white colour (full white no transparency). This parts will be masked out. Later invert the selection and colorize the image in black (corresponds to visible parts). Export the black and white layer as an image in PNG format and apply the mask.
+
+Before applying the mask, check if the image is correct:
+ - Dimension of the image: 1456 x 1088
+ - White = the mask itself. This part of the image will not be used for colorization. The points overlapping with this part of the image will get black color information in final point cloud after post processing.
+ - Black = area of the image that will be used for the point cloud colorization in post processing.
+ - Format: png
+
+### How to run this example:
+
+`python3 src/python_sample_wrapper/examples/slam_camera_masking_example.py`
+
+## Status Example
+
+This example shows how to read important state-information from the scanner. On one hand this are fields like the device-name or the serial-number and firmware-version. On the other hand also the state of the scanner, for example if it is scanning or not. It also shows how to read the free disk-space.
+
+### How to run this example:
+
+`python3 src/python_sample_wrapper/examples/status_example.py`
+
+## Wifi Client Example
+
+This example demonstrates how to connect the BLK ARC to a Wifi network and how to handle the Wifi client.
+
+### How to run this example:
+
+`python3 src/python_sample_wrapper/examples/wifi_client_example.py`
+
+## Network Example
+
+This example demonstrates how to get a list of the available BLK device network interfaces, paired with their respective IP and MAC addresses.
+
+### How to run this example:
+
+`python3 src/python_sample_wrapper/examples/network_example.py`
+
+## Timesync Example
+
+This example shows how to read the different clock-sources of the scanner. It then shows how to perform a simplified time-sync between the computer running the example and the scanner.
+
+### How to run this example:
+
+`python3 src/python_sample_wrapper/examples/timesync_example.py`

@@ -1,0 +1,503 @@
+syntax = "proto3";
+
+import "google/protobuf/duration.proto";
+import "google/protobuf/empty.proto";
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/wrappers.proto";
+
+package api.blk;
+
+
+message StartCaptureResponse {
+    /** Scan unique identifier. */
+    string scan_id = 1;
+    /**
+     * Time when the capture start request was accepted, based on the head assembly clock.
+     * To convert the starting time to a UTC timestamp, please refer to the `Clock` service.
+     */
+    google.protobuf.Duration starting_time = 2;
+    /** Unique identifier of dataset associated with the scan. */
+    string dataset_uuid = 3;
+}
+
+message StopCaptureResponse {
+    /** Scan unique identifier. */
+    string scan_id = 1;
+    /**
+     * Time when the capture start request was accepted, based on the head assembly clock.
+     * To convert the starting time to a UTC timestamp, please refer to the `Clock` service.
+     */
+    google.protobuf.Duration starting_time = 2;
+    /** Duration of the capture. */
+    google.protobuf.Duration duration = 3;
+    /**
+     * Statistics about the scan.
+     * The statistics will contain (including but not limited to):
+     *  - points_scanned
+     *  - points_dropped
+     */
+    map<string, string> statistics = 4;
+    /** If a scan is ongoing, unique identifier dataset created by this scan. Otherwise empty. */
+    string dataset_uuid = 5;
+}
+
+message PauseCaptureResponse {
+    /** Scan unique identifier. */
+    string scan_id = 1;
+    /** If a scan is ongoing, unique identifier dataset created by this scan. Otherwise empty. */
+    string dataset_uuid = 2;
+}
+
+message ResumeCaptureResponse {
+    /** Scan unique identifier. */
+    string scan_id = 1;
+    /** If a scan is ongoing, unique identifier dataset created by this scan. Otherwise empty. */
+    string dataset_uuid = 2;
+    /** Duration of the pause state. */
+    google.protobuf.Duration pause_duration = 3;
+}
+
+/* Slam user guidance/feedback types  */
+enum UserGuidanceType {
+    /** Invalid / unset value **/
+    UNSET = 0;
+    /** A fallback to the less complex lidar-only mode. */
+    SLAM_FALLBACK_TO_LIDAR_ONLY = 1;
+    /** Device is not steady and it should be at this point of time (can appear e.g., during slam static init). */
+    DEVICE_NOT_STEADY = 2;
+    /** Device is steady and it should not be at this point of time (can appear e.g., during slam dynamic init). */
+    NOT_ENOUGH_MOVEMENT = 3;
+    /** Device is moving too much or too fast. */
+    TOO_MUCH_MOVEMENT = 4;
+    /** Device is too close to a big object (e.g., wall). */
+    TOO_CLOSE_TO_WALL = 5;
+    /** There are too few visual features visible to (visual input of) slam. */
+    FEATURELESS_ENVIRONMENT = 6;
+    /** There are too few structural features visible to (lidar input of) slam. */
+    STRUCTURELESS_ENVIRONMENT = 7;
+}
+
+message CaptureStatusResponse {
+    enum CaptureState {
+        /**
+         * There is no capture ongoing.
+         * Please note this does not mean the device is in a ready state, as it solely relates to the capture state.
+         */
+        IDLE = 0;
+        /** The capture is starting. This is an intermediate state since the scan is requested to start, until SLAM is initialised. */
+        STARTING = 1;
+        /** The capture is in progress. */
+        RUNNING = 2;
+        /** The capture is in progress, and is considered static */
+        RUNNING_STATIC = 4;
+        /** The capture is stopping. This is an intermediate state since the scan  */
+        STOPPING = 3;
+    }
+
+    /**
+     * Indicates, if capture pause mark (written by pause-resume mechanism) is currently active
+     * in scan data file for currently running scan.
+     */
+    enum PauseMarkState {
+        /** State is not known, e.g., because the feature is not supported on this version of FW */
+        UNKNOWN = 0;
+        /** Pause started mark has been writen to scan data file, and related scan stop mark has been not written yet yet */
+        IN_PAUSE_MARKED_PHASE = 1;
+        /** No pause mark without related resume mark has been written */
+        OUT_OF_PAUSE_MARKED_PHASE = 2;
+    }
+
+    /** Current capture state. */
+    CaptureState state = 1;
+    /** If a scan is ongoing, unique identifier of the scan. Otherwise empty. */
+    string scan_id = 2;
+    /** If a scan is ongoing, current duration since it started (i.e., since all components, including SLAM were
+     * initialized).
+     *
+     * If scan is starting, time since request to start capture was accepted.
+     *
+     * Otherwise empty.
+     */
+    google.protobuf.Duration duration = 3;
+    /**
+     * If a scan is ongoing, statistics about the scan. Otherwise empty.
+     * The statistics will contain (including but not limited to):
+     *  - points_scanned
+     *  - points_dropped
+     */
+    map<string, string> statistics = 4;
+    /** If a scan is ongoing, unique identifier dataset created by this scan. Otherwise empty. */
+    string dataset_uuid = 5;
+    /** List of currently active guidance (current state of user guidance). */
+    repeated UserGuidanceType active_user_guidance = 6;
+    PauseMarkState pause_mark_state = 7;
+}
+
+/**
+ * Select the kinds of messages you'd like to be streamed and the maximum frequency.
+ */
+message StreamMessageOptions {
+    /** Maximum number of CloudPoints per second that the caller can handle (Hz). This does not affect the number of TrajectoryPoints, since they tend to be less numerous than CloudPoints. */
+    uint32 max_point_frequency = 1;
+    /** Trajectory points represent a transformation (displacement + rotation) between the initialisation frame of reference and the current location and orientation of the device. */
+    bool enable_trajectory = 2;
+    /** Baser points represent 3D points in space (laser returns) using the frame of reference of the current location and orientation of the device (referred to as trajectory). */
+    bool enable_baser = 3;
+    /** Don't use this field */
+    reserved 4;
+    /** Enable SLAM metrics to be streamed. */
+    bool enable_slam = 5;
+    /** Enable scan events to be streamed. See message ScanEvent. */
+    bool enable_scan_events = 6;
+    /** Enable low latency trajectory. The low latency trajectory is a preliminary, and much more frequently updated estimated device pose than
+     * the finished trajectory. It arrives at most with the same frequency as IMU sample rate used. There is no low latency trajectory streamed
+     * from finished scans. It only makes sense to request this on live scans.
+     */
+    bool enable_low_latency_trajectory = 7;
+}
+
+message LiveStreamRequest {
+    /** Types of messages desired and stream frequency. */
+    StreamMessageOptions options = 1;
+}
+
+message SavedStreamRequest {
+    /** Types of messages desired and stream frequency. */
+    StreamMessageOptions options = 1;
+    /** Unique identifier of the saved scan to be streamed. */
+    string scan_id = 2;
+    /**
+     * The possible timeline values range between 0.0f and 1.0f, where
+     * 0.0f indicates the start of the scan and 1.0f indicates the
+     * end of the scan.
+     * If we wish to start streaming right at the middle of the saved scan timeline,
+     * this should be set to 0.5f.
+     * This value is optional and will be defaulted to 0.0f if not specified.
+     * If the timeline start or end are specified, the following condition must be met
+     * for the request to be valid: [timeline_start < timeline_end]
+     */
+    google.protobuf.FloatValue timeline_start = 3;
+    /**
+     * The possible timeline values range between 0.0f and 1.0f, where
+     * 0.0f indicates the start of the scan and 1.0f indicates the
+     * end of the scan.
+     * If we wish to end the stream right at the middle of the saved scan timeline,
+     * this should be set to 0.5f.
+     * This value is optional and will be defaulted to 1.0f if not specified.
+     * If the timeline start or end are specified, the following condition must be met
+     * for the request to be valid: [timeline_start < timeline_end]
+     */
+    google.protobuf.FloatValue timeline_end = 4;
+    /**
+     * Sets the playback speed of the data served. A 10 second scan can be served in
+     * 1 second if this value is set to 10.0f or 20 seconds if it is 0.5f.
+     * `base_point_frequency` determines the number of points device streams to
+     * the client per second of real time independent of the playback speed.
+     * `base_point_frequency` is maintained when playback is sped-up, which could
+     * lead to some point data being dropped.
+     * This value is optional and will be defaulted to 1.0f if not specified.
+     */
+    google.protobuf.FloatValue playback_speed = 5;
+}
+
+/**
+ * Trajectory points do not represent points in space but transformation matrices instead.
+ * These can be used to change the frame of reference of cloud points.
+ * The (x,y,z) components of a trajectory point indicate the displacement of the BLK device with respect to the frame of reference upon initialisation.
+ */
+message TrajectoryPoint {
+    /** Displacement vector x coordinate. */
+    float x = 1;
+    /** Displacement vector y coordinate. */
+    float y = 2;
+    /** Displacement vector z coordinate. */
+    float z = 3;
+    /** Quaternion (rotation) first component. */
+    float q0 = 4;
+    /** Quaternion (rotation) second component. */
+    float q1 = 5;
+    /** Quaternion (rotation) third component. */
+    float q2 = 6;
+    /** Quaternion (rotation) fourth component. */
+    float q3 = 7;
+    /**
+     * Timestamp, based on head assembly clock.
+     * To convert this to a UTC timestamp, please refer to the `Clock` service.
+     */
+    google.protobuf.Duration timestamp = 8;
+}
+
+/*
+ * CloudPoints are used interchangeably to represent Baser points.
+ * They are points in space and have no orientation associated.
+ * The reasoning behind using (u, v, w) nomenclature is to emphasise that these points may not be in
+ * the initialisation frame of reference and could require a transformation.
+ */
+message CloudPoint {
+    /** x axis coordinate. */
+    float u = 1;
+    /** y axis coordinate. */
+    float v = 2;
+    /** z axis coordinate. */
+    float w = 3;
+    /** Intensity of the laser return that originated the point. This can be used to generate a greyscale image. */
+    uint32 intensity = 4;
+    /**
+     * Timestamp, based on head assembly clock.
+     * To convert this to a UTC timestamp, please refer to the `Clock` service.
+     */
+    google.protobuf.Duration timestamp = 5;
+}
+
+/**
+ * Color values of a single point: red (r), green (g), blue (b). Each value can take a value 0-255 i.e. is 8 bit long.
+ */
+message PointColor {
+    /**
+     * Red is represented in least-significant byte, followed by the bytes for green and blue.
+     * The most-significant byte is set to 0.
+     * Protobuf manages platform dependent endianness.
+     *
+     * Example
+     * RGB (r=255, g=9, b=128)
+     *
+     * Binary       Decimal
+     * 11111111  =  255       # Red
+     * 00001001  =    9       # Green
+     * 10000000  =  128       # Blue
+     *
+     * Bin:  00000000|10000000|00001001|11111111
+     * Hex:        00|      80|      09|      FF
+     * Dec: uint32 rgb = r + (2^8 x g) + (2^16 x b) = 255 + 2'304 + 8'388'608 = 8'391'167
+     */
+    uint32 rgb = 1;
+}
+
+message TrajectoryPointList {
+    /** List of trajectory points. */
+    repeated TrajectoryPoint points = 1;
+    /** A previous field with field number 2 was removed. reserved is used to ensure backward compatibility. */
+    reserved 2;
+}
+
+message BaserPointList {
+    /** List of baser points. */
+    repeated CloudPoint points = 1;
+    /**
+     * List of colors.
+     * Since colorized points are not available on all BLK devices, this array might be empty, otherwise the number of
+     * points is equal to the number of colors. The i-th element of "points" is associated with the i-th element of
+     * "colors".
+     */
+    repeated PointColor colors = 2;
+}
+
+message SLAMMetricInfo {
+    /** In URL format, e.g. "/confidence/visual/features". */
+    string key = 1;
+    /** Value for the attribute. Confidences range between 0.0f and 1.0f (low to high, respectively). */
+    float value = 2;
+    /**
+     * Timestamp, based on head assembly clock.
+     * To convert this to a UTC timestamp, please refer to the `Clock` service.
+     */
+    google.protobuf.Duration timestamp = 3;
+}
+
+/**
+ * Rare, state changing events that happen during an active scan, which clients
+ * may want to observe and react to.
+ */
+message ScanEvent {
+    enum EventType {
+        /** A fallback to the less complex lidar-only mode of slam has happened. */
+        SLAM_FALLBACK_TO_LIDAR_ONLY = 0;
+    }
+    /** Scan event received. */
+    EventType event = 1;
+    /**
+     * Timestamp, based on head assembly clock.
+     * To convert this to a UTC timestamp, please refer to the `Clock` service.
+     */
+    google.protobuf.Duration timestamp = 2;
+}
+
+
+/**
+ * User guidance events, there are generally two types of events:
+ *  - events changing state of the scan (e.g., SLAM_FALLBACK_TO_LIDAR_ONLY_BEGIN)
+ *  - events indicating either begin or end of "user guidance"
+ *
+ * Clients may want to observe and react to both types of event.
+ *
+ * This enum has a counterpart in CaptureStatusResponse::ScanGuidanceType. Those two should be
+ * kept in sync.
+ */
+message UserNotificationEvent {
+
+    /** Indicate state change type - beginning or end of user guidance or slam state. */
+    enum UserNotificationChangeType {
+        /** Value not set on client side - change must be ignored. **/
+        NOTIFICATION_CHANGE_NONE = 0;
+        /** Guidance is valid from now until SLAM_STATE_END is be received. */
+        NOTIFICATION_BEGIN = 1;
+        /** Guidance is not valid any more. */
+        NOTIFICATION_END = 2;
+    }
+
+    /** Scan guidance event type. */
+    UserGuidanceType type = 1;
+    /**
+     * Timestamp, based on head assembly clock.
+     * To convert this to a UTC timestamp, please refer to the `Clock` service.
+     */
+    google.protobuf.Duration timestamp = 2;
+
+    /** Indicate state change type - beginning or end of user guidance or slam state. */
+    UserNotificationChangeType event_change_type = 3;
+}
+
+message CaptureStreamMessage {
+    oneof payload {
+        /**
+         * Baser points represent points in space, as generated by the head assembly.
+         * These are the raw points in the frame of reference of the current position of the device.
+         */
+        BaserPointList baser = 1;
+        /**
+         * Trajectory points are transformation matrices. They can be used to change the frame of reference of
+         * Baser points into World points or viceversa.
+         * It can also be used to determine the trajectory the BLK device followed during the scan.
+         */
+        TrajectoryPointList trajectory = 2;
+        /** Confidence metrics from the SLAM algorithm. */
+        SLAMMetricInfo slam_metric = 4;
+        /** Slam state changes that happen during scanning - only "fallback to
+         * lidar slam". Marked for future deprecation. */
+        ScanEvent scan_event = 8;
+        /**
+         * Most recent low latency trajectory point. It makes no sense to send lists of these, as only the most recent one is of any interest. Old points
+         * that were determined in the interim loose validity immediately once a new one has been calculated.
+         */
+        TrajectoryPoint low_latency_trajectory = 9;
+        /** User notification events, which inform the user about certain
+         * active conditions during the scan, which may impact the final
+         * result. */
+        UserNotificationEvent user_guidance_event = 10;
+    }
+    /** Don't use this field */
+    reserved 3;
+    /**
+     * Current queue duration. If this value grows over time, it can be an indication of a bad connection quality and
+     * many queued but not yet transmitted events.
+     */
+    google.protobuf.Duration time_queued = 5;
+    /**
+     * Head assembly clock timestamp when this event was first queued for transmission.
+     * This value can be used to calculate the offset/delay caused by processing using the delta of a baser,
+     * or trajectory point and this timestamp.
+     */
+    google.protobuf.Duration queue_timestamp = 6;
+    /**
+     * This value can be used to compute the network latency.
+     * It represents the exact timestamp when this message left the queue and was sent on the network.
+     */
+    google.protobuf.Timestamp dispatch_utc_timestamp = 7;
+}
+
+
+/**
+ * This service contains all the methods related to a capture.
+ * It includes both live data streaming of an ongoing capture and streaming of past scans saved on disk.
+ *
+ * NOTE: All timestamps in this service are based on the head assembly clock unless otherwise specified.
+ * To convert this to a UTC timestamp, please refer to the `Clock` service.
+ */
+service Capture {
+    /**
+     * Starts a new capture and returns the scan ID and the starting time immediately (non-blocking).
+     * The capture will then be set to a `STARTING` state until SLAM initialises.
+     *
+     * Error Codes:
+     *  - gRPC status 2 (UNKNOWN): If the capture cannot start for any other reason.
+     *  - gRPC status 9 (FAILED_PRECONDITION): If a capture is already in progress.
+     *  - gRPC status 13 (INTERNAL): If the device is not ready to start a capture due to faulty or missing hardware.
+     *
+     * Authorization Scopes:
+     *  - `capture`
+     */
+    rpc StartCapture(google.protobuf.Empty) returns (StartCaptureResponse);
+
+    /**
+     * Pause started capture.
+     * This only put a mark to data file, does not physically interrupt the scan
+     *
+     * Error Codes:
+     *  - gRPC status 9 (FAILED_PRECONDITION): If a capture is not in progress.
+     *
+     * Authorization Scopes:
+     *  - `capture`
+     */
+    rpc PauseCapture(google.protobuf.Empty) returns (PauseCaptureResponse);
+
+    /**
+     * Resume paused capture.
+     * This only put a mark to data file, does not physically start the scan
+     *
+     * Error Codes:
+     *  - gRPC status 9 (FAILED_PRECONDITION): If a capture is not in progress or is not paused.
+     *
+     * Authorization Scopes:
+     *  - `capture`
+     */
+    rpc ResumeCapture(google.protobuf.Empty) returns (ResumeCaptureResponse);
+
+    /**
+     * Stops the current capture and returns information about the same.
+     *
+     * Error Codes:
+     *  - gRPC status 9 (FAILED_PRECONDITION): If there is no capture in progress.
+     *  - gRPC status 14 (UNAVAILABLE): If the device did not respond or cannot perform the action at this point in time. The call shall be retried.
+     *
+     * Authorization Scopes:
+     *  - `capture`
+     */
+    rpc StopCapture(google.protobuf.Empty) returns (StopCaptureResponse);
+
+    /**
+     * Gets the current capture state. This may be called at any point in time, even if no capture is ongoing.
+     *
+     * Authorization Scopes:
+     *  - `capture`
+     */
+    rpc GetCaptureStatus(google.protobuf.Empty) returns (CaptureStatusResponse);
+
+    /**
+     * Streams the requested messages related to an ongoing capture. This method will not start a capture by itself.
+     *
+     * Error Codes:
+     *  - gRPC status 3 (INVALID_ARGUMENT): If the request cannot be fulfilled by the system due to the arguments provided. The call could be retried with different arguments.
+     *  - gRPC status 7 (PERMISSION_DENIED): If the caller does not have the adequate scopes for the operation requested.
+     *  - gRPC status 9 (FAILED_PRECONDITION): If there is no ongoing capture. In this context, a `STARTING` capture is treated as an ongoing capture.
+     *
+     * Authorization Scopes:
+     *  - `capture`
+     */
+    rpc StreamLiveCapture(LiveStreamRequest) returns (stream CaptureStreamMessage);
+
+    /**
+     * Streams all requested messages related to a saved capture with the specified `scan_id`. In contrast to the `StreamLiveCapture` method, no capture should be ongoing.
+     * The messages sent on this stream will have the exact same format as a live scan would produce.
+     *
+     * Error Codes:
+     *  - gRPC status 3 (INVALID_ARGUMENT): If the request cannot be fulfilled by the system due to the arguments provided. The call could be retried with different arguments. This would be the case, for example, if `playback_speed` is set to 0.
+     *  - gRPC status 5 (NOT_FOUND): If the `scan_id` provided cannot be found.
+     *  - gRPC status 7 (PERMISSION_DENIED): If the caller does not have the adequate scopes for the operation requested.
+     *  - gRPC status 9 (FAILED_PRECONDITION): If there is an ongoing capture. The device must be in an `IDLE` state.
+     *  - gRPC status 11 (OUT_OF_RANGE): If the `timeline_start` specified is greater than or equal to the `timeline_end`.
+     *
+     * Authorization Scopes:
+     *  - `capture`
+     */
+    rpc StreamSavedCapture(SavedStreamRequest) returns (stream CaptureStreamMessage);
+}

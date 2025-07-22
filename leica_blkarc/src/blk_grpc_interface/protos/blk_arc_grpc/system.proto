@@ -1,0 +1,83 @@
+syntax = "proto3";
+
+import "google/protobuf/duration.proto";
+import "google/protobuf/empty.proto";
+import "google/protobuf/timestamp.proto";
+
+package api.blk;
+
+
+message CountryCodeRequest {
+    /**
+     * Two letter country code according to ISO 3166-1 alpha-2.
+     * For example, "CH" should be used for Switzerland.
+     */
+    string country_code = 1;
+}
+
+message TimestampRequest {
+    /** UTC time to set on the device. */
+    google.protobuf.Timestamp utc_timestamp = 1;
+}
+
+
+service System {
+    /**
+     * Returns the current time according to the BLK device.
+     *
+     * Authorization Scopes:
+     *  - `info`
+     */
+    rpc GetSystemTime(google.protobuf.Empty) returns (google.protobuf.Timestamp);
+
+    /**
+     * Sets the current time on the Operating System of the BLK device. This is not allowed during a scan.
+     *
+     * Error Codes:
+     *  - gRPC status 7 (PERMISSION_DENIED): If the caller token does not have access to the necessary scopes for the operation.
+     *  - gRPC status 9 (FAILED_PRECONDITION): If the method is called while a capture is ongoing.
+     *  - gRPC status 16 (UNAUTHENTICATED): If the caller has not provided any Authentication Token in the headers.
+     *
+     * Authorization Scopes:
+     *  - `system.time`
+     */
+    rpc SetSystemTime(TimestampRequest) returns (google.protobuf.Empty);
+
+    /**
+     * Sets the country code of the device.
+     * This setting will have an impact on the available wi-fi bands.
+     *
+     * Error Codes:
+     *  - gRPC status 3 (INVALID_ARGUMENT): If the contents of the `country_code` are not a valid 2 character country code.
+     *  - gRPC status 7 (PERMISSION_DENIED): If the caller token does not have access to the necessary scopes for the operation.
+     *  - gRPC status 16 (UNAUTHENTICATED): If the caller has not provided any Authentication Token in the headers.
+     *
+     * Authorization Scopes:
+     *  - `system.country`
+     */
+    rpc SetCountryCode(CountryCodeRequest) returns (google.protobuf.Empty);
+
+    /**
+     * Returns the duration since the device was turned on.
+     *
+     * Authorization Scopes:
+     *  - `info`
+     */
+    rpc GetUptime(google.protobuf.Empty) returns (google.protobuf.Duration);
+
+    /**
+     * Reboots the BLK device.
+     *
+     * Authorization Scopes:
+     *  - `info`
+     */
+    rpc Reboot(google.protobuf.Empty) returns (google.protobuf.Empty);
+
+    /**
+     * Turns off the BLK device.
+     *
+     * Authorization Scopes:
+     *  - `info`
+     */
+    rpc Shutdown(google.protobuf.Empty) returns (google.protobuf.Empty);
+}

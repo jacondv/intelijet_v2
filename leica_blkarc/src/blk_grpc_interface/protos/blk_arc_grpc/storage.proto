@@ -1,0 +1,25 @@
+syntax = "proto3";
+
+import "google/protobuf/empty.proto";
+
+package api.blk;
+
+
+message DiskStatusResponse {
+    /** Percentage of free disk space (f0.0 to f100.0). */
+    float free_disk_space_percent = 1;
+}
+
+
+/**
+ * Allows the user to retrieve storage information from a BLK device.
+ */
+service Storage {
+    /**
+     * Returns the percentage of disk space that is currently free.
+     *
+     * Authorization Scopes:
+     *  - `info`
+     */
+    rpc GetDiskStatus(google.protobuf.Empty) returns (DiskStatusResponse);
+}

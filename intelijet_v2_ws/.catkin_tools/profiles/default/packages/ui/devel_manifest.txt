@@ -1,0 +1,5 @@
+ui
+/mnt/c/work/projects/intelijet_v2/intelijet_v2_ws/devel/.private/ui/lib/pkgconfig/ui.pc /mnt/c/work/projects/intelijet_v2/intelijet_v2_ws/devel/lib/pkgconfig/ui.pc
+/mnt/c/work/projects/intelijet_v2/intelijet_v2_ws/devel/.private/ui/lib/ui/main_gui.py /mnt/c/work/projects/intelijet_v2/intelijet_v2_ws/devel/lib/ui/main_gui.py
+/mnt/c/work/projects/intelijet_v2/intelijet_v2_ws/devel/.private/ui/share/ui/cmake/uiConfig-version.cmake /mnt/c/work/projects/intelijet_v2/intelijet_v2_ws/devel/share/ui/cmake/uiConfig-version.cmake
+/mnt/c/work/projects/intelijet_v2/intelijet_v2_ws/devel/.private/ui/share/ui/cmake/uiConfig.cmake /mnt/c/work/projects/intelijet_v2/intelijet_v2_ws/devel/share/ui/cmake/uiConfig.cmake

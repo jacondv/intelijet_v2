@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sample ROS Wrapper &mdash; BLK ARC Module API 0.9.0 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/sphinx_highlight.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="Workflow Examples" href="examples.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            BLK ARC Module API
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="introduction.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="blk_arc.html">About the BLK ARC</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="python.html">API Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples.html">Workflow Examples</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Sample ROS Wrapper</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#system-requirements">System Requirements</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#contained-packages">Contained Packages</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#installation">Installation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#running-the-blk-arc-ros-node">Running the BLK ARC ROS Node</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#available-topics-services-and-actions">Available Topics, Services and Actions</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#services">Services</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#actions">Actions</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#troubleshooting">Troubleshooting</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#running-the-rostests">Running the rostests</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">BLK ARC Module API</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Sample ROS Wrapper</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/ros.md.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section class="tex2jax_ignore mathjax_ignore" id="sample-ros-wrapper">
+<h1>Sample ROS Wrapper<a class="headerlink" href="#sample-ros-wrapper" title="Permalink to this heading"></a></h1>
+<p><strong>ros_blkarc</strong> is a collection of ROS packages for interfacing the BLK ARC using the python wrapper found under <code class="docutils literal notranslate"><span class="pre">src/python_sample_wrapper</span></code>. This guide assumes that you are already familiar with ROS.</p>
+<section id="system-requirements">
+<h2>System Requirements<a class="headerlink" href="#system-requirements" title="Permalink to this heading"></a></h2>
+<ul class="simple">
+<li><p>Ubuntu 20.04 with ROS Noetic installed. For the installation, please refer to the <a class="reference external" href="http://wiki.ros.org/noetic/Installation/Ubuntu">documentation provided by ROS</a>.</p></li>
+</ul>
+</section>
+<section id="contained-packages">
+<h2>Contained Packages<a class="headerlink" href="#contained-packages" title="Permalink to this heading"></a></h2>
+<ul class="simple">
+<li><p>ros_blkarc_driver: ROS driver for the BLK ARC</p></li>
+<li><p>ros_blkarc_msgs: Custom service and action messages for the BLK ARC</p></li>
+</ul>
+</section>
+<section id="installation">
+<h2>Installation<a class="headerlink" href="#installation" title="Permalink to this heading"></a></h2>
+<ol class="arabic simple">
+<li><p>Copy the whole API (BLKARC-Module-API) into the src folder of your <a class="reference external" href="http://wiki.ros.org/catkin/Tutorials/create_a_workspace">catkin workspace</a>.</p>
+<ul class="simple">
+<li><p>Alternatively, if you don’t want to copy it into your catkin workspace, you would need to symlink the ROS packages to your catkin workspace.</p>
+<ul>
+<li><p>Replace the [BLKARC-Module-API directory] and [catkin workspace directory] accordingly and run following terminal commands</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">ln</span> <span class="pre">-s</span> <span class="pre">[BLKARC-Module-API</span> <span class="pre">directory]/src/python_sample_wrapper/ros_sample_wrapper/ros_blkarc/</span> <span class="pre">[catkin</span> <span class="pre">workspace</span> <span class="pre">directory]/src/</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ln</span> <span class="pre">-s</span> <span class="pre">[BLKARC-Module-API</span> <span class="pre">directory]/src/python_sample_wrapper/ros_sample_wrapper/ros_blkarc_driver/</span> <span class="pre">[catkin</span> <span class="pre">workspace</span> <span class="pre">directory]/src/</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ln</span> <span class="pre">-s</span> <span class="pre">[BLKARC-Module-API</span> <span class="pre">directory]/src/python_sample_wrapper/ros_sample_wrapper/ros_blkarc_msgs/</span> <span class="pre">[catkin</span> <span class="pre">workspace</span> <span class="pre">directory]/src/</span></code></p></li>
+</ul>
+</li>
+<li><p>Example: For the first command, if both BLKARC-Module-API and catkin_ws folders are located in your home directory, run</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">ln</span> <span class="pre">-s</span> <span class="pre">~/BLKARC-Module-API/src/python_sample_wrapper/ros_sample_wrapper/ros_blkarc/</span> <span class="pre">~/catkin_ws/src/</span></code></p></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p>Install the BLKARC-Module-API following the instructions found in the beginning of this guide.</p></li>
+<li><p>Install the required catkin tools:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">sudo</span> <span class="pre">apt-get</span> <span class="pre">install</span> <span class="pre">ros-noetic-catkin</span> <span class="pre">python3-catkin-tools</span></code></p></li>
+</ul>
+</li>
+<li><p>If you are using a virtual environment, you need to install additional packages:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">python3</span> <span class="pre">-m</span> <span class="pre">pip</span> <span class="pre">install</span> <span class="pre">-r</span> <span class="pre">src/python_sample_wrapper/ros_sample_wrapper/ros_blkarc/requirements.txt</span></code></p></li>
+</ul>
+</li>
+<li><p>Build the ROS packages. In your catkin workspace, run</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">catkin</span> <span class="pre">build</span> <span class="pre">ros_blkarc</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">catkin</span> <span class="pre">build</span> <span class="pre">ros_blkarc_msgs</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">catkin</span> <span class="pre">build</span> <span class="pre">ros_blkarc_driver</span></code></p></li>
+</ul>
+</li>
+<li><p>Remember to <code class="docutils literal notranslate"><span class="pre">source</span> <span class="pre">devel/setup.bash</span></code> your catkin workspace after building before you can start using the package.</p></li>
+</ol>
+</section>
+<section id="running-the-blk-arc-ros-node">
+<h2>Running the BLK ARC ROS Node<a class="headerlink" href="#running-the-blk-arc-ros-node" title="Permalink to this heading"></a></h2>
+<ol class="arabic simple">
+<li><p>Go to <code class="docutils literal notranslate"><span class="pre">src/python_sample_wrapper/ros_sample_wrapper/ros_blkarc_driver/launch/blkarc_bringup.launch</span></code> and change the necessary configuration information (e.g. connection_type) if necessary</p></li>
+<li><p>Connect your BLK ARC to your computer based on the connection type you specified in the launch file.</p></li>
+<li><p>Run <code class="docutils literal notranslate"><span class="pre">roslaunch</span> <span class="pre">ros_blkarc_driver</span> <span class="pre">blkarc_bringup.launch</span></code></p>
+<ul class="simple">
+<li><p>If connected successfully, the message “[BLKARCROSWrapper] Successfully connected to BLK over … connection” will be displayed in the terminal.</p></li>
+</ul>
+</li>
+<li><p>Using a second terminal, you can now command the BLK ARC using the topics/services/actions shown below.</p></li>
+</ol>
+</section>
+<section id="available-topics-services-and-actions">
+<h2>Available Topics, Services and Actions<a class="headerlink" href="#available-topics-services-and-actions" title="Permalink to this heading"></a></h2>
+<p>Below are the topics, services and actions available once the BLK ARC ROS Node has been launched, with terminal commands to call them. For more details on how to call the services/actions using Python 3 code, users can refer to the rostests found in <code class="docutils literal notranslate"><span class="pre">src/python_sample_wrapper/ros_sample_wrapper/ros_blkarc_driver/test</span></code>.</p>
+<p><strong>Note</strong>: All topic/service/action names are namespaced with the sensor_name specified in <code class="docutils literal notranslate"><span class="pre">blkarc_bringup.launch</span></code>, which by default is set to <code class="docutils literal notranslate"><span class="pre">blkarc</span></code>. Please replace the <code class="docutils literal notranslate"><span class="pre">blkarc</span></code> in the provided commands below with the sensor_name you have specified yourself.</p>
+<section id="services">
+<h3>Services<a class="headerlink" href="#services" title="Permalink to this heading"></a></h3>
+<ul class="simple">
+<li><p>/connect</p>
+<ul>
+<li><p>Description: Connect to the BLK ARC sensor</p></li>
+<li><p>Terminal command: <code class="docutils literal notranslate"><span class="pre">rosservice</span> <span class="pre">call</span> <span class="pre">/blkarc/connect</span></code></p></li>
+</ul>
+</li>
+<li><p>/disconnect</p>
+<ul>
+<li><p>Description: Disconnect from the BLK ARC sensor</p></li>
+<li><p>Terminal command: <code class="docutils literal notranslate"><span class="pre">rosservice</span> <span class="pre">call</span> <span class="pre">/blkarc/disconnect</span></code></p></li>
+</ul>
+</li>
+<li><p>/reboot</p>
+<ul>
+<li><p>Description: Reboot BLK ARC sensor. Wait around 45 seconds before attempting to connect to device again</p></li>
+<li><p>Terminal command: <code class="docutils literal notranslate"><span class="pre">rosservice</span> <span class="pre">call</span> <span class="pre">/blkarc/reboot</span></code></p></li>
+</ul>
+</li>
+<li><p>/get_device_state</p>
+<ul>
+<li><p>Description: Provides the current state of the device, refer to GetDeviceState.srv for all possible states</p></li>
+<li><p>Terminal command: <code class="docutils literal notranslate"><span class="pre">rosservice</span> <span class="pre">call</span> <span class="pre">/blkarc/get_device_state</span></code></p></li>
+</ul>
+</li>
+<li><p>/start_capture</p>
+<ul>
+<li><p>Description: Start a capture session, device must be in IDLE state (use /get_device_status service to ensure this) to start successfully</p></li>
+<li><p>Terminal command: <code class="docutils literal notranslate"><span class="pre">rosservice</span> <span class="pre">call</span> <span class="pre">/blkarc/start_capture</span></code></p></li>
+</ul>
+</li>
+<li><p>/stop_capture</p>
+<ul>
+<li><p>Description: Stop a capture session</p></li>
+<li><p>Terminal command: <code class="docutils literal notranslate"><span class="pre">rosservice</span> <span class="pre">call</span> <span class="pre">/blkarc/stop_capture</span></code></p></li>
+</ul>
+</li>
+<li><p>/begin_static_pose</p>
+<ul>
+<li><p>Description: Begin scanning in a static pose. A capture must have already started</p></li>
+<li><p>Terminal command: <code class="docutils literal notranslate"><span class="pre">rosservice</span> <span class="pre">call</span> <span class="pre">/blkarc/begin_static_pose</span></code></p></li>
+</ul>
+</li>
+<li><p>/end_static_pose</p>
+<ul>
+<li><p>Description: End a static pose. BLK ARC must already be static pose scanning</p></li>
+<li><p>Terminal command: <code class="docutils literal notranslate"><span class="pre">rosservice</span> <span class="pre">call</span> <span class="pre">/blkarc/end_static_pose</span></code></p></li>
+</ul>
+</li>
+<li><p>/trigger_detail_image</p>
+<ul>
+<li><p>Description: Trigger a detailed image. BLK ARC must already be scanning/ static pose scanning</p></li>
+<li><p>Terminal command: <code class="docutils literal notranslate"><span class="pre">rosservice</span> <span class="pre">call</span> <span class="pre">/blkarc/trigger_detail_image</span></code></p></li>
+</ul>
+</li>
+<li><p>/download_scan</p>
+<ul>
+<li><p>Description: Download a scan with scan_id and save it to the directory specified by scan_save_directory in the launch file. Set scan_id to -1 to download the latest scan.</p></li>
+<li><p>Terminal command (replace 0 with a appropriate scan_id): <code class="docutils literal notranslate"><span class="pre">rosservice</span> <span class="pre">call</span> <span class="pre">/blkarc/download_scan</span> <span class="pre">&quot;scan_id:</span> <span class="pre">0&quot;</span></code></p></li>
+</ul>
+</li>
+</ul>
+</section>
+<section id="actions">
+<h3>Actions<a class="headerlink" href="#actions" title="Permalink to this heading"></a></h3>
+<ul class="simple">
+<li><p>/timed_scan</p>
+<ul>
+<li><p>Description: Automatically runs a scan session with a duration of scan_time_seconds</p>
+<ul>
+<li><p>Note: You will not be able to use the other services until the action has completed or the action is cancelled</p></li>
+</ul>
+</li>
+<li><p>Running from terminal:</p>
+<ul>
+<li><p>Sending goal: <code class="docutils literal notranslate"><span class="pre">rostopic</span> <span class="pre">pub</span> <span class="pre">-1</span> <span class="pre">/blkarc/timed_scan/goal</span> <span class="pre">ros_blkarc_msgs/TimedScanActionGoal</span> <span class="pre">'{goal:</span> <span class="pre">{scan_time_seconds:</span> <span class="pre">20}}'</span></code></p></li>
+<li><p>Receiving feedback: <code class="docutils literal notranslate"><span class="pre">rostopic</span> <span class="pre">echo</span> <span class="pre">/blkarc/timed_scan/feedback</span></code></p></li>
+<li><p>Cancel action midway: <code class="docutils literal notranslate"><span class="pre">rostopic</span> <span class="pre">pub</span> <span class="pre">-1</span> <span class="pre">/blkarc/timed_scan/cancel</span> <span class="pre">actionlib_msgs/GoalID</span> <span class="pre">{}</span></code></p></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</section>
+</section>
+<section id="troubleshooting">
+<h2>Troubleshooting<a class="headerlink" href="#troubleshooting" title="Permalink to this heading"></a></h2>
+<ul class="simple">
+<li><p>If there are issues with running the BLK ARC ROS Node, we recommend that you first ensure you can connect to the device using the BLK ARC Module API directly and successfully run the example scripts found under <code class="docutils literal notranslate"><span class="pre">src/python_sample_wrapper/examples</span></code>.</p></li>
+</ul>
+</section>
+<section id="running-the-rostests">
+<h2>Running the rostests<a class="headerlink" href="#running-the-rostests" title="Permalink to this heading"></a></h2>
+<ol class="arabic simple">
+<li><p>Go to <code class="docutils literal notranslate"><span class="pre">ros_blkarc_driver/test/test_setup.launch</span></code> and change the necessary configuration information (e.g. connection_type) if necessary.</p></li>
+<li><p>Connect your BLK ARC to your computer, either through USB or Wi-Fi, but not both. We recommend using USB connection for tests because during reboot test, Wifi connection will drop and you will have to manually reconnect yourself.</p></li>
+<li><p>In your catkin workspace, run <code class="docutils literal notranslate"><span class="pre">catkin</span> <span class="pre">test</span> <span class="pre">ros_blkarc_driver</span></code>.</p></li>
+</ol>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="examples.html" class="btn btn-neutral float-left" title="Workflow Examples" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Alex Hönger, Teng Foong Lam, Pascal Schoppmann.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

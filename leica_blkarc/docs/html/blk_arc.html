@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>About the BLK ARC &mdash; BLK ARC Module API 0.9.0 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/sphinx_highlight.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Installation" href="installation.html" />
+    <link rel="prev" title="Introduction" href="introduction.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            BLK ARC Module API
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="introduction.html">Introduction</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">About the BLK ARC</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#overview">Overview</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#environmental">Environmental</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#network-communication">Network communication</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#power-requirements">Power Requirements</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#connectors">Connectors</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#mounting-interface">Mounting Interface</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#field-of-view">Field of View</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="python.html">API Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples.html">Workflow Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ros.html">Sample ROS Wrapper</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">BLK ARC Module API</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">About the BLK ARC</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/blk_arc.md.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section class="tex2jax_ignore mathjax_ignore" id="about-the-blk-arc">
+<h1>About the BLK ARC<a class="headerlink" href="#about-the-blk-arc" title="Permalink to this heading"></a></h1>
+<section id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Permalink to this heading"></a></h2>
+<a class="reference internal image-reference" href="_images/BLK_ARC.png"><img alt="BLK-ARC-Image" class="align-center" src="_images/BLK_ARC.png" style="width: 300px;" /></a>
+<p>The BLK ARC is an autonomous laser scanning module based on the GrandSLAM technology, that combines multiple sensors in order to collect spatial data and define the position of the scanner relative to the space around it.</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Specification</p></th>
+<th class="head"><p>Value</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Dimensions</p></td>
+<td><p>Height: 183.6 mm / Width: 80 mm / Length: 92.5 mm</p></td>
+</tr>
+<tr class="row-odd"><td><p>Net weight</p></td>
+<td><p>690 g</p></td>
+</tr>
+<tr class="row-even"><td><p>Storage</p></td>
+<td><p>24 hours of scanning (compressed data) / 6 hours (uncompressed data)</p></td>
+</tr>
+<tr class="row-odd"><td><p>Lidar</p></td>
+<td><p>830 nm wavelength with a range of 0.5m to 25m and relative accuracy of 6-15 mm</p></td>
+</tr>
+<tr class="row-even"><td><p>Point measurement rate</p></td>
+<td><p>420.000 points / second</p></td>
+</tr>
+<tr class="row-odd"><td><p>HighRes camera</p></td>
+<td><p>12 MPixel, rolling shutter</p></td>
+</tr>
+<tr class="row-even"><td><p>Panoramic vision system</p></td>
+<td><p>3-camera system, 4.8 Mpixel 360° x 125°, global shutter</p></td>
+</tr>
+<tr class="row-odd"><td><p>Communication</p></td>
+<td><p>USB 2.0 and Wi-Fi</p></td>
+</tr>
+</tbody>
+</table>
+<section id="environmental">
+<h3>Environmental<a class="headerlink" href="#environmental" title="Permalink to this heading"></a></h3>
+<ul class="simple">
+<li><p>Robustness - Designed for indoor and outdoor use</p></li>
+<li><p>Operating temperature 0 to +40 °C</p></li>
+<li><p>Dust &amp; humidity protection IP54 (IEC 60529)</p></li>
+</ul>
+<p>Note: Fan/Ventilation might require to be exchanged after a certain time. The measurement performance of the BLK ARC module can degrade over time in highly dusty environments due to its lack of airtightness (which depends on factors such as dust particle size and number of operation hours).</p>
+</section>
+<section id="network-communication">
+<h3>Network communication<a class="headerlink" href="#network-communication" title="Permalink to this heading"></a></h3>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Connectivity</p></th>
+<th class="head"><p></p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Wi-Fi</p></td>
+<td><p>802.11gn</p></td>
+</tr>
+<tr class="row-odd"><td><p>USB Ethernet</p></td>
+<td><p>100 MBit/s</p></td>
+</tr>
+</tbody>
+</table>
+<p>The device is reachable as a network device via USB. The IP is statically set to 192.168.42.1. DHCP is available.</p>
+<p>The device runs in either of two wireless network modes:</p>
+<ul class="simple">
+<li><p><strong>BLK ARC as a Wi-Fi access point (AP)</strong>.
+Applications with physical proximity to the BLK ARC, like the Leica Geosystems provided mobile application BLK ARC Live, can connect to the WiFi access point and communicate directly without any networking infrastructure. The AP password is printed on the “Connection Settings” card that you got together with your BLK ARC. The device is reachable on the static IP 10.1.1.1 if not configured otherwise.</p></li>
+<li><p><strong>BLK ARC as a Wi-Fi client</strong>.
+BLK ARC can join an existing Wi-Fi network, and applications can also join the same Wi-Fi network to talk to the device. This approach increases the possible range between application and the BLK ARC and allows to use the 5Ghz frequencies for faster data transfer.</p></li>
+</ul>
+</section>
+</section>
+<section id="power-requirements">
+<h2>Power Requirements<a class="headerlink" href="#power-requirements" title="Permalink to this heading"></a></h2>
+<ul class="simple">
+<li><p>Supply power range: 9 V to 48 V</p></li>
+<li><p>Maximum power: 25 W</p></li>
+</ul>
+<p>Please ensure that the power supply you use for the BLK ARC falls within the specified voltage range and meets the power requirement. Using a power supply outside of these limits or could cause damage to the device or result in unsafe operating conditions.</p>
+<section id="connectors">
+<h3>Connectors<a class="headerlink" href="#connectors" title="Permalink to this heading"></a></h3>
+<ul class="simple">
+<li><p>USB connector socket type C</p></li>
+<li><p>Power socket 5.5x2.5 DC Jack</p></li>
+</ul>
+<p><strong>Note</strong>: Two (power) modes of operation are available:</p>
+<ol class="arabic simple">
+<li><p>Data reading only mode – BLK ARC module is powered over USB-C only (5V, 0.5A/2.5W max). In this mode it’s not possible to scan – only to download data.</p></li>
+<li><p>Regular operation mode – All functionalities available.</p></li>
+</ol>
+<p>To start the BLK ARC module, a proper USB connection is required. If power is supplied before start, the regular operation mode will be entered. If only a USB connection is provided, the BLK ARC will enter the Data reading only mode. Once in Data reading only mode, if a supply voltage is subsequently connected, initiating a reboot gRPC command will transition it back to the regular operation mode.</p>
+</section>
+</section>
+<section id="mounting-interface">
+<h2>Mounting Interface<a class="headerlink" href="#mounting-interface" title="Permalink to this heading"></a></h2>
+<p>The BLK ARC mounting interface is provided at the bed-plate, by three M4 srew-holes. Two additional pin-holes (one regular and one elongated hole) serve as an accurate reference if required.</p>
+<a class="reference internal image-reference" href="_images/mounting_interface.png"><img alt="BLK ARC Mounting Interface" class="align-center" src="_images/mounting_interface.png" style="width: 450px;" /></a>
+</section>
+<section id="field-of-view">
+<h2>Field of View<a class="headerlink" href="#field-of-view" title="Permalink to this heading"></a></h2>
+<p>The provided LiDAR FoV is 360 degrees horizontal, and 270 degrees vertical. The laser emiting source is centered at the spherical protection dome.</p>
+<p>The three panoramic cameras are arranged in a landscape 360 degree arrangement, providing a vertical FoV of about 100 degrees each. The detail image provides a resolution of 12 MPixel with a horizontal FOE of 90 degress and a vertical FOV of 120 degrees.</p>
+<p>Note: the actual camera center and FoV slightly varies due to manufacturing tolerances, but each camera is precisely calibrated and accounted for.</p>
+<p>Please find the positions of the cameras in the drawing below:</p>
+<a class="reference internal image-reference" href="_images/camera_fov.png"><img alt="BLK ARC Camera of View" class="align-center" src="_images/camera_fov.png" style="width: 450px;" /></a>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="introduction.html" class="btn btn-neutral float-left" title="Introduction" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="installation.html" class="btn btn-neutral float-right" title="Installation" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Alex Hönger, Teng Foong Lam, Pascal Schoppmann.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

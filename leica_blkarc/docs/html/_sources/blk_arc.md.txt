@@ -1,0 +1,91 @@
+# About the BLK ARC
+
+## Overview
+
+```{image} images/BLK_ARC.png
+:alt: BLK-ARC-Image
+:width: 300px
+:align: center
+```
+
+The BLK ARC is an autonomous laser scanning module based on the GrandSLAM technology, that combines multiple sensors in order to collect spatial data and define the position of the scanner relative to the space around it.
+
+| Specification           | Value                                                                          |
+| ----------------------- | ------------------------------------------------------------------------------ |
+| Dimensions              | Height: 183.6 mm / Width: 80 mm / Length: 92.5 mm                              |
+| Net weight              | 690 g                                                                          |
+| Storage                 | 24 hours of scanning (compressed data) / 6 hours (uncompressed data)           |
+| Lidar                   | 830 nm wavelength with a range of 0.5m to 25m and relative accuracy of 6-15 mm |
+| Point measurement rate  | 420.000 points / second                                                        |
+| HighRes camera          | 12 MPixel, rolling shutter                                                     |
+| Panoramic vision system | 3-camera system, 4.8 Mpixel 360° x 125°, global shutter                        |
+| Communication           | USB 2.0 and Wi-Fi                                                              |
+
+### Environmental
+
+- Robustness - Designed for indoor and outdoor use
+- Operating temperature 0 to +40 °C
+- Dust & humidity protection IP54 (IEC 60529)
+
+Note: Fan/Ventilation might require to be exchanged after a certain time. The measurement performance of the BLK ARC module can degrade over time in highly dusty environments due to its lack of airtightness (which depends on factors such as dust particle size and number of operation hours).
+
+### Network communication
+
+| Connectivity |            |
+| ------------ | ---------- |
+| Wi-Fi        | 802.11gn   |
+| USB Ethernet | 100 MBit/s |
+
+The device is reachable as a network device via USB. The IP is statically set to 192.168.42.1. DHCP is available.
+
+The device runs in either of two wireless network modes:
+
+- **BLK ARC as a Wi-Fi access point (AP)**.
+  Applications with physical proximity to the BLK ARC, like the Leica Geosystems provided mobile application BLK ARC Live, can connect to the WiFi access point and communicate directly without any networking infrastructure. The AP password is printed on the "Connection Settings" card that you got together with your BLK ARC. The device is reachable on the static IP 10.1.1.1 if not configured otherwise.
+- **BLK ARC as a Wi-Fi client**.
+  BLK ARC can join an existing Wi-Fi network, and applications can also join the same Wi-Fi network to talk to the device. This approach increases the possible range between application and the BLK ARC and allows to use the 5Ghz frequencies for faster data transfer.
+
+## Power Requirements
+
+- Supply power range: 9 V to 48 V
+- Maximum power: 25 W
+
+Please ensure that the power supply you use for the BLK ARC falls within the specified voltage range and meets the power requirement. Using a power supply outside of these limits or could cause damage to the device or result in unsafe operating conditions.
+
+### Connectors
+
+- USB connector socket type C
+- Power socket 5.5x2.5 DC Jack
+
+**Note**: Two (power) modes of operation are available:
+
+1.  Data reading only mode – BLK ARC module is powered over USB-C only (5V, 0.5A/2.5W max). In this mode it’s not possible to scan – only to download data.
+2.  Regular operation mode – All functionalities available.
+
+To start the BLK ARC module, a proper USB connection is required. If power is supplied before start, the regular operation mode will be entered. If only a USB connection is provided, the BLK ARC will enter the Data reading only mode. Once in Data reading only mode, if a supply voltage is subsequently connected, initiating a reboot gRPC command will transition it back to the regular operation mode.
+
+## Mounting Interface
+
+The BLK ARC mounting interface is provided at the bed-plate, by three M4 srew-holes. Two additional pin-holes (one regular and one elongated hole) serve as an accurate reference if required.
+
+```{image} images/mounting_interface.png
+:alt: BLK ARC Mounting Interface
+:width: 450px
+:align: center
+```
+
+## Field of View
+
+The provided LiDAR FoV is 360 degrees horizontal, and 270 degrees vertical. The laser emiting source is centered at the spherical protection dome.
+
+The three panoramic cameras are arranged in a landscape 360 degree arrangement, providing a vertical FoV of about 100 degrees each. The detail image provides a resolution of 12 MPixel with a horizontal FOE of 90 degress and a vertical FOV of 120 degrees.
+
+Note: the actual camera center and FoV slightly varies due to manufacturing tolerances, but each camera is precisely calibrated and accounted for.
+
+Please find the positions of the cameras in the drawing below:
+
+```{image} images/camera_fov.png
+:alt: BLK ARC Camera of View
+:width: 450px
+:align: center
+```

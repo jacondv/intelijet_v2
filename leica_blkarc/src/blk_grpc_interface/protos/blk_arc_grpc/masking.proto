@@ -1,0 +1,182 @@
+syntax = "proto3";
+
+package api.blk;
+
+/**
+ * A mask of width * height bits, encoded into continuous bytes in transfer.
+ * To be interpreted as a bitmask, where 1 = masked, and 0 = unmasked.
+ *
+ * Encoding is done "height first", meaning that the mask is transferred "row
+ * by row", left to right, rows from top to bottom. The amount of bytes sent
+ * per row must be encoded in the `bytes_per_row` field. There must be at least
+ * `image_width_pixels` % 8 bytes sent. In case the image width is not
+ * dividable by 8, an additional byte per row must be sent. The last byte may
+ * contain padding bits at the end. In each row, pixel masks are encoded "left
+ * to right". The `image_width_pixels` encodes the actual bits sent per row.
+ *
+ * The amount of rows sent must always be equal to the `image_height_pixels`
+ * field.
+ *
+ * The mask is always applied and interpreted to the distorted image from the
+ * SLAM camera.
+ */
+message BitMask {
+    uint64 image_width_pixels  = 1;
+    uint64 image_height_pixels = 2;
+    uint64 bytes_per_row       = 3;
+    bytes data                 = 4;
+}
+
+/**
+ * A mask of width * height bytes, encoded into continuous bytes in transfer.
+ *
+ * To be interpreted as a 0 byte meaning "unmasked". At time of writing any
+ * byte not equal 0 will mean masked. This is subject to change in the future,
+ * where more elaborate interpretations of values are possible.
+ *
+ * Mask is interpreted as quadrants of azimuth + elevation combinations. Bytes
+ * are transmitted row-wise in terms of elevation, then from -180 to 180
+ * degrees on the azimuth axis.
+ */
+message ByteMask {
+    uint64 width  = 1;
+    uint64 height = 2;
+    bytes data    = 3;
+}
+
+/**
+ * The Mask identifier.
+ */
+enum MaskIdentifier {
+    TYPE_UNSET         = 0;
+    LIDAR              = 1;
+    SLAM_CAMERA_LEFT   = 2;
+    SLAM_CAMERA_CENTER = 3;
+    SLAM_CAMERA_RIGHT  = 4;
+}
+
+/**
+ * A SLAM camera mask.
+ *
+ * It contains the bit mask for the camera, where each bit specifies if a pixel
+ * in raw camera image should be masked or not. This means that the mask is
+ * applied to the distorted image of the camera!
+ *
+ * Also see description of BitMask.
+ */
+message SLAMCameraMask {
+    /**
+     * The mask contained in the message.
+     */
+    BitMask bit_mask = 2;
+}
+
+/**
+ * A Lidar mask.
+ *
+ * The Lidar mask is an equirectangular projection of Azimuth angles (width)
+ * and Elevation angles (height).
+ *
+ * The width of the mask is fixed to 2048, which
+ * represents discrete angle ranges between [-180, 180] in azimuth, with 0
+ * degrees in the middle.
+ *
+ * The height of the mask is fixed to 1024, which
+ * represents discrete angle ranges between [+90, -90] in elevation, with 0
+ * degrees in the middle.
+ *
+ * The vector through 0/0 in the mask is parallel to the axis through the front
+ * facing camera of the scanner, that is "0/0" is the natural "pointing straight
+ * ahead of the device".
+ *
+ * Also see description of ByteMask.
+ */
+message LidarMask {
+    /** The mask contained in the message. */
+    ByteMask byte_mask = 1;
+}
+
+/**
+ * A complete description of a mask.
+ */
+message MaskDescription {
+    /** The type of mask transmitted. */
+    MaskIdentifier id = 1;
+
+    /** The mask contained. */
+    oneof mask {
+        SLAMCameraMask slam_mask = 2;
+        LidarMask lidar_mask     = 3;
+    }
+}
+
+/**
+ * Request for a certain mask.
+ */
+message MaskRequest {
+    /** Identifier of the requested mask. */
+    MaskIdentifier id = 1;
+}
+
+/**
+ * Response after setting a mask.
+ */
+message MaskSetResponse {
+}
+
+/**
+ * Response after resetting a mask.
+ */
+message MaskResetResponse {
+}
+
+/**
+ * The masking service that can be used to manage SLAM camera and Lidar masks
+ * that get applied and saved into scans.
+ *
+ * The capture application always starts up with empty masks. This means that
+ * after a reboot or capture application crash, the last configured mask is
+ * lost.
+ */
+service Masking {
+    /**
+     * Reset the mask of a certain type. Afterwards the mask is "all clear",
+     * i.e. no masking is taking place for the specific type.
+     *
+     * Authorization Scopes:
+     *  - `masking`
+     */
+    rpc ResetMask(MaskRequest) returns (MaskResetResponse);
+
+    /**
+     * Get the mask of a certain type currently configured.
+     *
+     * Before any mask is set, this will return an "all clear" mask of the size
+     * expected for the relevant type.
+     *
+     * Error Codes:
+     *  - gRPC status 7 (PERMISSION_DENIED): If the caller token does not have access to the necessary scopes for the operation.
+     *  - gRPC status 16 (UNAUTHENTICATED): If the caller has not provided any Authentication Token in the headers.
+     *
+     * Authorization Scopes:
+     *  - `masking`
+     */
+    rpc GetMask(MaskRequest) returns (MaskDescription);
+
+    /**
+     * Set the mask of a certain type.
+     *
+     * This mask will be set and applied to any future scan. The mask is lost
+     * on capture application restart and reboot.
+     *
+     * Error Codes:
+     *  - gRPC status 7 (PERMISSION_DENIED): If the caller token does not have access to the necessary scopes for the operation.
+     *  - gRPC status 3 (INVALID_ARGUMENT): If the height or width of the mask
+     *                                      type does not meet the requirements for the sensor.
+     *  - gRPC status 16 (UNAUTHENTICATED): If the caller has not provided any Authentication Token in the headers.
+     *
+     * Authorization Scopes:
+     *  - `masking`
+     */
+    rpc SetMask(MaskDescription) returns (MaskSetResponse);
+}

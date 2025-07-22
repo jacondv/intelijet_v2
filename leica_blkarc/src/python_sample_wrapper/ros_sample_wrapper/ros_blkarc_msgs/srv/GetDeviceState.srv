@@ -1,0 +1,20 @@
+# Request message
+---
+# Response message
+# Note: Refer to DeviceStateResponse.State (to device.proto in blk_arc_grpc) for descriptions of each status
+uint8 STATE_UNKNOWN = 0 # Could not receive response from device, most likely disconnected
+uint8 STATE_BOOTING = 1
+uint8 STATE_OTA_IN_PROGRESS = 2
+uint8 STATE_FLASHING_HW_MAIN = 3
+uint8 STATE_FLASHING_HW_HEAD = 4
+uint8 STATE_IDLE = 5
+uint8 STATE_CAPTURE_STARTING = 6
+uint8 STATE_CAPTURE_RUNNING = 7
+uint8 STATE_CAPTURE_STOPPING = 8
+uint8 STATE_FAULT_BROKEN = 9
+uint8 STATE_FAULT_DEGRADED = 10
+uint8 STATE_FAULT_RECOVERABLE_DEGRADED = 11
+uint8 STATE_SHUTDOWN = 12
+uint8 STATE_CAPTURE_RUNNING_STATIC = 13
+uint8 state
+string message

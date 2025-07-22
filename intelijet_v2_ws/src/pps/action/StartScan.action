@@ -1,0 +1,12 @@
+# Goal
+uint64 scan_time_seconds
+string output_topic
+---
+# Result
+bool success
+string message
+int32 scan_id
+---
+# Feedback
+string status
+uint64 time_elapsed_seconds

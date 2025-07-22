@@ -1,0 +1,312 @@
+syntax = "proto3";
+
+import "google/protobuf/empty.proto";
+import "google/protobuf/timestamp.proto";
+
+package api.blk.scanlibrary;
+
+
+message ListItemsRequest {
+    /** Selector string to be used for the request. */
+    string selector = 1;
+}
+
+message ItemMetadata {
+    /**
+     * Name-value pairs of properties.
+     * Most keys are under control of the device and cannot be modified using the API.
+     * Only keys starting with "ext/" can be modified. Everything else is read-only.
+     *
+     * Non-exhaustive list of properties for the /scan-data/scans selector:
+     * - item/id The device unique number id
+     * - item/uuid The universal unique id of the scan
+     * - ext/display-name The name of the scan
+     * - ext/description A description for the scan
+     * - stats/detail_image_count The amount of detail camera image
+     * - stats/pano_image_count The amount of user requested panorama images
+     */
+    map<string, string> properties = 1;
+}
+
+message ItemInfo {
+    /** The item id. This can be a scan id or an image id. */
+    uint64 id = 6;
+    /** Selector pointing to the item. */
+    string path = 1;
+    /** Size of the item in bytes. */
+    uint64 size_bytes = 2;
+    /** UTC system time when the item was created. */
+    google.protobuf.Timestamp created = 3;
+    /** UTC system time when the item was last modified. */
+    google.protobuf.Timestamp modified = 4;
+    /** Metadata of the item as a key-value map. */
+    ItemMetadata metadata = 5;
+}
+
+message ItemList {
+    /** List of items matching the selector. */
+    repeated ItemInfo items = 1;
+}
+
+message LockItemRequest {
+    /** Selector pointing to the item to lock. */
+    string selector = 1;
+}
+
+message UnlockItemRequest {
+    /** Selector pointing to the item to unlock. */
+    string selector = 1;
+}
+
+message UpdateItemMetadataRequest {
+    /** Selector pointing to the item whose metadata should be updated. */
+    string selector = 1;
+    /** Map including all key-value pairs to be updated or added. */
+    ItemMetadata metadata = 2;
+}
+
+message DeleteItemMetadataRequest {
+    /** Selector pointing to the item whose metadata should be deleted. */
+    string selector = 1;
+    /** List of all the keys to be deleted. */
+    repeated string keys = 2;
+}
+
+message ReadItemRequest {
+    /** Selector pointing to the item to read. */
+    string path = 1;
+    /**
+     * Offset of the read buffer in bytes.
+     * By default, this should be set to 0, which corresponds to reading from the beginning of the file.
+     * This may be set to a different value if for example the connection dropped and the client wishes to continue the download, instead of restarting it.
+     * In this case, the `offset` field should be set to the size of the data currently received by the client, so that the first byte streamed will be the address of the last byte + 1.
+     * This would correspond to the `offset` received in the last message + the size of the chunk received.
+     */
+    uint64 offset = 2;
+    /**
+     * Length of the requested data block in bytes.
+     * Setting this field to 0 will continue streaming until the end of the requested file reached.
+     */
+    uint64 length = 3;
+}
+
+/**
+ * Receive items chunk-wise from the device.
+ *
+ * You will receive as many bytes as requested, or until the end of the object
+ * is reached. The final response given has the offset set to the position in
+ * the object until it was streamed, and a chunk_size of 0. If the whole object
+ * was requested, this means that offset will equal file size transmitted.
+ */
+message ReadItemResponse {
+    /**
+     * Zero-based starting offset of the first byte in the current data chunk.
+     * Assuming chunks of 5000 bytes, the first chunk will have an offset of 0 and the second chunk will have an offset of 5000.
+     */
+    uint64 offset = 1;
+    /** Size of the "data" field in bytes. */
+    uint64 chunk_size = 2;
+    /** Binary data chunk. */
+    bytes data = 3;
+    /** The total size in bytes, all chunks combined. Might be 0 if unknown. */
+    uint64 total_size = 4;
+}
+
+
+/**
+ * Allows a user to browse, list, update and download capture data from a BLK device.
+ * This service is deliberately generic and the methods work on `Items`. An item can be a scan or a camera image, for example.
+ * Items are addressed by the use of `Selectors`. A selector is a string that acts as a pointer to an item.
+ * An item has a unique selector path and can optionally have metadata attached.
+ *
+ * The methods described in this API often require the user to specify a `{scan_id}`.
+ * It can be specified as a number ("1" ... "999999") or as a scan identifier ("ds000001").
+ */
+service ScanLibrary {
+    /**
+     * List all items matching the selector string in the request and return a list
+     * including path, details and metadata for each item.
+     * This call will block until all items have been collected.
+     *
+     * This call may block for a long time until all scan details have been gathered.
+     * Use StreamItemInfo() for faster results.
+     *
+     * Selectors available:
+     *  - List all scans: `/scan-data/scans`.
+     *  - Get details from a single scan: `/scan-data/scans/{scan_id}`.
+     *  - List all detail camera images in a scan: `/scan-data/scans/{scan_id}/detail-images`.
+     *  - Get metadata from a single detail camera image: `/scan-data/scans/{scan_id}/detail-images/{image_id}`.
+     *  - List all panorama images in a scan: `/scan-data/scans/{scan_id}/pano-images`.
+     *  - Get metadata from a single panorama camera image: `/scan-data/scans/{scan_id}/pano-images/{image_id}`.
+     *
+     * Error Codes:
+     *  - gRPC status 3 (INVALID_ARGUMENT): If the selector provided is invalid regardless of the state of the system (i.e. malformed selector).
+     *  - gRPC status 5 (NOT_FOUND): If the selector provided does not exist.
+     *
+     * Authorization Scopes:
+     *  - `library`
+     */
+    rpc ListItems(ListItemsRequest) returns (ItemList);
+
+    /**
+     * List all items matching the selector string in the request and return a list
+     * including path, details and metadata for each item.
+     * This call is the streaming variant of `ListItems`. It will stream the items one by one instead of
+     * first generating a list and then returning it.
+     *
+     * Selectors available:
+     *  - List all scans: `/scan-data/scans`.
+     *  - Get details from a single scan: `/scan-data/scans/{scan_id}`.
+     *  - List all detail camera images in a scan: `/scan-data/scans/{scan_id}/detail-images`.
+     *  - Get metadata from a single detail camera image: `/scan-data/scans/{scan_id}/detail-images/{image_id}`.
+     *  - List all panorama images in a scan: `/scan-data/scans/{scan_id}/pano-images`.
+     *  - Get metadata from a single panorama camera image: `/scan-data/scans/{scan_id}/pano-images/{image_id}`.
+     *
+     * Error Codes:
+     *  - gRPC status 3 (INVALID_ARGUMENT): If the selector provided is invalid regardless of the state of the system (i.e. malformed selector).
+     *  - gRPC status 5 (NOT_FOUND): If the selector provided does not exist.
+     *
+     * Authorization Scopes:
+     *  - `library`
+     */
+    rpc StreamItemInfo(ListItemsRequest) returns (stream ItemInfo);
+
+    /**
+     * Lock a data storage item. Locked items are protected against modification and deletion.
+     * Only full scans can be locked, but not images within the scan or any other items.
+     * Nevertheless, locked items will be deleted upon a Factory Reset of the BLK device.
+     *
+     * Selectors available:
+     *  - Lock a scan: `/scan-data/scans/{scan_id}`.
+     *
+     * Error Codes:
+     *  - gRPC status 3 (INVALID_ARGUMENT): If the selector provided is invalid regardless of the state of the system (i.e. malformed selector).
+     *  - gRPC status 5 (NOT_FOUND): If the selector provided does not exist.
+     *  - gRPC status 6 (ALREADY_EXISTS): If the specified item is already locked.
+     *  - gRPC status 12 (UNIMPLEMENTED): If the requested item is not a scan. Please note this does not mean that locking other types of items will ever be implemented.
+     *
+     * Authorization Scopes:
+     *  - `library`
+     */
+    rpc LockItem(LockItemRequest) returns (google.protobuf.Empty);
+
+    /**
+     * Unlock a data storage item. This makes it possible to alter and delete the item.
+     *
+     * Selectors available:
+     *  - Unlock a scan: `/scan-data/scans/{scan_id}`.
+     *
+     * Error Codes:
+     *  - gRPC status 3 (INVALID_ARGUMENT): If the selector provided is invalid regardless of the state of the system (i.e. malformed selector).
+     *  - gRPC status 5 (NOT_FOUND): If the selector provided does not exist.
+     *  - gRPC status 9 (FAILED_PRECONDITION): If the specified item is currently not locked.
+     *  - gRPC status 12 (UNIMPLEMENTED): If the requested item is not a scan. Please note this does not mean that unlocking other types of items will ever be implemented.
+     *
+     * Authorization Scopes:
+     *  - `library`
+     */
+    rpc UnlockItem(UnlockItemRequest) returns (google.protobuf.Empty);
+
+    /**
+     * Update the metadata of an item. The metadata is stored as a key-value map.
+     * If the specified key does not exist, it will be added to the metadata. If it does exist, the value will be updated.
+     * Only properties starting with "ext/" can be changed using this API.
+     *
+     * Selectors available:
+     *  - Update scan metadata: `/scan-data/scans/{scan_id}`.
+     *
+     * Error Codes:
+     *  - gRPC status 3 (INVALID_ARGUMENT): If the selector provided is invalid regardless of the state of the system (i.e. malformed selector).
+     *  - gRPC status 5 (NOT_FOUND): If the selector provided does not exist.
+     *  - gRPC status 7 (PERMISSION_DENIED): If the key provided does not start with "ext/". Every other metadata key is read-only.
+     *  - gRPC status 9 (FAILED_PRECONDITION): If the specified item is currently locked.
+     *  - gRPC status 12 (UNIMPLEMENTED): If the requested item is not a scan. Please note this does not mean that updating metadata for other types of items will ever be implemented.
+     *
+     * Authorization Scopes:
+     *  - `library`
+     */
+    rpc UpdateItemMetadata(UpdateItemMetadataRequest) returns (google.protobuf.Empty);
+
+    /**
+     * Delete the specified keys from the metadata of an item.
+     *
+     * Selectors available:
+     *  - Delete scan metadata: `/scan-data/scans/{scan_id}`.
+     *
+     * Error Codes:
+     *  - gRPC status 3 (INVALID_ARGUMENT): If the selector provided is invalid regardless of the state of the system (i.e. malformed selector).
+     *  - gRPC status 5 (NOT_FOUND): If the selector provided does not exist. The error message thrown will be "Selector not found".
+     *  - gRPC status 5 (NOT_FOUND): If any of the specified keys do not exist. In this case, the operation will be aborted and no keys will be removed. The error message thrown will be "One or more of the keys specified do not exist".
+     *  - gRPC status 7 (PERMISSION_DENIED): If the key provided does not start with "ext/". Every other metadata key is read-only.
+     *  - gRPC status 9 (FAILED_PRECONDITION): If the specified item is currently locked.
+     *  - gRPC status 12 (UNIMPLEMENTED): If the requested item is not a scan. Please note this does not mean that deleting metadata for other types of items will ever be implemented.
+     *
+     * Authorization Scopes:
+     *  - `library`
+     */
+    rpc DeleteItemMetadata(DeleteItemMetadataRequest) returns (google.protobuf.Empty);
+
+    /**
+     * Delete an item from the BLK device.
+     * The item and all metadata associated with it will be deleted.
+     *
+     * Selectors available:
+     *  - Delete a specific scan: `/scan-data/scans/{scan_id}`.
+     *  - Delete all scans (except locked ones): `/scan-data/scans`.
+     *  - Delete a detail image: `/scan-data/scans/{scan_id}/detail-images/{image_id}`.
+     *
+     * Error Codes:
+     *  - gRPC status 3 (INVALID_ARGUMENT): If the selector provided is invalid regardless of the state of the system (i.e. malformed selector).
+     *  - gRPC status 5 (NOT_FOUND): If the selector provided does not exist.
+     *  - gRPC status 9 (FAILED_PRECONDITION): If the specified item is currently locked.
+     *  - gRPC status 12 (UNIMPLEMENTED): If the requested item is not a scan. Please note this does not mean that deleting other types of items will ever be implemented.
+     *
+     * Authorization Scopes:
+     *  - `library`
+     */
+    rpc DeleteItem(ListItemsRequest) returns (google.protobuf.Empty);
+
+    /**
+     * Retrieves the binary data associated to a given selector. The data is streamed in chunks of a size determined by the device.
+     *
+     * Streams of chunk are always terminated by a last message of chunk_size 0.
+     *
+     * Examples assuming a chunk-size determined by device to be 10 bytes,
+     * entity size is 24 bytes:
+     * Read Item request offset = 0, length = 0
+     * Read Item response # 0: offset =  0, chunk_size = 10
+     * Read Item response # 1: offset = 10, chunk_size = 10
+     * Read Item response # 2: offset = 20, chunk_size =  4
+     * Read Item response # 3: offset = 24, chunk_size =  0
+
+     * Read Item request offset = 8, length = 4
+     * Read Item response # 0: offset =  8, chunk_size =  4
+     * Read Item response # 1: offset = 12, chunk_size =  0
+     *
+     * NOTE: It is usually faster to download large scan files using the REST API. As an example:
+     * `curl http://{device-ip}/scandata/dsXXXXXX.b2g` will download scan file XXXXXX. This is always 6 characters long and leading zeroes must be added if necessary (for scan 42 -> 000042).
+     * This URL can also be entered in a browser for the file to be downloaded.
+     *
+     * Selectors available:
+     *  - Download a scan file (.b2g file): `/scan-data/scans/{scan_id}`.
+     *  - Download a detail camera image. The format is implementation defined and may be different for different firmware versions:
+     *    `/scan-data/scans/{scan_id}/detail-images/{image_id}`.
+     *  - Download a detail camera image in raw format. (Only available for scans taken with v2.2.0+):
+     *    `/scan-data/scans/{scan_id}/detail-images/{image_id}/raw`.
+     *  - Download a detail camera image as a low resolution JPEG. (Only available for scans taken with v2.2.0+):
+     *    `/scan-data/scans/{scan_id}/detail-images/{image_id}/jpeg-preview`.
+     *  - Download a detail camera image as ready to use full resolution JPEG. (Only available for scans taken with v3.3.0+):
+     *    `/scan-data/scans/{scan_id}/detail-images/{image_id}/jpeg-full`.
+     *  - Download a panorama camera image. The format is implementation defined and may be different for different firmware versions:
+     *    `/scan-data/scans/{scan_id}/pano-images/{image_id}`.
+     *
+     * Error Codes:
+     *  - gRPC status 3 (INVALID_ARGUMENT): If the selector provided is invalid regardless of the state of the system (i.e. malformed selector).
+     *  - gRPC status 5 (NOT_FOUND): If the selector provided does not exist.
+     *  - gRPC status 11 (OUT_OF_RANGE): If the `offset` or `length` fields exceed the file size or surpass the end of the file.
+     *
+     * Authorization Scopes:
+     *  - `library`
+     */
+    rpc ReadItem(ReadItemRequest) returns (stream ReadItemResponse);
+}

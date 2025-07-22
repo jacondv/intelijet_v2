@@ -1,0 +1,12 @@
+# Introduction
+
+Welcome to the documentation for the BLK ARC Module API, a Python package designed to provide an easy-to-use interface for controlling and communicating with BLK ARC devices using gRPC.
+
+With the BLK ARC Module API, integrators can easily interact with the BLK ARC by writing Python code that sends gRPC requests to the device, and receives responses back. The user will have the full control of BLK ARC, from data acquisition to download of scan data (.b2g file). This data can be used for multiple purposes, such as reality capture and autonomous navigation tasks.
+
+The BLK ARC Module API package provides a high-level API that abstracts away many of the complexities of working with gRPC, making it easy for integrators to get started quickly. The package also includes extensive documentation and examples to help integrators understand the various features and capabilities of the BLK ARC.
+
+We hope you find this documentation helpful and informative. If you have any questions or feedback, please don't hesitate to reach out to us.
+
+> LEICA GEOSYSTEMS WILL ONLY COMMIT TO OFFICIALLY RELEASED APIs. EXAMPLES ARE PROVIDED AS-IS.
+> LEICA GEOSYSTEMS IS NOT LIABLE FOR ANY DAMAGES CAUSED BY USING THE EXAMPLES OR API.

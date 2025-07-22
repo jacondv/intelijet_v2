@@ -1,0 +1,20 @@
+<?xml version="1.0" ?>
+<package format="2">
+  <name>ros_blkarc</name>
+  <version>0.9.0</version>
+  <description>
+    ROS packages that support the BLK ARC
+  </description>
+  <maintainer email="tengfoong.lam@hexagon.com">Lam Teng Foong</maintainer>
+  <author>Lam Teng Foong</author>
+  <license>Proprietary</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <exec_depend>ros_blkarc_driver</exec_depend>
+  <exec_depend>ros_blkarc_msgs</exec_depend>
+
+  <export>
+    <metapackage />
+  </export>
+</package>
