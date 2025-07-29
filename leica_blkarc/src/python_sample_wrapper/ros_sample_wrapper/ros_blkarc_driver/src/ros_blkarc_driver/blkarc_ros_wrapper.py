@@ -268,14 +268,18 @@ class BLKARCROSWrapper():
 
         # With required variables acquired, initialise BLK_ARC API and attempt connection to BLK ARC
         self._blk_arc = BLK_ARC()
-        connected_successfully = self._attempt_connection()
-
+        self.connected_successfully = self._attempt_connection()
+# DANH ------------------------------------------------------
+        self._terminate = False  # dùng để dừng thread monitor connection khi shutdown
+        self._connection_monitor_thread = threading.Thread(target=self._monitor_connection, daemon=True)
+        self._connection_monitor_thread.start()
+# -----------------------------------------------------------
         # If connection is not successful, raise error.
         # Enforce that ROS node should be connected on sensor upon startup
         # This is so user of node is guaranteed that sensor starts up in a connected state
         # And does not need to check this with an additional service call
         connection_type_msg = ConnectionType(self._blk_arc_connection_type).name
-        if not connected_successfully:
+        if not self.connected_successfully:
             rospy.logerr(
                 f"[BLKARCROSWrapper] Failed to connect to sensor during ROS node initialisation over {connection_type_msg} connection."
             )
@@ -406,7 +410,21 @@ class BLKARCROSWrapper():
                                            device_message.DeviceStateResponse.State.CAPTURE_STARTING,
                                            device_message.DeviceStateResponse.State.CAPTURE_STOPPING)
         return False
+# DANH ---- add monitor function to auto reconnect lidar device
 
+    def _monitor_connection(self):
+        while not self._terminate and not rospy.is_shutdown():
+            if not self.connected_successfully:
+                rospy.logwarn("[BLKARCROSWrapper] Sensor not connected. Attempting reconnection...")
+                try:
+                    self.connected_successfully = self._attempt_connection()
+                    if self.connected_successfully:
+                        rospy.loginfo("[BLKARCROSWrapper] Reconnected to sensor successfully.")
+                except Exception as e:
+                    rospy.logwarn(f"[BLKARCROSWrapper] Reconnection failed: {e}")
+            time.sleep(3)
+
+# -------------------------------------------------------------
     def _ready_to_scan(self) -> bool:
         device_status = self._blk_arc.get_device_status()
         if device_status:
@@ -415,7 +433,10 @@ class BLKARCROSWrapper():
 
     def close(self) -> None:
         rospy.loginfo("[BLKARCROSWrapper] Closing BLK ARC ROS Wrapper.")
-
+# DANH --------------------------------------------------
+        self._terminate = True
+        self._connection_monitor_thread.join()
+# -------------------------------------------------------------
         # If we are scanning, stop the scan
         if self._scanning_in_progress():
             self._blk_arc.stop_capture()

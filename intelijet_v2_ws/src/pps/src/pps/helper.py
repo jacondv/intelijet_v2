@@ -67,8 +67,6 @@ def compute_distance_histogram(
     plt.savefig(filename, format=filename.split('.')[-1])
     plt.close()
 
-import open3d as o3d
-import numpy as np
 
 def crop_pointcloud_by_box(pcd, box_type='aabb', center=None, extent=None,
                            min_bound=None, max_bound=None, rotation_rpy=(0, 0, 0)):

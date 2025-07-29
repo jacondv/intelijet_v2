@@ -618,46 +618,73 @@ class KeypointCloudAlignManager:
         self._T = self._compute_transform_matrix(source_points=keypoint3d_of_cloud2, target_points=keypoint3d_of_cloud1)
         return cloud1_crop, cloud2_crop
     
-    def _compute_transform_matrix(self, source_points, target_points, max_iterations=100, distance_threshold=0.05):
+    def _compute_transform_matrix(self, source_points, target_points, max_iterations=100, distance_threshold=0.05, ransac_point=5):
         """
-        source_points, target_points: list or Nx3 array of 3D keypoints (matched)
-        Returns: Best transform T (4x4)
+        RANSAC-based estimation of transform matrix with rotation clustering to remove outlier transforms.
         """
         source_points = np.array(source_points)
         target_points = np.array(target_points)
 
-        rospy.logwarn(f"[RANSAC] source_points shape: {source_points.shape}, target_points shape: {target_points.shape}")
         assert source_points.shape == target_points.shape
         n = source_points.shape[0]
 
-        best_inlier_count = 0
-        best_T = None
+        candidates = []  # Danh sách các ứng viên: (T, inlier_count)
 
         for i in range(max_iterations):
-            # Chọn ngẫu nhiên 3 điểm (3 là tối thiểu để định nghĩa transform 3D)
             idx = random.sample(range(n), 5)
             src_sample = source_points[idx]
             tgt_sample = target_points[idx]
 
-            # Tính transform từ mẫu
             T_candidate = self._estimate_transform(src_sample, tgt_sample)
 
-            # Áp dụng transform
             src_transformed = (T_candidate[:3, :3] @ source_points.T).T + T_candidate[:3, 3]
-
-            # Tính sai số từng điểm
             errors = np.linalg.norm(src_transformed - target_points, axis=1)
 
-            # Đếm số inliers
             inliers = errors < distance_threshold
             inlier_count = np.sum(inliers)
 
-            if inlier_count > best_inlier_count:
-                best_inlier_count = inlier_count
-                best_T = T_candidate
-                rospy.logwarn(f"[RANSAC] Iter {i}: New best inlier count = {inlier_count}")
+            if inlier_count > 0:
+                candidates.append((T_candidate, inlier_count))
 
-        rospy.logwarn(f"[RANSAC] Best inlier count: {best_inlier_count}/{n}")
+        # rospy.logwarn(f"[RANSAC] Total valid candidates: {len(candidates)}")
+
+        if not candidates:
+            return None  # Không có transform nào hợp lệ
+
+        # Tính hướng quay (rotation vector) từ ma trận xoay
+        def rotation_angle(R):
+            angle = np.arccos((np.trace(R) - 1) / 2)
+            return angle if not np.isnan(angle) else 0
+
+        # Tính độ lệch giữa các ma trận xoay
+        angles = [cv2.Rodrigues(T[0][:3, :3])[0].flatten() for T in candidates]
+
+        # Gom nhóm các ma trận có hướng quay gần nhau
+        grouped = []
+        used = [False] * len(angles)
+        angle_threshold = np.deg2rad(10)  # ngưỡng 10 độ
+
+        for i, a1 in enumerate(angles):
+            if used[i]:
+                continue
+            group = [i]
+            used[i] = True
+            for j, a2 in enumerate(angles):
+                if not used[j]:
+                    if np.linalg.norm(a1 - a2) < angle_threshold:
+                        group.append(j)
+                        used[j] = True
+            grouped.append(group)
+
+        # Chọn cụm lớn nhất
+        largest_group = max(grouped, key=len)
+        # rospy.logwarn(f"[RANSAC] Largest rotation group size: {len(largest_group)}")
+
+        # Chọn transform có inlier cao nhất trong cụm lớn nhất
+        best_idx = max(largest_group, key=lambda i: candidates[i][1])
+        best_T = candidates[best_idx][0]
+        # rospy.logwarn(f"[RANSAC] Best inlier count from group: {candidates[best_idx][1]}")
+
         return best_T
 
 

@@ -1,0 +1,43 @@
+pdos:
+  RxScannerCommandRos: # This is command from HMI to PLC to control the scanner
+    cob_id: 801 # This is COB_ID 0x321 RPDO2 offset at 0x300 in PLC Node ID 0x21
+    fields:
+      - name: bServiceOpenScanner
+        byte: 0
+        bit: 0
+        type: bool
+      - name: bServiceCloseScanner
+        byte: 0
+        bit: 1
+        type: bool
+      - name: bPerformPreScan
+        byte: 0
+        bit: 2
+        type: bool
+      - name: bPerformPostScan
+        byte: 0
+        bit: 3
+        type: bool
+      - name: bStop
+        byte: 0
+        bit: 4
+        type: bool
+      - name: bRequestingOverrideMode
+        byte: 0
+        bit: 5
+        type: bool
+      - name: bRequestForceScannerPowerOn
+        byte: 0
+        bit: 6
+        type: bool
+      - name: bEnableScannerPower
+        byte: 0
+        bit: 7
+        type: bool
+
+  RxZeroCommand: # This is command from HMI to PLC to request zeroing of the scanner
+    cob_id: 1932  
+    fields:
+      - name: gRx_byZeroRequest
+        byte: 0
+        type: byte #uint8

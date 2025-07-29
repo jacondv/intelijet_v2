@@ -30,7 +30,7 @@ POST_SCAN_IMAGE = "/post_scan_0/image"
 ENABLE_ALIGNMENT = True
 
 #IPC Param
-ICP_THRESHOLDS = [1.0, 0.1, 0.05]      # coarse → fine
+ICP_THRESHOLDS = [0.3, 0.15, 0.05]      # coarse → fine
 ICP_MAX_ITERS = [30, 40, 50]           # coarse → fine
 ICP_ALIGN_AREA = None                  # hoặc [[xmin, xmax], [ymin, ymax], [zmin, zmax]]
 
@@ -106,40 +106,23 @@ class CloudAlignNode:
             _, source_patch, T = self.__keypoint_manager.get_result()
             rospy.logwarn("T is:\n%s", T)
             __timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")  
-            # o3d.io.write_point_cloud(f"/mnt/c/work/projects/intelijet_v2/data/cloud1_target{__timestamp}.ply", cloud1_target)
-            # o3d.io.write_point_cloud(f"/mnt/c/work/projects/intelijet_v2/data/cloud2_source{__timestamp}.ply", cloud2_source)  
+            # o3d.io.write_point_cloud(f"/mnt/c/work/projects/intelijet_v2/data/cloud1_target{__timestamp}.ply", target_path)
+            # o3d.io.write_point_cloud(f"/mnt/c/work/projects/intelijet_v2/data/cloud2_source{__timestamp}.ply", source_patch)  
                     
             img = self.__keypoint_manager.draw_result()
             cv2.imwrite(f"/mnt/c/work/projects/intelijet_v2/data/keypoint_postcan_{__timestamp}.png", img)
             rospy.logwarn("[Aligner by keypoint]")
         else:
-            # cloud1_target = self.target
-            # cloud2_source = self.source
+            cloud1_target = self.target
+            cloud2_source = self.source
             rospy.logwarn("[Aligner by original cloud]")
 
-        # source_temp = copy.deepcopy(self.source)        
-
-        source_temp = copy.deepcopy(self.source)     
-        rospy.logwarn("source_temp T matrix 0 : \n%s", source_temp.transformation)
-        print("source_temp T matrix 0 : \n%s", source_temp.transformation)
-        source_temp.transform(T)
-        rospy.logwarn("source_temp T matrix 1 : \n%s", source_temp.transformation)
-        print("source_temp T matrix 1 : \n%s", source_temp.transformation)
-        _ = self.__aligner.align(source_temp, self.target)
-        rospy.logwarn("source_temp T matrix 2 : \n%s", source_temp.transformation)
-        print("source_temp T matrix 2 : \n%s", source_temp.transformation)
-        T_2 = self.__aligner.get_transformation_matrix()
-
-        source_patch.transform(T_2@T)
+        source_patch.transform(T)
         _ = self.__aligner.align(source_patch, self.target)
         T_3 = self.__aligner.get_transformation_matrix()
 
-        transformation_matrix = T_3@T_2@T
-        rospy.logwarn("transformation_matrix is : \n%s", transformation_matrix)
-        print("transformation_matrix is : \n%s", transformation_matrix)
+        transformation_matrix = T_3@T
 
-        # o3d.io.write_point_cloud(f"/mnt/c/work/projects/intelijet_v2/data/pcd1{__timestamp}.ply", pcd1)
-  
         result = copy.deepcopy(self.source)
         if transformation_matrix is not None:
             # Transform the source (postscan) cloud using the calculated transformation matrix

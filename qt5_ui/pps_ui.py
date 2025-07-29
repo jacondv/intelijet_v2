@@ -1,0 +1,118 @@
+# -*- coding: utf-8 -*-
+
+# Form implementation generated from reading ui file 'pps.ui'
+#
+# Created by: PyQt5 UI code generator 5.14.1
+#
+# WARNING! All changes made in this file will be lost!
+
+
+from PyQt5 import QtCore, QtGui, QtWidgets
+
+
+class Ui_Frame(object):
+    def setupUi(self, Frame):
+        Frame.setObjectName("Frame")
+        Frame.setWindowModality(QtCore.Qt.NonModal)
+        Frame.resize(800, 600)
+        Frame.setMaximumSize(QtCore.QSize(1920, 1080))
+        Frame.setBaseSize(QtCore.QSize(800, 600))
+        Frame.setStyleSheet("")
+        self.gridLayout_2 = QtWidgets.QGridLayout(Frame)
+        self.gridLayout_2.setObjectName("gridLayout_2")
+        self.tabWidget = QtWidgets.QTabWidget(Frame)
+        self.tabWidget.setStyleSheet("")
+        self.tabWidget.setObjectName("tabWidget")
+        self.tab_main = QtWidgets.QWidget()
+        self.tab_main.setObjectName("tab_main")
+        self.verticalLayout_3 = QtWidgets.QVBoxLayout(self.tab_main)
+        self.verticalLayout_3.setObjectName("verticalLayout_3")
+        self.horizontalLayout_2 = QtWidgets.QHBoxLayout()
+        self.horizontalLayout_2.setObjectName("horizontalLayout_2")
+        self.couldFrame = QtWidgets.QFrame(self.tab_main)
+        self.couldFrame.setMinimumSize(QtCore.QSize(627, 533))
+        self.couldFrame.setFrameShape(QtWidgets.QFrame.StyledPanel)
+        self.couldFrame.setFrameShadow(QtWidgets.QFrame.Raised)
+        self.couldFrame.setObjectName("couldFrame")
+        self.verticalLayout_2 = QtWidgets.QVBoxLayout(self.couldFrame)
+        self.verticalLayout_2.setObjectName("verticalLayout_2")
+        self.horizontalLayout_2.addWidget(self.couldFrame)
+        self.frame_3 = QtWidgets.QFrame(self.tab_main)
+        self.frame_3.setFrameShape(QtWidgets.QFrame.StyledPanel)
+        self.frame_3.setFrameShadow(QtWidgets.QFrame.Raised)
+        self.frame_3.setObjectName("frame_3")
+        self.formLayout = QtWidgets.QFormLayout(self.frame_3)
+        self.formLayout.setObjectName("formLayout")
+        self.btnCompare = QtWidgets.QPushButton(self.frame_3)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Minimum)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.btnCompare.sizePolicy().hasHeightForWidth())
+        self.btnCompare.setSizePolicy(sizePolicy)
+        self.btnCompare.setMinimumSize(QtCore.QSize(0, 50))
+        self.btnCompare.setMaximumSize(QtCore.QSize(16777215, 50))
+        self.btnCompare.setObjectName("btnCompare")
+        self.formLayout.setWidget(2, QtWidgets.QFormLayout.FieldRole, self.btnCompare)
+        self.btnPostScan = QtWidgets.QPushButton(self.frame_3)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Minimum)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.btnPostScan.sizePolicy().hasHeightForWidth())
+        self.btnPostScan.setSizePolicy(sizePolicy)
+        self.btnPostScan.setMinimumSize(QtCore.QSize(0, 50))
+        self.btnPostScan.setMaximumSize(QtCore.QSize(16777215, 50))
+        self.btnPostScan.setObjectName("btnPostScan")
+        self.formLayout.setWidget(3, QtWidgets.QFormLayout.FieldRole, self.btnPostScan)
+        self.btnCancel = QtWidgets.QPushButton(self.frame_3)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Minimum)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.btnCancel.sizePolicy().hasHeightForWidth())
+        self.btnCancel.setSizePolicy(sizePolicy)
+        self.btnCancel.setMinimumSize(QtCore.QSize(0, 50))
+        self.btnCancel.setMaximumSize(QtCore.QSize(16777215, 50))
+        self.btnCancel.setObjectName("btnCancel")
+        self.formLayout.setWidget(4, QtWidgets.QFormLayout.FieldRole, self.btnCancel)
+        self.btnPreScan = QtWidgets.QPushButton(self.frame_3)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Minimum)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.btnPreScan.sizePolicy().hasHeightForWidth())
+        self.btnPreScan.setSizePolicy(sizePolicy)
+        self.btnPreScan.setMinimumSize(QtCore.QSize(0, 50))
+        self.btnPreScan.setMaximumSize(QtCore.QSize(16777215, 50))
+        self.btnPreScan.setObjectName("btnPreScan")
+        self.formLayout.setWidget(5, QtWidgets.QFormLayout.FieldRole, self.btnPreScan)
+        self.horizontalLayout_2.addWidget(self.frame_3)
+        self.horizontalLayout_2.setStretch(0, 5)
+        self.horizontalLayout_2.setStretch(1, 1)
+        self.verticalLayout_3.addLayout(self.horizontalLayout_2)
+        self.tabWidget.addTab(self.tab_main, "")
+        self.tab_setting = QtWidgets.QWidget()
+        self.tab_setting.setObjectName("tab_setting")
+        self.tabWidget.addTab(self.tab_setting, "")
+        self.gridLayout_2.addWidget(self.tabWidget, 0, 1, 1, 1)
+
+        self.retranslateUi(Frame)
+        self.tabWidget.setCurrentIndex(0)
+        QtCore.QMetaObject.connectSlotsByName(Frame)
+
+    def retranslateUi(self, Frame):
+        _translate = QtCore.QCoreApplication.translate
+        Frame.setWindowTitle(_translate("Frame", "Frame"))
+        self.btnCompare.setText(_translate("Frame", "Compare"))
+        self.btnPostScan.setText(_translate("Frame", "Postscan"))
+        self.btnCancel.setText(_translate("Frame", "Cancel"))
+        self.btnPreScan.setText(_translate("Frame", "Prescan"))
+        self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_main), _translate("Frame", "Home"))
+        self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_setting), _translate("Frame", "Setting"))
+
+
+if __name__ == "__main__":
+    import sys
+    app = QtWidgets.QApplication(sys.argv)
+    Frame = QtWidgets.QFrame()
+    ui = Ui_Frame()
+    ui.setupUi(Frame)
+    Frame.show()
+    sys.exit(app.exec_())

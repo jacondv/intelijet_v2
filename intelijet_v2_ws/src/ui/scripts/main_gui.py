@@ -53,7 +53,7 @@ class HMIWidget(QWidget):
         self.setLayout(layout)
 
     def start_prescan(self):
-        self.cmd_pub.publish(String("start_prescan1"))
+        self.cmd_pub.publish(String("start_prescan"))
         self.status_label.setText("Requested PreScan...")
 
     def start_postscan(self):
