@@ -38,6 +38,7 @@ log/
 **/devel/
 **/install/
 **/log/
+**/logs/
 
 
 # === CMAKE ===
