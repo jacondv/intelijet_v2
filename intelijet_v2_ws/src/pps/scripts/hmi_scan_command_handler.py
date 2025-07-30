@@ -16,12 +16,12 @@ PRE_SCAN_TOPIC = "/pre_scan_0"
 POST_SCAN_TOPIC = "/post_scan_0"
 
 class ScanManagerNode:
-    def __init__(self, action_server_name= "/scan_scan"):
+    def __init__(self, action_server_name= "/start_scan"):
         # Action client
         rospy.loginfo("Starting HMI")
         self.__scan_action_client = actionlib.SimpleActionClient(action_server_name, TimedScanAction)
         rospy.loginfo(f"Waiting for scan action server...{action_server_name}")
-        self.__scan_action_client.wait_for_server()
+        self.__scan_action_client.wait_for_server(rospy.Duration(10.0))
 
         self.__align_service_client = AlignServiceClient()
 
@@ -31,7 +31,7 @@ class ScanManagerNode:
 
     def cmd_cb(self, msg):
         cmd = msg.data.strip().lower()
-        rospy.loginfo("Received HMI command: %s", cmd)
+        rospy.logwarn("Received HMI command: %s", cmd)
 
         if cmd == "start_prescan":
             self.__send_scan_cmd(PRE_SCAN_TOPIC)

@@ -104,17 +104,19 @@ class CloudAlignNode:
         if self.__keypoint_manager.is_ready():    
             # cloud1_target, cloud2_source, T = self.__keypoint_manager.get_result()
             _, source_patch, T = self.__keypoint_manager.get_result()
+            
             rospy.logwarn("T is:\n%s", T)
             __timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")  
             # o3d.io.write_point_cloud(f"/mnt/c/work/projects/intelijet_v2/data/cloud1_target{__timestamp}.ply", target_path)
             # o3d.io.write_point_cloud(f"/mnt/c/work/projects/intelijet_v2/data/cloud2_source{__timestamp}.ply", source_patch)  
                     
             img = self.__keypoint_manager.draw_result()
-            cv2.imwrite(f"/mnt/c/work/projects/intelijet_v2/data/keypoint_postcan_{__timestamp}.png", img)
+            cv2.imwrite(f"../data/keypoint_{__timestamp}.png", img)
             rospy.logwarn("[Aligner by keypoint]")
         else:
-            cloud1_target = self.target
-            cloud2_source = self.source
+            source_patch = self.source
+            T = np.eye(4)
+            
             rospy.logwarn("[Aligner by original cloud]")
 
         source_patch.transform(T)
@@ -215,42 +217,40 @@ class CloudAlignNode:
 
 def main():
     rospy.init_node("dv_cloud_align", anonymous=False)
-    try:
-        node = CloudAlignNode(source_topic=POST_SCAN_CLOUD,
-                       target_topic=PRE_SCAN_CLOUD,
-                       aligned_topic=ALIGNED_CLOUD,
-                       image_prescan_topic=PRE_SCAN_IMAGE,
-                       image_postscan_topic=POST_SCAN_IMAGE,
-                       enable_align=ENABLE_ALIGNMENT)
-        
-        node.build_keypoint_extracter(
-            camera_intrinsics=CAMERA_INTRINSICS,  # Example values
-            lidar_to_cam_extrinsic=LIDAR_TO_CAM_EXTRINSIC ,
-            dist_coeffs=DIST_COEFFS ,
-            feature_method=FEATURE_METHOD ,
-            pixel_radius=PIXEL_RADIUS ,
-            cloud_radius=CLOUD_RADIUS,
-            match_ratio=MATCH_RATIO 
-        )
+    rospy.loginfo("Cloud alignment node started.")
+    node = CloudAlignNode(source_topic=POST_SCAN_CLOUD,
+                    target_topic=PRE_SCAN_CLOUD,
+                    aligned_topic=ALIGNED_CLOUD,
+                    image_prescan_topic=PRE_SCAN_IMAGE,
+                    image_postscan_topic=POST_SCAN_IMAGE,
+                    enable_align=ENABLE_ALIGNMENT)
+    
+    node.build_keypoint_extracter(
+        camera_intrinsics=CAMERA_INTRINSICS,  # Example values
+        lidar_to_cam_extrinsic=LIDAR_TO_CAM_EXTRINSIC ,
+        dist_coeffs=DIST_COEFFS ,
+        feature_method=FEATURE_METHOD ,
+        pixel_radius=PIXEL_RADIUS ,
+        cloud_radius=CLOUD_RADIUS,
+        match_ratio=MATCH_RATIO 
+    )
 
-        node.build_cloud_aligner(
-            PointCloudAlignerManager(
-                strategy="icp",
-                config=ICPConfig(
-                    threshold=ICP_THRESHOLDS,
-                    max_iters=ICP_MAX_ITERS,
-                    align_area=ICP_ALIGN_AREA
-                )
+    node.build_cloud_aligner(
+        PointCloudAlignerManager(
+            strategy="icp",
+            config=ICPConfig(
+                threshold=ICP_THRESHOLDS,
+                max_iters=ICP_MAX_ITERS,
+                align_area=ICP_ALIGN_AREA
             )
         )
+    )
 
-        rospy.spin()
+    rospy.spin()
 
-    except rospy.ROSInterruptException:
-        rospy.logerr(f"ROS Interrupt Exception occurred. Shutting down CloudAlignNode.")
 
 if __name__ == "__main__":
     try:
         main()
     except rospy.ROSInterruptException:
-        pass
+        rospy.logerr("ROS Interrupt Exception occurred. Shutting down the node %s.", rospy.get_name())

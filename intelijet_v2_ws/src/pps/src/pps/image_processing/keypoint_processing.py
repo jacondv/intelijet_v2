@@ -840,6 +840,7 @@ def draw_good_matches(img1, kp1, img2, kp2, good_matches, max_matches=50):
         flags=cv2.DrawMatchesFlags_NOT_DRAW_SINGLE_POINTS
     )
     return img_out
+
 def match_and_draw_sift_keypoints(img1, img2, ratio_test=0.75, max_matches=50):
     """
     So sánh và vẽ các keypoint match giữa hai ảnh bằng SIFT + BFMatcher.

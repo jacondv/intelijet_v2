@@ -83,12 +83,19 @@ class CloudProcessorNode:
         self.pub_post.publish(processed)
         # notify_one(self.pub_post_topic + "_trigger")
 
+def main():
+    rospy.init_node("dv_cloud_process", anonymous=False)
+    rospy.loginfo("Cloud processing node started.")
+    
+    CloudProcessorNode(pub_pre_topic=PRE_SCAN_PROCESSED_TOPIC,
+                        pub_post_topic=POST_SCAN_PROCESSED_TOPIC,
+                        sub_pre_topic=PRE_SCAN_RAW_TOPIC,
+                        sub_post_topic=POST_SCAN_RAW_TOPIC)
+
+    rospy.spin()
 
 if __name__ == "__main__":
     try:
-        CloudProcessorNode(pub_pre_topic=PRE_SCAN_PROCESSED_TOPIC,
-                            pub_post_topic=POST_SCAN_PROCESSED_TOPIC,
-                            sub_pre_topic=PRE_SCAN_RAW_TOPIC,
-                            sub_post_topic=POST_SCAN_RAW_TOPIC)
+        main()
     except rospy.ROSInterruptException:
-        pass
+        rospy.logerr("ROS Interrupt Exception occurred. Shutting down the node %s.", rospy.get_name())

@@ -32,10 +32,6 @@ class CloudComparer:
         rospy.Subscriber(self.pres_topic, PointCloud2, self.callback_pres)
         rospy.Subscriber(self.post_topic, PointCloud2, self.callback_post)
        
-        rospy.init_node("dv_cloud_compare", anonymous=False)
-        rospy.loginfo("CloudComparer node initialized.")
-        rospy.spin()
-
     def callback_pres(self, msg):
         self.frame_id = msg.header.frame_id
         rospy.loginfo(f"Received from {self.pres_topic}")
@@ -84,11 +80,18 @@ class CloudComparer:
     #     cloud_o3d.points = o3d.utility.Vector3dVector(cloud_np)
     #     return cloud_o3d
 
+def main():
+    rospy.init_node("dv_cloud_compare", anonymous=False)
+    rospy.loginfo("Cloud comparison node started.")
+    
+    CloudComparer(pubpish_topic=CLOUD_COMPARED,
+                             pres_topic=PRE_SCAN_CLOUD,
+                             post_topic=POST_SCAN_CLOUD)
+    
+    rospy.spin()
 
 if __name__ == "__main__":
     try:
-        CloudComparer(pubpish_topic=CLOUD_COMPARED,
-                        pres_topic=PRE_SCAN_CLOUD,
-                        post_topic=POST_SCAN_CLOUD)
+        main()
     except rospy.ROSInterruptException:
-        pass
+        rospy.logerr("ROS Interrupt Exception occurred. Shutting down the node.")

@@ -1,0 +1,3 @@
+<launch>
+	<node pkg="pcan_ethernet_gateway" name="pcan_gateway_node" type="pcan_gateway_node.py" output="screen"/>
+</launch>
