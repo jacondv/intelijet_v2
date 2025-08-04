@@ -17,7 +17,7 @@ class UICANInterface:
         rospy.Subscriber(PCAN_GATEWAY_RECV_TOPIC, Frame, self.recv_callback)
 
         #Configure the CAN PDOs from a YAML file
-        _pdos = load_pdos_from_yaml("/mnt/c/work/projects/intelijet_v2/intelijet_v2_ws/src/ui_can_interface/src/ui_can_interface/can_pdo_config.yaml")
+        _pdos = load_pdos_from_yaml("src/ui_can_interface/can_pdo_config.yaml")
         self.cmd_handler = CommandHandler(pdos=_pdos, can_topic_to_send=PCAN_GATEWAY_SEND_TOPIC)
         rospy.loginfo("ui_can_interface node started.")
 

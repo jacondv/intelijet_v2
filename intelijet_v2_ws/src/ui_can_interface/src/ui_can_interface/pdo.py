@@ -1,5 +1,10 @@
 import struct
 import yaml
+import yaml
+import os
+import rospkg
+
+
 
 class PDO:
    
@@ -104,7 +109,14 @@ class PDO:
 
 
 def load_pdos_from_yaml(yaml_path):
-    with open(yaml_path, 'r') as f:
+    caller_package = _guess_calling_package()
+
+    if caller_package:
+        rospack = rospkg.RosPack()
+        pkg_path = rospack.get_path(caller_package)
+
+    file_path = os.path.join(pkg_path, yaml_path) if caller_package else yaml_path
+    with open(file_path, 'r') as f:
         config = yaml.safe_load(f)
 
     pdos = {}
@@ -121,6 +133,29 @@ def load_pdos_from_yaml(yaml_path):
             )
         pdos[name] = pdo  # key là tên PDO trong YAML, ví dụ 'scanner_command'
     return pdos
+
+
+def _guess_calling_package():
+    """
+    Tries to guess the calling package by inspecting __file__ variable
+    of the caller. Only works if caller is in a ROS package.
+    """
+    import inspect
+    try:
+        # Lấy đường dẫn file gọi hàm này
+        frame = inspect.stack()[2]
+        module_path = os.path.abspath(frame.filename)
+
+        # Dò ngược từ module_path để tìm gói ROS
+        while module_path != "/" and module_path:
+            if os.path.exists(os.path.join(module_path, "package.xml")):
+                return os.path.basename(module_path)
+            module_path = os.path.dirname(module_path)
+
+    except Exception:
+        pass
+
+    return None
 
 
 # from can_msgs.msg import Frame
