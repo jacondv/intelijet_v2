@@ -30,6 +30,7 @@ source venv/bin/activate
 pip install --upgrade pip setuptools wheel
 pip install open3d
 pip install git+https://github.com/eric-wieser/ros_numpy.git
+pip install python-box
 
 ```
 
