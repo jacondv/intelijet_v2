@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
+
+# This script received CAN msgs from HMI or ROS topic... then convert to UDO and sends to PCAN Ethernet Gateway via UDP.
+
 import rospy
-from pcan_ethernet_gateway.frame_builder import build_udp_frame
 from pcan_ethernet_gateway.pcan_udp_driver import PcanUdpSender
 from can_msgs.msg import Frame
 
@@ -15,11 +17,8 @@ class PcanGatewayTxNode:
         rospy.Subscriber(PCAN_GATEWAY_SEND_TOPIC, Frame, self.callback)  # hoặc String nếu topic là String
 
     def callback(self, msg: Frame):
-        can_id = msg.id
-        data = list(msg.data[:msg.dlc])
-        frame = build_udp_frame(can_id, data, is_extended=msg.is_extended)
-        self.sender.send_frame(frame)
-        rospy.loginfo(f"Sent CAN frame: ID=0x{can_id:X}, Data={data}")
+        # Gửi frame qua UDP (can_msgs/Frame will be converted to UDP frame inside PcanUdpSender sender.send_frame)
+        self.sender.send_frame(msg)
 
 
 def main():

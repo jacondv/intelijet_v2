@@ -1,0 +1,14 @@
+
+
+HMI_CMD_TOPIC: "/hmi/cmd"
+
+# Raw point cloud data 
+PRE_SCAN_TOPIC: "/pre_scan_0"
+POST_SCAN_TOPIC: "/post_scan_0"
+
+# Preprocess point cloud data
+PRE_SCAN_CLOUD_TOPIC: "/pre_scan_cloud"
+POST_SCAN_CLOUD_TOPIC: "/post_scan_cloud"
+
+# Cloud after compare between Pres can and Post scan point cloud
+CLOUD_COMPARED_TOPIC: "/cloud_compared"

@@ -1,4 +1,5 @@
 ui_can_interface
 /mnt/c/work/projects/intelijet_v2/intelijet_v2_ws/devel/.private/ui_can_interface/lib/pkgconfig/ui_can_interface.pc /mnt/c/work/projects/intelijet_v2/intelijet_v2_ws/devel/lib/pkgconfig/ui_can_interface.pc
+/mnt/c/work/projects/intelijet_v2/intelijet_v2_ws/devel/.private/ui_can_interface/lib/python3/dist-packages/ui_can_interface/__init__.py /mnt/c/work/projects/intelijet_v2/intelijet_v2_ws/devel/lib/python3/dist-packages/ui_can_interface/__init__.py
 /mnt/c/work/projects/intelijet_v2/intelijet_v2_ws/devel/.private/ui_can_interface/share/ui_can_interface/cmake/ui_can_interfaceConfig-version.cmake /mnt/c/work/projects/intelijet_v2/intelijet_v2_ws/devel/share/ui_can_interface/cmake/ui_can_interfaceConfig-version.cmake
 /mnt/c/work/projects/intelijet_v2/intelijet_v2_ws/devel/.private/ui_can_interface/share/ui_can_interface/cmake/ui_can_interfaceConfig.cmake /mnt/c/work/projects/intelijet_v2/intelijet_v2_ws/devel/share/ui_can_interface/cmake/ui_can_interfaceConfig.cmake

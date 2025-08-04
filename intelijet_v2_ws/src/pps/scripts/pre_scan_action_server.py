@@ -9,6 +9,8 @@ from sensor_msgs.msg import PointCloud2
 from pps.msg import PreScanAction, PreScanResult, PreScanFeedback
 from pps.msg import StartScanAction, StartScanResult, StartScanFeedback
 from pps.utils import load_config
+from shared.config_loader import CONFIG as cfg
+
 
 class PreScanActionServer:
     def __init__(self,scan_service_name, pointcloud_topic):
@@ -79,14 +81,21 @@ class PreScanActionServer:
         result = PreScanResult(success=False, message=msg)
         self.server.set_aborted(result)
 
-if __name__ == '__main__':
+def main():
     rospy.init_node('pre_scan_action_server')
-    config = load_config("config/lidar.yaml")
-    active_lidar = config.get("active_lidar", "lms511")
-    pointcloud_topic = config.get("lidar_config", "")[active_lidar]['pointcloud_topic']
-    scan_service_name = config.get("lidar_config", "")[active_lidar]['start_scan_service']
 
-    rospy.loginfo("Loaded configuration: %s, %s", scan_service_name, pointcloud_topic)
-    server = PreScanActionServer(scan_service_name, pointcloud_topic)
+    # cfg = load_config(default_filename="config/lidar.yaml")
+    active_lidar = cfg.active_lidar
+    rospy.loginfo(f"Active lidar: {active_lidar}")
+
+    PreScanActionServer(scan_service_name=cfg[active_lidar].start_scan_service,
+                        pointcloud_topic=cfg[active_lidar].pointcloud_topic)
+    
     rospy.loginfo("Pre-scan Action Server is ready.")
     rospy.spin()
+
+if __name__ == '__main__':
+    try:
+        main()
+    except rospy.ROSInterruptException:
+        rospy.logerr("ROS Interrupt Exception occurred. Shutting down the node %s.", rospy.get_name())

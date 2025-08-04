@@ -4,8 +4,10 @@
 	<node pkg="pps" name="dv_cloud_preprocess" type="dv_cloud_preprocess.py" />
 	<node pkg="pps" name="dv_cloud_align" type="dv_cloud_align.py" />
 	<node pkg="pps" name="hmi_scan_command_handler" type="hmi_scan_command_handler.py" />
-
     <node name="rviz" pkg="rviz" type="rviz" output="screen" args="-d $(find pps)/launch/rviz/raw_pre_scan.rviz" />
+	<node pkg="ui_can_interface" name="ui_can_node" type="ui_can_node.py" />
+
+	<include file="$(find pcan_ethernet_gateway)/launch/pcan_ethernet_gateway.launch"/>
 	<include file="$(find ros_blkarc_driver)/launch/blkarc_bringup.launch" />
 	<include file="$(find ui)/launch/ui.launch"/>
 <!-- 

@@ -3,7 +3,7 @@ import rospy
 from can_msgs.msg import Frame
 
 class CommandHandler:
-    def __init__(self, pdos, can_topic_to_send="sent_messages"):
+    def __init__(self, pdos, can_topic_to_send):
         self.pdos = pdos
         self.can_pub = rospy.Publisher(can_topic_to_send, Frame, queue_size=10)
 

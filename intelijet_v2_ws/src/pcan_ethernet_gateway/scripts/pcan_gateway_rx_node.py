@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+
+# This script receives CAN frames from a PCAN Ethernet Gateway and convert UDP data to CAN msgs Frame publishes them to a ROS topic.
+
 import rospy
 from can_msgs.msg import Frame
 from pcan_ethernet_gateway.pcan_udp_driver import PcanUdpReceiver

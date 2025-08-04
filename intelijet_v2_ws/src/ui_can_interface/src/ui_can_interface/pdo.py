@@ -23,8 +23,8 @@ class PDO:
     def get_bit(self, byte_index: int, bit_index: int) -> bool:
         return (self.data[byte_index] >> bit_index) & 1
 
-    def define_field(self, field_name: str, byte_index: int, bit_index: int = None):
-        self.fields[field_name] = (byte_index, bit_index)
+    def define_field(self, field_name: str, byte_index: int, bit_index: int = None, dtype: str = 'byte'):
+        self.fields[field_name] = (byte_index, bit_index, dtype)
 
     def set_field(self, field_name: str, value):
         if field_name not in self.fields:
@@ -73,13 +73,34 @@ class PDO:
 
     def to_frame(self):
         from can_msgs.msg import Frame
+        data = list(self.data)
+        data += [0] * (8 - len(data))
         return Frame(
             id=self.cob_id,
             is_extended=False,
             is_rtr=False,
             is_error=False,
-            data=self.data
+            dlc=len(self.data),
+            data = data
         )
+    
+    
+    def from_frame(self, frame):
+        """Load CAN frame data vào PDO"""
+        if frame.id != self.cob_id:
+            raise ValueError(f"Frame ID 0x{frame.id:X} không khớp với PDO 0x{self.cob_id:X}")
+        self.data = bytearray(frame.data[:frame.dlc])  # copy dữ liệu từ CAN frame
+        # Nếu frame nhỏ hơn size thì pad thêm
+        if len(self.data) < len(self.fields):
+            self.data += b'\x00' * (8 - len(self.data))
+        return self
+
+    def decode(self):
+        """Trả về dict chứa tất cả các field đã giải mã"""
+        decoded = {}
+        for field_name in self.fields.keys():
+            decoded[field_name] = self[field_name]
+        return decoded
 
 
 def load_pdos_from_yaml(yaml_path):
@@ -92,12 +113,39 @@ def load_pdos_from_yaml(yaml_path):
         pdo = PDO(cob_id)  # chỉ truyền cob_id vì class PDO không cần name
         for field in pdo_cfg['fields']:
             pdo.define_field(
-                name=field['name'],
-                byte_index=field['byte'],
-                size=field.get('size', 1),
-                dtype=field['type'],
-                bit_index=field.get('bit')  # optional
+                field_name=field['name'],
+                byte_index=field['byte'], 
+                bit_index=field.get('bit'),  # optional bit or len
+                dtype=field['type']
+
             )
         pdos[name] = pdo  # key là tên PDO trong YAML, ví dụ 'scanner_command'
     return pdos
 
+
+# from can_msgs.msg import Frame
+
+# pdos = load_pdos_from_yaml("pdos.yaml")
+# scanner_pdo = pdos["RxScannerCommandRos"]
+
+# # Giả lập frame CAN
+# frame = Frame(
+#     id=801,
+#     is_extended=False,
+#     is_rtr=False,
+#     is_error=False,
+#     dlc=2,
+#     data=[0b00000011, 10, 0, 0, 0, 0, 0, 0]  # bit0 & bit1 = True, byte1=10
+# )
+
+# # Giải mã frame
+# scanner_pdo.from_frame(frame)
+# decoded = scanner_pdo.decode()
+
+# print(decoded)
+# # Output:
+# # {
+# #   'bServiceOpenScanner': True,
+# #   'bServiceCloseScanner': True,
+# #   'gRx_byZeroRequest': 10
+# # }

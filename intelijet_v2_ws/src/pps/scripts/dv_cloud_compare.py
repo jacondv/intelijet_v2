@@ -94,4 +94,4 @@ if __name__ == "__main__":
     try:
         main()
     except rospy.ROSInterruptException:
-        rospy.logerr("ROS Interrupt Exception occurred. Shutting down the node.")
+        rospy.logerr("ROS Interrupt Exception occurred. Shutting down the node %s.", rospy.get_name())

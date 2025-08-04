@@ -1,0 +1,23 @@
+active_lidar: "blkarc"  # Options: blk360g2, blkarc, lms511
+
+blk360g2:
+  pointcloud_topic: "/blk360g2/pointcloud"
+  start_scan_service: "/blk360g2/start_scan"
+  action_server_name: "/blk360g2/start_scan"
+  goal_type: StartScanGoal
+  scan_time_seconds: None  # Duration for the scan in seconds
+
+blkarc:
+  pointcloud_topic: "/blkarc/scan"
+  start_scan_service: "/blkarc/start_scan"
+  # This action server name is used for starting lidar scans
+  action_server_name: "/blkarc/timed_scan"
+  goal_type: TimedScanGoal
+  scan_time_seconds: 10  # Duration for the scan in seconds
+
+lms511:
+  pointcloud_topic: "/lms511/scan"
+  start_scan_service: "/lms511/start_scan"
+  action_server_name: "/lms511/start_scan"
+  scan_time_seconds: None  # Duration for the scan in seconds
+

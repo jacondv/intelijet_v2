@@ -4,7 +4,7 @@ import vtk
 from PyQt5.QtWidgets import QApplication, QVBoxLayout, QFrame, QSizePolicy, QWidget
 from vtk.qt.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
 from ui.pps_ui import Ui_Frame  # Import class từ file pps_ui.py
-from ui.utils import ros_pointcloud2_to_vtk_polydata, ros_pointcloud2_to_o3d_to_vtk_polydata_voxel
+from ui.utils import ros_pointcloud2_to_o3d_to_vtk_polydata_voxel
 import rospy
 from sensor_msgs.msg import PointCloud2
 from std_msgs.msg import String
@@ -12,6 +12,10 @@ from PyQt5.QtCore import pyqtSignal, pyqtSlot
 import threading
 import subprocess
 import os
+
+# from pps.utils import load_config
+from shared.config_loader import CONFIG as cfg
+
 
 class RosThread(threading.Thread):
     def __init__(self, cloud_received_signal, ui_send_cmd_signal):
@@ -21,11 +25,11 @@ class RosThread(threading.Thread):
         self.ui_send_cmd_signal = ui_send_cmd_signal
 
     def run(self):
-        rospy.init_node("my_gui_node", anonymous=True, disable_signals=True)
-        self.cmd_pub = rospy.Publisher("/hmi/cmd", String, queue_size=1)
-        rospy.Subscriber("/pre_scan_cloud", PointCloud2, self.cloud_received_signal_callback)
-        rospy.Subscriber("/post_scan_cloud", PointCloud2, self.cloud_received_signal_callback)
-        rospy.Subscriber("/cloud_compared", PointCloud2, self.cloud_received_signal_callback)
+        rospy.init_node("gui_node", anonymous=True, disable_signals=True)
+        self.cmd_pub = rospy.Publisher(HMI_CMD_TOPIC, String, queue_size=1)
+        rospy.Subscriber(PRE_SCAN_CLOUD_TOPIC, PointCloud2, self.cloud_received_signal_callback)
+        rospy.Subscriber(POST_SCAN_CLOUD_TOPIC, PointCloud2, self.cloud_received_signal_callback)
+        rospy.Subscriber(CLOUD_COMPARED_TOPIC, PointCloud2, self.cloud_received_signal_callback)
         rospy.spin()
 
     def cloud_received_signal_callback(self, msg):
@@ -53,8 +57,10 @@ class App(QWidget):
         self.ros_thread.start()
         
         self.current_actor = None
-        self.vl = QVBoxLayout()
+        self.vl = self.ui.cloudFrame.layout()#QVBoxLayout(self.ui.cloudFrame)
         self.vl.setContentsMargins(0, 0, 0, 0)
+        self.vl.setSpacing(0)
+
         self.vtkWidget = QVTKRenderWindowInteractor(self.ui.cloudFrame)
         
         self.vl.addWidget(self.vtkWidget)
@@ -67,6 +73,7 @@ class App(QWidget):
         self.vtkWidget.Initialize()
         self.vtkWidget.Start()
 
+        self.showFullScreen()
         self.vtkWidget.resize(self.ui.cloudFrame.size())  # Ép nó tràn ra
 
         self.ui.btnPreScan.clicked.connect(self.start_prescan)
@@ -148,13 +155,22 @@ class App(QWidget):
         self.renderer.ResetCamera()
 
 if __name__ == "__main__":
-    from PyQt5.QtWidgets import QWidget, QHBoxLayout
+
+    from PyQt5.QtWidgets import QWidget
+
+    # Load parameters befor work.
+    
+    # cfg = load_config(default_filename="../config/commond.yaml") # intelijet_v2_ws/src/config/commond.yaml
+    # HMI_CMD_TOPIC = cfg.HMI_CMD_TOPIC # config.get('HMI_CMD_TOPIC')
+    # PRE_SCAN_CLOUD_TOPIC = cfg.PRE_SCAN_CLOUD_TOPIC
+    # POST_SCAN_CLOUD_TOPIC = cfg.PRE_SCAN_CLOUD_TOPIC
+    # CLOUD_COMPARED_TOPIC = cfg.PRE_SCAN_CLOUD_TOPIC
+
+    HMI_CMD_TOPIC = cfg.HMI_CMD_TOPIC # config.get('HMI_CMD_TOPIC')
+    PRE_SCAN_CLOUD_TOPIC = cfg.PRE_SCAN_CLOUD_TOPIC
+    POST_SCAN_CLOUD_TOPIC = cfg.PRE_SCAN_CLOUD_TOPIC
+    CLOUD_COMPARED_TOPIC = cfg.PRE_SCAN_CLOUD_TOPIC
+    print(cfg)
     app = QApplication(sys.argv)
-    main_widget = QWidget()
-    layout = QHBoxLayout(main_widget)
-
-    viewer = App()  # App là QWidget con
-    layout.addWidget(viewer)
-
-    main_widget.showFullScreen()  # Full màn hình ở widget cha
+    viewer = App()  # App kế thừa QWidget
     sys.exit(app.exec_())
