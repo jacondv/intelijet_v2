@@ -82,6 +82,10 @@ class App(QWidget):
 
         self.ui.btnCancel.clicked.connect(self.on_cancel)
 
+        self.ui.btnOpenScanner.clicked.connect(self.open_scanner)
+        self.ui.btnCloseScanner.clicked.connect(self.close_scanner)
+        self.ui.btnStop.clicked.connect(self.stop_scanner)
+    
     def start_prescan(self):
         # self.cmd_pub.publish(String("start_prescan"))
         # self.status_label.setText("Requested PreScan...")
@@ -98,6 +102,19 @@ class App(QWidget):
     def cloud_callback(self, msg):
         rospy.logwarn("Received pointcloud")
         self.cloud_received.emit(msg)
+
+    def open_scanner(self):
+        # self.cmd_pub.publish(String("open_scanner"))
+        # self.status_label.setText("Opening Scanner...")
+        self.ui_send_cmd_signale.emit("open_scanner")
+
+    def close_scanner(self):
+        self.ui_send_cmd_signale.emit("close_scanner")
+
+    def stop_scanner(self): 
+        self.ui_send_cmd_signale.emit("stop_scanner")
+    
+    
 
     @pyqtSlot(object)
     def update_pointcloud(self, msg):

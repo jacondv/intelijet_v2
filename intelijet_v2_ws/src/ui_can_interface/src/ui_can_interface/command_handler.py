@@ -47,5 +47,24 @@ class CommandHandler:
             rospy.sleep(0.5)
             self.send_pdo(pdo_name, field_name, value=0)
             return True
+        
+        elif cmd == "open_scanner":
+            pdo_name= "RxScannerCommandRos"
+            field_name="bServiceOpenScanner"
+            self.send_pdo(pdo_name, field_name, value=1)
+            return True
+        
+        elif cmd == "close_scanner":
+            pdo_name= "RxScannerCommandRos"
+            field_name="bServiceCloseScanner"
+            self.send_pdo(pdo_name, field_name, value=1)
+            return True
+        
+        elif cmd == "stop_scanner":
+            pdo_name= "RxScannerCommandRos"
+            self.send_pdo(pdo_name, "bServiceOpenScanner", value=0)
+            self.send_pdo(pdo_name, "bServiceCloseScanner", value=0)
+            return True
+                
         else:
             return False
