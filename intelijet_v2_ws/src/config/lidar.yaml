@@ -1,4 +1,4 @@
-active_lidar: "blkarc"  # Options: blk360g2, blkarc, lms511
+active_lidar: "lms511"  # Options: blk360g2, blkarc, lms511
 
 blk360g2:
   pointcloud_topic: "/blk360g2/pointcloud"

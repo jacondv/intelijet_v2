@@ -8,7 +8,7 @@ from pcan_ethernet_gateway.pcan_udp_driver import PcanUdpReceiver
 
 # Cấu hình IP và port
 PC_LOCAL_IP = "0.0.0.0"           # Lắng nghe tất cả interface mạng
-PCAN_GATEWAY_RECV_PORT  = 6000       # Port Gateway gửi về PC, Port này sẽ được cấu hình trong PCAN Gateway
+PCAN_GATEWAY_RECV_PORT  = 55000       # Port Gateway gửi về PC, Port này sẽ được cấu hình trong PCAN Gateway
 PCAN_GATEWAY_RECV_TOPIC = "/pcan_received_messanges"  # Topic to publish CAN frames
 
 def main():
