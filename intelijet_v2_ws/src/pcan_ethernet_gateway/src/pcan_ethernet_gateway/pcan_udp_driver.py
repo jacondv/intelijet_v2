@@ -2,9 +2,24 @@ import socket
 from can_msgs.msg import Frame
 from pcan_ethernet_gateway.frame_builder import build_udp_frame
 import struct
+import binascii
+import rospy
 
 # This class reponsible for sending CAN frames over UDP to the PCAN Gateway
 # |Can device| <-CAN frame-> |PCAN Gateway| <-UDP frame-> |PCAN Gateway Node| <-ROS can_msgs-> ROS Topic
+
+def log_udp_frame(frame: bytes):
+    header = frame[0:20]
+    dlc = frame[20]
+    reserved = frame[21]
+    flags = frame[22]
+    can_id = int.from_bytes(frame[23:27], "big")
+    data = frame[27:27 + dlc]
+    rospy.loginfo(f"Header: {header.hex()}")
+    rospy.loginfo(f"DLC: {dlc}, Reserved: {reserved}, Flags: {flags}")
+    rospy.loginfo(f"CAN ID: 0x{can_id:X}")
+    rospy.loginfo(f"Data: {[hex(b) for b in data]}")
+
 class PcanUdpSender:
     def __init__(self, gateway_ip, gateway_port):
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -16,6 +31,8 @@ class PcanUdpSender:
         data = list(msg.data[:msg.dlc])
         frame = self._decode_can_to_udp(can_id, data, is_extended=msg.is_extended)
 
+        log_udp_frame(frame)
+
         # Gửi frame UDP
         self.sock.sendto(frame, (self.gateway_ip, self.gateway_port))
 
@@ -23,19 +40,25 @@ class PcanUdpSender:
         dlc = len(data)
         flags = 0x02 if is_extended else 0x00
 
-        # Header cố định (20 bytes) theo Developer Doku
-        header = b'\x00\x24\x00\x80\x9d\x7c\x3c\xd5\xf0\x73\xae\x00\x35\xba\x5e\xf3\x00\x05\x40\x50'
+        # Tạo mảng 36 bytes ban đầu (giống msg_list mẫu)
+        msg_list = [0x00, 0x24, 0x00, 0x80, 0x9d, 0x7c, 0x3c,0xd5,0xf0,0x73,0xae,0x00,0x35,0xba,0x5e,0xf3,0x00,0x05,0x40,0x50,0x00,0x08,0x00,0x02,0x80,0x0c,0x12,0x34,0x8f,0x8e,0xb8,0x0c,0x00,0x00,0x00,0x00]
 
-        # DLC (1B) + Reserved (1B) + Flags (1B)
-        frame = header + struct.pack('B', dlc) + struct.pack('BB', 0x00, flags)
 
-        # CAN ID (4B big-endian)
-        frame += struct.pack('>I', can_id)
+        # Pos 21 = DLC
+        msg_list[21] = dlc
 
-        # Data 8 bytes (pad 0 nếu thiếu)
-        frame += bytes(data) + bytes(8 - dlc)
+        # Pos 22/23 = Reserved + Flags
+        msg_list[22] = 0x00
+        msg_list[23] = flags
 
-        return frame
+        # Pos 24/27 = CAN ID (11-bit trong 4 byte big-endian)
+        msg_list[24:28] = list(struct.pack(">I", can_id))
+
+        # Pos 28/35 = Dữ liệu (pad 0 nếu thiếu)
+        data_bytes = list(data) + [0] * (8 - dlc)
+        msg_list[28:36] = data_bytes
+
+        return bytes(msg_list)
 
 
 # This class reponsible for receiving CAN frames over UDP from the PCAN Gateway
@@ -80,7 +103,6 @@ class PcanUdpReceiver:
         frame.dlc = min(length, 8)  # ROS Frame chỉ hỗ trợ 8 bytes (CAN 2.0)
 
         # Data bytes
-        for i in range(frame.dlc):
-            frame.data[i] = message[28 + i]
+        frame.data = message[28:28 + frame.dlc]
 
         return frame

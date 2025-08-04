@@ -37,6 +37,7 @@ class PDO:
         self[field_name] = value
 
     def __setitem__(self, name, value):
+        # Hàm này được ọi khi gán giá trị cho field
         byte_idx, length, dtype = self.fields[name]
         if dtype == 'byte':
             self.data[byte_idx] = value
@@ -127,7 +128,7 @@ def load_pdos_from_yaml(yaml_path):
             pdo.define_field(
                 field_name=field['name'],
                 byte_index=field['byte'], 
-                bit_index=field.get('bit'),  # optional bit or len
+                bit_index=field.get('bit',0),  # optional bit or len
                 dtype=field['type']
 
             )

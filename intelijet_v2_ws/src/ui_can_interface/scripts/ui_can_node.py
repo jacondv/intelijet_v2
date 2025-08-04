@@ -31,7 +31,9 @@ class UICANInterface:
             rospy.logwarn("[WARN UICANInterface]Sent command [%s] failed %s", command)
 
     def recv_callback(self, frame:Frame):
-        rospy.loginfo("Received CAN Frame: ID=0x%X, DLC=%d, DATA=%s", frame.id, frame.dlc, list(frame.data[:frame.dlc]))
+        if frame.id == 1076:
+            rospy.loginfo("Received Zero Position Command Frame: ID=0x%X, DLC=%d, DATA=%s", frame.id, frame.dlc, list(frame.data[:frame.dlc]))
+        # rospy.loginfo("Received CAN Frame: ID=0x%X, DLC=%d, DATA=%s", frame.id, frame.dlc, list(frame.data[:frame.dlc]))
 
 if __name__ == "__main__":
     rospy.init_node("ui_can_node")
