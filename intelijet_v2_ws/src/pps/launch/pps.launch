@@ -6,14 +6,18 @@
 	<node pkg="pps" name="hmi_scan_command_handler" type="hmi_scan_command_handler.py" />
     <node name="rviz" pkg="rviz" type="rviz" output="screen" args="-d $(find pps)/launch/rviz/raw_pre_scan.rviz" />
 	<node pkg="ui_can_interface" name="ui_can_node" type="ui_can_node.py" />
+	<node pkg="encoder_process" name="encoder_process_node" type="encoder_process_node.py" />
+
 
 	<include file="$(find pcan_ethernet_gateway)/launch/pcan_ethernet_gateway.launch"/>
-	<include file="$(find ros_blkarc_driver)/launch/blkarc_bringup.launch" />
+	<!-- <include file="$(find ros_blkarc_driver)/launch/blkarc_bringup.launch" /> -->
 	<include file="$(find ui)/launch/ui.launch"/>
 <!-- 
 	<node name="rosbag_recorder" pkg="rosbag" type="record" output="screen"
 			args="-O /mnt/c/work/projects/intelijet_v2/data/ros_3.bag
 				/pre_scan_0 /pre_scan_0/image
 				/post_scan_0 /post_scan_0/image" /> -->
+
+	
 
 </launch>

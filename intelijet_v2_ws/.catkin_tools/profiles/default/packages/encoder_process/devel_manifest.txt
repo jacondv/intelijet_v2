@@ -1,0 +1,5 @@
+encoder_process
+/mnt/c/work/projects/intelijet_v2/intelijet_v2_ws/devel/.private/encoder_process/lib/pkgconfig/encoder_process.pc /mnt/c/work/projects/intelijet_v2/intelijet_v2_ws/devel/lib/pkgconfig/encoder_process.pc
+/mnt/c/work/projects/intelijet_v2/intelijet_v2_ws/devel/.private/encoder_process/lib/python3/dist-packages/encoder_process/__init__.py /mnt/c/work/projects/intelijet_v2/intelijet_v2_ws/devel/lib/python3/dist-packages/encoder_process/__init__.py
+/mnt/c/work/projects/intelijet_v2/intelijet_v2_ws/devel/.private/encoder_process/share/encoder_process/cmake/encoder_processConfig-version.cmake /mnt/c/work/projects/intelijet_v2/intelijet_v2_ws/devel/share/encoder_process/cmake/encoder_processConfig-version.cmake
+/mnt/c/work/projects/intelijet_v2/intelijet_v2_ws/devel/.private/encoder_process/share/encoder_process/cmake/encoder_processConfig.cmake /mnt/c/work/projects/intelijet_v2/intelijet_v2_ws/devel/share/encoder_process/cmake/encoder_processConfig.cmake

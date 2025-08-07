@@ -1,0 +1,21 @@
+<launch>
+  <!-- Load URDF -->
+  <param name="robot_description" textfile="$(find pps)/urdf/scanner_housing.urdf"/>
+
+  <!-- Publish TF -->
+  <node pkg="robot_state_publisher" type="robot_state_publisher" name="robot_state_publisher"/>
+
+  <!-- Encoder node -->
+  <node pkg="encoder_process" type="encoder_process_node.py" name="encoder_process"/>
+
+  <!-- <node pkg="encoder_process" type="test_runrosbag_laserscan.py" name="test_runrosbag_laserscan"/> -->
+
+  <!-- <node pkg="laser_assembler" type="point_cloud_assembler" name="assembler_node" output="screen">
+    <param name="frame_id" value="LMS_511_scan_plane"/>
+    <remap from="/cloud" to="/cloud1"/>
+    <param name="fixed_frame" type="string" value="base_link" />;
+    <param name="max_scans" type="int" value="100" />;
+  </node> -->
+  <!-- <node pkg="rviz" type="rviz" name="rviz" args="-d $(find pps)/launch/rviz/scanner.rviz"/> -->
+
+</launch>

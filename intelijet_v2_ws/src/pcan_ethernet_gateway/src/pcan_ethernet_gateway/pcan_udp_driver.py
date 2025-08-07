@@ -1,6 +1,5 @@
 import socket
 from can_msgs.msg import Frame
-from pcan_ethernet_gateway.frame_builder import build_udp_frame
 import struct
 import binascii
 import rospy

@@ -1,0 +1,4 @@
+rospy
+/mnt/c/work/projects/intelijet_v2/intelijet_v2_ws/devel/.private/rospy/lib/pkgconfig/rospy.pc /mnt/c/work/projects/intelijet_v2/intelijet_v2_ws/devel/lib/pkgconfig/rospy.pc
+/mnt/c/work/projects/intelijet_v2/intelijet_v2_ws/devel/.private/rospy/share/rospy/cmake/rospyConfig-version.cmake /mnt/c/work/projects/intelijet_v2/intelijet_v2_ws/devel/share/rospy/cmake/rospyConfig-version.cmake
+/mnt/c/work/projects/intelijet_v2/intelijet_v2_ws/devel/.private/rospy/share/rospy/cmake/rospyConfig.cmake /mnt/c/work/projects/intelijet_v2/intelijet_v2_ws/devel/share/rospy/cmake/rospyConfig.cmake

@@ -1,0 +1,72 @@
+<?xml version="1.0"?>
+<robot name="scanner">
+
+  <!-- Base link -->
+  <link name="base_link"/>
+
+  <!-- Scanner joint -->
+  <joint name="scanner_deploy_retract" type="revolute">
+    <parent link="base_link"/>
+    <child link="scanner_mount"/>
+    <origin xyz="0 0 0.5" rpy="0 0 0"/>
+    <axis xyz="0 -1 0"/>
+    <limit effort="1000" lower="-3.0" upper="0.5" velocity="1.0"/>
+  </joint>
+
+    <!-- Scanner joint :Là khớp quay (revolute) kết nối base_link với scanner_mount.
+          origin: scanner_mount được gắn ở vị trí (0, 0, 0.5) so với base_link.
+          axis xyz="1 0 0": quay quanh trục X.
+          limit: góc quay giới hạn từ -3.0 đến 0.5 rad (~ -172° đến 28°).
+          Đây là joint mà encoder sẽ publish giá trị lên /joint_states. -->
+
+  <!-- Scanner mount : Đây là phần thân của cơ cấu (giá đỡ).-->
+  <link name="scanner_mount">
+    <visual>
+      <geometry>
+        <box size="0.4 0.05 0.05"/>
+      </geometry>
+      <material name="blue">
+        <color rgba="0 0 1 1"/>
+      </material>
+    </visual>
+  </link>
+
+  <!-- Laser joint : LMS-511 được gắn trực tiếp lên scanner_mount.-->
+  <joint name="scanner_to_mount" type="fixed">
+    <parent link="scanner_mount"/>
+    <child link="LMS-511"/>
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+  </joint>
+
+  <!-- Laser sensor : Mô tả cảm biến laser LMS-511 bằng hình trụ (cylinder) màu đỏ-->
+  <link name="LMS-511">
+    <visual>
+      <geometry>
+        <cylinder radius="0.03" length="0.1"/>
+      </geometry>
+      <material name="red">
+        <color rgba="1 0 0 1"/>
+      </material>
+    </visual>
+  </link>
+
+  <!-- Laser scan frame : Joint fixed tạo ra frame LMS_511_scan_plane cách LMS-511 0.08m theo trục X.-->
+  <!-- Đây chính là frame mà driver sick_scan sử dụng làm frame_id cho LaserScan. -->
+  <joint name="scan_to_scanner" type="fixed">
+    <parent link="LMS-511"/>
+    <child link="LMS_511_scan_plane"/>
+    <origin xyz="0.08 0 0" rpy="0 0 0"/>
+  </joint>
+
+  <link name="LMS_511_scan_plane"/>
+</robot>
+
+<!-- 
+base_link
+ └── scanner_deploy_retract (revolute joint)
+      └── scanner_mount
+           └── scanner_to_mount (fixed joint)
+                └── LMS-511
+                     └── scan_to_scanner (fixed joint)
+                          └── LMS_511_scan_plane 
+                          -->
