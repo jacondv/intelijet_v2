@@ -8,8 +8,10 @@
   <joint name="scanner_deploy_retract" type="revolute">
     <parent link="base_link"/>
     <child link="scanner_mount"/>
-    <origin xyz="0 0 0.5" rpy="0 0 0"/>
-    <axis xyz="0 -1 0"/>
+    <!-- <origin xyz="0 0 0.5" rpy="1.74 0 0"/> -->
+    <origin xyz="0 0 0" rpy="1.74 0 0"/>
+
+    <axis xyz="-1 0  0"/>
     <limit effort="1000" lower="-3.0" upper="0.5" velocity="1.0"/>
   </joint>
 
@@ -41,8 +43,11 @@
   <!-- Laser sensor : Mô tả cảm biến laser LMS-511 bằng hình trụ (cylinder) màu đỏ-->
   <link name="LMS-511">
     <visual>
+      <!-- <origin xyz="0.00 0.1 0" rpy="0 0 0"/> -->
+      <origin xyz="0 0 0" rpy="0 0 0"/>
       <geometry>
-        <cylinder radius="0.03" length="0.1"/>
+        <!-- <cylinder radius="0.06" length="0.02"/> -->
+        <box size="0.1 0.2 0.01"/>
       </geometry>
       <material name="red">
         <color rgba="1 0 0 1"/>
@@ -55,7 +60,9 @@
   <joint name="scan_to_scanner" type="fixed">
     <parent link="LMS-511"/>
     <child link="LMS_511_scan_plane"/>
-    <origin xyz="0.08 0 0" rpy="0 0 0"/>
+    <!-- <origin xyz="0.08 0 0" rpy="0 0 1.57"/> -->
+    <origin xyz="0 0 0" rpy="0 0 1.57"/>
+
   </joint>
 
   <link name="LMS_511_scan_plane"/>

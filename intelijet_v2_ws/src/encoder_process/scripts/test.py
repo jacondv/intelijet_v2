@@ -9,9 +9,9 @@ def test_encoder_publisher():
 
     rospy.loginfo("Test publisher started. Sending fake CAN frames...")
 
-    position = 1      # Giá trị ban đầu (giả lập raw data)
-    step = 1            # Mỗi lần tăng thêm 50 (giống encoder di chuyển)
-    max_position = 5000
+    position = 29910924     # Giá trị ban đầu (giả lập raw data)
+    step = 30            # Mỗi lần tăng thêm 50 (giống encoder di chuyển)
+    max_position = position+700/200*8912
     direction = 1         # 1: tăng, -1: giảm
 
     while not rospy.is_shutdown():
@@ -34,9 +34,9 @@ def test_encoder_publisher():
 
         # Cập nhật position
         position += step 
-        if position > 1200:
+        if position > max_position:
             break
-            position= 1  # Reset về giá trị ban đầu nếu vượt quá 1000
+        #     position= 730249  # Reset về giá trị ban đầu nếu vượt quá 1000
 
         rate.sleep()
 

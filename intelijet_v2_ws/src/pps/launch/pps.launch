@@ -7,6 +7,7 @@
     <node name="rviz" pkg="rviz" type="rviz" output="screen" args="-d $(find pps)/launch/rviz/raw_pre_scan.rviz" />
 	<node pkg="ui_can_interface" name="ui_can_node" type="ui_can_node.py" />
 	<node pkg="encoder_process" name="encoder_process_node" type="encoder_process_node.py" />
+	<node pkg="encoder_process" name="test_runrosbag_laserscan" type="test_runrosbag_laserscan.py" />
 
 
 	<include file="$(find pcan_ethernet_gateway)/launch/pcan_ethernet_gateway.launch"/>

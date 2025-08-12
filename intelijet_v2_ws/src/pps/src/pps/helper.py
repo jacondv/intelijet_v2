@@ -11,7 +11,7 @@ import cv2
 import matplotlib
 import matplotlib.pyplot as plt
 matplotlib.use('Agg')  # Không dùng GUI backend
-from sensor_msgs.msg import PointCloud2
+from sensor_msgs.msg import PointCloud2, PointCloud
 
 
 def compute_distance_histogram(
@@ -531,3 +531,19 @@ def notify_one(topic_name: str):
     rospy.sleep(0.5)  # Chờ publisher được đăng ký với master
     pub.publish(Empty())
     pub.unregister()  # Giải phóng sau khi publish nếu không cần giữ lại
+
+
+from geometry_msgs.msg import Point32
+import sensor_msgs.point_cloud2 as pc2
+def convert_pointcloud2_to_pointcloud(pc2_msg):
+    pc_msg = PointCloud()
+    pc_msg.header = pc2_msg.header
+    points = []
+
+    # Đọc từng điểm (x,y,z) từ PointCloud2
+    for point in pc2.read_points(pc2_msg, skip_nans=True):
+        x, y, z = point[:3]
+        points.append(Point32(x, y, z))
+
+    pc_msg.points = points
+    return pc_msg
