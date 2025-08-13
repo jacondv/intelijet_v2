@@ -4,7 +4,7 @@ from std_srvs.srv import Trigger
 
 class AlignServiceClient:
     def __init__(self):
-        rospy.wait_for_service('/start_align')
+        # rospy.wait_for_service('/start_align')
         self.proxy = rospy.ServiceProxy('/start_align', Trigger)
 
     def call(self):

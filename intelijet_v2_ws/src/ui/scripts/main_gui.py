@@ -4,7 +4,7 @@ import sys
 import rospy
 import sensor_msgs.point_cloud2 as pc2
 from sensor_msgs.msg import PointCloud2
-from std_msgs.msg import String
+from std_msgs.msg import String, Int32
 
 from PyQt5.QtWidgets import (
     QApplication, QWidget, QVBoxLayout,
@@ -23,7 +23,7 @@ class HMIWidget(QWidget):
 
         # ROS init
         rospy.init_node("hmi_gui_node", anonymous=True)
-        self.cmd_pub = rospy.Publisher("/hmi/cmd", String, queue_size=1)
+        self.cmd_pub = rospy.Publisher("/hmi/cmd", Int32, queue_size=1)
 
         # Subcribe point cloud (prescan và postscan cùng lắng nghe 1 topic hoặc tách riêng)
         rospy.Subscriber("/pre_scan_0", PointCloud2, self.cloud_callback)

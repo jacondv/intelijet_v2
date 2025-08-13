@@ -8,7 +8,6 @@ from std_srvs.srv import Trigger
 from sensor_msgs.msg import PointCloud2
 from pps.msg import PreScanAction, PreScanResult, PreScanFeedback
 from pps.msg import StartScanAction, StartScanResult, StartScanFeedback
-from pps.utils import load_config
 from shared.config_loader import CONFIG as cfg
 
 

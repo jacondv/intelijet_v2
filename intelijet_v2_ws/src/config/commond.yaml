@@ -12,3 +12,9 @@ POST_SCAN_CLOUD_TOPIC: "/post_scan_cloud"
 
 # Cloud after compare between Pres can and Post scan point cloud
 CLOUD_COMPARED_TOPIC: "/cloud_compared"
+
+ENCODER_JOINT_NAME: "scanner_deploy_retract"
+
+# Start Housing possition in degree (start to collect data)
+HOUSING_START_POSITION : 15 # value in degree (not in radian)
+HOUSING_END_POSITION : 90 # value in degree (not in radian)

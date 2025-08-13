@@ -1,6 +1,7 @@
 # command_handler.py
 import rospy
 from can_msgs.msg import Frame
+from shared.pps_command import PPSCommand
 
 class CommandHandler:
     def __init__(self, pdos, can_topic_to_send):
@@ -21,9 +22,10 @@ class CommandHandler:
         # rospy.loginfo(f"Published CAN frame for PDO '{pdo_name}'.")
 
     def execute_command(self, command):
-        cmd = command.strip().lower()
+        # cmd = command.strip().lower()
+        cmd = command
         
-        if cmd == "start_prescan":
+        if cmd == "plc_start_prescan":
             pdo_name= "RxScannerCommandRos"
             field_name="bPerformPreScan"
             self.send_pdo(pdo_name, field_name, value=1)
@@ -31,7 +33,7 @@ class CommandHandler:
             self.send_pdo(pdo_name, field_name, value=0)
             return True
 
-        elif cmd == "start_postscan":
+        elif cmd == "plc_start_postscan":
             pdo_name= "RxScannerCommandRos"
             field_name="bPerformPostScan"
             self.send_pdo(pdo_name, field_name, value=1)
@@ -48,19 +50,25 @@ class CommandHandler:
             self.send_pdo(pdo_name, field_name, value=0)
             return True
         
-        elif cmd == "open_scanner":
+        elif cmd == PPSCommand.PLC_OPEN_HOUSING.value:
             pdo_name= "RxScannerCommandRos"
             field_name="bServiceOpenScanner"
             self.send_pdo(pdo_name, field_name, value=1)
             return True
         
-        elif cmd == "close_scanner":
+        elif cmd == PPSCommand.PLC_CLOSE_HOUSING.value:
             pdo_name= "RxScannerCommandRos"
             field_name="bServiceCloseScanner"
             self.send_pdo(pdo_name, field_name, value=1)
             return True
         
-        elif cmd == "stop_scanner":
+        elif cmd == PPSCommand.PLC_PAUSE_HOUSING.value:
+            pdo_name= "RxScannerCommandRos"
+            self.send_pdo(pdo_name, "bServiceOpenScanner", value=0)
+            self.send_pdo(pdo_name, "bServiceCloseScanner", value=0)
+            return True
+        
+        elif cmd == "plc_on_cancel":
             pdo_name= "RxScannerCommandRos"
             self.send_pdo(pdo_name, "bServiceOpenScanner", value=0)
             self.send_pdo(pdo_name, "bServiceCloseScanner", value=0)

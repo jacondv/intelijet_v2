@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 import rospy
-from std_msgs.msg import String
+from std_msgs.msg import String, Int32
 from can_msgs.msg import Frame
 from ui_can_interface.command_handler import CommandHandler
 from ui_can_interface.pdo import load_pdos_from_yaml
@@ -13,7 +13,7 @@ PCAN_GATEWAY_SEND_TOPIC = "/pcan_sent_messanges"  # Topic to publish CAN frames
 class UICANInterface:
     def __init__(self):
         
-        rospy.Subscriber("/hmi/cmd", String, self.command_callback)
+        rospy.Subscriber("/hmi/cmd", Int32, self.command_callback)
         rospy.Subscriber(PCAN_GATEWAY_RECV_TOPIC, Frame, self.recv_callback)
 
         #Configure the CAN PDOs from a YAML file
@@ -22,13 +22,13 @@ class UICANInterface:
         rospy.loginfo("ui_can_interface node started.")
 
 
-    def command_callback(self, msg:String):
-        command = msg.data.strip().lower()
-        rospy.loginfo("Received control command: %s", command)
+    def command_callback(self, msg:Int32):
+        command = msg.data  # đã là int
+        rospy.loginfo("Received control command code is: %d", command)
         result = self.cmd_handler.execute_command(command)
     
         if not result:
-            rospy.logwarn("[WARN UICANInterface]Sent command [%s] failed %s", command)
+            rospy.logwarn("[WARN UICANInterface]Sent command [%s] failed %d", command)
 
     def recv_callback(self, frame:Frame):
         if frame.id == 1076:
