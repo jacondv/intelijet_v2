@@ -5,8 +5,8 @@ from shared.config_loader import CONFIG
 cfg = CONFIG
 # Mapping COB-ID → topic
 COB_ID_MAPPING = {
-    "encoder": [0x385, 0x38A, 0x38F,0x394, 0x39E],   # ví dụ motor control
-    "plc": [0x200, 0x201, 0x210]   # ví dụ sensor data
+    "encoder": [0x285],  
+    "plc": [0x200, 0x201, 0x210]   
 }
 
 class MessageRouter:

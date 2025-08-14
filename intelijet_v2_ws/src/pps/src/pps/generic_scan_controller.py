@@ -42,7 +42,7 @@ class GenericScanController(ABC):
         except ValueError:
             rospy.logwarn(f"Joint {cfg.ENCODER_JOINT_NAME} not found in JointState")
 
-    def wait_until_target(self, target_position_in_degree: float,timeout: float=10.0):
+    def wait_until_target(self, target_position_in_degree: float,timeout: float=10.0, direction = True):
         rospy.loginfo("Waiting until encoder reaches %.2f..." % target_position_in_degree)
         rate = rospy.Rate(10)
         start_time = rospy.Time.now()
@@ -52,9 +52,15 @@ class GenericScanController(ABC):
                 rospy.loginfo("[GenericScanController] Cancel job, exiting wait.")
                 break
 
-            if self.current_encoder_value_in_degree is not None and self.current_encoder_value_in_degree >= target_position_in_degree:
-                rospy.loginfo("Target reached: %.2f" % self.current_position)
-                return True
+            if direction:
+                if self.current_encoder_value_in_degree is not None and self.current_encoder_value_in_degree >= target_position_in_degree:
+                    rospy.loginfo("Target reached: %.2f" % self.current_position)
+                    return True
+            else:
+                if self.current_encoder_value_in_degree is not None and self.current_encoder_value_in_degree < target_position_in_degree:
+                    rospy.loginfo("Target reached: %.2f" % self.current_position)
+                    return True
+
             
             elapsed = (rospy.Time.now() - start_time).to_sec()
             if elapsed > timeout:

@@ -65,7 +65,7 @@ class RosThread(threading.Thread):
             rospy.logwarn(f"Joint {cfg.ENCODER_JOINT_NAME} not found in JointState")
 
     def emit_ui_data_update(self,msg):
-        self.data_store["encoder_value_in_deg"] = random.random()
+        # self.data_store["encoder_value_in_deg"] = random.random()
         self.ui_data_update.emit(self.data_store)
 
 
