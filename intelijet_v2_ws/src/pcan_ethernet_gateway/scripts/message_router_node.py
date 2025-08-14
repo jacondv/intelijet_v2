@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 import rospy
 from can_msgs.msg import Frame
-
+from shared.config_loader import CONFIG
+cfg = CONFIG
 # Mapping COB-ID → topic
 COB_ID_MAPPING = {
     "encoder": [0x385, 0x38A, 0x38F,0x394, 0x39E],   # ví dụ motor control
@@ -16,7 +17,7 @@ class MessageRouter:
         self.sub = rospy.Subscriber("/pcan_received_messanges", Frame, self.callback)
 
         # Publishers cho từng nhóm
-        self.pub_encoder = rospy.Publisher("/encoder01/can_msg", Frame, queue_size=10)
+        self.pub_encoder = rospy.Publisher(cfg.ENCODER01_CAN_MSG, Frame, queue_size=10)
         self.pub_other  = rospy.Publisher("/can/other", Frame, queue_size=10)
 
         rospy.loginfo("Message Router Node started")

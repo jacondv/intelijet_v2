@@ -17,12 +17,12 @@ def publish_single_image(image_path, topic="/pre_scan_image"):
     # Đọc ảnh từ file
     img = cv2.imread(image_path)
     if img is None:
-        rospy.logerr(f"Không đọc được ảnh từ đường dẫn: {image_path}")
+        rospy.logerr(f"Not found : {image_path}")
         return
 
     # Convert sang message
     img_msg = bridge.cv2_to_imgmsg(img, encoding="bgr8")
-    rospy.loginfo(f"Publish ảnh lên topic: {topic}")
+    rospy.loginfo(f"Publish image to topic: {topic}")
     pub.publish(img_msg)
 
     rospy.sleep(1.0)  # Chờ gửi xong

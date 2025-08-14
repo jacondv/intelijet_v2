@@ -3,10 +3,11 @@
 # scripts/sick_scan_controller.py
 import rospy
 from pps.generic_scan_controller import GenericScanController
-from std_msgs.msg import String
+from std_msgs.msg import String, Int32
 from shared.config_loader import CONFIG as cfg
 from sensor_msgs.msg import PointCloud2
 from laser_assembler.srv import AssembleScans2
+from shared.pps_command import PPSCommand
 
 def assemble_cloud_client(start_time, end_time):
     rospy.wait_for_service('assemble_scans2')
@@ -22,12 +23,21 @@ def assemble_cloud_client(start_time, end_time):
 class SickScanController(GenericScanController):
     def __init__(self):
         super().__init__()
+
+        self.open_housing_cmd = Int32()
+        self.open_housing_cmd.data = PPSCommand.PLC_OPEN_HOUSING.value
+
+        self.close_housing_cmd = Int32()
+        self.close_housing_cmd.data = PPSCommand.PLC_CLOSE_HOUSING.value
+
+        self.stop_housing_cmd = Int32()
+        self.stop_housing_cmd.data = PPSCommand.PLC_PAUSE_HOUSING.value     
+
       
     def run_workflow(self)->PointCloud2:
         # Send run commant to PLC via ROS Topic. Detail in command_handler.py
-        msg = String()
-        msg.data = "plc_open_scanner"
-        self.cmd_pub.publish(msg)
+
+        self.cmd_pub.publish(self.open_housing_cmd)
 
         #  Waiting Scaner housing open around 10 degree to start collect data point from sickscan
         if not self.wait_until_target(target_position_in_degree=cfg.HOUSING_START_POSITION):
@@ -45,19 +55,14 @@ class SickScanController(GenericScanController):
         self.end_time = rospy.Time.now()
 
         # Send run commant to PLC via ROS Topic. Detail in command_handler.py
-        msg = String()
-        msg.data = "plc_stop_scanner"
-        self.cmd_pub.publish(msg)
+        self.cmd_pub.publish(self.stop_housing_cmd)
         
         # Call service to assembler pointcloud and publish result to Prescan or PostScan topic...
-        # assemble_scans2 will be called. Detail is in intelijet_v2_ws/src/encoder_process/scripts/combine_cloud_srv.py
         point_cloud = assemble_cloud_client(start_time=self.start_time, end_time=self.end_time)
         return point_cloud
     
     def reset(self):
-        msg = String()
-        msg.data = "plc_stop_scanner"
-        self.cmd_pub.publish(msg)
+        self.cmd_pub.publish(self.stop_housing_cmd)
 
 
 

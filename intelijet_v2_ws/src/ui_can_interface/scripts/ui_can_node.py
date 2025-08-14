@@ -25,10 +25,11 @@ class UICANInterface:
     def command_callback(self, msg:Int32):
         command = msg.data  # đã là int
         rospy.loginfo("Received control command code is: %d", command)
+        
         result = self.cmd_handler.execute_command(command)
     
         if not result:
-            rospy.logwarn("[WARN UICANInterface]Sent command [%s] failed %d", command)
+            rospy.logwarn("[WARN UICANInterface]Sent command failed %d", command)
 
     def recv_callback(self, frame:Frame):
         if frame.id == 1076:

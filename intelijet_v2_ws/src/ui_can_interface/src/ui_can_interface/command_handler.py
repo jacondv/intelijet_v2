@@ -3,6 +3,7 @@ import rospy
 from can_msgs.msg import Frame
 from shared.pps_command import PPSCommand
 
+
 class CommandHandler:
     def __init__(self, pdos, can_topic_to_send):
         self.pdos = pdos
@@ -19,13 +20,13 @@ class CommandHandler:
         self.__set_value(pdo_name, field_name, value)
         can_frame = self.pdos[pdo_name].to_frame()
         self.can_pub.publish(can_frame)
-        # rospy.loginfo(f"Published CAN frame for PDO '{pdo_name}'.")
+        rospy.logwarn(f"Published CAN frame for PDO '{pdo_name}'.")
 
     def execute_command(self, command):
         # cmd = command.strip().lower()
         cmd = command
         
-        if cmd == "plc_start_prescan":
+        if cmd == PPSCommand.PLC_START_PRESCAN.value:
             pdo_name= "RxScannerCommandRos"
             field_name="bPerformPreScan"
             self.send_pdo(pdo_name, field_name, value=1)
@@ -33,7 +34,7 @@ class CommandHandler:
             self.send_pdo(pdo_name, field_name, value=0)
             return True
 
-        elif cmd == "plc_start_postscan":
+        elif cmd == PPSCommand.PCL_START_POSTSCAN.value:
             pdo_name= "RxScannerCommandRos"
             field_name="bPerformPostScan"
             self.send_pdo(pdo_name, field_name, value=1)

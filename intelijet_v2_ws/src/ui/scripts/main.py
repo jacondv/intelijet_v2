@@ -6,13 +6,14 @@ from vtk.qt.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
 from ui.pps_ui import Ui_Frame  # Import class từ file pps_ui.py
 from ui.utils import ros_pointcloud2_to_o3d_to_vtk_polydata_voxel
 import rospy
-from sensor_msgs.msg import PointCloud2
+from sensor_msgs.msg import PointCloud2, JointState
 from std_msgs.msg import String, Int32
 from PyQt5.QtCore import pyqtSignal, pyqtSlot
 import threading
 import subprocess
 import os
 from shared.pps_command import PPSCommand
+import random
 
 
 # from pps.utils import load_config
@@ -20,11 +21,14 @@ from shared.config_loader import CONFIG as cfg
 
 
 class RosThread(threading.Thread):
-    def __init__(self, cloud_received_signal, ui_send_cmd_signal):
+    def __init__(self, cloud_received_signal, ui_send_cmd_signal, ui_data_update):
         super(RosThread, self).__init__()
         self.daemon = True  
         self.cloud_received_signal = cloud_received_signal
         self.ui_send_cmd_signal = ui_send_cmd_signal
+
+        self.ui_data_update = ui_data_update # Data update to UI
+        self.data_store = {}
 
     def run(self):
         rospy.init_node("gui_node", anonymous=True, disable_signals=True)
@@ -32,6 +36,13 @@ class RosThread(threading.Thread):
         rospy.Subscriber(PRE_SCAN_CLOUD_TOPIC, PointCloud2, self.cloud_received_signal_callback)
         rospy.Subscriber(POST_SCAN_CLOUD_TOPIC, PointCloud2, self.cloud_received_signal_callback)
         rospy.Subscriber(CLOUD_COMPARED_TOPIC, PointCloud2, self.cloud_received_signal_callback)
+
+        # listening topic update infomation for UI.
+        rospy.Subscriber("/joint_states", JointState, self.update_joint_states_status)
+
+        rospy.Timer(rospy.Duration(1.0), self.emit_ui_data_update) # Update data 1Hz
+        # rospy.Subscriber(HMI_CMD_TOPIC,Int32, self.update_hmi_cmd)
+
         rospy.spin()
 
     def cloud_received_signal_callback(self, msg):
@@ -41,11 +52,33 @@ class RosThread(threading.Thread):
     def send_command(self, cmd: PPSCommand):
         if hasattr(self, 'cmd_pub'):
             self.cmd_pub.publish(Int32(data=cmd))    
+    
+    def update_joint_states_status(self, msg):
+        try:
+            idx = msg.name.index(cfg.ENCODER_JOINT_NAME)
+            current_encoder_value_in_degree = msg.position[idx] * 180 / 3.14
+
+            self.data_store["encoder_value_in_deg"] = current_encoder_value_in_degree
+
+        except ValueError:
+
+            rospy.logwarn(f"Joint {cfg.ENCODER_JOINT_NAME} not found in JointState")
+
+    def emit_ui_data_update(self,msg):
+        self.data_store["encoder_value_in_deg"] = random.random()
+        self.ui_data_update.emit(self.data_store)
+
+
+
+        
+
+
 
 class App(QWidget):
 
     cloud_received_signal = pyqtSignal(object)
     ui_send_cmd_signale = pyqtSignal(int)
+    ui_data_update = pyqtSignal(dict)
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -53,9 +86,13 @@ class App(QWidget):
         self.ui = Ui_Frame()
         self.ui.setupUi(self)  # Gán các widget đã thiết kế vào self
 	
-        self.ros_thread = RosThread(self.cloud_received_signal, self.ui_send_cmd_signale)
+        self.ros_thread = RosThread(self.cloud_received_signal, self.ui_send_cmd_signale, self.ui_data_update)
+
         self.cloud_received_signal.connect(self.update_pointcloud)
+        self.ui_data_update.connect(self.update_data)
+
         self.ui_send_cmd_signale.connect(self.ros_thread.send_command)
+        
         self.ros_thread.start()
         
         self.current_actor = None
@@ -147,6 +184,14 @@ class App(QWidget):
 
         # self.renderer.AddActor(actor)
         # self.renderer.ResetCamera()    
+
+    @pyqtSlot(dict)
+    def update_data(self, data):
+        try:
+            encoder_value_in_deg = data["encoder_value_in_deg"]
+            self.ui.lblEncoder.setText(f"{encoder_value_in_deg:.2f}")  # 2 chữ số thập phân
+        except Exception as e:
+            rospy.logwarn(f"update_data error: {e}")
 
     @pyqtSlot(object)
     def update_pointcloud(self, msg):

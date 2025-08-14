@@ -2,32 +2,22 @@
 import rospy
 from sensor_msgs.msg import JointState
 from can_msgs.msg import Frame
-from enum import Enum
-
-from encoder_process.data_models import EncoderConfig, KinematicParams, SolverType
 from encoder_process import encoder_utils as solver
-
+from shared.config_loader import CONFIG
+cfg = CONFIG
 
 class EncoderProcessNode:
     def __init__(self):
         rospy.init_node("encoder_process_node")
 
-        self.solver_type = SolverType.POLYNOMIAL
-
         # ROS Pub/Sub
         self.pub_joint_states = rospy.Publisher("/joint_states", JointState, queue_size=10)
-        rospy.Subscriber("/encoder01/can_msg", Frame, self.can_callback)
+        rospy.Subscriber(cfg.ENCODER01_CAN_MSG, Frame, self.can_callback)
 
     def can_callback(self, msg: Frame):
         draw_wire_length = solver.convert_draw_wire_length(msg.data)
+        angle = solver.length_to_angle_polynomial(draw_wire_length)
  
-        if self.solver_type == SolverType.POLYNOMIAL:
-            angle = solver.length_to_angle_polynomial(draw_wire_length)
-
-        else:
-            rospy.logwarn(f"Solver type '{self.solver_type}' is invalid, using raw length as angle.")
-            angle = draw_wire_length
-
         rospy.logwarn(f"[EncoderProcessNode] Length {draw_wire_length} to angle {angle} rad, {angle*180/3.14} deg.")
 
         # Publish JointState

@@ -18,3 +18,9 @@ ENCODER_JOINT_NAME: "scanner_deploy_retract"
 # Start Housing possition in degree (start to collect data)
 HOUSING_START_POSITION : 15 # value in degree (not in radian)
 HOUSING_END_POSITION : 90 # value in degree (not in radian)
+
+
+
+# ENCODER PARAMETER
+# Topic mà PCAN sẽ chuyển gói tin sau khi nhận từ mạng CAN.
+ENCODER01_CAN_MSG: "/encoder01/can_msg" 
