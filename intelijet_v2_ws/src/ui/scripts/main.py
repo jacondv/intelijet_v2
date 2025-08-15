@@ -3,6 +3,8 @@ import sys
 import vtk
 from PyQt5.QtWidgets import QApplication, QWidget
 from vtk.qt.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
+from vtk.util import numpy_support
+
 from ui.pps_ui import Ui_Frame  # Import class từ file pps_ui.py
 from ui.utils import ros_pointcloud2_to_o3d_to_vtk_polydata_voxel
 import rospy
@@ -142,6 +144,7 @@ class App(QWidget):
         self.ui.btnOpenScanner.clicked.connect(self.open_scanner)
         self.ui.btnCloseScanner.clicked.connect(self.close_scanner)
         self.ui.btnStop.clicked.connect(self.stop_scanner)
+        self.__load_sample()
     
     def start_prescan(self):
         # self.cmd_pub.publish(String("start_prescan"))
@@ -172,16 +175,34 @@ class App(QWidget):
         self.ui_send_cmd_signale.emit(PPSCommand.PAUSE_HOUSING.value)
     
     def on_cancel(self):
+        if not hasattr(self, "_cloud_loaded"):
+            self._cloud_loaded = True
+            self.__load_sample()
         self.ui_send_cmd_signale.emit(PPSCommand.CANCEL_JOB.value)
-        
+
+
+    def __load_sample(self):
+                
         # Example point cloud
 
-        # import open3d as o3d
-        # import numpy as np
+        import open3d as o3d
+        import numpy as np
         
-        # #     # Hardcoded path
-        # self.vtkWidget.resize(self.ui.cloudFrame.size())
+        #     # Hardcoded path
+        self.vtkWidget.resize(self.ui.cloudFrame.size())
         # path = "/mnt/c/work/projects/pointcloud/post_scan_0_20250530_130626_afterporcess.ply"
+        path = "/root/intelijet_v2/post_scan_0_20250530_130626_afterporcess.ply"
+
+        #Đọc PLY bằng Open3D
+        pcd = o3d.io.read_point_cloud(path)
+        points = np.asarray(pcd.points)
+        colors = np.asarray(pcd.colors) 
+
+        #  Chuyển sang vtkPolyData
+        polydata = vtk.vtkPolyData()
+        vtk_points = vtk.vtkPoints()
+        vtk_points.SetData(numpy_support.numpy_to_vtk(points))
+        polydata.SetPoints(vtk_points)
 
         # reader = vtk.vtkPLYReader()
         # reader.SetFileName(path)
@@ -189,19 +210,28 @@ class App(QWidget):
 
         # polydata = reader.GetOutput()
 
-        # vertex_filter = vtk.vtkVertexGlyphFilter()
-        # vertex_filter.SetInputData(polydata)
-        # vertex_filter.Update()
+        # Chuyển màu sang vtkUnsignedCharArray
+        # Open3D màu float [0,1], VTK cần uint8 [0,255]
+        colors_uint8 = (colors * 255).astype(np.uint8)
+        vtk_colors = numpy_support.numpy_to_vtk(colors_uint8)
+        vtk_colors.SetNumberOfComponents(3)
+        vtk_colors.SetName("Colors")
+        polydata.GetPointData().SetScalars(vtk_colors)
 
-        # mapper = vtk.vtkPolyDataMapper()
-        # mapper.SetInputConnection(vertex_filter.GetOutputPort())
+        vertex_filter = vtk.vtkVertexGlyphFilter()
+        vertex_filter.SetInputData(polydata)
+        vertex_filter.Update()
 
-        # actor = vtk.vtkActor()
-        # actor.SetMapper(mapper)
-        # actor.GetProperty().SetPointSize(1)
+        mapper = vtk.vtkPolyDataMapper()
+        mapper.SetInputConnection(vertex_filter.GetOutputPort())
 
-        # self.renderer.AddActor(actor)
-        # self.renderer.ResetCamera()    
+        actor = vtk.vtkActor()
+        actor.SetMapper(mapper)
+        actor.GetProperty().SetPointSize(1)
+
+        self.renderer.AddActor(actor)
+        self.renderer.ResetCamera()    
+
 
     @pyqtSlot(dict)
     def update_data(self, data):

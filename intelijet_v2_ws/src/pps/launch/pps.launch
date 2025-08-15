@@ -38,7 +38,7 @@
 
 
 	<!-- RVIZ -->
-	<node pkg="rviz" type="rviz" name="rviz" args="-d $(find pps)/launch/rviz/scanner.rviz"/>
+	<!-- <node pkg="rviz" type="rviz" name="rviz" args="-d $(find pps)/launch/rviz/scanner.rviz"/> -->
 
 
 	<!-- CANNER HOUSING Load URDF -->

@@ -12,6 +12,7 @@ RUN apt-get update && apt-get install -y \
     git \
     pkg-config \
     python3-pip \
+    python3-tk \
     ros-noetic-rviz \
     ros-noetic-tf \
     ros-noetic-tf2-ros \
@@ -40,10 +41,18 @@ RUN apt-get update && apt-get install -y \
 #        rosnumpy \
 #        numpy
 
-RUN apt-get update && apt-get install -y python3-pip
-RUN python3 -m pip install --no-cache-dir open3d
-RUN python3 -m pip install --no-cache-dir opencv-contrib-python
-RUN python3 -m pip install --no-cache-dir rosnumpy
+# RUN apt-get update && apt-get install -y python3-pip
+
+
+RUN python3 -m pip install open3d
+RUN python3 -m pip install opencv-contrib-python
+RUN python3 -m pip install rosnumpy
+RUN python3 -m pip install --upgrade pip setuptools wheel
+RUN python3 -m pip install "numpy>=1.21,<1.27"
+
+# Cập nhật apt và cài can-msgs (Note should update before install)
+RUN apt-get update && apt-get install -y ros-noetic-can-msgs
+
 
 # ---------------------------
 # 6. Tạo workspace ROS (ko cần, ta sẽ mount thư mục project từ ben ngoài trực tiếp vào trong)
@@ -70,4 +79,4 @@ CMD ["bash"]
 # docker run -it --rm -v /c/WORK/projects/intelijet_v2:/root/intelijet_v2 -e DISPLAY=host.docker.internal:0 -v /tmp/.X11-unix:/tmp/.X11-unix jacon-pps-noetic
 
 # On windows
-# docker run -it --rm -v /c/WORK/projects/intelijet_v2:/root/intelijet_v2 -e DISPLAY=host.docker.internal:0 -v /tmp/.X11-unix:/tmp/.X11-unix --network host jacon-pps-noetic
+# docker run -it -e XDG_RUNTIME_DIR=/tmp/runtime-root --rm -v /c/WORK/projects/intelijet_v2:/root/intelijet_v2 -e DISPLAY=host.docker.internal:0 -v /tmp/.X11-unix:/tmp/.X11-unix --network host jacon-pps-noetic

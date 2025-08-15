@@ -10,7 +10,7 @@
     <x>0</x>
     <y>0</y>
     <width>1147</width>
-    <height>979</height>
+    <height>1100</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -125,7 +125,7 @@
     border-radius: 10px; /* bo góc frame nếu muốn */
     border: 1px solid #E67E22; /* viền frame */
 	
-	background-color: qlineargradient(spread:reflect, x1:0, y1:1, x2:0, y2:0, stop:0 rgba(245, 205, 121,1.0), stop:1 rgba(247, 215, 148,1.0));
+	background-color: qlineargradient(spread:reflect, x1:0, y1:1, x2:0, y2:0, stop:0 rgba(245, 205, 121,1.0), stop:1 rgba(247, 255, 255,1.0));
 
 
 }</string>
@@ -143,6 +143,43 @@
             <property name="verticalSpacing">
              <number>20</number>
             </property>
+            <item row="0" column="1">
+             <widget class="QLabel" name="logoLabel">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="maximumSize">
+               <size>
+                <width>300</width>
+                <height>150</height>
+               </size>
+              </property>
+              <property name="baseSize">
+               <size>
+                <width>0</width>
+                <height>200</height>
+               </size>
+              </property>
+              <property name="text">
+               <string/>
+              </property>
+              <property name="pixmap">
+               <pixmap>jacon_logo.png</pixmap>
+              </property>
+              <property name="scaledContents">
+               <bool>true</bool>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignHCenter|Qt::AlignTop</set>
+              </property>
+              <property name="margin">
+               <number>5</number>
+              </property>
+             </widget>
+            </item>
             <item row="1" column="1">
              <widget class="QPushButton" name="btnPreScan">
               <property name="sizePolicy">
@@ -194,37 +231,6 @@ QPushButton:pressed {
               </property>
               <property name="text">
                <string>Pre-Scan</string>
-              </property>
-             </widget>
-            </item>
-            <item row="0" column="1">
-             <widget class="QLabel" name="logoLabel">
-              <property name="sizePolicy">
-               <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-                <horstretch>0</horstretch>
-                <verstretch>0</verstretch>
-               </sizepolicy>
-              </property>
-              <property name="maximumSize">
-               <size>
-                <width>150</width>
-                <height>50</height>
-               </size>
-              </property>
-              <property name="text">
-               <string/>
-              </property>
-              <property name="pixmap">
-               <pixmap>jacon_logo.png</pixmap>
-              </property>
-              <property name="scaledContents">
-               <bool>true</bool>
-              </property>
-              <property name="alignment">
-               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-              </property>
-              <property name="margin">
-               <number>5</number>
               </property>
              </widget>
             </item>
@@ -370,7 +376,7 @@ QPushButton:pressed {
     border-radius: 40px; /* bo góc */
     color: white;
     padding: 6px 12px;
-    border: 1px solid #63cdda;
+    border: 1px solid #e15f41;
     background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
                                 stop:0 #e77f67, stop:1 #e15f41); /* gradient xanh */
 }
@@ -408,17 +414,17 @@ QPushButton:pressed {
     padding: 6px 12px;
     border: 1px solid #63cdda;
     background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                                stop:0 #e77f67, stop:1 #e15f41); /* gradient xanh */
+                                stop:0 #3dc1d3, stop:1 #63cdda); /* gradient xanh */
 }
 
 QPushButton:hover {
     background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                                stop:0 #e77f67, stop:1 #e15f41); 
+                                stop:0 #3dc1d3, stop:1 #3dc1d3);
 }
 
 QPushButton:pressed {
     background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                                stop:0 #e77f67, stop:1 #e15f41); 
+                                stop:0 #1E8449, stop:1 #145A32);
     padding-left: 4px;  /* tạo cảm giác nhấn sâu */
     padding-top: 4px;
 }
@@ -437,6 +443,29 @@ QPushButton:pressed {
                 <height>100</height>
                </size>
               </property>
+              <property name="styleSheet">
+               <string notr="true">QPushButton {
+    border-radius: 40px; /* bo góc */
+    color: white;
+    padding: 6px 12px;
+    border: 1px solid #63cdda;
+    background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                                stop:0 #3dc1d3, stop:1 #63cdda); /* gradient xanh */
+}
+
+QPushButton:hover {
+    background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                                stop:0 #3dc1d3, stop:1 #3dc1d3);
+}
+
+QPushButton:pressed {
+    background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                                stop:0 #1E8449, stop:1 #145A32);
+    padding-left: 4px;  /* tạo cảm giác nhấn sâu */
+    padding-top: 4px;
+}
+</string>
+              </property>
               <property name="text">
                <string>Close Housing</string>
               </property>
@@ -449,6 +478,29 @@ QPushButton:pressed {
                 <width>0</width>
                 <height>100</height>
                </size>
+              </property>
+              <property name="styleSheet">
+               <string notr="true">QPushButton {
+    border-radius: 40px; /* bo góc */
+    color: white;
+    padding: 6px 12px;
+    border: 1px solid #63cdda;
+    background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                                stop:0 #3dc1d3, stop:1 #63cdda); /* gradient xanh */
+}
+
+QPushButton:hover {
+    background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                                stop:0 #3dc1d3, stop:1 #3dc1d3);
+}
+
+QPushButton:pressed {
+    background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                                stop:0 #1E8449, stop:1 #145A32);
+    padding-left: 4px;  /* tạo cảm giác nhấn sâu */
+    padding-top: 4px;
+}
+</string>
               </property>
               <property name="text">
                <string>Stop Housing</string>
