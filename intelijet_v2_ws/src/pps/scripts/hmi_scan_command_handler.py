@@ -9,6 +9,7 @@ from align_service_client import AlignServiceClient
 from pps.msg import StartScanAction, StartScanGoal
 from ros_blkarc_msgs.msg import TimedScanAction, TimedScanGoal
 from shared.pps_command import PPSCommand
+from shared.log_status import log_status
 
 from pps.sick_scan_controller import SickScanController
 
@@ -45,10 +46,12 @@ class ScanManagerNode:
 
         if cmd == PPSCommand.START_PRESCAN.value:
             self.scanner_controller.run_prescan()
+            
+        
 
             # self.__send_scan_cmd(output_topic=cfg.PRE_SCAN_TOPIC)
 
-        elif cmd == PPSCommand.START_POSTSCAN.value:
+        elif cmd == PPSCommand.START_POSTSCAN.value:    
             self.scanner_controller.run_postscan()
 
             # if self.__send_scan_cmd(output_topic=cfg.POST_SCAN_TOPIC):
@@ -68,7 +71,8 @@ class ScanManagerNode:
                 rospy.logerr("Alignment failed: %s", message)
 
         else:
-            rospy.logwarn("Unknown command from HMI: %s", cmd)
+            pass
+            # rospy.logwarn("Unknown command from HMI: %s", cmd)
 
     def __send_scan_cmd(self, output_topic):
         

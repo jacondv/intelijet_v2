@@ -1,0 +1,9 @@
+digraph G {
+"LMS-511" -> "LMS_511_scan_plane"[label="Broadcaster: /robot_state_publisher\nAverage rate: 10000.000 Hz\nMost recent transform: 0.000 ( 1754533813.534 sec old)\nBuffer length: 0.000 sec\n"];
+"scanner_mount" -> "LMS-511"[label="Broadcaster: /robot_state_publisher\nAverage rate: 10000.000 Hz\nMost recent transform: 0.000 ( 1754533813.534 sec old)\nBuffer length: 0.000 sec\n"];
+"base_link" -> "scanner_mount"[label="Broadcaster: /robot_state_publisher\nAverage rate: 10.203 Hz\nMost recent transform: 1754533813.452 ( 0.083 sec old)\nBuffer length: 4.901 sec\n"];
+edge [style=invis];
+ subgraph cluster_legend { style=bold; color=black; label ="view_frames Result";
+"Recorded at time: 1754533813.534"[ shape=plaintext ] ;
+ }->"base_link";
+}

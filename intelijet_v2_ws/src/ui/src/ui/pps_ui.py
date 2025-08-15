@@ -14,7 +14,7 @@ class Ui_Frame(object):
     def setupUi(self, Frame):
         Frame.setObjectName("Frame")
         Frame.setWindowModality(QtCore.Qt.NonModal)
-        Frame.resize(924, 979)
+        Frame.resize(1147, 979)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Fixed)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
@@ -24,8 +24,8 @@ class Ui_Frame(object):
         Frame.setMaximumSize(QtCore.QSize(16777215, 16777215))
         Frame.setBaseSize(QtCore.QSize(960, 600))
         Frame.setStyleSheet("")
-        self.gridLayout_2 = QtWidgets.QGridLayout(Frame)
-        self.gridLayout_2.setObjectName("gridLayout_2")
+        self.verticalLayout = QtWidgets.QVBoxLayout(Frame)
+        self.verticalLayout.setObjectName("verticalLayout")
         self.tabWidget = QtWidgets.QTabWidget(Frame)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
         sizePolicy.setHorizontalStretch(0)
@@ -35,6 +35,7 @@ class Ui_Frame(object):
         self.tabWidget.setMinimumSize(QtCore.QSize(0, 0))
         self.tabWidget.setBaseSize(QtCore.QSize(0, 0))
         self.tabWidget.setStyleSheet("")
+        self.tabWidget.setTabShape(QtWidgets.QTabWidget.Triangular)
         self.tabWidget.setObjectName("tabWidget")
         self.tab_main = QtWidgets.QWidget()
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
@@ -83,6 +84,27 @@ class Ui_Frame(object):
         self.btnPreScan.setMinimumSize(QtCore.QSize(0, 100))
         self.btnPreScan.setMaximumSize(QtCore.QSize(16777215, 16777215))
         self.btnPreScan.setBaseSize(QtCore.QSize(0, 200))
+        self.btnPreScan.setStyleSheet("QPushButton {\n"
+"    border-radius: 40px; /* bo góc */\n"
+"    color: white;\n"
+"    padding: 6px 12px;\n"
+"    border: 1px solid #388E3C;\n"
+"    background: qlineargradient(x1:0, y1:0, x2:0, y2:1,\n"
+"                                stop:0 #6FCF97, stop:1 #27AE60); /* gradient xanh */\n"
+"}\n"
+"\n"
+"QPushButton:hover {\n"
+"    background: qlineargradient(x1:0, y1:0, x2:0, y2:1,\n"
+"                                stop:0 #81E6A0, stop:1 #2ECC71);\n"
+"}\n"
+"\n"
+"QPushButton:pressed {\n"
+"    background: qlineargradient(x1:0, y1:0, x2:0, y2:1,\n"
+"                                stop:0 #1E8449, stop:1 #145A32);\n"
+"    padding-left: 4px;  /* tạo cảm giác nhấn sâu */\n"
+"    padding-top: 4px;\n"
+"}\n"
+"")
         self.btnPreScan.setObjectName("btnPreScan")
         self.formLayout.setWidget(1, QtWidgets.QFormLayout.FieldRole, self.btnPreScan)
         self.logoLabel = QtWidgets.QLabel(self.frame_3)
@@ -107,6 +129,27 @@ class Ui_Frame(object):
         self.btnPostScan.setMinimumSize(QtCore.QSize(0, 100))
         self.btnPostScan.setMaximumSize(QtCore.QSize(16777215, 16777215))
         self.btnPostScan.setBaseSize(QtCore.QSize(0, 200))
+        self.btnPostScan.setStyleSheet("QPushButton {\n"
+"    border-radius: 40px; /* bo góc */\n"
+"    color: white;\n"
+"    padding: 6px 12px;\n"
+"    border: 1px solid #388E3C;\n"
+"    background: qlineargradient(x1:0, y1:0, x2:0, y2:1,\n"
+"                                stop:0 #6FCF97, stop:1 #27AE60); /* gradient xanh */\n"
+"}\n"
+"\n"
+"QPushButton:hover {\n"
+"    background: qlineargradient(x1:0, y1:0, x2:0, y2:1,\n"
+"                                stop:0 #81E6A0, stop:1 #2ECC71);\n"
+"}\n"
+"\n"
+"QPushButton:pressed {\n"
+"    background: qlineargradient(x1:0, y1:0, x2:0, y2:1,\n"
+"                                stop:0 #1E8449, stop:1 #145A32);\n"
+"    padding-left: 4px;  /* tạo cảm giác nhấn sâu */\n"
+"    padding-top: 4px;\n"
+"}\n"
+"")
         self.btnPostScan.setObjectName("btnPostScan")
         self.formLayout.setWidget(2, QtWidgets.QFormLayout.FieldRole, self.btnPostScan)
         self.btnCompare = QtWidgets.QPushButton(self.frame_3)
@@ -130,6 +173,27 @@ class Ui_Frame(object):
         self.btnCancel.setMaximumSize(QtCore.QSize(16777215, 16777215))
         self.btnCancel.setBaseSize(QtCore.QSize(0, 200))
         self.btnCancel.setAutoFillBackground(False)
+        self.btnCancel.setStyleSheet("QPushButton {\n"
+"    border-radius: 40px; /* bo góc */\n"
+"    color: white;\n"
+"    padding: 6px 12px;\n"
+"    border: 1px solid #388E3C;\n"
+"    background: qlineargradient(x1:0, y1:0, x2:0, y2:1,\n"
+"                                stop:0 #6FCF97, stop:1 #27AE60); /* gradient xanh */\n"
+"}\n"
+"\n"
+"QPushButton:hover {\n"
+"    background: qlineargradient(x1:0, y1:0, x2:0, y2:1,\n"
+"                                stop:0 #81E6A0, stop:1 #2ECC71);\n"
+"}\n"
+"\n"
+"QPushButton:pressed {\n"
+"    background: qlineargradient(x1:0, y1:0, x2:0, y2:1,\n"
+"                                stop:0 #1E8449, stop:1 #145A32);\n"
+"    padding-left: 4px;  /* tạo cảm giác nhấn sâu */\n"
+"    padding-top: 4px;\n"
+"}\n"
+"")
         self.btnCancel.setObjectName("btnCancel")
         self.formLayout.setWidget(4, QtWidgets.QFormLayout.FieldRole, self.btnCancel)
         self.btnOpenScanner = QtWidgets.QPushButton(self.frame_3)
@@ -152,24 +216,54 @@ class Ui_Frame(object):
         self.tab_setting = QtWidgets.QWidget()
         self.tab_setting.setObjectName("tab_setting")
         self.tabWidget.addTab(self.tab_setting, "")
-        self.tab_setting1 = QtWidgets.QWidget()
-        self.tab_setting1.setObjectName("tab_setting1")
-        self.horizontalLayout_3 = QtWidgets.QHBoxLayout(self.tab_setting1)
+        self.tab_system = QtWidgets.QWidget()
+        self.tab_system.setObjectName("tab_system")
+        self.horizontalLayout_3 = QtWidgets.QHBoxLayout(self.tab_system)
         self.horizontalLayout_3.setObjectName("horizontalLayout_3")
         self.horizontalLayout = QtWidgets.QHBoxLayout()
         self.horizontalLayout.setObjectName("horizontalLayout")
-        self.infoFrame = QtWidgets.QFrame(self.tab_setting1)
+        self.infoFrame = QtWidgets.QFrame(self.tab_system)
         self.infoFrame.setFrameShape(QtWidgets.QFrame.StyledPanel)
         self.infoFrame.setFrameShadow(QtWidgets.QFrame.Raised)
         self.infoFrame.setObjectName("infoFrame")
         self.label = QtWidgets.QLabel(self.infoFrame)
-        self.label.setGeometry(QtCore.QRect(30, 60, 141, 16))
+        self.label.setGeometry(QtCore.QRect(80, 200, 141, 16))
         self.label.setObjectName("label")
         self.lblEncoder = QtWidgets.QLabel(self.infoFrame)
-        self.lblEncoder.setGeometry(QtCore.QRect(180, 60, 59, 15))
+        self.lblEncoder.setGeometry(QtCore.QRect(210, 200, 59, 15))
         self.lblEncoder.setObjectName("lblEncoder")
+        self.label_2 = QtWidgets.QLabel(self.infoFrame)
+        self.label_2.setGeometry(QtCore.QRect(30, 150, 41, 16))
+        self.label_2.setObjectName("label_2")
+        self.label_3 = QtWidgets.QLabel(self.infoFrame)
+        self.label_3.setGeometry(QtCore.QRect(30, 180, 61, 16))
+        self.label_3.setObjectName("label_3")
+        self.label_4 = QtWidgets.QLabel(self.infoFrame)
+        self.label_4.setGeometry(QtCore.QRect(30, 120, 41, 16))
+        self.label_4.setObjectName("label_4")
+        self.label_5 = QtWidgets.QLabel(self.infoFrame)
+        self.label_5.setGeometry(QtCore.QRect(30, 230, 91, 16))
+        self.label_5.setObjectName("label_5")
+        self.lblPLCStatus = QtWidgets.QLabel(self.infoFrame)
+        self.lblPLCStatus.setGeometry(QtCore.QRect(90, 120, 59, 15))
+        self.lblPLCStatus.setObjectName("lblPLCStatus")
+        self.lblLidarStatus = QtWidgets.QLabel(self.infoFrame)
+        self.lblLidarStatus.setGeometry(QtCore.QRect(90, 150, 59, 15))
+        self.lblLidarStatus.setObjectName("lblLidarStatus")
+        self.lblPCANStatus = QtWidgets.QLabel(self.infoFrame)
+        self.lblPCANStatus.setGeometry(QtCore.QRect(120, 230, 59, 15))
+        self.lblPCANStatus.setObjectName("lblPCANStatus")
+        self.lblEncoderStatus = QtWidgets.QLabel(self.infoFrame)
+        self.lblEncoderStatus.setGeometry(QtCore.QRect(90, 180, 59, 15))
+        self.lblEncoderStatus.setObjectName("lblEncoderStatus")
+        self.label_6 = QtWidgets.QLabel(self.infoFrame)
+        self.label_6.setGeometry(QtCore.QRect(30, 260, 61, 16))
+        self.label_6.setObjectName("label_6")
+        self.lblCameraStatus = QtWidgets.QLabel(self.infoFrame)
+        self.lblCameraStatus.setGeometry(QtCore.QRect(120, 260, 59, 15))
+        self.lblCameraStatus.setObjectName("lblCameraStatus")
         self.horizontalLayout.addWidget(self.infoFrame)
-        self.frmLeftSite = QtWidgets.QFrame(self.tab_setting1)
+        self.frmLeftSite = QtWidgets.QFrame(self.tab_system)
         self.frmLeftSite.setFrameShape(QtWidgets.QFrame.StyledPanel)
         self.frmLeftSite.setFrameShadow(QtWidgets.QFrame.Raised)
         self.frmLeftSite.setObjectName("frmLeftSite")
@@ -177,28 +271,43 @@ class Ui_Frame(object):
         self.horizontalLayout.setStretch(0, 5)
         self.horizontalLayout.setStretch(1, 1)
         self.horizontalLayout_3.addLayout(self.horizontalLayout)
-        self.tabWidget.addTab(self.tab_setting1, "")
-        self.gridLayout_2.addWidget(self.tabWidget, 0, 0, 1, 1)
+        self.tabWidget.addTab(self.tab_system, "")
+        self.verticalLayout.addWidget(self.tabWidget)
+        self.lblNotification = QtWidgets.QLabel(Frame)
+        self.lblNotification.setObjectName("lblNotification")
+        self.verticalLayout.addWidget(self.lblNotification)
+        self.verticalLayout.setStretch(0, 5)
 
         self.retranslateUi(Frame)
-        self.tabWidget.setCurrentIndex(2)
+        self.tabWidget.setCurrentIndex(1)
         QtCore.QMetaObject.connectSlotsByName(Frame)
 
     def retranslateUi(self, Frame):
         _translate = QtCore.QCoreApplication.translate
         Frame.setWindowTitle(_translate("Frame", "Frame"))
-        self.btnPreScan.setText(_translate("Frame", "Prescan"))
-        self.btnPostScan.setText(_translate("Frame", "Postscan"))
+        self.btnPreScan.setText(_translate("Frame", "Pre-Scan"))
+        self.btnPostScan.setText(_translate("Frame", "Post-Scan"))
         self.btnCompare.setText(_translate("Frame", "Compare"))
-        self.btnCancel.setText(_translate("Frame", "Cancel"))
-        self.btnOpenScanner.setText(_translate("Frame", "Open Scanner"))
-        self.btnCloseScanner.setText(_translate("Frame", "Close Scanner"))
-        self.btnStop.setText(_translate("Frame", "Stop"))
+        self.btnCancel.setText(_translate("Frame", "Cancel job"))
+        self.btnOpenScanner.setText(_translate("Frame", "Open Housing"))
+        self.btnCloseScanner.setText(_translate("Frame", "Close Housing"))
+        self.btnStop.setText(_translate("Frame", "Stop Housing"))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_main), _translate("Frame", "Home"))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_setting), _translate("Frame", "Setting"))
-        self.label.setText(_translate("Frame", "Encoder value (deg):"))
+        self.label.setText(_translate("Frame", "Encoder value (rad):"))
         self.lblEncoder.setText(_translate("Frame", "--"))
-        self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_setting1), _translate("Frame", "System"))
+        self.label_2.setText(_translate("Frame", "Lidar:"))
+        self.label_3.setText(_translate("Frame", "Encoder:"))
+        self.label_4.setText(_translate("Frame", "PLC:"))
+        self.label_5.setText(_translate("Frame", "PCAN Gatway:"))
+        self.lblPLCStatus.setText(_translate("Frame", "--"))
+        self.lblLidarStatus.setText(_translate("Frame", "--"))
+        self.lblPCANStatus.setText(_translate("Frame", "--"))
+        self.lblEncoderStatus.setText(_translate("Frame", "--"))
+        self.label_6.setText(_translate("Frame", "Camera:"))
+        self.lblCameraStatus.setText(_translate("Frame", "--"))
+        self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_system), _translate("Frame", "System"))
+        self.lblNotification.setText(_translate("Frame", "Notification..."))
 
 
 if __name__ == "__main__":

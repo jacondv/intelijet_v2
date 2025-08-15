@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import sys
 import vtk
-from PyQt5.QtWidgets import QApplication, QVBoxLayout, QFrame, QSizePolicy, QWidget
+from PyQt5.QtWidgets import QApplication, QWidget
 from vtk.qt.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
 from ui.pps_ui import Ui_Frame  # Import class từ file pps_ui.py
 from ui.utils import ros_pointcloud2_to_o3d_to_vtk_polydata_voxel
@@ -10,10 +10,12 @@ from sensor_msgs.msg import PointCloud2, JointState
 from std_msgs.msg import String, Int32
 from PyQt5.QtCore import pyqtSignal, pyqtSlot
 import threading
-import subprocess
-import os
+import json
+
+
 from shared.pps_command import PPSCommand
-import random
+from shared.log_status import unpack_log_status
+from rosgraph_msgs.msg import Log
 
 
 # from pps.utils import load_config
@@ -36,23 +38,30 @@ class RosThread(threading.Thread):
         rospy.Subscriber(PRE_SCAN_CLOUD_TOPIC, PointCloud2, self.cloud_received_signal_callback)
         rospy.Subscriber(POST_SCAN_CLOUD_TOPIC, PointCloud2, self.cloud_received_signal_callback)
         rospy.Subscriber(CLOUD_COMPARED_TOPIC, PointCloud2, self.cloud_received_signal_callback)
+        
 
         # listening topic update infomation for UI.
         rospy.Subscriber("/joint_states", JointState, self.update_joint_states_status)
+
+        rospy.Subscriber('/rosout', Log, self.rosout_callback)
+
 
         rospy.Timer(rospy.Duration(1.0), self.emit_ui_data_update) # Update data 1Hz
         # rospy.Subscriber(HMI_CMD_TOPIC,Int32, self.update_hmi_cmd)
 
         rospy.spin()
 
+
     def cloud_received_signal_callback(self, msg):
         # Đẩy msg về Qt bằng signal
         self.cloud_received_signal.emit(msg)
+
 
     def send_command(self, cmd: PPSCommand):
         if hasattr(self, 'cmd_pub'):
             self.cmd_pub.publish(Int32(data=cmd))    
     
+
     def update_joint_states_status(self, msg):
         try:
             idx = msg.name.index(cfg.ENCODER_JOINT_NAME)
@@ -64,13 +73,22 @@ class RosThread(threading.Thread):
 
             rospy.logwarn(f"Joint {cfg.ENCODER_JOINT_NAME} not found in JointState")
 
-    def emit_ui_data_update(self,msg):
-        # self.data_store["encoder_value_in_deg"] = random.random()
-        self.ui_data_update.emit(self.data_store)
 
-
-
+    def rosout_callback(self,msg):
+        # Lọc theo mức INFO
+        data = unpack_log_status(msg)
+        if data is not None:
+            name = data.get("name")
+            self.data_store[name] = data.get("message")
         
+        
+
+
+
+    def emit_ui_data_update(self, msg):
+        # self.data_store["encoder_value_in_deg"] = random.random()
+
+        self.ui_data_update.emit(self.data_store)
 
 
 
@@ -188,8 +206,12 @@ class App(QWidget):
     @pyqtSlot(dict)
     def update_data(self, data):
         try:
-            encoder_value_in_deg = data["encoder_value_in_deg"]
-            self.ui.lblEncoder.setText(f"{encoder_value_in_deg:.2f}")  # 2 chữ số thập phân
+            if "encoder_value_in_deg" in data:
+                encoder_value_in_deg = data["encoder_value_in_deg"]
+                self.ui.lblEncoder.setText(f"{encoder_value_in_deg:.2f}")  # 2 chữ số thập phân
+                
+            if cfg.NOTIFICATION in data:            
+                self.ui.lblNotification.setText(data[cfg.NOTIFICATION])
         except Exception as e:
             rospy.logwarn(f"update_data error: {e}")
 

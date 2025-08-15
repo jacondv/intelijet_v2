@@ -4,10 +4,11 @@
 import rospy
 from pps.generic_scan_controller import GenericScanController
 from std_msgs.msg import String, Int32
-from shared.config_loader import CONFIG as cfg
 from sensor_msgs.msg import PointCloud2
 from laser_assembler.srv import AssembleScans2
+from shared.config_loader import CONFIG as cfg
 from shared.pps_command import PPSCommand
+from shared.log_status import log_status
 
 def assemble_cloud_client(start_time, end_time):
     rospy.wait_for_service('assemble_scans2')
@@ -38,10 +39,22 @@ class SickScanController(GenericScanController):
         # Send run commant to PLC via ROS Topic. Detail in command_handler.py
 
         self.cmd_pub.publish(self.open_housing_cmd)
-
+        log_status(
+                name=cfg.NOTIFICATION, 
+                status=None, 
+                value=None, 
+                message="[INFO] Scanning...", 
+                node=None
+            )
         #  Waiting Scaner housing open around 10 degree to start collect data point from sickscan
         if not self.wait_until_target(target_position_in_degree=cfg.HOUSING_START_POSITION):
-            rospy.logwarn("[SickScanController] Encoder not reaching target value on time")
+            log_status(
+                name=cfg.NOTIFICATION, 
+                status=None, 
+                value=None, 
+                message="[WARN] Encoder not reaching target value on time", 
+                node=None
+            )    
             return None
         
         # Start collect data. 
@@ -50,6 +63,13 @@ class SickScanController(GenericScanController):
 
         #  Wait Scaner hosing open to target value
         if not self.wait_until_target(target_position_in_degree=cfg.HOUSING_END_POSITION):
+            log_status(
+                name=cfg.NOTIFICATION, 
+                status=None, 
+                value=None, 
+                message="[WARN] Encoder not reaching target value on time", 
+                node=None
+            )            
             return None
 
 
@@ -71,6 +91,13 @@ class SickScanController(GenericScanController):
 
         #  Wait Scaner hosing clouse to target value
         if not self.wait_until_target(target_position_in_degree=cfg.HOUSING_START_POSITION, direction=False):
+            log_status(
+                name=cfg.NOTIFICATION, 
+                status=None, 
+                value=None, 
+                message="[WARN] Encoder not reaching target value on time", 
+                node=None
+            )
             return None        
         rospy.sleep(2)
         self.cmd_pub.publish(self.stop_housing_cmd)

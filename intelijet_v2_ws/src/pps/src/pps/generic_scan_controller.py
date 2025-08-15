@@ -7,6 +7,8 @@ from std_msgs.msg import String, Int32
 from sensor_msgs.msg import PointCloud2
 
 from shared.config_loader import CONFIG as cfg
+from shared.log_status import log_status
+
 import threading
 
 PI = 3.141592
@@ -95,16 +97,45 @@ class GenericScanController(ABC):
 
 
     def run_prescan(self):
+        log_status(
+                name=cfg.NOTIFICATION, 
+                status=None, 
+                value=None, 
+                message="[INFO] Pre-Scan is scanning", 
+                node=None
+            )
         self.__run(self.prescan_pub)
 
 
     def run_postscan(self):
+        log_status(
+                name=cfg.NOTIFICATION, 
+                status=None, 
+                value=None, 
+                message="[INFO] Post-Scan is scanning", 
+                node=None
+            )        
         self.__run(self.postscan_pub)
     
 
-    def on_cancel(self):
-        rospy.loginfo("Cancel requested")
-        self.cancel_job = True
-        # if self._thread and self._thread.is_alive():
-        #     self._thread.join()  # đợi thread kết thúc (nếu muốn đồng bộ)
+    def on_cancel(self):       
+        if self._thread is not None and self._thread.is_alive():
+            log_status(
+                    name=cfg.NOTIFICATION, 
+                    status=None, 
+                    value=None, 
+                    message="[INFO] Cancel job", 
+                    node=None
+                )
+            self.cancel_job = True
+            rospy.sleep(2)
+            if self._thread is not None and not self._thread.is_alive():
+                log_status(
+                        name=cfg.NOTIFICATION, 
+                        status=None, 
+                        value=None, 
+                        message="JACON EQUIPMENT", 
+                        node=None
+                    )
+
 
