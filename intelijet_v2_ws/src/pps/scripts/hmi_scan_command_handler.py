@@ -70,6 +70,8 @@ class ScanManagerNode:
             else:
                 rospy.logerr("Alignment failed: %s", message)
 
+        elif cmd == PPSCommand.PLC_CLOSE_HOUSING.value:
+            self.scanner_controller.close_housing()
         else:
             pass
             # rospy.logwarn("Unknown command from HMI: %s", cmd)
