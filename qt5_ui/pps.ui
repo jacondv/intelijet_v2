@@ -43,7 +43,7 @@
   <property name="styleSheet">
    <string notr="true"/>
   </property>
-  <layout class="QVBoxLayout" name="verticalLayout" stretch="5,0">
+  <layout class="QVBoxLayout" name="verticalLayout" stretch="5,1">
    <item>
     <widget class="QTabWidget" name="tabWidget">
      <property name="sizePolicy">
@@ -65,7 +65,14 @@
       </size>
      </property>
      <property name="styleSheet">
-      <string notr="true"/>
+      <string notr="true">
+#tab_main {
+    border-radius: 10px; /* bo góc frame nếu muốn */
+    border: none; 
+}
+
+
+</string>
      </property>
      <property name="tabShape">
       <enum>QTabWidget::Triangular</enum>
@@ -121,14 +128,7 @@
             </sizepolicy>
            </property>
            <property name="styleSheet">
-            <string notr="true">QFrame {
-    border-radius: 10px; /* bo góc frame nếu muốn */
-    border: 1px solid #E67E22; /* viền frame */
-	
-	background-color: qlineargradient(spread:reflect, x1:0, y1:1, x2:0, y2:0, stop:0 rgba(245, 205, 121,1.0), stop:1 rgba(247, 255, 255,1.0));
-
-
-}</string>
+            <string notr="true"/>
            </property>
            <property name="frameShape">
             <enum>QFrame::StyledPanel</enum>

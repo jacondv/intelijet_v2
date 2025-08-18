@@ -29,6 +29,9 @@ RUN apt-get update && apt-get install -y \
     libqt5core5a \
     libqt5svg5 \
     libqt5multimedia5 \
+    mesa-utils \
+    libgl1-mesa-dri \
+    libgl1-mesa-glx \
     && rm -rf /var/lib/apt/lists/*
 
 # ===========================
@@ -41,18 +44,24 @@ RUN apt-get update && apt-get install -y \
 #        rosnumpy \
 #        numpy
 
-# RUN apt-get update && apt-get install -y python3-pip
+
+RUN python3 -m pip install --upgrade pip setuptools wheel \
+    && python3 -m pip install "numpy==1.23.5" \
+    && python3 -m pip install open3d==0.13.0 opencv-contrib-python rosnumpy \
+    && apt-get update \
+    && apt-get install -y ros-noetic-can-msgs \
+    && rm -rf /var/lib/apt/lists/*
+
+# RUN python3 -m pip install open3d
+# RUN python3 -m pip install opencv-contrib-python
+# RUN python3 -m pip install rosnumpy
+# RUN python3 -m pip install --upgrade pip setuptools wheel
+# RUN python3 -m pip install "numpy==1.23.5"
+# RUN apt-get update && apt-get install -y ros-noetic-can-msgs
 
 
-RUN python3 -m pip install open3d
-RUN python3 -m pip install opencv-contrib-python
-RUN python3 -m pip install rosnumpy
-RUN python3 -m pip install --upgrade pip setuptools wheel
-RUN python3 -m pip install "numpy>=1.21,<1.27"
-
-# Cập nhật apt và cài can-msgs (Note should update before install)
-RUN apt-get update && apt-get install -y ros-noetic-can-msgs
-
+RUN mkdir -p /tmp/runtime-root && chmod 700 /tmp/runtime-root
+ENV XDG_RUNTIME_DIR=/tmp/runtime-root
 
 # ---------------------------
 # 6. Tạo workspace ROS (ko cần, ta sẽ mount thư mục project từ ben ngoài trực tiếp vào trong)
@@ -76,7 +85,32 @@ CMD ["bash"]
 
 
 #Run docker on Linux
-# docker run -it --rm -v /c/WORK/projects/intelijet_v2:/root/intelijet_v2 -e DISPLAY=host.docker.internal:0 -v /tmp/.X11-unix:/tmp/.X11-unix jacon-pps-noetic
+# xhost +local:docker
+
+# docker run -it --rm -v /home/nuc/intelijet_v2:/root/intelijet_v2 -e DISPLAY=$DISPLAY -v /tmp/.X11-unix:/tmp/.X11-unix --network host jacondv/jacon-pps-noetic
+
+# docker run -it --rm \
+#     -v /home/nuc/intelijet_v2:/root/intelijet_v2 \
+#     -e DISPLAY=$DISPLAY \
+#     -e QT_X11_NO_MITSHM=1 \
+#     -v /tmp/.X11-unix:/tmp/.X11-unix:rw \
+#     --network host \
+#     jacondv/jacon-pps-noetic
+
 
 # On windows
 # docker run -it -e XDG_RUNTIME_DIR=/tmp/runtime-root --rm -v /c/WORK/projects/intelijet_v2:/root/intelijet_v2 -e DISPLAY=host.docker.internal:0 -v /tmp/.X11-unix:/tmp/.X11-unix --network host jacon-pps-noetic
+
+
+# #!/bin/bash
+
+# # Cho phép container kết nối X server
+# xhost +local:docker
+
+# # Chạy container
+# docker run -it --rm \
+#     -v /home/nuc/intelijet_v2:/root/intelijet_v2 \
+#     -e DISPLAY=$DISPLAY \
+#     -v /tmp/.X11-unix:/tmp/.X11-unix \
+#     --network host \
+#     jacon-pps-noetic

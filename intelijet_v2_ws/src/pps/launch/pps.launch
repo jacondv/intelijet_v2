@@ -7,15 +7,14 @@
 	<node pkg="pps" name="hmi_scan_command_handler" type="hmi_scan_command_handler.py" />
 
 
-    <!-- <node name="rviz" pkg="rviz" type="rviz" output="screen" args="-d $(find pps)/launch/rviz/raw_pre_scan.rviz" /> -->
-	<node pkg="ui_can_interface" name="ui_can_node" type="ui_can_node.py" />
-
 	<!-- ENCODER01 -->
 	<node pkg="encoder_process" name="encoder_process_node" type="encoder_process_node.py" />
 	<!-- <node pkg="encoder_process" name="test_runrosbag_laserscan" type="test_runrosbag_laserscan.py" /> -->
 
 	<!-- GATEWAY PCAN -->
 	<include file="$(find pcan_ethernet_gateway)/launch/pcan_ethernet_gateway.launch"/>
+	<node pkg="ui_can_interface" name="ui_can_node" type="ui_can_node.py" />
+
 
 	<!-- LEICA BLK SCANNER -->
 	<!-- <include file="$(find ros_blkarc_driver)/launch/blkarc_bringup.launch" /> -->
@@ -24,8 +23,7 @@
 	<!-- SICK SCANNER -->
 	<include file="$(find sick_scan)/launch/sick_lms_511.launch"/>
 
-
-	<!-- Laser_assembler Service-->
+	<!-- Laser assembler Service-->
 	<node pkg="laser_assembler" type="point_cloud2_assembler" name="assembler_node" output="screen">
 		<param name="frame_id" value="LMS_511_scan_plane"/>
 		<!-- remap should be remove in real implement -->
@@ -44,6 +42,7 @@
 	<!-- CANNER HOUSING Load URDF -->
 	<param name="robot_description" textfile="$(find pps)/urdf/scanner_housing.urdf"/>
 
+
 	<!-- Publish TF -->
 	<node pkg="robot_state_publisher" type="robot_state_publisher" name="robot_state_publisher"/>
 
@@ -51,12 +50,14 @@
 	<!-- UI -->
 	<include file="$(find ui)/launch/ui.launch"/>
 
-<!-- 
+	<!-- ROS BAG -->
+	<!-- 	
 	<node name="rosbag_recorder" pkg="rosbag" type="record" output="screen"
 			args="-O /mnt/c/work/projects/intelijet_v2/data/ros_3.bag
 				/pre_scan_0 /pre_scan_0/image
-				/post_scan_0 /post_scan_0/image" /> -->
+				/post_scan_0 /post_scan_0/image" /> 
+	-->
 
-	
+
 
 </launch>

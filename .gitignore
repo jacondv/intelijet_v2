@@ -23,6 +23,7 @@
 *.gz
 *.ply
 *.bag
+token.txt
 
 # === FILE ROS VÀ BUILD ===
 build/
@@ -39,6 +40,7 @@ log/
 **/install/
 **/log/
 **/logs/
+intelijet_v2_ws/.catkin_tools/
 
 
 # === CMAKE ===

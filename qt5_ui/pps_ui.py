@@ -34,7 +34,17 @@ class Ui_Frame(object):
         self.tabWidget.setSizePolicy(sizePolicy)
         self.tabWidget.setMinimumSize(QtCore.QSize(0, 0))
         self.tabWidget.setBaseSize(QtCore.QSize(0, 0))
-        self.tabWidget.setStyleSheet("")
+        self.tabWidget.setStyleSheet("\n"
+"#tab_main {\n"
+"    border-radius: 10px; /* bo góc frame nếu muốn */\n"
+"    border: none; \n"
+"    background-color: qlineargradient(spread:reflect, x1:0, y1:1, x2:0, y2:0, stop:0 rgba(245, 205, 121,1.0), stop:1 rgba(247, 255, 255,1.0));\n"
+"\n"
+"\n"
+"}\n"
+"\n"
+"\n"
+"")
         self.tabWidget.setTabShape(QtWidgets.QTabWidget.Triangular)
         self.tabWidget.setObjectName("tabWidget")
         self.tab_main = QtWidgets.QWidget()
@@ -68,14 +78,7 @@ class Ui_Frame(object):
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.frame_3.sizePolicy().hasHeightForWidth())
         self.frame_3.setSizePolicy(sizePolicy)
-        self.frame_3.setStyleSheet("QFrame {\n"
-"    border-radius: 10px; /* bo góc frame nếu muốn */\n"
-"    border: 1px solid #E67E22; /* viền frame */\n"
-"    \n"
-"    background-color: qlineargradient(spread:reflect, x1:0, y1:1, x2:0, y2:0, stop:0 rgba(245, 205, 121,1.0), stop:1 rgba(247, 255, 255,1.0));\n"
-"\n"
-"\n"
-"}")
+        self.frame_3.setStyleSheet("")
         self.frame_3.setFrameShape(QtWidgets.QFrame.StyledPanel)
         self.frame_3.setObjectName("frame_3")
         self.formLayout = QtWidgets.QFormLayout(self.frame_3)
@@ -370,6 +373,7 @@ class Ui_Frame(object):
         self.lblNotification.setObjectName("lblNotification")
         self.verticalLayout.addWidget(self.lblNotification)
         self.verticalLayout.setStretch(0, 5)
+        self.verticalLayout.setStretch(1, 1)
 
         self.retranslateUi(Frame)
         self.tabWidget.setCurrentIndex(0)
