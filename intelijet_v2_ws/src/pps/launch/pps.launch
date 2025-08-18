@@ -9,7 +9,7 @@
 
 	<!-- ENCODER01 -->
 	<node pkg="encoder_process" name="encoder_process_node" type="encoder_process_node.py" />
-	<node pkg="encoder_process" name="test_runrosbag_laserscan" type="test_runrosbag_laserscan.py" />
+	<!-- <node pkg="encoder_process" name="test_runrosbag_laserscan" type="test_runrosbag_laserscan.py" /> -->
 
 	<!-- GATEWAY PCAN -->
 	<include file="$(find pcan_ethernet_gateway)/launch/pcan_ethernet_gateway.launch"/>
@@ -27,7 +27,7 @@
 	<node pkg="laser_assembler" type="point_cloud2_assembler" name="assembler_node" output="screen">
 		<param name="frame_id" value="LMS_511_scan_plane"/>
 		<!-- remap should be remove in real implement -->
-		<remap from="/cloud" to="/cloud1"/> 
+		<!-- <remap from="/cloud" to="/cloud1"/> -->
 		<param name="fixed_frame" type="string" value="base_link" />
 		<param name="max_clouds" type="int" value="3000" />
 		<param name="ignore_laser_skew" type="bool" value="false" />
@@ -36,7 +36,7 @@
 
 
 	<!-- RVIZ -->
-	<!-- <node pkg="rviz" type="rviz" name="rviz" args="-d $(find pps)/launch/rviz/scanner.rviz"/> -->
+	<node pkg="rviz" type="rviz" name="rviz" args="-d $(find pps)/launch/rviz/scanner.rviz"/>
 
 
 	<!-- CANNER HOUSING Load URDF -->
@@ -51,12 +51,20 @@
 	<include file="$(find ui)/launch/ui.launch"/>
 
 	<!-- ROS BAG -->
-	<!-- 	
-	<node name="rosbag_recorder" pkg="rosbag" type="record" output="screen"
-			args="-O /mnt/c/work/projects/intelijet_v2/data/ros_3.bag
-				/pre_scan_0 /pre_scan_0/image
-				/post_scan_0 /post_scan_0/image" /> 
-	-->
+
+	  <node name="rosbag_recorder"
+		pkg="rosbag"
+		type="record"
+		output="screen"
+		args="-O /root/intelijet_v2/data/bag_250818.bag /cloud /joint_states" />
+
+
 
 
 </launch>
+
+
+
+
+
+
