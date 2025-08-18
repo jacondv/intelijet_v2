@@ -56,11 +56,11 @@ class GenericScanController(ABC):
 
             if direction:
                 if self.current_encoder_value_in_degree is not None and self.current_encoder_value_in_degree >= target_position_in_degree:
-                    rospy.loginfo("Target reached: %.2f" % self.current_position)
+                    rospy.loginfo("Target reached: %.2f" % self.current_encoder_value_in_degree)
                     return True
             else:
                 if self.current_encoder_value_in_degree is not None and self.current_encoder_value_in_degree < target_position_in_degree:
-                    rospy.loginfo("Target reached: %.2f" % self.current_position)
+                    rospy.loginfo("Target reached: %.2f" % self.current_encoder_value_in_degree)
                     return True
 
             

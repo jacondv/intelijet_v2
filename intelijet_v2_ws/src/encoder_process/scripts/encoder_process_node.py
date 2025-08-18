@@ -18,7 +18,7 @@ class EncoderProcessNode:
         draw_wire_length = solver.convert_draw_wire_length(msg.data)
         angle = solver.length_to_angle_polynomial(draw_wire_length)
  
-        rospy.logwarn(f"[EncoderProcessNode] Length {draw_wire_length} to angle {angle} rad, {angle*180/3.14} deg.")
+        #rospy.logwarn(f"[EncoderProcessNode] Length {draw_wire_length} to angle {angle} rad, {angle*180/3.14} deg.")
 
         # Publish JointState
         joint_msg = JointState()

@@ -6,7 +6,7 @@ import rospy
 from pcan_ethernet_gateway.pcan_udp_driver import PcanUdpSender
 from can_msgs.msg import Frame
 
-PCAN_GATEWAY_IP = "192.168.1.10" # Replace with your actual gateway IP
+PCAN_GATEWAY_IP = "192.168.82.10" # Replace with your actual gateway IP
 PCAN_GATEWAY_SEND_PORT  = 56000 # This is the port for sending messages of PC
 PCAN_GATEWAY_SEND_TOPIC = "/pcan_sent_messanges"  # Topic to publish CAN frames
 
