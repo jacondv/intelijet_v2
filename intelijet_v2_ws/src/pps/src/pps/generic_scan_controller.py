@@ -138,20 +138,20 @@ class GenericScanController(ABC):
                         node=None
                     )
                 
-        def close_housing():
-            self.cmd_pub.publish(self.close_housing_cmd)
-            #  Wait Scaner hosing clouse to target value
-            if not self.wait_until_target(target_position_in_degree=cfg.HOUSING_START_POSITION, direction=False):
-                log_status(
-                    name=cfg.NOTIFICATION, 
-                    status=None, 
-                    value=None, 
-                    message="[WARN] Encoder not reaching target value on time", 
-                    node=None
-                )
-                return None        
-            rospy.sleep(2)
-            self.cmd_pub.publish(self.stop_housing_cmd)
+    def close_housing(self):
+        self.cmd_pub.publish(self.close_housing_cmd)
+        #  Wait Scaner hosing clouse to target value
+        if not self.wait_until_target(target_position_in_degree=cfg.HOUSING_START_POSITION, direction=False):
+            log_status(
+                name=cfg.NOTIFICATION, 
+                status=None, 
+                value=None, 
+                message="[WARN] Encoder not reaching target value on time", 
+                node=None
+            )
+            return None        
+        rospy.sleep(2)
+        self.cmd_pub.publish(self.stop_housing_cmd)
 
 
 
