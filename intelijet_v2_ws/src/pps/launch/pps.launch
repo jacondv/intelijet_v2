@@ -52,8 +52,10 @@
 
 	<!-- ROS BAG -->
 	<!-- 	
+	<arg name="bag_name" default="$(shell date +%Y-%m-%d_%H-%M).bag"/>
 	<node name="rosbag_recorder" pkg="rosbag" type="record" output="screen"
-			args="-O /mnt/c/work/projects/intelijet_v2/data/ros_3.bag
+      	args="-O /root/intelijet_v2/data/ros_$(arg bag_name)
+				/scan
 				/pre_scan_0 /pre_scan_0/image
 				/post_scan_0 /post_scan_0/image" /> 
 	-->
