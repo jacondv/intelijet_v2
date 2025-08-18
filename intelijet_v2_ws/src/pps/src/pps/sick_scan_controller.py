@@ -11,11 +11,13 @@ from shared.pps_command import PPSCommand
 from shared.log_status import log_status
 
 def assemble_cloud_client(start_time, end_time):
-    rospy.wait_for_service('assemble_scans2')
+    #rospy.wait_for_service('assemble_scans2')
     try:
         assemble_scans = rospy.ServiceProxy('assemble_scans2', AssembleScans2)
+        rospy.logwarn(f"===========start at : {start_time.to_sec()}")
+        rospy.logwarn(f"===========end at : {end_time.to_sec()}")
         resp = assemble_scans(start_time, end_time)
-        rospy.logwarn("Got combined cloud with %d points", len(resp.cloud.data))
+        rospy.logwarn("Got combined cloud with %d points==================================================================", len(resp.cloud.data))
         return resp.cloud
     except rospy.ServiceException as e:
         rospy.logerr("Service call failed: %s", e)
@@ -81,6 +83,7 @@ class SickScanController(GenericScanController):
         self.cmd_pub.publish(self.stop_housing_cmd)
 
         # Wait some second before go back and call assemble cloud service.
+        
         point_cloud = assemble_cloud_client(start_time=self.start_time, end_time=self.end_time)
         rospy.sleep(2)
 

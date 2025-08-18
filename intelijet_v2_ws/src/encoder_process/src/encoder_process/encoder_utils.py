@@ -49,7 +49,7 @@ def convert_draw_wire_length(message_data, draw_wire_gain_term=draw_wire_gain_te
     )
 
     global encoder_length_at_zero_possition
-    rospy.logwarn(raw_value)
+    #rospy.logwarn(raw_value)
 
     if encoder_length_at_zero_possition is None:
         encoder_length_at_zero_possition = 29910924
