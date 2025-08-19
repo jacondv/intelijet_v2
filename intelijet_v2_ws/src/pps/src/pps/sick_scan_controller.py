@@ -49,7 +49,7 @@ class SickScanController(GenericScanController):
                 node=None
             )
         #  Waiting Scaner housing open around 10 degree to start collect data point from sickscan
-        if not self.wait_until_target(target_position_in_degree=cfg.HOUSING_START_POSITION):
+        if not self.wait_until_target(target_position_in_degree=cfg.HOUSING_START_POSITION, direction=True):
             log_status(
                 name=cfg.NOTIFICATION, 
                 status=None, 
