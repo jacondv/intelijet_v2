@@ -169,11 +169,9 @@ class App(QWidget):
         self.ui_send_cmd_signale.emit(PPSCommand.OPEN_HOUSING.value)
 
     def close_scanner(self):
+        # Cancel job and stop scaner
         self.ui_send_cmd_signale.emit(PPSCommand.CLOSE_HOUSING.value)
-
-    def stop_scanner(self): 
-        self.ui_send_cmd_signale.emit(PPSCommand.PAUSE_HOUSING.value)
-    
+   
     def on_cancel(self):
         if not hasattr(self, "_cloud_loaded"):
             self._cloud_loaded = True

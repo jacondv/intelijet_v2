@@ -7,17 +7,13 @@ from std_msgs.msg import String, Int32
 from sensor_msgs.msg import PointCloud2
 from laser_assembler.srv import AssembleScans2
 from shared.config_loader import CONFIG as cfg
-from shared.pps_command import PPSCommand
 from shared.log_status import log_status
 
 def assemble_cloud_client(start_time, end_time):
     #rospy.wait_for_service('assemble_scans2')
     try:
         assemble_scans = rospy.ServiceProxy('assemble_scans2', AssembleScans2)
-        rospy.logwarn(f"===========start at : {start_time.to_sec()}")
-        rospy.logwarn(f"===========end at : {end_time.to_sec()}")
         resp = assemble_scans(start_time, end_time)
-        rospy.logwarn("Got combined cloud with %d points==================================================================", len(resp.cloud.data))
         return resp.cloud
     except rospy.ServiceException as e:
         rospy.logerr("Service call failed: %s", e)
@@ -26,21 +22,11 @@ def assemble_cloud_client(start_time, end_time):
 class SickScanController(GenericScanController):
     def __init__(self):
         super().__init__()
-
-        self.open_housing_cmd = Int32()
-        self.open_housing_cmd.data = PPSCommand.PLC_OPEN_HOUSING.value
-
-        self.close_housing_cmd = Int32()
-        self.close_housing_cmd.data = PPSCommand.PLC_CLOSE_HOUSING.value
-
-        self.stop_housing_cmd = Int32()
-        self.stop_housing_cmd.data = PPSCommand.PLC_PAUSE_HOUSING.value     
-
       
+
     def run_workflow(self)->PointCloud2:
         # Send run commant to PLC via ROS Topic. Detail in command_handler.py
-
-        self.cmd_pub.publish(self.open_housing_cmd)
+        self.housing.open()
         log_status(
                 name=cfg.NOTIFICATION, 
                 status=None, 
@@ -62,7 +48,6 @@ class SickScanController(GenericScanController):
         # Start collect data. 
         self.start_time = rospy.Time.now()
 
-
         #  Wait Scaner hosing open to target value
         if not self.wait_until_target(target_position_in_degree=cfg.HOUSING_END_POSITION):
             log_status(
@@ -74,23 +59,20 @@ class SickScanController(GenericScanController):
             )            
             return None
 
-
         # Stop move housing
         self.end_time = rospy.Time.now()
 
 
-        # Send run commant to PLC via ROS Topic. Detail in command_handler.py
-        self.cmd_pub.publish(self.stop_housing_cmd)
+        # Send run commant to PLC via ROS Topic.
+        self.housing.stop()
 
         # Wait some second before go back and call assemble cloud service.
         
         point_cloud = assemble_cloud_client(start_time=self.start_time, end_time=self.end_time)
         rospy.sleep(2)
 
-
         # Send back command
-        self.cmd_pub.publish(self.close_housing_cmd)
-
+        self.housing.close()
 
         #  Wait Scaner hosing clouse to target value
         if not self.wait_until_target(target_position_in_degree=cfg.HOUSING_START_POSITION, direction=False):
@@ -102,8 +84,9 @@ class SickScanController(GenericScanController):
                 node=None
             )
             return None        
+        
         rospy.sleep(2)
-        self.cmd_pub.publish(self.stop_housing_cmd)
+        self.housing.stop()
 
         # Call service to assembler pointcloud and publish result to Prescan or PostScan topic...
         
@@ -111,7 +94,7 @@ class SickScanController(GenericScanController):
     
     
     def reset(self):
-        self.cmd_pub.publish(self.stop_housing_cmd)
+        self.housing.stop()
 
 
 

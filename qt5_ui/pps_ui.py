@@ -14,7 +14,7 @@ class Ui_Frame(object):
     def setupUi(self, Frame):
         Frame.setObjectName("Frame")
         Frame.setWindowModality(QtCore.Qt.NonModal)
-        Frame.resize(1147, 1100)
+        Frame.resize(1147, 954)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Fixed)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
@@ -24,8 +24,10 @@ class Ui_Frame(object):
         Frame.setMaximumSize(QtCore.QSize(16777215, 16777215))
         Frame.setBaseSize(QtCore.QSize(960, 600))
         Frame.setStyleSheet("")
-        self.verticalLayout = QtWidgets.QVBoxLayout(Frame)
-        self.verticalLayout.setObjectName("verticalLayout")
+        self.gridLayout = QtWidgets.QGridLayout(Frame)
+        self.gridLayout.setContentsMargins(10, 0, 10, 5)
+        self.gridLayout.setSpacing(0)
+        self.gridLayout.setObjectName("gridLayout")
         self.tabWidget = QtWidgets.QTabWidget(Frame)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
         sizePolicy.setHorizontalStretch(0)
@@ -38,14 +40,12 @@ class Ui_Frame(object):
 "#tab_main {\n"
 "    border-radius: 10px; /* bo góc frame nếu muốn */\n"
 "    border: none; \n"
-"    background-color: qlineargradient(spread:reflect, x1:0, y1:1, x2:0, y2:0, stop:0 rgba(245, 205, 121,1.0), stop:1 rgba(247, 255, 255,1.0));\n"
-"\n"
-"\n"
 "}\n"
 "\n"
 "\n"
 "")
-        self.tabWidget.setTabShape(QtWidgets.QTabWidget.Triangular)
+        self.tabWidget.setTabShape(QtWidgets.QTabWidget.Rounded)
+        self.tabWidget.setIconSize(QtCore.QSize(32, 32))
         self.tabWidget.setObjectName("tabWidget")
         self.tab_main = QtWidgets.QWidget()
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
@@ -55,6 +55,8 @@ class Ui_Frame(object):
         self.tab_main.setSizePolicy(sizePolicy)
         self.tab_main.setObjectName("tab_main")
         self.verticalLayout_3 = QtWidgets.QVBoxLayout(self.tab_main)
+        self.verticalLayout_3.setContentsMargins(0, 0, 0, 0)
+        self.verticalLayout_3.setSpacing(0)
         self.verticalLayout_3.setObjectName("verticalLayout_3")
         self.horizontalLayout_2 = QtWidgets.QHBoxLayout()
         self.horizontalLayout_2.setSizeConstraint(QtWidgets.QLayout.SetMaximumSize)
@@ -84,7 +86,8 @@ class Ui_Frame(object):
         self.formLayout = QtWidgets.QFormLayout(self.frame_3)
         self.formLayout.setLabelAlignment(QtCore.Qt.AlignHCenter|QtCore.Qt.AlignTop)
         self.formLayout.setFormAlignment(QtCore.Qt.AlignHCenter|QtCore.Qt.AlignTop)
-        self.formLayout.setVerticalSpacing(20)
+        self.formLayout.setContentsMargins(5, 5, 5, 5)
+        self.formLayout.setVerticalSpacing(10)
         self.formLayout.setObjectName("formLayout")
         self.logoLabel = QtWidgets.QLabel(self.frame_3)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
@@ -113,7 +116,7 @@ class Ui_Frame(object):
 "    border-radius: 40px; /* bo góc */\n"
 "    color: white;\n"
 "    padding: 6px 12px;\n"
-"    border: 1px solid #63cdda;\n"
+"    border: none;\n"
 "    background: qlineargradient(x1:0, y1:0, x2:0, y2:1,\n"
 "                                stop:0 #3dc1d3, stop:1 #63cdda); /* gradient xanh */\n"
 "}\n"
@@ -125,7 +128,7 @@ class Ui_Frame(object):
 "\n"
 "QPushButton:pressed {\n"
 "    background: qlineargradient(x1:0, y1:0, x2:0, y2:1,\n"
-"                                stop:0 #1E8449, stop:1 #145A32);\n"
+"                                stop:0 #3dc1d3, stop:1 #3dc1d3);\n"
 "    padding-left: 4px;  /* tạo cảm giác nhấn sâu */\n"
 "    padding-top: 4px;\n"
 "}\n"
@@ -145,7 +148,7 @@ class Ui_Frame(object):
 "    border-radius: 40px; /* bo góc */\n"
 "    color: white;\n"
 "    padding: 6px 12px;\n"
-"    border: 1px solid #63cdda;\n"
+"    border: none;\n"
 "    background: qlineargradient(x1:0, y1:0, x2:0, y2:1,\n"
 "                                stop:0 #3dc1d3, stop:1 #63cdda); /* gradient xanh */\n"
 "}\n"
@@ -157,7 +160,7 @@ class Ui_Frame(object):
 "\n"
 "QPushButton:pressed {\n"
 "    background: qlineargradient(x1:0, y1:0, x2:0, y2:1,\n"
-"                                stop:0 #1E8449, stop:1 #145A32);\n"
+"                                stop:0 #3dc1d3, stop:1 #3dc1d3);\n"
 "    padding-left: 4px;  /* tạo cảm giác nhấn sâu */\n"
 "    padding-top: 4px;\n"
 "}\n"
@@ -177,7 +180,7 @@ class Ui_Frame(object):
 "    border-radius: 40px; /* bo góc */\n"
 "    color: white;\n"
 "    padding: 6px 12px;\n"
-"    border: 1px solid #63cdda;\n"
+"    border: none;\n"
 "    background: qlineargradient(x1:0, y1:0, x2:0, y2:1,\n"
 "                                stop:0 #3dc1d3, stop:1 #63cdda); /* gradient xanh */\n"
 "}\n"
@@ -189,7 +192,7 @@ class Ui_Frame(object):
 "\n"
 "QPushButton:pressed {\n"
 "    background: qlineargradient(x1:0, y1:0, x2:0, y2:1,\n"
-"                                stop:0 #1E8449, stop:1 #145A32);\n"
+"                                stop:0 #3dc1d3, stop:1 #3dc1d3);\n"
 "    padding-left: 4px;  /* tạo cảm giác nhấn sâu */\n"
 "    padding-top: 4px;\n"
 "}\n"
@@ -210,7 +213,7 @@ class Ui_Frame(object):
 "    border-radius: 40px; /* bo góc */\n"
 "    color: white;\n"
 "    padding: 6px 12px;\n"
-"    border: 1px solid #e15f41;\n"
+"    border: none;\n"
 "    background: qlineargradient(x1:0, y1:0, x2:0, y2:1,\n"
 "                                stop:0 #e77f67, stop:1 #e15f41); /* gradient xanh */\n"
 "}\n"
@@ -235,19 +238,19 @@ class Ui_Frame(object):
 "    border-radius: 40px; /* bo góc */\n"
 "    color: white;\n"
 "    padding: 6px 12px;\n"
-"    border: 1px solid #63cdda;\n"
+"    border: none;\n"
 "    background: qlineargradient(x1:0, y1:0, x2:0, y2:1,\n"
-"                                stop:0 #3dc1d3, stop:1 #63cdda); /* gradient xanh */\n"
+"                                stop:0 #596275, stop:1 #596275); /* gradient xanh */\n"
 "}\n"
 "\n"
 "QPushButton:hover {\n"
 "    background: qlineargradient(x1:0, y1:0, x2:0, y2:1,\n"
-"                                stop:0 #3dc1d3, stop:1 #3dc1d3);\n"
+"                                stop:0 #596275, stop:1 #596275);\n"
 "}\n"
 "\n"
 "QPushButton:pressed {\n"
 "    background: qlineargradient(x1:0, y1:0, x2:0, y2:1,\n"
-"                                stop:0 #1E8449, stop:1 #145A32);\n"
+"                                stop:0 #303952, stop:1 #303952);\n"
 "    padding-left: 4px;  /* tạo cảm giác nhấn sâu */\n"
 "    padding-top: 4px;\n"
 "}\n"
@@ -260,50 +263,27 @@ class Ui_Frame(object):
 "    border-radius: 40px; /* bo góc */\n"
 "    color: white;\n"
 "    padding: 6px 12px;\n"
-"    border: 1px solid #63cdda;\n"
+"    border: none;\n"
 "    background: qlineargradient(x1:0, y1:0, x2:0, y2:1,\n"
-"                                stop:0 #3dc1d3, stop:1 #63cdda); /* gradient xanh */\n"
+"                                stop:0 #596275, stop:1 #596275); /* gradient xanh */\n"
 "}\n"
 "\n"
 "QPushButton:hover {\n"
 "    background: qlineargradient(x1:0, y1:0, x2:0, y2:1,\n"
-"                                stop:0 #3dc1d3, stop:1 #3dc1d3);\n"
+"                                stop:0 #596275, stop:1 #596275);\n"
 "}\n"
 "\n"
 "QPushButton:pressed {\n"
 "    background: qlineargradient(x1:0, y1:0, x2:0, y2:1,\n"
-"                                stop:0 #1E8449, stop:1 #145A32);\n"
+"                                stop:0 #303952, stop:1 #303952);\n"
 "    padding-left: 4px;  /* tạo cảm giác nhấn sâu */\n"
 "    padding-top: 4px;\n"
 "}\n"
 "")
         self.btnCloseScanner.setObjectName("btnCloseScanner")
         self.formLayout.setWidget(6, QtWidgets.QFormLayout.FieldRole, self.btnCloseScanner)
-        self.btnStop = QtWidgets.QPushButton(self.frame_3)
-        self.btnStop.setMinimumSize(QtCore.QSize(0, 100))
-        self.btnStop.setStyleSheet("QPushButton {\n"
-"    border-radius: 40px; /* bo góc */\n"
-"    color: white;\n"
-"    padding: 6px 12px;\n"
-"    border: 1px solid #63cdda;\n"
-"    background: qlineargradient(x1:0, y1:0, x2:0, y2:1,\n"
-"                                stop:0 #3dc1d3, stop:1 #63cdda); /* gradient xanh */\n"
-"}\n"
-"\n"
-"QPushButton:hover {\n"
-"    background: qlineargradient(x1:0, y1:0, x2:0, y2:1,\n"
-"                                stop:0 #3dc1d3, stop:1 #3dc1d3);\n"
-"}\n"
-"\n"
-"QPushButton:pressed {\n"
-"    background: qlineargradient(x1:0, y1:0, x2:0, y2:1,\n"
-"                                stop:0 #1E8449, stop:1 #145A32);\n"
-"    padding-left: 4px;  /* tạo cảm giác nhấn sâu */\n"
-"    padding-top: 4px;\n"
-"}\n"
-"")
-        self.btnStop.setObjectName("btnStop")
-        self.formLayout.setWidget(7, QtWidgets.QFormLayout.FieldRole, self.btnStop)
+        spacerItem = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding)
+        self.formLayout.setItem(7, QtWidgets.QFormLayout.FieldRole, spacerItem)
         self.horizontalLayout_2.addWidget(self.frame_3)
         self.horizontalLayout_2.setStretch(0, 5)
         self.horizontalLayout_2.setStretch(1, 1)
@@ -368,12 +348,10 @@ class Ui_Frame(object):
         self.horizontalLayout.setStretch(1, 1)
         self.horizontalLayout_3.addLayout(self.horizontalLayout)
         self.tabWidget.addTab(self.tab_system, "")
-        self.verticalLayout.addWidget(self.tabWidget)
+        self.gridLayout.addWidget(self.tabWidget, 0, 0, 1, 1)
         self.lblNotification = QtWidgets.QLabel(Frame)
         self.lblNotification.setObjectName("lblNotification")
-        self.verticalLayout.addWidget(self.lblNotification)
-        self.verticalLayout.setStretch(0, 5)
-        self.verticalLayout.setStretch(1, 1)
+        self.gridLayout.addWidget(self.lblNotification, 1, 0, 1, 1)
 
         self.retranslateUi(Frame)
         self.tabWidget.setCurrentIndex(0)
@@ -388,7 +366,6 @@ class Ui_Frame(object):
         self.btnCancel.setText(_translate("Frame", "Cancel job"))
         self.btnOpenScanner.setText(_translate("Frame", "Open Housing"))
         self.btnCloseScanner.setText(_translate("Frame", "Close Housing"))
-        self.btnStop.setText(_translate("Frame", "Stop Housing"))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_main), _translate("Frame", "Home"))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_setting), _translate("Frame", "Setting"))
         self.label.setText(_translate("Frame", "Encoder value (rad):"))
@@ -405,3 +382,13 @@ class Ui_Frame(object):
         self.lblCameraStatus.setText(_translate("Frame", "--"))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_system), _translate("Frame", "System"))
         self.lblNotification.setText(_translate("Frame", "Notification..."))
+
+
+if __name__ == "__main__":
+    import sys
+    app = QtWidgets.QApplication(sys.argv)
+    Frame = QtWidgets.QFrame()
+    ui = Ui_Frame()
+    ui.setupUi(Frame)
+    Frame.show()
+    sys.exit(app.exec_())

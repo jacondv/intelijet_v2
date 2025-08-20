@@ -46,9 +46,7 @@ class ScanManagerNode:
 
         if cmd == PPSCommand.START_PRESCAN.value:
             self.scanner_controller.run_prescan()
-            
-        
-
+                   
             # self.__send_scan_cmd(output_topic=cfg.PRE_SCAN_TOPIC)
 
         elif cmd == PPSCommand.START_POSTSCAN.value:    
@@ -70,10 +68,16 @@ class ScanManagerNode:
             else:
                 rospy.logerr("Alignment failed: %s", message)
 
-        
+        elif cmd == PPSCommand.OPEN_HOUSING.value:
+            self.scanner_controller.open_housing_auto()
+
+        elif cmd == PPSCommand.CLOSE_HOUSING.value:
+            self.scanner_controller.close_housing_auto()
+
+
         else:
             pass
-            # rospy.logwarn("Unknown command from HMI: %s", cmd)
+
 
     def __send_scan_cmd(self, output_topic):
         

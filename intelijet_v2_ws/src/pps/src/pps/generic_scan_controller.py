@@ -8,23 +8,49 @@ from sensor_msgs.msg import PointCloud2
 
 from shared.config_loader import CONFIG as cfg
 from shared.log_status import log_status
+from shared.pps_command import PPSCommand
 
 import threading
 
 PI = 3.141592
+
+class HousingControl():
+    def __init__(self):
+        self.open_housing_cmd = Int32()
+        self.open_housing_cmd.data = PPSCommand.PLC_OPEN_HOUSING.value
+
+        self.close_housing_cmd = Int32()
+        self.close_housing_cmd.data = PPSCommand.PLC_CLOSE_HOUSING.value
+
+        self.stop_housing_cmd = Int32()
+        self.stop_housing_cmd.data = PPSCommand.PLC_PAUSE_HOUSING.value     
+
+        self.cmd_pub = rospy.Publisher(cfg.HMI_CMD_TOPIC, Int32, queue_size=1)
+
+    def open(self):
+        self.cmd_pub.publish(self.open_housing_cmd)
+
+    def close(self):
+        self.cmd_pub.publish(self.close_housing_cmd)
+
+    def stop(self):
+        self.cmd_pub.publish(self.stop_housing_cmd)
+
+
 
 class GenericScanController(ABC):
     def __init__(self):
 
         self.current_encoder_value = None # indarian
         self.current_encoder_value_in_degree = None
-
-        self.cmd_pub = rospy.Publisher(cfg.HMI_CMD_TOPIC, Int32, queue_size=1)
+        
         self.prescan_pub = rospy.Publisher(cfg.PRE_SCAN_TOPIC, PointCloud2, queue_size=1)
         self.postscan_pub = rospy.Publisher(cfg.POST_SCAN_TOPIC, PointCloud2, queue_size=1)
 
         self.cancel_job = False
         self._thread = None
+
+        self.housing = HousingControl()
 
         rospy.Subscriber("/joint_states", JointState, self.joint_state_cb)
 
@@ -41,6 +67,7 @@ class GenericScanController(ABC):
             idx = msg.name.index(cfg.ENCODER_JOINT_NAME)
             self.current_encoder_value = msg.position[idx]
             self.current_encoder_value_in_degree = self.current_encoder_value * 180 / PI
+
         except ValueError:
             rospy.logwarn(f"Joint {cfg.ENCODER_JOINT_NAME} not found in JointState")
 
@@ -59,22 +86,57 @@ class GenericScanController(ABC):
                     rospy.loginfo("Target reached: %.2f" % self.current_encoder_value_in_degree)
                     return True
             else:
-                if self.current_encoder_value_in_degree is not None and self.current_encoder_value_in_degree < target_position_in_degree:
+                if self.current_encoder_value_in_degree is not None and self.current_encoder_value_in_degree <= target_position_in_degree:
                     rospy.loginfo("Target reached: %.2f" % self.current_encoder_value_in_degree)
                     return True
 
-            
+        # TODO add condition to break this function due to encoder error or PLC not responding...    
             elapsed = (rospy.Time.now() - start_time).to_sec()
             if elapsed > timeout:
                 rospy.logwarn(f"Timeout waiting for target position {target_position_in_degree}° after {timeout} seconds")
                 break
             rate.sleep()
         
-        # TODO add condition to break this function due to encoder error or PLC not responding...
+        
         return False
 
-    def __run(self, publisher):
-        
+    def run_prescan(self):
+        self.__run_scan(self.prescan_pub)
+
+
+    def run_postscan(self):    
+        self.__run_scan(self.postscan_pub)
+    
+
+    def on_cancel(self):       
+        if self._thread is not None and self._thread.is_alive():
+            log_status(
+                    name=cfg.NOTIFICATION, 
+                    status=None, 
+                    value=None, 
+                    message="[INFO] Canceling job", 
+                    node=None
+                )
+            self.cancel_job = True
+            rospy.sleep(1)
+            if self._thread is not None and not self._thread.is_alive():
+                log_status(
+                        name=cfg.NOTIFICATION, 
+                        status=None, 
+                        value=None, 
+                        message="Job canceled", 
+                        node=None
+                    )
+                
+    def open_housing_auto(self):
+        self.__move_housing(direction=True)
+
+    def close_housing_auto(self):
+        self.__move_housing(direction=False)
+
+
+    def __run_scan(self, publisher):
+       
         if self._thread is not None and self._thread.is_alive():
             rospy.logwarn("Scan already running, cannot start another.")
             return False
@@ -94,64 +156,34 @@ class GenericScanController(ABC):
         self._thread.start()
 
         return True
-
-
-    def run_prescan(self):
-        log_status(
-                name=cfg.NOTIFICATION, 
-                status=None, 
-                value=None, 
-                message="[INFO] Pre-Scan is scanning", 
-                node=None
-            )
-        self.__run(self.prescan_pub)
-
-
-    def run_postscan(self):
-        log_status(
-                name=cfg.NOTIFICATION, 
-                status=None, 
-                value=None, 
-                message="[INFO] Post-Scan is scanning", 
-                node=None
-            )        
-        self.__run(self.postscan_pub)
     
+    def __move_housing(self, direction=True):
 
-    def on_cancel(self):       
         if self._thread is not None and self._thread.is_alive():
-            log_status(
-                    name=cfg.NOTIFICATION, 
-                    status=None, 
-                    value=None, 
-                    message="[INFO] Cancel job", 
-                    node=None
-                )
-            self.cancel_job = True
-            rospy.sleep(2)
-            if self._thread is not None and not self._thread.is_alive():
-                log_status(
-                        name=cfg.NOTIFICATION, 
-                        status=None, 
-                        value=None, 
-                        message="JACON EQUIPMENT", 
-                        node=None
-                    )
+            rospy.logwarn("Scan already running, cannot start another.")
+            return False
+        
+        self.cancel_job = False
+
+        def run_thread():
+
+            try:
+                if direction:
+                    TARGET=cfg.HOUSING_END_POSITION
+                    self.housing.open()
+                else:
+                    TARGET=cfg.HOUSING_START_POSITION
+                    self.housing.close()
+                    
+                self.wait_until_target(target_position_in_degree=TARGET,direction=direction)
+
+                self.reset()
+            except Exception as e:
+                rospy.logerr(f"Error during run_workflow: {e}")
+
+        self._thread = threading.Thread(target=run_thread, daemon=True)
+        self._thread.start()
+
+        return True
+
                 
-    def close_housing(self):
-        self.cmd_pub.publish(self.close_housing_cmd)
-        #  Wait Scaner hosing clouse to target value
-        if not self.wait_until_target(target_position_in_degree=cfg.HOUSING_START_POSITION, direction=False):
-            log_status(
-                name=cfg.NOTIFICATION, 
-                status=None, 
-                value=None, 
-                message="[WARN] Close housing", 
-                node=None
-            )
-            return None        
-        rospy.sleep(2)
-        self.cmd_pub.publish(self.stop_housing_cmd)
-
-
-

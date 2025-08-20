@@ -10,7 +10,7 @@
     <x>0</x>
     <y>0</y>
     <width>1147</width>
-    <height>1100</height>
+    <height>954</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -43,8 +43,23 @@
   <property name="styleSheet">
    <string notr="true"/>
   </property>
-  <layout class="QVBoxLayout" name="verticalLayout" stretch="5,1">
-   <item>
+  <layout class="QGridLayout" name="gridLayout">
+   <property name="leftMargin">
+    <number>10</number>
+   </property>
+   <property name="topMargin">
+    <number>0</number>
+   </property>
+   <property name="rightMargin">
+    <number>10</number>
+   </property>
+   <property name="bottomMargin">
+    <number>5</number>
+   </property>
+   <property name="spacing">
+    <number>0</number>
+   </property>
+   <item row="0" column="0">
     <widget class="QTabWidget" name="tabWidget">
      <property name="sizePolicy">
       <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
@@ -75,10 +90,16 @@
 </string>
      </property>
      <property name="tabShape">
-      <enum>QTabWidget::Triangular</enum>
+      <enum>QTabWidget::Rounded</enum>
      </property>
      <property name="currentIndex">
       <number>0</number>
+     </property>
+     <property name="iconSize">
+      <size>
+       <width>32</width>
+       <height>32</height>
+      </size>
      </property>
      <widget class="QWidget" name="tab_main">
       <property name="sizePolicy">
@@ -91,6 +112,21 @@
        <string>Home</string>
       </attribute>
       <layout class="QVBoxLayout" name="verticalLayout_3">
+       <property name="spacing">
+        <number>0</number>
+       </property>
+       <property name="leftMargin">
+        <number>0</number>
+       </property>
+       <property name="topMargin">
+        <number>0</number>
+       </property>
+       <property name="rightMargin">
+        <number>0</number>
+       </property>
+       <property name="bottomMargin">
+        <number>0</number>
+       </property>
        <item>
         <layout class="QHBoxLayout" name="horizontalLayout_2" stretch="5,1">
          <property name="sizeConstraint">
@@ -141,7 +177,19 @@
              <set>Qt::AlignHCenter|Qt::AlignTop</set>
             </property>
             <property name="verticalSpacing">
-             <number>20</number>
+             <number>10</number>
+            </property>
+            <property name="leftMargin">
+             <number>5</number>
+            </property>
+            <property name="topMargin">
+             <number>5</number>
+            </property>
+            <property name="rightMargin">
+             <number>5</number>
+            </property>
+            <property name="bottomMargin">
+             <number>5</number>
             </property>
             <item row="0" column="1">
              <widget class="QLabel" name="logoLabel">
@@ -211,7 +259,7 @@
     border-radius: 40px; /* bo góc */
     color: white;
     padding: 6px 12px;
-    border: 1px solid #63cdda;
+    border: none;
     background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
                                 stop:0 #3dc1d3, stop:1 #63cdda); /* gradient xanh */
 }
@@ -223,7 +271,7 @@ QPushButton:hover {
 
 QPushButton:pressed {
     background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                                stop:0 #1E8449, stop:1 #145A32);
+                                stop:0 #3dc1d3, stop:1 #3dc1d3);
     padding-left: 4px;  /* tạo cảm giác nhấn sâu */
     padding-top: 4px;
 }
@@ -265,7 +313,7 @@ QPushButton:pressed {
     border-radius: 40px; /* bo góc */
     color: white;
     padding: 6px 12px;
-    border: 1px solid #63cdda;
+    border: none;
     background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
                                 stop:0 #3dc1d3, stop:1 #63cdda); /* gradient xanh */
 }
@@ -277,7 +325,7 @@ QPushButton:hover {
 
 QPushButton:pressed {
     background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                                stop:0 #1E8449, stop:1 #145A32);
+                                stop:0 #3dc1d3, stop:1 #3dc1d3);
     padding-left: 4px;  /* tạo cảm giác nhấn sâu */
     padding-top: 4px;
 }
@@ -319,7 +367,7 @@ QPushButton:pressed {
     border-radius: 40px; /* bo góc */
     color: white;
     padding: 6px 12px;
-    border: 1px solid #63cdda;
+    border: none;
     background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
                                 stop:0 #3dc1d3, stop:1 #63cdda); /* gradient xanh */
 }
@@ -331,7 +379,7 @@ QPushButton:hover {
 
 QPushButton:pressed {
     background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                                stop:0 #1E8449, stop:1 #145A32);
+                                stop:0 #3dc1d3, stop:1 #3dc1d3);
     padding-left: 4px;  /* tạo cảm giác nhấn sâu */
     padding-top: 4px;
 }
@@ -376,7 +424,7 @@ QPushButton:pressed {
     border-radius: 40px; /* bo góc */
     color: white;
     padding: 6px 12px;
-    border: 1px solid #e15f41;
+    border: none;
     background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
                                 stop:0 #e77f67, stop:1 #e15f41); /* gradient xanh */
 }
@@ -412,19 +460,19 @@ QPushButton:pressed {
     border-radius: 40px; /* bo góc */
     color: white;
     padding: 6px 12px;
-    border: 1px solid #63cdda;
+    border: none;
     background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                                stop:0 #3dc1d3, stop:1 #63cdda); /* gradient xanh */
+                                stop:0 #596275, stop:1 #596275); /* gradient xanh */
 }
 
 QPushButton:hover {
     background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                                stop:0 #3dc1d3, stop:1 #3dc1d3);
+                                stop:0 #596275, stop:1 #596275);
 }
 
 QPushButton:pressed {
     background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                                stop:0 #1E8449, stop:1 #145A32);
+                                stop:0 #303952, stop:1 #303952);
     padding-left: 4px;  /* tạo cảm giác nhấn sâu */
     padding-top: 4px;
 }
@@ -448,19 +496,19 @@ QPushButton:pressed {
     border-radius: 40px; /* bo góc */
     color: white;
     padding: 6px 12px;
-    border: 1px solid #63cdda;
+    border: none;
     background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                                stop:0 #3dc1d3, stop:1 #63cdda); /* gradient xanh */
+                                stop:0 #596275, stop:1 #596275); /* gradient xanh */
 }
 
 QPushButton:hover {
     background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                                stop:0 #3dc1d3, stop:1 #3dc1d3);
+                                stop:0 #596275, stop:1 #596275);
 }
 
 QPushButton:pressed {
     background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                                stop:0 #1E8449, stop:1 #145A32);
+                                stop:0 #303952, stop:1 #303952);
     padding-left: 4px;  /* tạo cảm giác nhấn sâu */
     padding-top: 4px;
 }
@@ -472,40 +520,17 @@ QPushButton:pressed {
              </widget>
             </item>
             <item row="7" column="1">
-             <widget class="QPushButton" name="btnStop">
-              <property name="minimumSize">
+             <spacer name="verticalSpacer">
+              <property name="orientation">
+               <enum>Qt::Vertical</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
                <size>
-                <width>0</width>
-                <height>100</height>
+                <width>20</width>
+                <height>40</height>
                </size>
               </property>
-              <property name="styleSheet">
-               <string notr="true">QPushButton {
-    border-radius: 40px; /* bo góc */
-    color: white;
-    padding: 6px 12px;
-    border: 1px solid #63cdda;
-    background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                                stop:0 #3dc1d3, stop:1 #63cdda); /* gradient xanh */
-}
-
-QPushButton:hover {
-    background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                                stop:0 #3dc1d3, stop:1 #3dc1d3);
-}
-
-QPushButton:pressed {
-    background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                                stop:0 #1E8449, stop:1 #145A32);
-    padding-left: 4px;  /* tạo cảm giác nhấn sâu */
-    padding-top: 4px;
-}
-</string>
-              </property>
-              <property name="text">
-               <string>Stop Housing</string>
-              </property>
-             </widget>
+             </spacer>
             </item>
            </layout>
           </widget>
@@ -708,7 +733,7 @@ QPushButton:pressed {
      </widget>
     </widget>
    </item>
-   <item>
+   <item row="1" column="0">
     <widget class="QLabel" name="lblNotification">
      <property name="text">
       <string>Notification...</string>
