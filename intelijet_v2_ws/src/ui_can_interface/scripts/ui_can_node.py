@@ -28,8 +28,8 @@ class UICANInterface:
         
         result = self.cmd_handler.execute_command(command)
     
-        if not result:
-            rospy.logwarn("[WARN UICANInterface]Sent command failed %d", command)
+        # if not result:
+        #     rospy.loginfo("[WARN UICANInterface] Sent command failed %d", command)
 
     def recv_callback(self, frame:Frame):
         if frame.id == 1076:
