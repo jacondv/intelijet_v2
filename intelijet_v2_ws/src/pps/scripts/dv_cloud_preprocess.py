@@ -51,7 +51,7 @@ class CloudProcessorNode:
         # aabb = o3d.geometry.AxisAlignedBoundingBox(min_bound, max_bound)
         # cloud_cropped = cloud_o3d.crop(aabb)
 
-        cloud_cropped = crop_pointcloud_by_box(pcd=cloud_o3d, box_type='aabb', min_bound=[-4, -10, -0.5], max_bound=[14, 10, 13])
+        cloud_cropped = crop_pointcloud_by_box(pcd=cloud_o3d, box_type='aabb', min_bound=[-50, -50, -15], max_bound=[50, 50, 50])
 
         # Lọc nhiễu
         cloud_cropped, _ = cloud_cropped.remove_statistical_outlier(nb_neighbors=5, std_ratio=1)

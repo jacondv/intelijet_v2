@@ -176,8 +176,10 @@ class GenericScanController(ABC):
                     self.housing.close()
                     
                 self.wait_until_target(target_position_in_degree=TARGET,direction=direction)
+                if not direction:
+                    rospy.sleep(3)
 
-                self.reset()
+                self.housing.stop()
             except Exception as e:
                 rospy.logerr(f"Error during run_workflow: {e}")
 
