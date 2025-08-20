@@ -9,9 +9,12 @@ from ui.pps_ui import Ui_Frame  # Import class từ file pps_ui.py
 from ui.utils import ros_pointcloud2_to_o3d_to_vtk_polydata_voxel
 import rospy
 from sensor_msgs.msg import PointCloud2, JointState
+import sensor_msgs.point_cloud2 as pc2
+
 from std_msgs.msg import Int32
 from PyQt5.QtCore import pyqtSignal, pyqtSlot
 import threading
+import numpy as np
 
 
 from shared.pps_command import PPSCommand
@@ -150,7 +153,6 @@ class App(QWidget):
         subprocess.call(["rosnode", "kill", "-a"])
         subprocess.call("pkill -f ros", shell=True)
         subprocess.call(["rosclean", "purge", "-y"])
-        subprocess.call(["docker", "stop", "intelijet"])
         event.accept()  
 
     
@@ -263,17 +265,21 @@ class App(QWidget):
         mapper = vtk.vtkPolyDataMapper()
         mapper.SetInputConnection(vertex_filter.GetOutputPort())
 
+        if hasattr(self, 'current_actor') and self.current_actor is not None:
+            self.renderer.RemoveActor(self.current_actor)
+
         actor = vtk.vtkActor()
         actor.SetMapper(mapper)
         actor.GetProperty().SetPointSize(1)
-
-        if self.current_actor is not None:
-            self.renderer.RemoveActor(self.current_actor)
 
         self.current_actor = actor
         self.renderer.AddActor(actor)
         self.renderer.ResetCamera()
         self.vtkWidget.GetRenderWindow().Render()
+
+
+
+
 
 
 
@@ -290,8 +296,8 @@ if __name__ == "__main__":
 
     HMI_CMD_TOPIC = cfg.HMI_CMD_TOPIC # config.get('HMI_CMD_TOPIC')
     PRE_SCAN_CLOUD_TOPIC = cfg.PRE_SCAN_CLOUD_TOPIC
-    POST_SCAN_CLOUD_TOPIC = cfg.PRE_SCAN_CLOUD_TOPIC
-    CLOUD_COMPARED_TOPIC = cfg.PRE_SCAN_CLOUD_TOPIC
+    POST_SCAN_CLOUD_TOPIC = cfg.POST_SCAN_CLOUD_TOPIC
+    CLOUD_COMPARED_TOPIC = cfg.CLOUD_COMPARED_TOPIC
     print(cfg)
     app = QApplication(sys.argv)
     viewer = App()  # App kế thừa QWidget
