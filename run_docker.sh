@@ -4,7 +4,8 @@ sudo usermod -aG docker nuc
 
 # Cho phép container kết nối X server
 xhost +local:docker
-trap "xhost -local:docker" EXIT
+trap "xhost -local:docker; echo 'Stopping container...'; sudo docker stop $CONTAINER_NAME; exit" INT
+
 
 CONTAINER_NAME=intelijet
 IMAGE_NAME=jacondv/jacon-pps-noetic
@@ -19,7 +20,7 @@ run_container() {
         sudo docker start -ai $CONTAINER_NAME
     else
         echo "Container $CONTAINER_NAME does not exist. Running new container..."
-        sudo docker run -it \
+        sudo docker run -d \
             --name $CONTAINER_NAME \
             -v /home/nuc/intelijet_v2:/root/intelijet_v2 \
             -e DISPLAY=$DISPLAY \
