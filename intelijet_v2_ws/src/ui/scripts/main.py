@@ -148,6 +148,7 @@ class App(QWidget):
 
     def closeEvent(self, event):
         subprocess.call(["rosnode", "kill", "-a"])
+        subprocess.call("pkill -f ros", shell=True)
         subprocess.call(["rosclean", "purge", "-y"])
         event.accept()  
 
