@@ -150,6 +150,7 @@ class App(QWidget):
         subprocess.call(["rosnode", "kill", "-a"])
         subprocess.call("pkill -f ros", shell=True)
         subprocess.call(["rosclean", "purge", "-y"])
+        subprocess.call(["docker", "stop", "intelijet"])
         event.accept()  
 
     
