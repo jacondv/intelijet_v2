@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-import sys
+import sys, subprocess
 import vtk
 from PyQt5.QtWidgets import QApplication, QWidget
 from vtk.qt.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
@@ -9,10 +9,9 @@ from ui.pps_ui import Ui_Frame  # Import class từ file pps_ui.py
 from ui.utils import ros_pointcloud2_to_o3d_to_vtk_polydata_voxel
 import rospy
 from sensor_msgs.msg import PointCloud2, JointState
-from std_msgs.msg import String, Int32
+from std_msgs.msg import Int32
 from PyQt5.QtCore import pyqtSignal, pyqtSlot
 import threading
-import json
 
 
 from shared.pps_command import PPSCommand
@@ -145,6 +144,13 @@ class App(QWidget):
         self.ui.btnCloseScanner.clicked.connect(self.close_scanner)
 
         self.__load_sample()
+
+
+    def closeEvent(self, event):
+        subprocess.call(["rosnode", "kill", "-a"])
+        subprocess.call(["rosclean", "purge", "-y"])
+        event.accept()  
+
     
     def start_prescan(self):
         # self.cmd_pub.publish(String("start_prescan"))
