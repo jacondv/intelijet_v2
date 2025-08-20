@@ -63,11 +63,14 @@ def ros_pointcloud2_to_o3d_to_vtk_polydata_voxel(msg, voxel_size=0.02):
     polydata = o3d_to_vtk_polydata(o3d_cloud)
     return polydata
 
+    
 def o3d_to_vtk_polydata(pcd):
     import vtk
     import numpy as np
+
     points = np.asarray(pcd.points)
-    colors = np.asarray(pcd.colors)
+    has_colors = pcd.has_colors()
+    colors = np.asarray(pcd.colors) if has_colors else None
 
     vtk_points = vtk.vtkPoints()
     vtk_colors = vtk.vtkUnsignedCharArray()
@@ -76,8 +79,13 @@ def o3d_to_vtk_polydata(pcd):
 
     for i in range(points.shape[0]):
         vtk_points.InsertNextPoint(points[i])
-        # Open3D color [0.0, 1.0] → [0, 255]
-        r, g, b = (colors[i] * 255).astype(np.uint8)
+
+        if has_colors:
+            r, g, b = (colors[i] * 255).astype(np.uint8)
+        else:
+            # Default to red (255, 0, 0)
+            r, g, b = 255, 0, 0
+
         vtk_colors.InsertNextTuple3(r, g, b)
 
     polydata = vtk.vtkPolyData()
@@ -86,36 +94,52 @@ def o3d_to_vtk_polydata(pcd):
 
     return polydata
 
-
 def convert_pointcloud2_to_o3d(msg):
+    import rospy
+    import numpy as np
     import open3d as o3d
+    import ros_numpy
+    from sensor_msgs.msg import PointCloud2
+
     """Convert a ROS PointCloud2 message into an Open3D PointCloud."""
     if not isinstance(msg, PointCloud2):
         rospy.logerr("Input message is not of type PointCloud2.")
         return None
 
-    # Convert to structured NumPy array
-    cloud_arr = ros_numpy.point_cloud2.pointcloud2_to_array(msg)
+    try:
+        # Convert ROS PointCloud2 to structured NumPy array
+        cloud_arr = ros_numpy.point_cloud2.pointcloud2_to_array(msg)
 
-    # Extract XYZ
-    xyz = ros_numpy.point_cloud2.get_xyz_points(cloud_arr, remove_nans=True)
+        # Extract XYZ points
+        xyz = ros_numpy.point_cloud2.get_xyz_points(cloud_arr, remove_nans=True)
 
-    # Create Open3D PointCloud
-    cloud_o3d = o3d.geometry.PointCloud()
-    cloud_o3d.points = o3d.utility.Vector3dVector(xyz)
+        # Create Open3D point cloud
+        cloud_o3d = o3d.geometry.PointCloud()
+        cloud_o3d.points = o3d.utility.Vector3dVector(xyz)
 
-    # Handle RGB if available
-    if 'rgb' in cloud_arr.dtype.names:
-        # Extract RGB field (float32 packed)
-        rgb_packed = cloud_arr['rgb']
-        rgb_uint8 = np.zeros((rgb_packed.shape[0], 3), dtype=np.uint8)
-        rgb_view = rgb_packed.view(np.uint32)  # Treat float32 as uint32 to extract colors
+        # Check for RGB field
+        if 'rgb' in cloud_arr.dtype.names:
+            # Extract RGB field (float32 packed as uint32)
+            rgb_packed = cloud_arr['rgb']
+            rgb_view = rgb_packed.view(np.uint32)
 
-        rgb_uint8[:, 0] = (rgb_view >> 16) & 255  # R
-        rgb_uint8[:, 1] = (rgb_view >> 8) & 255   # G
-        rgb_uint8[:, 2] = rgb_view & 255          # B
+            # Decode RGB to 8-bit values
+            r = (rgb_view >> 16) & 255
+            g = (rgb_view >> 8) & 255
+            b = rgb_view & 255
 
-        # Normalize to [0, 1]
-        cloud_o3d.colors = o3d.utility.Vector3dVector(rgb_uint8.astype(np.float32) / 255.0)
+            rgb = np.stack([r, g, b], axis=-1).astype(np.float32) / 255.0
 
-    return cloud_o3d
+            # Assign colors (only for valid XYZ points)
+            if len(rgb) == len(xyz):
+                cloud_o3d.colors = o3d.utility.Vector3dVector(rgb)
+            else:
+                rospy.logwarn("Mismatch between XYZ and RGB point count. Skipping color assignment.")
+        else:
+            rospy.loginfo("No RGB field in PointCloud2 message. Creating point cloud without color.")
+
+        return cloud_o3d
+
+    except Exception as e:
+        rospy.logerr(f"Failed to convert PointCloud2 to Open3D format: {e}")
+        return None

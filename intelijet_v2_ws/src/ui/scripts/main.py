@@ -146,7 +146,7 @@ class App(QWidget):
         self.ui.btnOpenScanner.clicked.connect(self.open_scanner)
         self.ui.btnCloseScanner.clicked.connect(self.close_scanner)
 
-        self.__load_sample()
+        
 
 
     def closeEvent(self, event):
@@ -183,9 +183,6 @@ class App(QWidget):
         self.ui_send_cmd_signale.emit(PPSCommand.CLOSE_HOUSING.value)
    
     def on_cancel(self):
-        if not hasattr(self, "_cloud_loaded"):
-            self._cloud_loaded = True
-            self.__load_sample()
         self.ui_send_cmd_signale.emit(PPSCommand.CANCEL_JOB.value)
 
 
@@ -289,16 +286,17 @@ if __name__ == "__main__":
 
     # Load parameters befor work.
     
-    # HMI_CMD_TOPIC = cfg.HMI_CMD_TOPIC # config.get('HMI_CMD_TOPIC')
-    # PRE_SCAN_CLOUD_TOPIC = cfg.PRE_SCAN_CLOUD_TOPIC
-    # POST_SCAN_CLOUD_TOPIC = cfg.PRE_SCAN_CLOUD_TOPIC
-    # CLOUD_COMPARED_TOPIC = cfg.PRE_SCAN_CLOUD_TOPIC
-
     HMI_CMD_TOPIC = cfg.HMI_CMD_TOPIC # config.get('HMI_CMD_TOPIC')
     PRE_SCAN_CLOUD_TOPIC = cfg.PRE_SCAN_CLOUD_TOPIC
     POST_SCAN_CLOUD_TOPIC = cfg.POST_SCAN_CLOUD_TOPIC
     CLOUD_COMPARED_TOPIC = cfg.CLOUD_COMPARED_TOPIC
+
+    # HMI_CMD_TOPIC = cfg.HMI_CMD_TOPIC # config.get('HMI_CMD_TOPIC')
+    # PRE_SCAN_CLOUD_TOPIC = cfg.PRE_SCAN_TOPIC
+    # POST_SCAN_CLOUD_TOPIC = cfg.POST_SCAN_TOPIC
+    # CLOUD_COMPARED_TOPIC = cfg.CLOUD_COMPARED_TOPIC
     print(cfg)
+
     app = QApplication(sys.argv)
     viewer = App()  # App kế thừa QWidget
     sys.exit(app.exec_())

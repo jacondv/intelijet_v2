@@ -14,7 +14,7 @@ class Ui_Frame(object):
     def setupUi(self, Frame):
         Frame.setObjectName("Frame")
         Frame.setWindowModality(QtCore.Qt.NonModal)
-        Frame.resize(1147, 954)
+        # Frame.resize(1147, 954)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Fixed)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
@@ -98,7 +98,7 @@ class Ui_Frame(object):
         self.logoLabel.setMaximumSize(QtCore.QSize(300, 150))
         self.logoLabel.setBaseSize(QtCore.QSize(0, 200))
         self.logoLabel.setText("")
-        self.logoLabel.setPixmap(QtGui.QPixmap("jacon_logo.png"))
+        self.logoLabel.setPixmap(QtGui.QPixmap("/root/intelijet_v2/jacon_logo.png"))
         self.logoLabel.setScaledContents(True)
         self.logoLabel.setAlignment(QtCore.Qt.AlignHCenter|QtCore.Qt.AlignTop)
         self.logoLabel.setObjectName("logoLabel")
