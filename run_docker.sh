@@ -24,6 +24,8 @@ else
 
     sudo docker run -it \
         --name $CONTAINER_NAME \
+        -v /var/run/docker.sock:/var/run/docker.sock \
+        -v /usr/bin/docker:/usr/bin/docker \
         -v /home/nuc/intelijet_v2:/root/intelijet_v2 \
         -e DISPLAY=$DISPLAY \
         -e QT_X11_NO_MITSHM=1 \
