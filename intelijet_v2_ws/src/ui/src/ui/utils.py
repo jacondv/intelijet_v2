@@ -64,7 +64,6 @@ def ros_pointcloud2_to_o3d_to_vtk_polydata_voxel(msg, voxel_size=0.02):
     return polydata
 
 def o3d_to_vtk_polydata(pcd):
-    import open3d as o3d
     import vtk
     import numpy as np
     points = np.asarray(pcd.points)
