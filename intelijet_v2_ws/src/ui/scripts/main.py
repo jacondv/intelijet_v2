@@ -143,7 +143,7 @@ class App(QWidget):
 
         self.ui.btnOpenScanner.clicked.connect(self.open_scanner)
         self.ui.btnCloseScanner.clicked.connect(self.close_scanner)
-        self.ui.btnStop.clicked.connect(self.stop_scanner)
+
         self.__load_sample()
     
     def start_prescan(self):
