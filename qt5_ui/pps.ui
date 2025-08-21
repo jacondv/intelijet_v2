@@ -10,7 +10,7 @@
     <x>0</x>
     <y>0</y>
     <width>1147</width>
-    <height>925</height>
+    <height>952</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -29,7 +29,13 @@
    <string>Jacon Intelijet</string>
   </property>
   <property name="styleSheet">
-   <string notr="true"/>
+   <string notr="true">QTabWidget {
+    font-family: &quot;Arial&quot;;
+    font-size: 16pt;
+    font-weight: bold; /* optional: normal, bold */
+
+}
+</string>
   </property>
   <layout class="QGridLayout" name="gridLayout">
    <property name="leftMargin">
@@ -146,7 +152,13 @@
             </sizepolicy>
            </property>
            <property name="styleSheet">
-            <string notr="true"/>
+            <string notr="true">QPushButton {
+    font-family: &quot;Arial&quot;;
+    font-size: 16pt;
+    font-weight: bold; /* optional: normal, bold */
+
+}
+</string>
            </property>
            <property name="frameShape">
             <enum>QFrame::StyledPanel</enum>
@@ -159,7 +171,7 @@
              <set>Qt::AlignHCenter|Qt::AlignTop</set>
             </property>
             <property name="verticalSpacing">
-             <number>20</number>
+             <number>10</number>
             </property>
             <property name="leftMargin">
              <number>5</number>
@@ -181,10 +193,16 @@
                 <verstretch>0</verstretch>
                </sizepolicy>
               </property>
+              <property name="minimumSize">
+               <size>
+                <width>0</width>
+                <height>130</height>
+               </size>
+              </property>
               <property name="maximumSize">
                <size>
                 <width>300</width>
-                <height>150</height>
+                <height>130</height>
                </size>
               </property>
               <property name="baseSize">
@@ -215,7 +233,7 @@
               <property name="minimumSize">
                <size>
                 <width>0</width>
-                <height>80</height>
+                <height>100</height>
                </size>
               </property>
               <property name="styleSheet">
@@ -251,7 +269,7 @@ QPushButton:pressed {
               <property name="minimumSize">
                <size>
                 <width>0</width>
-                <height>80</height>
+                <height>100</height>
                </size>
               </property>
               <property name="styleSheet">
@@ -287,7 +305,7 @@ QPushButton:pressed {
               <property name="minimumSize">
                <size>
                 <width>0</width>
-                <height>80</height>
+                <height>100</height>
                </size>
               </property>
               <property name="styleSheet">
@@ -323,7 +341,7 @@ QPushButton:pressed {
               <property name="minimumSize">
                <size>
                 <width>0</width>
-                <height>80</height>
+                <height>100</height>
                </size>
               </property>
               <property name="autoFillBackground">
@@ -362,7 +380,7 @@ QPushButton:pressed {
               <property name="minimumSize">
                <size>
                 <width>0</width>
-                <height>80</height>
+                <height>100</height>
                </size>
               </property>
               <property name="styleSheet">
@@ -398,7 +416,7 @@ QPushButton:pressed {
               <property name="minimumSize">
                <size>
                 <width>0</width>
-                <height>80</height>
+                <height>100</height>
                </size>
               </property>
               <property name="styleSheet">
@@ -441,6 +459,36 @@ QPushButton:pressed {
                </size>
               </property>
              </spacer>
+            </item>
+            <item row="8" column="1">
+             <widget class="QPushButton" name="btnShutdown">
+              <property name="styleSheet">
+               <string notr="true">QPushButton {
+    border-radius: 10px; /* bo góc */
+    color: white;
+    padding: 6px 12px;
+    border: none;
+    background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                                stop:0 #e77f67, stop:1 #e15f41); /* gradient xanh */
+}
+
+QPushButton:hover {
+    background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                                stop:0 #e77f67, stop:1 #e15f41); 
+}
+
+QPushButton:pressed {
+    background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                                stop:0 #e77f67, stop:1 #e15f41); 
+    padding-left: 4px;  /* tạo cảm giác nhấn sâu */
+    padding-top: 4px;
+}
+</string>
+              </property>
+              <property name="text">
+               <string>Close App</string>
+              </property>
+             </widget>
             </item>
            </layout>
           </widget>

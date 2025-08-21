@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import sys, subprocess
 import vtk
-from PyQt5.QtWidgets import QApplication, QWidget
+from PyQt5.QtWidgets import QApplication, QWidget, QMessageBox
 from vtk.qt.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
 from vtk.util import numpy_support
 
@@ -146,6 +146,7 @@ class App(QWidget):
         self.ui.btnOpenScanner.clicked.connect(self.open_scanner)
         self.ui.btnCloseScanner.clicked.connect(self.close_scanner)
 
+        self.ui.btnShutdown.clicked.connect(self.on_shutdown)
 
     def closeEvent(self, event):
         subprocess.call(["rosnode", "kill", "-a"])
@@ -153,6 +154,17 @@ class App(QWidget):
         subprocess.call(["rosclean", "purge", "-y"])
         event.accept()  
 
+    def on_shutdown(self):
+        reply = QMessageBox.question(
+            self,
+            "Xác nhận",
+            "Bạn có chắc muốn thoát ứng dụng?",
+            QMessageBox.Yes | QMessageBox.No,
+            QMessageBox.No
+        )
+
+        if reply == QMessageBox.Yes:
+            self.close()
     
     def start_prescan(self):
         # self.cmd_pub.publish(String("start_prescan"))
