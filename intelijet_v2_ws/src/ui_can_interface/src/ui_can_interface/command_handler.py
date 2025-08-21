@@ -22,7 +22,7 @@ class CommandHandler:
         self.can_pub.publish(can_frame)
         rospy.logwarn(f"Published CAN frame for PDO '{pdo_name}'.")
 
-    def execute_command(self, command):
+    def execute_command(self, command, value=None):
         # cmd = command.strip().lower()
         cmd = command
         
@@ -67,6 +67,11 @@ class CommandHandler:
             pdo_name= "RxScannerCommandRos"
             self.send_pdo(pdo_name, "bServiceOpenScanner", value=0)
             self.send_pdo(pdo_name, "bServiceCloseScanner", value=0)
+            return True
+        
+
+        elif cmd == PPSCommand.PLC_SET_RETRACT_SPEED.value:
+  
             return True
         
         elif cmd == "plc_on_cancel":

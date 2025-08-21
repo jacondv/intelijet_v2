@@ -27,11 +27,22 @@ class HousingControl():
 
         self.cmd_pub = rospy.Publisher(cfg.HMI_CMD_TOPIC, Int32, queue_size=1)
 
-    def open(self):
-        self.cmd_pub.publish(self.open_housing_cmd)
+        self.set_retract_speed_cmd = Int32
+        self.set_retract_speed_cmd.data = PPSCommand.PLC_SET_RETRACT_SPEED.value
 
-    def close(self):
+        self.set_extend_speed_cmd = Int32
+        self.set_extend_speed_cmd.data = PPSCommand.PLC_SET_EXTEND_SPEED.value
+
+
+    def open(self, speed=None):
+        self.cmd_pub.publish(self.open_housing_cmd)
+        if speed is not None:
+            self.cmd_pub.publish((self.set_extend_speed_cmd,speed))
+
+    def close(self,speed=None):
         self.cmd_pub.publish(self.close_housing_cmd)
+        if speed is not None:
+            self.cmd_pub.publish((self.set_retract_speed_cmd,speed))
 
     def stop(self):
         self.cmd_pub.publish(self.stop_housing_cmd)
@@ -145,10 +156,10 @@ class GenericScanController(ABC):
 
         def run_thread():
             try:
-                cloud = self.run_workflow()
+                cloud = self.run_workflow(publisher)
                 self.reset()
-                if cloud is not None:
-                    publisher.publish(cloud)
+                # if cloud is not None:
+                #     publisher.publish(cloud)
             except Exception as e:
                 rospy.logerr(f"Error during run_workflow: {e}")
 
@@ -170,13 +181,14 @@ class GenericScanController(ABC):
             try:
                 if direction:
                     TARGET=cfg.HOUSING_END_POSITION
-                    self.housing.open()
+                    self.housing.open(110) # Open fast speed
                 else:
                     TARGET=cfg.HOUSING_START_POSITION
-                    self.housing.close()
+                    self.housing.close(110) # Close fast speed
                     
                 self.wait_until_target(target_position_in_degree=TARGET,direction=direction)
                 if not direction:
+                    self.housing.close(90) # Close slow speed
                     rospy.sleep(3)
 
                 self.housing.stop()

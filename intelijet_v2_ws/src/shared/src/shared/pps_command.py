@@ -18,6 +18,10 @@ class PPSCommand(Enum):
     PLC_CLOSE_HOUSING = 104
     PLC_PAUSE_HOUSING = 105
 
+    #Command Set speed for Housing
+    PLC_SET_RETRACT_SPEED = 201
+    PLC_SET_EXTEND_SPEED = 202 
+
 
 
 

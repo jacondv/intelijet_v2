@@ -4,6 +4,7 @@ from std_msgs.msg import String, Int32
 from can_msgs.msg import Frame
 from ui_can_interface.command_handler import CommandHandler
 from ui_can_interface.pdo import load_pdos_from_yaml
+from shared.config_loader import CONFIG as cfg
 
 # We will send and receive CAN messages via PCAN Ethernet Gateway, so we need to define the topics.
 # pcan_ehternet_gateway node will reposibility to communicate with real CAN bus.
@@ -13,7 +14,7 @@ PCAN_GATEWAY_SEND_TOPIC = "/pcan_sent_messanges"  # Topic to publish CAN frames
 class UICANInterface:
     def __init__(self):
         
-        rospy.Subscriber("/hmi/cmd", Int32, self.command_callback)
+        rospy.Subscriber(cfg.HMI_CMD_TOPIC, Int32, self.command_callback)
         rospy.Subscriber(PCAN_GATEWAY_RECV_TOPIC, Frame, self.recv_callback)
 
         #Configure the CAN PDOs from a YAML file
@@ -32,8 +33,9 @@ class UICANInterface:
         #     rospy.loginfo("[WARN UICANInterface] Sent command failed %d", command)
 
     def recv_callback(self, frame:Frame):
-        if frame.id == 1076:
-            rospy.loginfo("Received Zero Position Command Frame: ID=0x%X, DLC=%d, DATA=%s", frame.id, frame.dlc, list(frame.data[:frame.dlc]))
+        pass
+        # if frame.id == 1076:
+        #     rospy.loginfo("Received Zero Position Command Frame: ID=0x%X, DLC=%d, DATA=%s", frame.id, frame.dlc, list(frame.data[:frame.dlc]))
         # rospy.loginfo("Received CAN Frame: ID=0x%X, DLC=%d, DATA=%s", frame.id, frame.dlc, list(frame.data[:frame.dlc]))
 
 if __name__ == "__main__":

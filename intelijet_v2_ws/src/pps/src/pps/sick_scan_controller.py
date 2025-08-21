@@ -22,11 +22,14 @@ def assemble_cloud_client(start_time, end_time):
 class SickScanController(GenericScanController):
     def __init__(self):
         super().__init__()
-      
 
-    def run_workflow(self)->PointCloud2:
+        self._SPEED_1 = 110
+        self._SPEED_2 = 95
+
+
+    def run_workflow(self,publisher=None)->PointCloud2:
         # Send run commant to PLC via ROS Topic. Detail in command_handler.py
-        self.housing.open()
+        self.housing.open(self._SPEED_1)
         log_status(
                 name=cfg.NOTIFICATION, 
                 status=None, 
@@ -45,6 +48,8 @@ class SickScanController(GenericScanController):
             )    
             return None
         
+        self.housing.open(self._SPEED_2)
+
         # Start collect data. 
         self.start_time = rospy.Time.now()
 
@@ -62,7 +67,6 @@ class SickScanController(GenericScanController):
         # Stop move housing
         self.end_time = rospy.Time.now()
 
-
         # Send run commant to PLC via ROS Topic.
         self.housing.stop()
 
@@ -71,8 +75,11 @@ class SickScanController(GenericScanController):
         point_cloud = assemble_cloud_client(start_time=self.start_time, end_time=self.end_time)
         rospy.sleep(2)
 
+        if point_cloud is not None:
+            publisher.publish(point_cloud)
+
         # Send back command
-        self.housing.close()
+        self.housing.close(self._SPEED_1)
 
         #  Wait Scaner hosing clouse to target value
         if not self.wait_until_target(target_position_in_degree=cfg.HOUSING_START_POSITION, direction=False):
