@@ -10,7 +10,7 @@
     <x>0</x>
     <y>0</y>
     <width>1147</width>
-    <height>954</height>
+    <height>925</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -19,18 +19,6 @@
     <verstretch>0</verstretch>
    </sizepolicy>
   </property>
-  <property name="minimumSize">
-   <size>
-    <width>0</width>
-    <height>0</height>
-   </size>
-  </property>
-  <property name="maximumSize">
-   <size>
-    <width>16777215</width>
-    <height>16777215</height>
-   </size>
-  </property>
   <property name="baseSize">
    <size>
     <width>960</width>
@@ -38,7 +26,7 @@
    </size>
   </property>
   <property name="windowTitle">
-   <string>Frame</string>
+   <string>Jacon Intelijet</string>
   </property>
   <property name="styleSheet">
    <string notr="true"/>
@@ -140,12 +128,6 @@
              <verstretch>0</verstretch>
             </sizepolicy>
            </property>
-           <property name="minimumSize">
-            <size>
-             <width>0</width>
-             <height>0</height>
-            </size>
-           </property>
            <property name="toolTip">
             <string/>
            </property>
@@ -177,7 +159,7 @@
              <set>Qt::AlignHCenter|Qt::AlignTop</set>
             </property>
             <property name="verticalSpacing">
-             <number>10</number>
+             <number>20</number>
             </property>
             <property name="leftMargin">
              <number>5</number>
@@ -230,28 +212,10 @@
             </item>
             <item row="1" column="1">
              <widget class="QPushButton" name="btnPreScan">
-              <property name="sizePolicy">
-               <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
-                <horstretch>0</horstretch>
-                <verstretch>0</verstretch>
-               </sizepolicy>
-              </property>
               <property name="minimumSize">
                <size>
                 <width>0</width>
-                <height>100</height>
-               </size>
-              </property>
-              <property name="maximumSize">
-               <size>
-                <width>16777215</width>
-                <height>16777215</height>
-               </size>
-              </property>
-              <property name="baseSize">
-               <size>
-                <width>0</width>
-                <height>200</height>
+                <height>80</height>
                </size>
               </property>
               <property name="styleSheet">
@@ -284,28 +248,10 @@ QPushButton:pressed {
             </item>
             <item row="2" column="1">
              <widget class="QPushButton" name="btnPostScan">
-              <property name="sizePolicy">
-               <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
-                <horstretch>0</horstretch>
-                <verstretch>0</verstretch>
-               </sizepolicy>
-              </property>
               <property name="minimumSize">
                <size>
                 <width>0</width>
-                <height>100</height>
-               </size>
-              </property>
-              <property name="maximumSize">
-               <size>
-                <width>16777215</width>
-                <height>16777215</height>
-               </size>
-              </property>
-              <property name="baseSize">
-               <size>
-                <width>0</width>
-                <height>200</height>
+                <height>80</height>
                </size>
               </property>
               <property name="styleSheet">
@@ -338,28 +284,10 @@ QPushButton:pressed {
             </item>
             <item row="3" column="1">
              <widget class="QPushButton" name="btnCompare">
-              <property name="sizePolicy">
-               <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
-                <horstretch>0</horstretch>
-                <verstretch>0</verstretch>
-               </sizepolicy>
-              </property>
               <property name="minimumSize">
                <size>
                 <width>0</width>
-                <height>100</height>
-               </size>
-              </property>
-              <property name="maximumSize">
-               <size>
-                <width>16777215</width>
-                <height>16777215</height>
-               </size>
-              </property>
-              <property name="baseSize">
-               <size>
-                <width>0</width>
-                <height>200</height>
+                <height>80</height>
                </size>
               </property>
               <property name="styleSheet">
@@ -392,28 +320,10 @@ QPushButton:pressed {
             </item>
             <item row="4" column="1">
              <widget class="QPushButton" name="btnCancel">
-              <property name="sizePolicy">
-               <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
-                <horstretch>0</horstretch>
-                <verstretch>0</verstretch>
-               </sizepolicy>
-              </property>
               <property name="minimumSize">
                <size>
                 <width>0</width>
-                <height>100</height>
-               </size>
-              </property>
-              <property name="maximumSize">
-               <size>
-                <width>16777215</width>
-                <height>16777215</height>
-               </size>
-              </property>
-              <property name="baseSize">
-               <size>
-                <width>0</width>
-                <height>200</height>
+                <height>80</height>
                </size>
               </property>
               <property name="autoFillBackground">
@@ -452,7 +362,7 @@ QPushButton:pressed {
               <property name="minimumSize">
                <size>
                 <width>0</width>
-                <height>100</height>
+                <height>80</height>
                </size>
               </property>
               <property name="styleSheet">
@@ -488,7 +398,7 @@ QPushButton:pressed {
               <property name="minimumSize">
                <size>
                 <width>0</width>
-                <height>100</height>
+                <height>80</height>
                </size>
               </property>
               <property name="styleSheet">

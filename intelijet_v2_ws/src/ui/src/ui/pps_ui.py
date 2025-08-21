@@ -14,14 +14,12 @@ class Ui_Frame(object):
     def setupUi(self, Frame):
         Frame.setObjectName("Frame")
         Frame.setWindowModality(QtCore.Qt.NonModal)
-        # Frame.resize(1147, 954)
+        Frame.resize(1147, 925)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Fixed)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(Frame.sizePolicy().hasHeightForWidth())
         Frame.setSizePolicy(sizePolicy)
-        Frame.setMinimumSize(QtCore.QSize(0, 0))
-        Frame.setMaximumSize(QtCore.QSize(16777215, 16777215))
         Frame.setBaseSize(QtCore.QSize(960, 600))
         Frame.setStyleSheet("")
         self.gridLayout = QtWidgets.QGridLayout(Frame)
@@ -67,7 +65,6 @@ class Ui_Frame(object):
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.cloudFrame.sizePolicy().hasHeightForWidth())
         self.cloudFrame.setSizePolicy(sizePolicy)
-        self.cloudFrame.setMinimumSize(QtCore.QSize(0, 0))
         self.cloudFrame.setToolTip("")
         self.cloudFrame.setFrameShape(QtWidgets.QFrame.StyledPanel)
         self.cloudFrame.setObjectName("cloudFrame")
@@ -87,7 +84,7 @@ class Ui_Frame(object):
         self.formLayout.setLabelAlignment(QtCore.Qt.AlignHCenter|QtCore.Qt.AlignTop)
         self.formLayout.setFormAlignment(QtCore.Qt.AlignHCenter|QtCore.Qt.AlignTop)
         self.formLayout.setContentsMargins(5, 5, 5, 5)
-        self.formLayout.setVerticalSpacing(10)
+        self.formLayout.setVerticalSpacing(20)
         self.formLayout.setObjectName("formLayout")
         self.logoLabel = QtWidgets.QLabel(self.frame_3)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
@@ -98,20 +95,13 @@ class Ui_Frame(object):
         self.logoLabel.setMaximumSize(QtCore.QSize(300, 150))
         self.logoLabel.setBaseSize(QtCore.QSize(0, 200))
         self.logoLabel.setText("")
-        self.logoLabel.setPixmap(QtGui.QPixmap("/root/intelijet_v2/jacon_logo.png"))
+        self.logoLabel.setPixmap(QtGui.QPixmap("jacon_logo.png"))
         self.logoLabel.setScaledContents(True)
         self.logoLabel.setAlignment(QtCore.Qt.AlignHCenter|QtCore.Qt.AlignTop)
         self.logoLabel.setObjectName("logoLabel")
         self.formLayout.setWidget(0, QtWidgets.QFormLayout.FieldRole, self.logoLabel)
         self.btnPreScan = QtWidgets.QPushButton(self.frame_3)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Minimum)
-        sizePolicy.setHorizontalStretch(0)
-        sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.btnPreScan.sizePolicy().hasHeightForWidth())
-        self.btnPreScan.setSizePolicy(sizePolicy)
-        self.btnPreScan.setMinimumSize(QtCore.QSize(0, 100))
-        self.btnPreScan.setMaximumSize(QtCore.QSize(16777215, 16777215))
-        self.btnPreScan.setBaseSize(QtCore.QSize(0, 200))
+        self.btnPreScan.setMinimumSize(QtCore.QSize(0, 80))
         self.btnPreScan.setStyleSheet("QPushButton {\n"
 "    border-radius: 40px; /* bo góc */\n"
 "    color: white;\n"
@@ -136,14 +126,7 @@ class Ui_Frame(object):
         self.btnPreScan.setObjectName("btnPreScan")
         self.formLayout.setWidget(1, QtWidgets.QFormLayout.FieldRole, self.btnPreScan)
         self.btnPostScan = QtWidgets.QPushButton(self.frame_3)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Minimum)
-        sizePolicy.setHorizontalStretch(0)
-        sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.btnPostScan.sizePolicy().hasHeightForWidth())
-        self.btnPostScan.setSizePolicy(sizePolicy)
-        self.btnPostScan.setMinimumSize(QtCore.QSize(0, 100))
-        self.btnPostScan.setMaximumSize(QtCore.QSize(16777215, 16777215))
-        self.btnPostScan.setBaseSize(QtCore.QSize(0, 200))
+        self.btnPostScan.setMinimumSize(QtCore.QSize(0, 80))
         self.btnPostScan.setStyleSheet("QPushButton {\n"
 "    border-radius: 40px; /* bo góc */\n"
 "    color: white;\n"
@@ -168,14 +151,7 @@ class Ui_Frame(object):
         self.btnPostScan.setObjectName("btnPostScan")
         self.formLayout.setWidget(2, QtWidgets.QFormLayout.FieldRole, self.btnPostScan)
         self.btnCompare = QtWidgets.QPushButton(self.frame_3)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Minimum)
-        sizePolicy.setHorizontalStretch(0)
-        sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.btnCompare.sizePolicy().hasHeightForWidth())
-        self.btnCompare.setSizePolicy(sizePolicy)
-        self.btnCompare.setMinimumSize(QtCore.QSize(0, 100))
-        self.btnCompare.setMaximumSize(QtCore.QSize(16777215, 16777215))
-        self.btnCompare.setBaseSize(QtCore.QSize(0, 200))
+        self.btnCompare.setMinimumSize(QtCore.QSize(0, 80))
         self.btnCompare.setStyleSheet("QPushButton {\n"
 "    border-radius: 40px; /* bo góc */\n"
 "    color: white;\n"
@@ -200,14 +176,7 @@ class Ui_Frame(object):
         self.btnCompare.setObjectName("btnCompare")
         self.formLayout.setWidget(3, QtWidgets.QFormLayout.FieldRole, self.btnCompare)
         self.btnCancel = QtWidgets.QPushButton(self.frame_3)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Minimum)
-        sizePolicy.setHorizontalStretch(0)
-        sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.btnCancel.sizePolicy().hasHeightForWidth())
-        self.btnCancel.setSizePolicy(sizePolicy)
-        self.btnCancel.setMinimumSize(QtCore.QSize(0, 100))
-        self.btnCancel.setMaximumSize(QtCore.QSize(16777215, 16777215))
-        self.btnCancel.setBaseSize(QtCore.QSize(0, 200))
+        self.btnCancel.setMinimumSize(QtCore.QSize(0, 80))
         self.btnCancel.setAutoFillBackground(False)
         self.btnCancel.setStyleSheet("QPushButton {\n"
 "    border-radius: 40px; /* bo góc */\n"
@@ -233,7 +202,7 @@ class Ui_Frame(object):
         self.btnCancel.setObjectName("btnCancel")
         self.formLayout.setWidget(4, QtWidgets.QFormLayout.FieldRole, self.btnCancel)
         self.btnOpenScanner = QtWidgets.QPushButton(self.frame_3)
-        self.btnOpenScanner.setMinimumSize(QtCore.QSize(0, 100))
+        self.btnOpenScanner.setMinimumSize(QtCore.QSize(0, 80))
         self.btnOpenScanner.setStyleSheet("QPushButton {\n"
 "    border-radius: 40px; /* bo góc */\n"
 "    color: white;\n"
@@ -258,7 +227,7 @@ class Ui_Frame(object):
         self.btnOpenScanner.setObjectName("btnOpenScanner")
         self.formLayout.setWidget(5, QtWidgets.QFormLayout.FieldRole, self.btnOpenScanner)
         self.btnCloseScanner = QtWidgets.QPushButton(self.frame_3)
-        self.btnCloseScanner.setMinimumSize(QtCore.QSize(0, 100))
+        self.btnCloseScanner.setMinimumSize(QtCore.QSize(0, 80))
         self.btnCloseScanner.setStyleSheet("QPushButton {\n"
 "    border-radius: 40px; /* bo góc */\n"
 "    color: white;\n"
@@ -359,7 +328,7 @@ class Ui_Frame(object):
 
     def retranslateUi(self, Frame):
         _translate = QtCore.QCoreApplication.translate
-        Frame.setWindowTitle(_translate("Frame", "Frame"))
+        Frame.setWindowTitle(_translate("Frame", "Jacon Intelijet"))
         self.btnPreScan.setText(_translate("Frame", "Pre-Scan"))
         self.btnPostScan.setText(_translate("Frame", "Post-Scan"))
         self.btnCompare.setText(_translate("Frame", "Compare"))

@@ -146,8 +146,6 @@ class App(QWidget):
         self.ui.btnOpenScanner.clicked.connect(self.open_scanner)
         self.ui.btnCloseScanner.clicked.connect(self.close_scanner)
 
-        
-
 
     def closeEvent(self, event):
         subprocess.call(["rosnode", "kill", "-a"])
