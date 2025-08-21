@@ -2,15 +2,12 @@
 <ui version="4.0">
  <class>Frame</class>
  <widget class="QFrame" name="Frame">
-  <property name="windowModality">
-   <enum>Qt::NonModal</enum>
-  </property>
   <property name="geometry">
    <rect>
     <x>0</x>
     <y>0</y>
     <width>1147</width>
-    <height>952</height>
+    <height>1047</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -32,7 +29,7 @@
    <string notr="true">QTabWidget {
     font-family: &quot;Arial&quot;;
     font-size: 16pt;
-    font-weight: bold; /* optional: normal, bold */
+    font-weight: normal; /* optional: normal, bold */
 
 }
 </string>
@@ -164,14 +161,8 @@
             <enum>QFrame::StyledPanel</enum>
            </property>
            <layout class="QFormLayout" name="formLayout">
-            <property name="labelAlignment">
-             <set>Qt::AlignHCenter|Qt::AlignTop</set>
-            </property>
-            <property name="formAlignment">
-             <set>Qt::AlignHCenter|Qt::AlignTop</set>
-            </property>
             <property name="verticalSpacing">
-             <number>10</number>
+             <number>20</number>
             </property>
             <property name="leftMargin">
              <number>5</number>
@@ -193,12 +184,6 @@
                 <verstretch>0</verstretch>
                </sizepolicy>
               </property>
-              <property name="minimumSize">
-               <size>
-                <width>0</width>
-                <height>130</height>
-               </size>
-              </property>
               <property name="maximumSize">
                <size>
                 <width>300</width>
@@ -215,7 +200,7 @@
                <string/>
               </property>
               <property name="pixmap">
-               <pixmap>root/intelijet_v2/jacon_logo.png</pixmap>
+               <pixmap>intelijet_v2/jacon_logo.png</pixmap>
               </property>
               <property name="scaledContents">
                <bool>true</bool>
@@ -243,12 +228,12 @@
     padding: 6px 12px;
     border: none;
     background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                                stop:0 #3dc1d3, stop:1 #63cdda); /* gradient xanh */
+                                stop:0 #63cdda, stop:1 #63cdda); /* gradient xanh */
 }
 
 QPushButton:hover {
     background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                                stop:0 #3dc1d3, stop:1 #3dc1d3);
+                                stop:0 #63cdda, stop:1 #63cdda);
 }
 
 QPushButton:pressed {
@@ -279,12 +264,12 @@ QPushButton:pressed {
     padding: 6px 12px;
     border: none;
     background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                                stop:0 #3dc1d3, stop:1 #63cdda); /* gradient xanh */
+                                stop:0 #63cdda, stop:1 #63cdda); /* gradient xanh */
 }
 
 QPushButton:hover {
     background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                                stop:0 #3dc1d3, stop:1 #3dc1d3);
+                                stop:0 #63cdda, stop:1 #63cdda);
 }
 
 QPushButton:pressed {
@@ -315,12 +300,12 @@ QPushButton:pressed {
     padding: 6px 12px;
     border: none;
     background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                                stop:0 #3dc1d3, stop:1 #63cdda); /* gradient xanh */
+                                stop:0 #63cdda, stop:1 #63cdda); /* gradient xanh */
 }
 
 QPushButton:hover {
     background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                                stop:0 #3dc1d3, stop:1 #3dc1d3);
+                                stop:0 #63cdda, stop:1 #63cdda);
 }
 
 QPushButton:pressed {
@@ -364,7 +349,7 @@ QPushButton:hover {
 
 QPushButton:pressed {
     background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                                stop:0 #e77f67, stop:1 #e15f41); 
+                                stop:0 #e15f41, stop:1 #e15f41); 
     padding-left: 4px;  /* tạo cảm giác nhấn sâu */
     padding-top: 4px;
 }
@@ -693,6 +678,15 @@ QPushButton:pressed {
    </item>
    <item row="1" column="0">
     <widget class="QLabel" name="lblNotification">
+     <property name="styleSheet">
+      <string notr="true">QLabel {
+    font-family: &quot;Arial&quot;;
+    font-size: 13pt;
+    font-weight: normal; /* optional: normal, bold */
+
+}
+</string>
+     </property>
      <property name="text">
       <string>Notification...</string>
      </property>

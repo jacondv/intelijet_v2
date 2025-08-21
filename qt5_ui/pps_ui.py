@@ -13,8 +13,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 class Ui_Frame(object):
     def setupUi(self, Frame):
         Frame.setObjectName("Frame")
-        Frame.setWindowModality(QtCore.Qt.NonModal)
-        Frame.resize(1147, 952)
+        Frame.resize(1147, 1047)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Fixed)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
@@ -24,7 +23,7 @@ class Ui_Frame(object):
         Frame.setStyleSheet("QTabWidget {\n"
 "    font-family: \"Arial\";\n"
 "    font-size: 16pt;\n"
-"    font-weight: bold; /* optional: normal, bold */\n"
+"    font-weight: normal; /* optional: normal, bold */\n"
 "\n"
 "}\n"
 "")
@@ -93,10 +92,8 @@ class Ui_Frame(object):
         self.frame_3.setFrameShape(QtWidgets.QFrame.StyledPanel)
         self.frame_3.setObjectName("frame_3")
         self.formLayout = QtWidgets.QFormLayout(self.frame_3)
-        self.formLayout.setLabelAlignment(QtCore.Qt.AlignHCenter|QtCore.Qt.AlignTop)
-        self.formLayout.setFormAlignment(QtCore.Qt.AlignHCenter|QtCore.Qt.AlignTop)
         self.formLayout.setContentsMargins(5, 5, 5, 5)
-        self.formLayout.setVerticalSpacing(10)
+        self.formLayout.setVerticalSpacing(20)
         self.formLayout.setObjectName("formLayout")
         self.logoLabel = QtWidgets.QLabel(self.frame_3)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
@@ -104,11 +101,10 @@ class Ui_Frame(object):
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.logoLabel.sizePolicy().hasHeightForWidth())
         self.logoLabel.setSizePolicy(sizePolicy)
-        self.logoLabel.setMinimumSize(QtCore.QSize(0, 130))
         self.logoLabel.setMaximumSize(QtCore.QSize(300, 130))
         self.logoLabel.setBaseSize(QtCore.QSize(0, 200))
         self.logoLabel.setText("")
-        self.logoLabel.setPixmap(QtGui.QPixmap("root/intelijet_v2/jacon_logo.png"))
+        self.logoLabel.setPixmap(QtGui.QPixmap("intelijet_v2/jacon_logo.png"))
         self.logoLabel.setScaledContents(True)
         self.logoLabel.setAlignment(QtCore.Qt.AlignHCenter|QtCore.Qt.AlignTop)
         self.logoLabel.setObjectName("logoLabel")
@@ -121,12 +117,12 @@ class Ui_Frame(object):
 "    padding: 6px 12px;\n"
 "    border: none;\n"
 "    background: qlineargradient(x1:0, y1:0, x2:0, y2:1,\n"
-"                                stop:0 #3dc1d3, stop:1 #63cdda); /* gradient xanh */\n"
+"                                stop:0 #63cdda, stop:1 #63cdda); /* gradient xanh */\n"
 "}\n"
 "\n"
 "QPushButton:hover {\n"
 "    background: qlineargradient(x1:0, y1:0, x2:0, y2:1,\n"
-"                                stop:0 #3dc1d3, stop:1 #3dc1d3);\n"
+"                                stop:0 #63cdda, stop:1 #63cdda);\n"
 "}\n"
 "\n"
 "QPushButton:pressed {\n"
@@ -146,12 +142,12 @@ class Ui_Frame(object):
 "    padding: 6px 12px;\n"
 "    border: none;\n"
 "    background: qlineargradient(x1:0, y1:0, x2:0, y2:1,\n"
-"                                stop:0 #3dc1d3, stop:1 #63cdda); /* gradient xanh */\n"
+"                                stop:0 #63cdda, stop:1 #63cdda); /* gradient xanh */\n"
 "}\n"
 "\n"
 "QPushButton:hover {\n"
 "    background: qlineargradient(x1:0, y1:0, x2:0, y2:1,\n"
-"                                stop:0 #3dc1d3, stop:1 #3dc1d3);\n"
+"                                stop:0 #63cdda, stop:1 #63cdda);\n"
 "}\n"
 "\n"
 "QPushButton:pressed {\n"
@@ -171,12 +167,12 @@ class Ui_Frame(object):
 "    padding: 6px 12px;\n"
 "    border: none;\n"
 "    background: qlineargradient(x1:0, y1:0, x2:0, y2:1,\n"
-"                                stop:0 #3dc1d3, stop:1 #63cdda); /* gradient xanh */\n"
+"                                stop:0 #63cdda, stop:1 #63cdda); /* gradient xanh */\n"
 "}\n"
 "\n"
 "QPushButton:hover {\n"
 "    background: qlineargradient(x1:0, y1:0, x2:0, y2:1,\n"
-"                                stop:0 #3dc1d3, stop:1 #3dc1d3);\n"
+"                                stop:0 #63cdda, stop:1 #63cdda);\n"
 "}\n"
 "\n"
 "QPushButton:pressed {\n"
@@ -207,7 +203,7 @@ class Ui_Frame(object):
 "\n"
 "QPushButton:pressed {\n"
 "    background: qlineargradient(x1:0, y1:0, x2:0, y2:1,\n"
-"                                stop:0 #e77f67, stop:1 #e15f41); \n"
+"                                stop:0 #e15f41, stop:1 #e15f41); \n"
 "    padding-left: 4px;  /* tạo cảm giác nhấn sâu */\n"
 "    padding-top: 4px;\n"
 "}\n"
@@ -356,6 +352,13 @@ class Ui_Frame(object):
         self.tabWidget.addTab(self.tab_system, "")
         self.gridLayout.addWidget(self.tabWidget, 0, 0, 1, 1)
         self.lblNotification = QtWidgets.QLabel(Frame)
+        self.lblNotification.setStyleSheet("QLabel {\n"
+"    font-family: \"Arial\";\n"
+"    font-size: 13pt;\n"
+"    font-weight: normal; /* optional: normal, bold */\n"
+"\n"
+"}\n"
+"")
         self.lblNotification.setObjectName("lblNotification")
         self.gridLayout.addWidget(self.lblNotification, 1, 0, 1, 1)
 
