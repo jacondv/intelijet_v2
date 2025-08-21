@@ -215,7 +215,7 @@
                <string/>
               </property>
               <property name="pixmap">
-               <pixmap>jacon_logo.png</pixmap>
+               <pixmap>root/intelijet_v2/jacon_logo.png</pixmap>
               </property>
               <property name="scaledContents">
                <bool>true</bool>

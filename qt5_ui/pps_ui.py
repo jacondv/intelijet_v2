@@ -108,7 +108,7 @@ class Ui_Frame(object):
         self.logoLabel.setMaximumSize(QtCore.QSize(300, 130))
         self.logoLabel.setBaseSize(QtCore.QSize(0, 200))
         self.logoLabel.setText("")
-        self.logoLabel.setPixmap(QtGui.QPixmap("jacon_logo.png"))
+        self.logoLabel.setPixmap(QtGui.QPixmap("root/intelijet_v2/jacon_logo.png"))
         self.logoLabel.setScaledContents(True)
         self.logoLabel.setAlignment(QtCore.Qt.AlignHCenter|QtCore.Qt.AlignTop)
         self.logoLabel.setObjectName("logoLabel")
