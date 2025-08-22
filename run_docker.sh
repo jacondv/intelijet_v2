@@ -6,6 +6,7 @@ sudo usermod -aG docker nuc
 xhost +local:docker
 trap "xhost -local:docker; echo 'Stopping container...'; sudo docker stop $CONTAINER_NAME; exit" INT
 
+sudo xrandr --output DSI-1 --rotate right
 
 CONTAINER_NAME=intelijet
 IMAGE_NAME=jacondv/jacon-pps-noetic
