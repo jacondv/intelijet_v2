@@ -50,7 +50,7 @@ pdos:
         bit: 0
         type: word
       - name: g_Rx_ScannerExtendSpeedInHz
-        byte: 1
+        byte: 2
         bit: 0
         type: word
 

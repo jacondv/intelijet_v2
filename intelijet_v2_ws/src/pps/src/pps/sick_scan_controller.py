@@ -28,6 +28,7 @@ class SickScanController(GenericScanController):
 
 
     def run_workflow(self,publisher=None)->PointCloud2:
+        rospy.loginfo("run_workflow Open")
         # Send run commant to PLC via ROS Topic. Detail in command_handler.py
         self.housing.open(self._SPEED_1)
         log_status(

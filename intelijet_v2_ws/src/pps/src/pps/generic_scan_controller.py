@@ -27,22 +27,22 @@ class HousingControl():
 
         self.cmd_pub = rospy.Publisher(cfg.HMI_CMD_TOPIC, Int32, queue_size=1)
 
-        self.set_retract_speed_cmd = Int32
+        self.set_retract_speed_cmd = Int32()
         self.set_retract_speed_cmd.data = PPSCommand.PLC_SET_RETRACT_SPEED.value
 
-        self.set_extend_speed_cmd = Int32
+        self.set_extend_speed_cmd = Int32()
         self.set_extend_speed_cmd.data = PPSCommand.PLC_SET_EXTEND_SPEED.value
 
 
     def open(self, speed=None):
         self.cmd_pub.publish(self.open_housing_cmd)
-        if speed is not None:
-            self.cmd_pub.publish((self.set_extend_speed_cmd,speed))
+        # if speed is not None:
+        #     self.cmd_pub.publish((self.set_extend_speed_cmd,speed))
 
     def close(self,speed=None):
         self.cmd_pub.publish(self.close_housing_cmd)
-        if speed is not None:
-            self.cmd_pub.publish((self.set_retract_speed_cmd,speed))
+        # if speed is not None:
+        #     self.cmd_pub.publish((self.set_retract_speed_cmd,speed))
 
     def stop(self):
         self.cmd_pub.publish(self.stop_housing_cmd)

@@ -169,6 +169,7 @@ class App(QWidget):
     def start_prescan(self):
         # self.cmd_pub.publish(String("start_prescan"))
         # self.status_label.setText("Requested PreScan...")
+
         self.ui_send_cmd_signale.emit(PPSCommand.START_PRESCAN.value)
 
     def start_postscan(self):
@@ -296,7 +297,7 @@ if __name__ == "__main__":
 
     # Load parameters befor work.
     
-    HMI_CMD_TOPIC = cfg.HMI_CMD_TOPIC # config.get('HMI_CMD_TOPIC')
+    HMI_CMD_TOPIC = "/hmi/cmd" # config.get('HMI_CMD_TOPIC')
     PRE_SCAN_CLOUD_TOPIC = cfg.PRE_SCAN_CLOUD_TOPIC
     POST_SCAN_CLOUD_TOPIC = cfg.POST_SCAN_CLOUD_TOPIC
     CLOUD_COMPARED_TOPIC = cfg.CLOUD_COMPARED_TOPIC
