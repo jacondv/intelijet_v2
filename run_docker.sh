@@ -13,7 +13,7 @@ IMAGE_NAME=jacondv/jacon-pps-noetic
 
 run_container() {
     if [ "$(sudo docker ps -q -f name=$CONTAINER_NAME)" ]; then
-        echo "Container $CONTAINER_NAME is already running. Restarting..."
+        echo "Container $CONTAINER_NAME is already running."
         sudo docker exec -it $CONTAINER_NAME bash -c "cd /root/intelijet_v2 && ./run_intelijet.sh"
 
     elif [ "$(sudo docker ps -aq -f name=$CONTAINER_NAME)" ]; then

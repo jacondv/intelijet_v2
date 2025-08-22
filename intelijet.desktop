@@ -1,0 +1,16 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Intelijet
+Comment=Jacon Intelijet                         # <– tooltip hiện khi rê chuột
+Exec=/home/nuc/intelijet_v2/run_docker.sh
+Icon=multimedia-player
+Terminal=false
+StartupWMClass=Intelijet
+TryExec=/home/nuc/intelijet_v2/run_docker.sh
+
+# ========== Ghi chú =====================================
+# Đây là shortcut để chạy Intelijet từ container Docker
+# Script run_docker.sh có trách nhiệm kiểm tra container, 
+# nếu chưa có thì tạo mới, nếu có rồi thì attach vào.
+# ========================================================

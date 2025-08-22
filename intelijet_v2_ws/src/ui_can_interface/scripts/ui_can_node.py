@@ -5,6 +5,8 @@ from can_msgs.msg import Frame
 from ui_can_interface.command_handler import CommandHandler
 from ui_can_interface.pdo import load_pdos_from_yaml
 from shared.config_loader import CONFIG as cfg
+from shared.msg import PPSCommand as PPSCommandMsg
+
 
 # We will send and receive CAN messages via PCAN Ethernet Gateway, so we need to define the topics.
 # pcan_ehternet_gateway node will reposibility to communicate with real CAN bus.
@@ -14,7 +16,7 @@ PCAN_GATEWAY_SEND_TOPIC = "/pcan_sent_messanges"  # Topic to publish CAN frames
 class UICANInterface:
     def __init__(self):
         
-        rospy.Subscriber(cfg.HMI_CMD_TOPIC, Int32, self.command_callback)
+        rospy.Subscriber(cfg.PLC_CMD_TOPIC, PPSCommandMsg, self.command_callback)
         rospy.Subscriber(PCAN_GATEWAY_RECV_TOPIC, Frame, self.recv_callback)
 
         #Configure the CAN PDOs from a YAML file
@@ -23,8 +25,8 @@ class UICANInterface:
         rospy.loginfo("ui_can_interface node started.")
 
 
-    def command_callback(self, msg:Int32):
-        command = msg.data  # đã là int
+    def command_callback(self, msg:PPSCommandMsg):
+        command = msg.code  # đã là int
         rospy.loginfo("Received control command code is: %d", command)
         
         result = self.cmd_handler.execute_command(command)

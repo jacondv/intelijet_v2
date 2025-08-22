@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=Screen Off                                     # Tên hiển thị trong menu / dock
+Comment= Turn off sceen                             # Tooltip khi rê chuột
+Exec=/home/nuc/intelijet_v2/screen_off.sh           # Script thực thi
+Icon=display
+Terminal=false
+Categories=Utility;
+
+# File desktop entry để tạo shortcut tắt màn hình
+# Nằm trong ~/.local/share/applications hoặc ~/Desktop

@@ -9,6 +9,7 @@ from sensor_msgs.msg import PointCloud2
 from shared.config_loader import CONFIG as cfg
 from shared.log_status import log_status
 from shared.pps_command import PPSCommand
+from shared.msg import PPSCommand as PPSCommandMsg
 
 import threading
 
@@ -16,31 +17,33 @@ PI = 3.141592
 
 class HousingControl():
     def __init__(self):
-        self.open_housing_cmd = Int32()
-        self.open_housing_cmd.data = PPSCommand.PLC_OPEN_HOUSING.value
 
-        self.close_housing_cmd = Int32()
-        self.close_housing_cmd.data = PPSCommand.PLC_CLOSE_HOUSING.value
+        self.cmd_pub = rospy.Publisher(cfg.PLC_CMD_TOPIC, PPSCommandMsg, queue_size=1)
 
-        self.stop_housing_cmd = Int32()
-        self.stop_housing_cmd.data = PPSCommand.PLC_PAUSE_HOUSING.value     
+        self.open_housing_cmd = PPSCommandMsg()
+        self.open_housing_cmd.code = PPSCommand.PLC_OPEN_HOUSING.value
 
-        self.cmd_pub = rospy.Publisher(cfg.HMI_CMD_TOPIC, Int32, queue_size=1)
+        self.close_housing_cmd = PPSCommandMsg()
+        self.close_housing_cmd.code = PPSCommand.PLC_CLOSE_HOUSING.value
 
-        self.set_retract_speed_cmd = Int32()
-        self.set_retract_speed_cmd.data = PPSCommand.PLC_SET_RETRACT_SPEED.value
-
-        self.set_extend_speed_cmd = Int32()
-        self.set_extend_speed_cmd.data = PPSCommand.PLC_SET_EXTEND_SPEED.value
+        self.stop_housing_cmd = PPSCommandMsg()
+        self.stop_housing_cmd.code = PPSCommand.PLC_PAUSE_HOUSING.value     
 
 
-    def open(self, speed=None):
+        self.set_retract_speed_cmd = PPSCommandMsg()
+        self.set_retract_speed_cmd.code = PPSCommand.PLC_SET_RETRACT_SPEED.value
+
+        self.set_extend_speed_cmd = PPSCommandMsg()
+        self.set_extend_speed_cmd.code = PPSCommand.PLC_SET_EXTEND_SPEED.value
+
+
+    def open(self, speed=0):
         self.cmd_pub.publish(self.open_housing_cmd)
-        # if speed is not None:
-        #     self.cmd_pub.publish((self.set_extend_speed_cmd,speed))
+        self.open_housing_cmd.uint16_value = speed
 
-    def close(self,speed=None):
+    def close(self,speed=0):
         self.cmd_pub.publish(self.close_housing_cmd)
+        self.close_housing_cmd.uint16_value = speed
         # if speed is not None:
         #     self.cmd_pub.publish((self.set_retract_speed_cmd,speed))
 

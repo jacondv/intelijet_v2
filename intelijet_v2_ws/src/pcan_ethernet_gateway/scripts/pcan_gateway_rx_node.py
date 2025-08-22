@@ -19,7 +19,7 @@ def main():
 
     rospy.loginfo(f"PCAN Gateway RX Node started, listening on {PC_LOCAL_IP}:{PCAN_GATEWAY_RECV_PORT }")
 
-    rate = rospy.Rate(50)  # 200 Hz
+    rate = rospy.Rate(200)  # 200 Hz
     while not rospy.is_shutdown():
         frame = receiver.receive_frame()
         if frame:

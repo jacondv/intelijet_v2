@@ -1,22 +1,4 @@
 #!/usr/bin/env python3
-# import rospy
-# from std_msgs.msg import Int32
-
-# def callback(msg):
-#     rospy.logerr(f"Received message from /hmi/cmd: {msg.data}")
-
-# def listener():
-#     rospy.init_node('hmi_cmd_listener', anonymous=True)
-#     rospy.Subscriber('/hmi/cmd', Int32, callback)
-#     rospy.logerr("Node hmi_cmd_listener started, waiting for messages on /hmi/cmd ...")
-#     rospy.spin()
-
-# if __name__ == '__main__':
-#     listener()
-
-
-
-
 
 import rospy
 import actionlib
@@ -35,12 +17,8 @@ from pps.sick_scan_controller import SickScanController
 from shared.config_loader import CONFIG as cfg
 
 def get_scanner_controller(active_lidar=cfg.active_lidar):
-    rospy.logerr(cfg.active_lidar)
     if active_lidar == "lms511":
         controller = SickScanController()
-
-
-
         return controller
 
 class ScanManagerNode:
@@ -55,17 +33,12 @@ class ScanManagerNode:
         # self.__scan_action_client.wait_for_server(rospy.Duration(10.0))
 
         # Lắng nghe lệnh từ HMI
-        rospy.Subscriber('/hmi/cmd', Int32, self.cmd_cb)
+        rospy.Subscriber(cfg.HMI_CMD_TOPIC, Int32, self.cmd_cb)
         rospy.loginfo("ScanManager ready. Listening on %s", cfg.HMI_CMD_TOPIC)
 
         self.__align_service_client = AlignServiceClient()
         # rospy.logwarn("Starting AlignServiceClient")
         self.scanner_controller = get_scanner_controller()
-
-    def cmd_cb1(Self,msg):
-        rospy.logerr(f"Received message from /hmi/cmd: {msg.data}")
-
-
 
     def cmd_cb(self, msg):
         cmd = msg.data

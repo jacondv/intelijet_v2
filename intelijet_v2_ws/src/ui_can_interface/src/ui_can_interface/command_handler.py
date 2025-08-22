@@ -22,9 +22,9 @@ class CommandHandler:
         self.can_pub.publish(can_frame)
         rospy.logwarn(f"Published CAN frame for PDO '{pdo_name}'.")
 
-    def execute_command(self, command, value=None):
+    def execute_command(self, command):
         # cmd = command.strip().lower()
-        cmd = command
+        cmd = command.code
         
         if cmd == PPSCommand.PLC_START_PRESCAN.value:
             pdo_name= "RxScannerCommandRos"
@@ -55,7 +55,7 @@ class CommandHandler:
             pdo_name= "RxScannerCommandRos"
             field_name="bServiceOpenScanner"
             self.send_pdo(pdo_name, field_name, value=1)
-            self.send_pdo("RxScannerSpeed", "g_Rx_ScannerExtendSpeedInHz", value=95)
+            self.send_pdo("RxScannerSpeed", "g_Rx_ScannerExtendSpeedInHz", value=command.uint16_value)
             
             return True
         
@@ -63,7 +63,7 @@ class CommandHandler:
             pdo_name= "RxScannerCommandRos"
             field_name="bServiceCloseScanner"
             self.send_pdo(pdo_name, field_name, value=1)
-            self.send_pdo("RxScannerSpeed", "g_Rx_ScannerRetractSpeedInHz", value=110)
+            self.send_pdo("RxScannerSpeed", "g_Rx_ScannerRetractSpeedInHz", value=command.uint16_value)
 
             return True
         

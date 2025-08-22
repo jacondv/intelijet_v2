@@ -65,4 +65,3 @@ def load_config(*paths):
 
 CONFIG = load_config("../config/commond.yaml", 
                      "../config/lidar.yaml")
-rospy.logwarn("Only run load CONFIG one time")
