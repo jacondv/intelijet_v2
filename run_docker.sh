@@ -20,7 +20,7 @@ run_container() {
         sudo docker start -ai $CONTAINER_NAME
     else
         echo "Container $CONTAINER_NAME does not exist. Running new container..."
-        sudo docker run -d \
+        sudo docker run -it \
             --name $CONTAINER_NAME \
             -v /home/nuc/intelijet_v2:/root/intelijet_v2 \
             -e DISPLAY=$DISPLAY \
