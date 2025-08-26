@@ -11,10 +11,13 @@ sudo xrandr --output DSI-1 --rotate right
 CONTAINER_NAME=intelijet
 IMAGE_NAME=jacondv/jacon-pps-noetic
 
+QT_ENV="export QT_AUTO_SCREEN_SCALE_FACTOR=1; export QT_SCREEN_SCALE_FACTORS=1; export QT_SCALE_FACTOR=1.25;"
+
+
 run_container() {
     if [ "$(sudo docker ps -q -f name=$CONTAINER_NAME)" ]; then
         echo "Container $CONTAINER_NAME is already running."
-        sudo docker exec -it $CONTAINER_NAME bash -c "cd /root/intelijet_v2 && ./run_intelijet.sh"
+        sudo docker exec -it $CONTAINER_NAME bash -c "$QT_ENV cd /root/intelijet_v2 && ./run_intelijet.sh"
 
     elif [ "$(sudo docker ps -aq -f name=$CONTAINER_NAME)" ]; then
         echo "Container $CONTAINER_NAME exists but stopped. Starting..."
@@ -30,7 +33,8 @@ run_container() {
             -v /dev/dri:/dev/dri \
             --network host \
             $IMAGE_NAME \
-            bash /root/intelijet_v2/run_intelijet.sh
+            bash -c "$QT_ENV /root/intelijet_v2/run_intelijet.sh"
+
     fi
 
 

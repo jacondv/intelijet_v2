@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1103</width>
-    <height>704</height>
+    <width>1080</width>
+    <height>761</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -16,7 +16,7 @@
   <property name="styleSheet">
    <string notr="true">*{
 border: 0px solid green;
-color: gray;
+color: back;
 }
 
 #centralwidget {
@@ -93,7 +93,7 @@ color: gray;
     color: white;
     font-size: 14px;
     font-weight: normal;
-	border:1px solid red;
+
 
 }
 
@@ -104,7 +104,7 @@ color: gray;
     color: white;
     font-size: 16px;
     font-weight: bold;
-	border:1px solid red;
+
 
 }
 
@@ -118,6 +118,7 @@ QTabBar::tab {
     border: none;
 	font-weight: normal;
 	padding-top: 30px;
+	padding-left: 10px;
 	min-height: 100px;
 
 }
@@ -147,7 +148,7 @@ QPushButton#btnPreScan {
    <layout class="QGridLayout" name="gridLayout_2">
     <item row="0" column="0">
      <widget class="QWidget" name="centralFrame" native="true">
-      <layout class="QHBoxLayout" name="horizontalLayout_2" stretch="2,0,4,1">
+      <layout class="QHBoxLayout" name="horizontalLayout_2" stretch="2,0,4,2">
        <property name="spacing">
         <number>0</number>
        </property>
@@ -189,8 +190,8 @@ QPushButton#btnPreScan {
               <rect>
                <x>0</x>
                <y>0</y>
-               <width>277</width>
-               <height>598</height>
+               <width>235</width>
+               <height>659</height>
               </rect>
              </property>
              <attribute name="icon">
@@ -262,7 +263,7 @@ QPushButton#btnPreScan {
                </spacer>
               </item>
               <item>
-               <widget class="QPushButton" name="btnExit">
+               <widget class="QPushButton" name="btnShutdown">
                 <property name="minimumSize">
                  <size>
                   <width>0</width>
@@ -407,14 +408,7 @@ border-radius:12px;</string>
                <number>4</number>
               </property>
               <item>
-               <widget class="QLabel" name="label">
-                <property name="styleSheet">
-                 <string notr="true">background-color: #323E4C;</string>
-                </property>
-                <property name="text">
-                 <string>TextLabel</string>
-                </property>
-               </widget>
+               <widget class="QWidget" name="cloudFrame" native="true"/>
               </item>
              </layout>
             </widget>
@@ -423,17 +417,9 @@ border-radius:12px;</string>
          </widget>
          <widget class="QWidget" name="tab_setting">
           <attribute name="title">
-           <string>Report</string>
+           <string>Setting</string>
           </attribute>
-          <layout class="QGridLayout" name="gridLayout">
-           <item row="0" column="0">
-            <widget class="QLabel" name="label_2">
-             <property name="text">
-              <string>TextLabel</string>
-             </property>
-            </widget>
-           </item>
-          </layout>
+          <layout class="QGridLayout" name="gridLayout"/>
          </widget>
          <widget class="QWidget" name="tab_system">
           <attribute name="title">
@@ -441,10 +427,109 @@ border-radius:12px;</string>
           </attribute>
           <layout class="QVBoxLayout" name="verticalLayout_5">
            <item>
-            <widget class="QLabel" name="label_3">
-             <property name="text">
-              <string>Page 3</string>
-             </property>
+            <widget class="QWidget" name="widget" native="true">
+             <widget class="QWidget" name="widget_2" native="true">
+              <property name="geometry">
+               <rect>
+                <x>10</x>
+                <y>10</y>
+                <width>300</width>
+                <height>150</height>
+               </rect>
+              </property>
+              <property name="maximumSize">
+               <size>
+                <width>300</width>
+                <height>250</height>
+               </size>
+              </property>
+              <layout class="QGridLayout" name="gridLayout_3">
+               <item row="4" column="0" colspan="3">
+                <widget class="QLabel" name="label_5">
+                 <property name="text">
+                  <string>PCAN Gatway:</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="5" column="3">
+                <widget class="QLabel" name="lblCameraStatus">
+                 <property name="text">
+                  <string>--</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="5" column="0" colspan="2">
+                <widget class="QLabel" name="label_6">
+                 <property name="text">
+                  <string>Camera:</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="2" column="0" colspan="2">
+                <widget class="QLabel" name="label_3">
+                 <property name="text">
+                  <string>Encoder:</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="1" column="0">
+                <widget class="QLabel" name="label_2">
+                 <property name="text">
+                  <string>Lidar:</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="0" column="2" colspan="2">
+                <widget class="QLabel" name="lblPLCStatus">
+                 <property name="text">
+                  <string>--</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="3" column="4">
+                <widget class="QLabel" name="lblEncoder">
+                 <property name="text">
+                  <string>--</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="0" column="0">
+                <widget class="QLabel" name="label_7">
+                 <property name="text">
+                  <string>PLC:</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="4" column="3">
+                <widget class="QLabel" name="lblPCANStatus">
+                 <property name="text">
+                  <string>--</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="2" column="2" colspan="2">
+                <widget class="QLabel" name="lblEncoderStatus">
+                 <property name="text">
+                  <string>--</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="3" column="1" colspan="3">
+                <widget class="QLabel" name="label">
+                 <property name="text">
+                  <string>Encoder value (rad):</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="1" column="2" colspan="2">
+                <widget class="QLabel" name="lblLidarStatus">
+                 <property name="text">
+                  <string>--</string>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </widget>
             </widget>
            </item>
           </layout>
@@ -541,6 +626,13 @@ border-radius:12px;</string>
            </widget>
           </item>
           <item>
+           <widget class="QPushButton" name="btnCompare">
+            <property name="text">
+             <string>Compare</string>
+            </property>
+           </widget>
+          </item>
+          <item>
            <spacer name="verticalSpacer_6">
             <property name="orientation">
              <enum>Qt::Vertical</enum>
@@ -589,14 +681,14 @@ border-radius:12px;</string>
            </spacer>
           </item>
           <item>
-           <widget class="QPushButton" name="btnOpenHousing">
+           <widget class="QPushButton" name="btnOpenScanner">
             <property name="text">
              <string>OPEN HOUSING</string>
             </property>
            </widget>
           </item>
           <item>
-           <widget class="QPushButton" name="btnClouseHousing">
+           <widget class="QPushButton" name="btnCloseScanner">
             <property name="text">
              <string>CLOSE HOUSING</string>
             </property>
