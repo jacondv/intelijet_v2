@@ -10,7 +10,7 @@ import open3d as o3d
 import ros_numpy
 import numpy as np
 from datetime import datetime
-
+from shared.config_loader import CONFIG as cfg
 
 PRE_SCAN_RAW_TOPIC = "/pre_scan_0"
 POST_SCAN_RAW_TOPIC = "/post_scan_0"
@@ -51,7 +51,9 @@ class CloudProcessorNode:
         # aabb = o3d.geometry.AxisAlignedBoundingBox(min_bound, max_bound)
         # cloud_cropped = cloud_o3d.crop(aabb)
 
-        cloud_cropped = crop_pointcloud_by_box(pcd=cloud_o3d, box_type='aabb', min_bound=[-50, -50, -15], max_bound=[50, 50, 50])
+        cloud_cropped = crop_pointcloud_by_box(pcd=cloud_o3d, box_type='aabb', 
+                                               min_bound=[cfg.crop_box.min.x, cfg.crop_box.min.y, cfg.crop_box.min.x], 
+                                               max_bound=[cfg.crop_box.max.x, cfg.crop_box.max.y, cfg.crop_box.max.z])
 
         # Lọc nhiễu
         cloud_cropped, _ = cloud_cropped.remove_statistical_outlier(nb_neighbors=5, std_ratio=1)

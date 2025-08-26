@@ -4,6 +4,13 @@ import os
 import rospy
 import rospkg
 
+def get_config_dir():
+    rospack = rospkg.RosPack()
+    pkg_path = rospack.get_path("pps") 
+    pkg_path = os.path.dirname(pkg_path)
+    config_dir = os.path.join(pkg_path, "config")
+    return config_dir
+
 def _guess_calling_package():
     """
     Tries to guess the calling package by inspecting __file__ variable
@@ -44,24 +51,82 @@ def deep_merge(dict1, dict2):
 
 def load_config(*paths):
     merged = {}
-    caller_package = _guess_calling_package()
+    # caller_package = _guess_calling_package()
 
-    if caller_package:
-        rospack = rospkg.RosPack()
-        pkg_path = rospack.get_path(caller_package)
+    # if caller_package:
+    #     rospack = rospkg.RosPack()
+    #     pkg_path = rospack.get_path(caller_package)
+
+    config_dir = get_config_dir()
 
     for path in paths:
 
-        default_path = os.path.join(pkg_path, path)
-        if os.path.isfile(default_path):
-            rospy.logwarn(f"Loading config from default path: {default_path}")
+        config_path = os.path.join(config_dir, path)
+        if os.path.isfile(config_path):
+            rospy.logwarn(f"Loading config from default path: {config_path}")
             
-        with open(default_path, "r") as f:
+        with open(config_path, "r") as f:
             data = yaml.safe_load(f)
             merged = deep_merge(merged, data)
 
     return dict_to_namespace(merged)
 
 
-CONFIG = load_config("../config/commond.yaml", 
-                     "../config/lidar.yaml")
+def save_config(config_obj, filename="last_used.yaml"):
+    """Lưu config object (SimpleNamespace) thành YAML."""
+
+    def namespace_to_dict(ns):
+        if isinstance(ns, SimpleNamespace):
+            return {k: namespace_to_dict(v) for k, v in vars(ns).items()}
+        elif isinstance(ns, list):
+            return [namespace_to_dict(v) for v in ns]
+        return ns
+
+    data = namespace_to_dict(config_obj)
+
+    config_dir = get_config_dir()
+    config_path = os.path.join(config_dir, filename)
+    with open(config_path, "w") as f:
+        yaml.dump(data, f, default_flow_style=False, sort_keys=False)
+
+# def reload_config():
+#     global CONFIG
+#     config_dir = get_config_dir()
+#     config_path = os.path.join(config_dir, "last_used.yaml")
+#     if os.path.isfile(config_path):
+#         CONFIG = load_config("last_used.yaml")
+#     else:
+#         CONFIG = load_config("commond.yaml", 
+#                              "lidar.yaml", 
+#                              "runtime.yaml")
+        
+#         save_config(CONFIG, filename="last_used.yaml")
+
+
+def reload_config():
+    global CONFIG
+    config_dir = get_config_dir()
+    config_path = os.path.join(config_dir, "last_used.yaml")
+
+    if os.path.isfile(config_path):
+        new_config = load_config("last_used.yaml")
+    else:
+        new_config = load_config("commond.yaml", "lidar.yaml", "runtime.yaml")
+        save_config(new_config, filename="last_used.yaml")
+
+    if CONFIG is None:
+        CONFIG = new_config
+    else:
+        # giữ reference cũ, update __dict__
+        CONFIG.__dict__.clear()
+        CONFIG.__dict__.update(new_config.__dict__)
+
+
+CONFIG = None
+reload_config()
+if __name__ == "__main__":
+    # Test loading and saving config
+    # save_config(CONFIG)
+    # reload_config()
+    # print(CONFIG)
+    pass

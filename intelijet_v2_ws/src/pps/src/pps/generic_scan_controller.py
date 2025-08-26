@@ -37,13 +37,39 @@ class HousingControl():
         self.set_extend_speed_cmd.code = PPSCommand.PLC_SET_EXTEND_SPEED.value
 
 
-    def open(self, speed=0):
+    def open(self, speed='fast'):
+        """ speed: int or 'fast', 'medium' or 'slow' 
+        """
+        if speed == 'fast':
+            speed = cfg.housing_open_fast_speed
+        elif speed == 'medium':
+            speed = cfg.housing_open_medium_speed
+        elif speed == 'slow':
+            speed = cfg.housing_open_slow_speed
+        elif isinstance(speed, int):
+            speed = speed
+        else:
+            speed = 0
+
         self.cmd_pub.publish(self.open_housing_cmd)
         self.open_housing_cmd.uint16_value = speed
 
-    def close(self,speed=0):
+    def close(self,speed='fast'):
+
+        if speed == 'fast':
+            speed = cfg.housing_close_fast_speed
+        elif speed == 'medium':
+            speed = cfg.housing_close_medium_speed
+        elif speed == 'slow':
+            speed = cfg.housing_close_slow_speed
+        elif isinstance(speed, int):
+            speed = speed
+        else:
+            speed = 0
+
         self.cmd_pub.publish(self.close_housing_cmd)
         self.close_housing_cmd.uint16_value = speed
+
         # if speed is not None:
         #     self.cmd_pub.publish((self.set_retract_speed_cmd,speed))
 
@@ -183,15 +209,15 @@ class GenericScanController(ABC):
 
             try:
                 if direction:
-                    TARGET=cfg.HOUSING_END_POSITION
-                    self.housing.open(110) # Open fast speed
+                    TARGET=cfg.housing_end_position
+                    self.housing.open('fast') # Open fast speed
                 else:
-                    TARGET=cfg.HOUSING_START_POSITION
-                    self.housing.close(110) # Close fast speed
+                    TARGET=cfg.housing_start_position
+                    self.housing.close('fast') # Close fast speed
                     
                 self.wait_until_target(target_position_in_degree=TARGET,direction=direction)
                 if not direction:
-                    self.housing.close(90) # Close slow speed
+                    self.housing.close('medium') # Close slow speed
                     rospy.sleep(3)
 
                 self.housing.stop()

@@ -1,18 +1,25 @@
 #!/usr/bin/env python3
 import sys, subprocess
 import vtk
-from PyQt5.QtWidgets import QApplication, QWidget, QMessageBox
+from PyQt5.QtWidgets import QApplication, QWidget, QMessageBox, QVBoxLayout
 from vtk.qt.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
+from vtkmodules.vtkInteractionStyle import vtkInteractorStyleTrackballCamera
+
 from vtk.util import numpy_support
 
 from ui.pps_ui import Ui_Frame  # Import class từ file pps_ui.py
+from ui.setting_page_ui import Ui_setting_page
+
 from ui.utils import ros_pointcloud2_to_o3d_to_vtk_polydata_voxel
+from ui.update_data_utils import upload_data_to_ui, download_data_from_ui
+from ui.handlers import *
 import rospy
 from sensor_msgs.msg import PointCloud2, JointState
 import sensor_msgs.point_cloud2 as pc2
 
 from std_msgs.msg import Int32
 from PyQt5.QtCore import pyqtSignal, pyqtSlot
+
 import threading
 import numpy as np
 
@@ -85,9 +92,6 @@ class RosThread(threading.Thread):
             name = data.get("name")
             self.data_store[name] = data.get("message")
         
-        
-
-
 
     def emit_ui_data_update(self, msg):
         # self.data_store["encoder_value_in_deg"] = random.random()
@@ -107,6 +111,17 @@ class App(QWidget):
 
         self.ui = Ui_Frame()
         self.ui.setupUi(self)  # Gán các widget đã thiết kế vào self
+
+         # === Load setting UI ===
+        self.setting_page_ui = Ui_setting_page()
+        self.setting_page_widget = QWidget() 
+        self.setting_page_ui.setupUi(self.setting_page_widget)
+        # === Gán setting_page_widget vào tab_setting ===
+        # Nếu tab_setting chưa có layout → tạo VBoxLayout
+
+        if self.ui.tab_setting.layout() is None:
+            self.ui.tab_setting.setLayout(QVBoxLayout())
+        self.ui.tab_setting.layout().addWidget(self.setting_page_widget)
 	
         self.ros_thread = RosThread(self.cloud_received_signal, self.ui_send_cmd_signale, self.ui_data_update)
 
@@ -125,11 +140,33 @@ class App(QWidget):
         self.vtkWidget = QVTKRenderWindowInteractor(self.ui.cloudFrame)
         
         self.vl.addWidget(self.vtkWidget)
-
+        
 	
         # Create a VTK renderer
         self.renderer = vtk.vtkRenderer()
         self.vtkWidget.GetRenderWindow().AddRenderer(self.renderer)
+
+        iren = self.vtkWidget.GetRenderWindow().GetInteractor()
+        self.style = vtkInteractorStyleTrackballCamera()
+        iren.SetInteractorStyle(self.style)
+        iren.AddObserver("EndInteractionEvent", self._stop_rotation)
+
+        # === HIỂN THỊ TRỤC TỌA ĐỘ ===
+        axes = vtk.vtkAxesActor()
+        axes.SetTotalLength(1.0, 1.0, 1.0)  # độ dài X,Y,Z
+        axes.AxisLabelsOn()
+        axes.SetCylinderRadius(0.05)
+        transform = vtk.vtkTransform()
+        transform.RotateY(90) 
+        transform.RotateX(-90)
+        axes.SetUserTransform(transform)
+
+        self.orientation_widget = vtk.vtkOrientationMarkerWidget()
+        self.orientation_widget.SetOrientationMarker(axes)
+        self.orientation_widget.SetInteractor(self.vtkWidget)
+        self.orientation_widget.SetViewport(0.0, 0.0, 0.2, 0.2)  # góc trái dưới
+        self.orientation_widget.EnabledOn()
+        self.orientation_widget.InteractiveOn()
 
         self.vtkWidget.Initialize()
         self.vtkWidget.Start()
@@ -147,6 +184,14 @@ class App(QWidget):
         self.ui.btnCloseScanner.clicked.connect(self.close_scanner)
 
         self.ui.btnShutdown.clicked.connect(self.on_shutdown)
+        self.setting_page_ui.btnUpdateHousingParam.clicked.connect(lambda: btnUpdateHousingParam_handler(self))
+
+        upload_data_to_ui(self.ui.tab_setting)
+
+    def _stop_rotation(self,obj, ev):
+        # self.style.StopState()
+        # obj.GetRenderWindow().Render()
+        pass
 
     def closeEvent(self, event):
         subprocess.call(["rosnode", "kill", "-a"])
@@ -195,6 +240,8 @@ class App(QWidget):
    
     def on_cancel(self):
         self.ui_send_cmd_signale.emit(PPSCommand.CANCEL_JOB.value)
+
+     
 
 
     def __load_sample(self):

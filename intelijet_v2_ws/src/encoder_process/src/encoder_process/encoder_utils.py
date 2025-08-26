@@ -3,6 +3,8 @@ import numpy as np
 from scipy.optimize import  fsolve, root_scalar
 # Các hệ số của đa thức bậc 6, bạn thay bằng giá trị thật nếu cần
 
+from shared.config_loader import CONFIG as cfg
+
 ax6= 0.000000000000000014180561937502
 bx5= -0.000000000000056332634126525600
 cx4= 0.000000000088249620640769400000
@@ -49,17 +51,7 @@ def convert_draw_wire_length(message_data, draw_wire_gain_term=draw_wire_gain_te
         float(message_data[3]) * 256.0**3
     )
 
-    global encoder_length_at_zero_possition
-    #rospy.logwarn(raw_value)
-
-    if encoder_length_at_zero_possition is None:
-        encoder_length_at_zero_possition = 29910924
-        if raw_value < 29910924+100:
-            encoder_length_at_zero_possition= raw_value
-        else:
-            return -1
-
-    return (raw_value-encoder_length_at_zero_possition) * draw_wire_gain_term + 248
+    return (raw_value-cfg.encoder_length_at_zero_possition) * draw_wire_gain_term + 248
 
 
 def hinge_angle(a1=393.558, a2=309.546,

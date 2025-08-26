@@ -23,14 +23,10 @@ class SickScanController(GenericScanController):
     def __init__(self):
         super().__init__()
 
-        self._SPEED_1 = 110
-        self._SPEED_2 = 95
-
-
     def run_workflow(self,publisher=None)->PointCloud2:
         rospy.loginfo("run_workflow Open")
         # Send run commant to PLC via ROS Topic. Detail in command_handler.py
-        self.housing.open(self._SPEED_1)
+        self.housing.open('fast')
         log_status(
                 name=cfg.NOTIFICATION, 
                 status=None, 
@@ -39,7 +35,7 @@ class SickScanController(GenericScanController):
                 node=None
             )
         #  Waiting Scaner housing open around 10 degree to start collect data point from sickscan
-        if not self.wait_until_target(target_position_in_degree=cfg.HOUSING_START_POSITION, direction=True):
+        if not self.wait_until_target(target_position_in_degree=cfg.housing_start_position, direction=True):
             log_status(
                 name=cfg.NOTIFICATION, 
                 status=None, 
@@ -49,13 +45,13 @@ class SickScanController(GenericScanController):
             )    
             return None
         
-        self.housing.open(self._SPEED_2)
+        self.housing.open('medium')
 
         # Start collect data. 
         self.start_time = rospy.Time.now()
 
         #  Wait Scaner hosing open to target value
-        if not self.wait_until_target(target_position_in_degree=cfg.HOUSING_END_POSITION):
+        if not self.wait_until_target(target_position_in_degree=cfg.housing_end_position):
             log_status(
                 name=cfg.NOTIFICATION, 
                 status=None, 
@@ -80,10 +76,10 @@ class SickScanController(GenericScanController):
             publisher.publish(point_cloud)
 
         # Send back command
-        self.housing.close(self._SPEED_1)
+        self.housing.close('fast')
 
         #  Wait Scaner hosing clouse to target value
-        if not self.wait_until_target(target_position_in_degree=cfg.HOUSING_START_POSITION, direction=False):
+        if not self.wait_until_target(target_position_in_degree=cfg.housing_start_position, direction=False):
             log_status(
                 name=cfg.NOTIFICATION, 
                 status=None, 

@@ -52,12 +52,12 @@
 
 	<!-- ROS BAG -->
 
-	  <node name="rosbag_recorder"
+	  <!-- <node name="rosbag_recorder"
 		pkg="rosbag"
 		type="record"
 		output="screen"
 		args="-O /root/intelijet_v2/data/bag_250818.bag /cloud /joint_states" />
-
+ -->
 
 
 
