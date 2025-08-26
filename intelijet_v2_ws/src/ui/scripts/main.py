@@ -182,17 +182,17 @@ class App(QMainWindow):
         self.showMaximized()
         self.vtkWidget.resize(self.ui.cloudFrame.size())  # Ép nó tràn ra
 
-        self.ui.btnPreScan.clicked.connect(self.start_prescan)
-        self.ui.btnPostScan.clicked.connect(self.start_postscan)
-        self.ui.btnCompare.clicked.connect(self.start_compare)
+        self.ui.btnPreScan.released.connect(self.start_prescan)
+        self.ui.btnPostScan.released.connect(self.start_postscan)
+        self.ui.btnCompare.released.connect(self.start_compare)
 
-        self.ui.btnCancel.clicked.connect(self.on_cancel)
+        self.ui.btnCancel.released.connect(self.on_cancel)
 
-        self.ui.btnOpenScanner.clicked.connect(self.open_scanner)
-        self.ui.btnCloseScanner.clicked.connect(self.close_scanner)
+        self.ui.btnOpenScanner.released.connect(self.open_scanner)
+        self.ui.btnCloseScanner.released.connect(self.close_scanner)
 
-        self.ui.btnShutdown.clicked.connect(self.on_shutdown)
-        self.setting_page_ui.btnUpdateHousingParam.clicked.connect(lambda: btnUpdateHousingParam_handler(self))
+        self.ui.btnShutdown.released.connect(self.on_shutdown)
+        self.setting_page_ui.btnUpdateHousingParam.released.connect(lambda: btnUpdateHousingParam_handler(self))
         self.lblNotification = QLabel("Ready")
         self.lblNotification.setStyleSheet("margin-left: 5px;")  
         self.ui.statusbar.addWidget(self.lblNotification)

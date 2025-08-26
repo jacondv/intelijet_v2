@@ -131,9 +131,6 @@ QTabBar::tab:selected {
 
 }
 
-QPushButton#btnPreScan {
-	border-left: 6px solid #00FF00;
-}
 
 
 

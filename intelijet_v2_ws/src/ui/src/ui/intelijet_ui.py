@@ -131,9 +131,6 @@ class Ui_MainWindow(object):
 "\n"
 "}\n"
 "\n"
-"QPushButton#btnPreScan {\n"
-"    border-left: 6px solid #00FF00;\n"
-"}\n"
 "\n"
 "\n"
 "\n"
@@ -355,7 +352,7 @@ class Ui_MainWindow(object):
 
         self.retranslateUi(MainWindow)
         self.toolBox.setCurrentIndex(0)
-        self.tab_mainview.setCurrentIndex(2)
+        self.tab_mainview.setCurrentIndex(0)
         self.pushButton_4.clicked['bool'].connect(self.menu_main.setHidden)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
         MainWindow.setTabOrder(self.pushButton, self.pushButton_2)

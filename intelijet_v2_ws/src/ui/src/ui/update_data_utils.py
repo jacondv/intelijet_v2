@@ -3,27 +3,6 @@ from PyQt5 import QtWidgets
 import rospy
 # ===== Hàm load dữ liệu vào UI =====
 
-data_mapingxx = {            
-    "txtHousingOpenFast": cfg.housing_open_speed_fast,
-    "txtHousingOpenMedium": cfg.housing_open_speed_medium,
-    "txtHousingOpenSlow": cfg.housing_open_speed_slow,
-
-    "txtHousingCloseFast": cfg.housing_close_speed_fast,
-    "txtHousingCloseMedium": cfg.housing_close_speed_medium,
-    "txtHousingCloseSlow": cfg.housing_close_speed_slow,
-
-    "txtHousingStartPosition": cfg.housing_start_position,
-    "txtHousingEndPosition": cfg.housing_end_position,
-    "txtHousingClosedPosition": cfg.encoder_length_at_zero_possition,
-
-    "txtTunnelMinBoundX": cfg.crop_box.min.x,
-    "txtTunnelMinBoundY": cfg.crop_box.min.y,
-    "txtTunnelMinBoundZ": cfg.crop_box.min.z,
-    "txtTunnelMaxBoundX": cfg.crop_box.max.x,
-    "txtTunnelMaxBoundY": cfg.crop_box.max.y,
-    "txtTunnelMaxBoundZ": cfg.crop_box.max.z,
-}
-
 data_mapping = {
     "txtHousingOpenFast": {
         "get": lambda: cfg.housing_open_speed_fast,
