@@ -56,7 +56,7 @@ def convert_draw_wire_length(message_data, draw_wire_gain_term=draw_wire_gain_te
 
 def hinge_angle(a1=393.558, a2=309.546,
                         r1=25.815, r2=45.35,
-                        theta0=np.radians(10),
+                        theta0=np.radians(0),
                         encoder0=0,
                         encoder_current=None):
     """

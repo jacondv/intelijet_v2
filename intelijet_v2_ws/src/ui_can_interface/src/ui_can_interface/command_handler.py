@@ -24,7 +24,8 @@ class CommandHandler:
 
     def execute_command(self, command):
         # cmd = command.strip().lower()
-        cmd = command
+        cmd = command.code
+
         
         if cmd == PPSCommand.PLC_START_PRESCAN.value:
             pdo_name= "RxScannerCommandRos"

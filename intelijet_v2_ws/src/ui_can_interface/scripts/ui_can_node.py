@@ -26,8 +26,7 @@ class UICANInterface:
 
 
     def command_callback(self, msg:PPSCommandMsg):
-        command = msg.code  # đã là int
-        rospy.loginfo("Received control command code is: %d", command)
+        command = msg  # đã là int
         
         result = self.cmd_handler.execute_command(command)
     

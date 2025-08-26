@@ -51,8 +51,9 @@ class HousingControl():
         else:
             speed = 0
 
-        self.cmd_pub.publish(self.open_housing_cmd)
+
         self.open_housing_cmd.uint16_value = speed
+        self.cmd_pub.publish(self.open_housing_cmd)
 
     def close(self,speed='fast'):
 
@@ -67,8 +68,8 @@ class HousingControl():
         else:
             speed = 0
 
-        self.cmd_pub.publish(self.close_housing_cmd)
         self.close_housing_cmd.uint16_value = speed
+        self.cmd_pub.publish(self.close_housing_cmd)
 
         # if speed is not None:
         #     self.cmd_pub.publish((self.set_retract_speed_cmd,speed))

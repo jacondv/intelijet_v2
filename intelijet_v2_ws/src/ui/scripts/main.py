@@ -157,8 +157,8 @@ class App(QWidget):
         axes.AxisLabelsOn()
         axes.SetCylinderRadius(0.05)
         transform = vtk.vtkTransform()
-        transform.RotateY(90) 
-        transform.RotateX(-90)
+        # transform.RotateY(90) 
+        # transform.RotateX(-90)
         axes.SetUserTransform(transform)
 
         self.orientation_widget = vtk.vtkOrientationMarkerWidget()
