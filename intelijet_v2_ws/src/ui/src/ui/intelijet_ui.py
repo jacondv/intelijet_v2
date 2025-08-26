@@ -13,7 +13,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
-        MainWindow.resize(1103, 704)
+        MainWindow.resize(1080, 761)
         MainWindow.setStyleSheet("*{\n"
 "border: 0px solid green;\n"
 "color: gray;\n"
@@ -93,7 +93,7 @@ class Ui_MainWindow(object):
 "    color: white;\n"
 "    font-size: 14px;\n"
 "    font-weight: normal;\n"
-"    border:1px solid red;\n"
+"\n"
 "\n"
 "}\n"
 "\n"
@@ -104,7 +104,7 @@ class Ui_MainWindow(object):
 "    color: white;\n"
 "    font-size: 16px;\n"
 "    font-weight: bold;\n"
-"    border:1px solid red;\n"
+"\n"
 "\n"
 "}\n"
 "\n"
@@ -166,7 +166,7 @@ class Ui_MainWindow(object):
         self.toolBox.setFont(font)
         self.toolBox.setObjectName("toolBox")
         self.page_4 = QtWidgets.QWidget()
-        self.page_4.setGeometry(QtCore.QRect(0, 0, 277, 598))
+        self.page_4.setGeometry(QtCore.QRect(0, 0, 235, 659))
         self.page_4.setObjectName("page_4")
         self.verticalLayout_2 = QtWidgets.QVBoxLayout(self.page_4)
         self.verticalLayout_2.setContentsMargins(0, 0, 20, 0)
@@ -184,15 +184,15 @@ class Ui_MainWindow(object):
         self.verticalLayout_2.addWidget(self.pushButton_2)
         spacerItem = QtWidgets.QSpacerItem(20, 437, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding)
         self.verticalLayout_2.addItem(spacerItem)
-        self.btnExit = QtWidgets.QPushButton(self.page_4)
-        self.btnExit.setMinimumSize(QtCore.QSize(0, 0))
+        self.btnShutdown = QtWidgets.QPushButton(self.page_4)
+        self.btnShutdown.setMinimumSize(QtCore.QSize(0, 0))
         icon = QtGui.QIcon()
         icon.addPixmap(QtGui.QPixmap(":/icon/icon/power-button.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-        self.btnExit.setIcon(icon)
-        self.btnExit.setIconSize(QtCore.QSize(32, 32))
-        self.btnExit.setCheckable(False)
-        self.btnExit.setObjectName("btnExit")
-        self.verticalLayout_2.addWidget(self.btnExit)
+        self.btnShutdown.setIcon(icon)
+        self.btnShutdown.setIconSize(QtCore.QSize(32, 32))
+        self.btnShutdown.setCheckable(False)
+        self.btnShutdown.setObjectName("btnShutdown")
+        self.verticalLayout_2.addWidget(self.btnShutdown)
         icon1 = QtGui.QIcon()
         icon1.addPixmap(QtGui.QPixmap(":/icon/icon/home-4-48 (2).ico"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.toolBox.addItem(self.page_4, icon1, "")
@@ -236,10 +236,9 @@ class Ui_MainWindow(object):
         self.verticalLayout_7.setContentsMargins(4, 4, 4, 4)
         self.verticalLayout_7.setSpacing(4)
         self.verticalLayout_7.setObjectName("verticalLayout_7")
-        self.label = QtWidgets.QLabel(self.tab_cloud_view)
-        self.label.setStyleSheet("background-color: #323E4C;")
-        self.label.setObjectName("label")
-        self.verticalLayout_7.addWidget(self.label)
+        self.cloudFrame = QtWidgets.QWidget(self.tab_cloud_view)
+        self.cloudFrame.setObjectName("cloudFrame")
+        self.verticalLayout_7.addWidget(self.cloudFrame)
         self.horizontalLayout.addWidget(self.tab_cloud_view)
         self.horizontalLayout.setStretch(0, 10)
         self.tab_mainview.addTab(self.tab_operator, "")
@@ -247,17 +246,11 @@ class Ui_MainWindow(object):
         self.tab_setting.setObjectName("tab_setting")
         self.gridLayout = QtWidgets.QGridLayout(self.tab_setting)
         self.gridLayout.setObjectName("gridLayout")
-        self.label_2 = QtWidgets.QLabel(self.tab_setting)
-        self.label_2.setObjectName("label_2")
-        self.gridLayout.addWidget(self.label_2, 0, 0, 1, 1)
         self.tab_mainview.addTab(self.tab_setting, "")
         self.tab_system = QtWidgets.QWidget()
         self.tab_system.setObjectName("tab_system")
         self.verticalLayout_5 = QtWidgets.QVBoxLayout(self.tab_system)
         self.verticalLayout_5.setObjectName("verticalLayout_5")
-        self.label_3 = QtWidgets.QLabel(self.tab_system)
-        self.label_3.setObjectName("label_3")
-        self.verticalLayout_5.addWidget(self.label_3)
         self.tab_mainview.addTab(self.tab_system, "")
         self.horizontalLayout_2.addWidget(self.tab_mainview)
         self.control_panel = QtWidgets.QWidget(self.centralFrame)
@@ -282,6 +275,9 @@ class Ui_MainWindow(object):
         self.btnPostScan = QtWidgets.QPushButton(self.control_panel)
         self.btnPostScan.setObjectName("btnPostScan")
         self.verticalLayout_4.addWidget(self.btnPostScan)
+        self.btnCompare = QtWidgets.QPushButton(self.control_panel)
+        self.btnCompare.setObjectName("btnCompare")
+        self.verticalLayout_4.addWidget(self.btnCompare)
         spacerItem5 = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Fixed)
         self.verticalLayout_4.addItem(spacerItem5)
         self.btnCancel = QtWidgets.QPushButton(self.control_panel)
@@ -291,18 +287,18 @@ class Ui_MainWindow(object):
         self.verticalLayout_4.addWidget(self.btnCancel)
         spacerItem6 = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Fixed)
         self.verticalLayout_4.addItem(spacerItem6)
-        self.btnOpenHousing = QtWidgets.QPushButton(self.control_panel)
-        self.btnOpenHousing.setObjectName("btnOpenHousing")
-        self.verticalLayout_4.addWidget(self.btnOpenHousing)
-        self.btnClouseHousing = QtWidgets.QPushButton(self.control_panel)
-        self.btnClouseHousing.setObjectName("btnClouseHousing")
-        self.verticalLayout_4.addWidget(self.btnClouseHousing)
+        self.btnOpenScanner = QtWidgets.QPushButton(self.control_panel)
+        self.btnOpenScanner.setObjectName("btnOpenScanner")
+        self.verticalLayout_4.addWidget(self.btnOpenScanner)
+        self.btnCloseScanner = QtWidgets.QPushButton(self.control_panel)
+        self.btnCloseScanner.setObjectName("btnCloseScanner")
+        self.verticalLayout_4.addWidget(self.btnCloseScanner)
         spacerItem7 = QtWidgets.QSpacerItem(20, 119, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding)
         self.verticalLayout_4.addItem(spacerItem7)
         self.horizontalLayout_2.addWidget(self.control_panel)
         self.horizontalLayout_2.setStretch(0, 2)
         self.horizontalLayout_2.setStretch(2, 4)
-        self.horizontalLayout_2.setStretch(3, 1)
+        self.horizontalLayout_2.setStretch(3, 2)
         self.gridLayout_2.addWidget(self.centralFrame, 0, 0, 1, 1)
         MainWindow.setCentralWidget(self.centralwidget)
         self.statusbar = QtWidgets.QStatusBar(MainWindow)
@@ -312,7 +308,7 @@ class Ui_MainWindow(object):
 
         self.retranslateUi(MainWindow)
         self.toolBox.setCurrentIndex(0)
-        self.tab_mainview.setCurrentIndex(0)
+        self.tab_mainview.setCurrentIndex(2)
         self.pushButton_4.clicked['bool'].connect(self.menu_main.setHidden)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
         MainWindow.setTabOrder(self.pushButton, self.pushButton_2)
@@ -322,21 +318,19 @@ class Ui_MainWindow(object):
         MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow"))
         self.pushButton.setText(_translate("MainWindow", "Operator"))
         self.pushButton_2.setText(_translate("MainWindow", "Job Setting"))
-        self.btnExit.setText(_translate("MainWindow", "Exit"))
+        self.btnShutdown.setText(_translate("MainWindow", "Exit"))
         self.toolBox.setItemText(self.toolBox.indexOf(self.page_4), _translate("MainWindow", "General"))
-        self.label.setText(_translate("MainWindow", "TextLabel"))
         self.tab_mainview.setTabText(self.tab_mainview.indexOf(self.tab_operator), _translate("MainWindow", "3D Viewer"))
-        self.label_2.setText(_translate("MainWindow", "TextLabel"))
         self.tab_mainview.setTabText(self.tab_mainview.indexOf(self.tab_setting), _translate("MainWindow", "Report"))
-        self.label_3.setText(_translate("MainWindow", "Page 3"))
         self.tab_mainview.setTabText(self.tab_mainview.indexOf(self.tab_system), _translate("MainWindow", "System"))
         self.label_4.setText(_translate("MainWindow", "LOGO"))
         self.btnPreScan.setText(_translate("MainWindow", "PRE-SCAN"))
         self.btnPostScan.setText(_translate("MainWindow", "POST-SCAN"))
+        self.btnCompare.setText(_translate("MainWindow", "PushButton"))
         self.btnCancel.setText(_translate("MainWindow", "CANCEL JOB"))
-        self.btnOpenHousing.setText(_translate("MainWindow", "OPEN HOUSING"))
-        self.btnClouseHousing.setText(_translate("MainWindow", "CLOSE HOUSING"))
-import resource_rc
+        self.btnOpenScanner.setText(_translate("MainWindow", "OPEN HOUSING"))
+        self.btnCloseScanner.setText(_translate("MainWindow", "CLOSE HOUSING"))
+from ui import resource_rc
 
 
 if __name__ == "__main__":

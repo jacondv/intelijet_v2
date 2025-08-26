@@ -7,12 +7,8 @@ from vtkmodules.vtkInteractionStyle import vtkInteractorStyleTrackballCamera
 
 from vtk.util import numpy_support
 
-from PyQt5 import QtCore, QtGui, QtWidgets
-from PyQt5.QtWidgets import QMainWindow
-
-# from ui.pps_ui import Ui_Frame  # Import class từ file pps_ui.py
+from ui.pps_ui import Ui_Frame  # Import class từ file pps_ui.py
 from ui.setting_page_ui import Ui_setting_page
-from ui.intelijet_ui import Ui_MainWindow as Ui_Frame
 
 from ui.utils import ros_pointcloud2_to_o3d_to_vtk_polydata_voxel
 from ui.update_data_utils import upload_data_to_ui, download_data_from_ui
@@ -104,7 +100,7 @@ class RosThread(threading.Thread):
 
 
 
-class App(QMainWindow):
+class App(QWidget):
 
     cloud_received_signal = pyqtSignal(object)
     ui_send_cmd_signale = pyqtSignal(int)
@@ -137,8 +133,7 @@ class App(QMainWindow):
         self.ros_thread.start()
         
         self.current_actor = None
-        self.vl = self.ui.cloudFrame.layout()
-        self.vl = QVBoxLayout(self.ui.cloudFrame)
+        self.vl = self.ui.cloudFrame.layout()#QVBoxLayout(self.ui.cloudFrame)
         self.vl.setContentsMargins(0, 0, 0, 0)
         self.vl.setSpacing(0)
 
@@ -205,7 +200,6 @@ class App(QMainWindow):
         event.accept()  
 
     def on_shutdown(self):
-
         reply = QMessageBox.question(
             self,
             "Xác nhận",
@@ -220,7 +214,6 @@ class App(QMainWindow):
     def start_prescan(self):
         # self.cmd_pub.publish(String("start_prescan"))
         # self.status_label.setText("Requested PreScan...")
-        
 
         self.ui_send_cmd_signale.emit(PPSCommand.START_PRESCAN.value)
 
