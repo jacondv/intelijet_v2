@@ -123,6 +123,8 @@ class App(QMainWindow):
         # === Gán setting_page_widget vào tab_setting ===
         # Nếu tab_setting chưa có layout → tạo VBoxLayout
 
+        self.ui.tab_mainview.setCurrentIndex(0)
+
         if self.ui.tab_setting.layout() is None:
             self.ui.tab_setting.setLayout(QVBoxLayout())
         self.ui.tab_setting.layout().addWidget(self.setting_page_widget)
