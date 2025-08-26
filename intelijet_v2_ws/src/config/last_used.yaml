@@ -29,7 +29,7 @@ lms511:
   scan_time_seconds: None
 crop_box:
   min:
-    x: -20.0
+    x: -5.0
     y: -20.0
     z: -20.0
   max:

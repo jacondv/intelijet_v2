@@ -41,11 +41,11 @@ class HousingControl():
         """ speed: int or 'fast', 'medium' or 'slow' 
         """
         if speed == 'fast':
-            speed = cfg.housing_open_fast_speed
+            speed = cfg.housing_open_speed_fast
         elif speed == 'medium':
-            speed = cfg.housing_open_medium_speed
+            speed = cfg.housing_open_speed_medium
         elif speed == 'slow':
-            speed = cfg.housing_open_slow_speed
+            speed = cfg.housing_open_speed_slow
         elif isinstance(speed, int):
             speed = speed
         else:
@@ -57,11 +57,11 @@ class HousingControl():
     def close(self,speed='fast'):
 
         if speed == 'fast':
-            speed = cfg.housing_close_fast_speed
+            speed = cfg.housing_close_speed_fast
         elif speed == 'medium':
-            speed = cfg.housing_close_medium_speed
+            speed = cfg.housing_close_speed_medium
         elif speed == 'slow':
-            speed = cfg.housing_close_slow_speed
+            speed = cfg.housing_close_speed_slow
         elif isinstance(speed, int):
             speed = speed
         else:
