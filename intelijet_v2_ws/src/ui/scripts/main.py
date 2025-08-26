@@ -196,6 +196,7 @@ class App(QMainWindow):
         self.ui.statusbar.addWidget(self.lblNotification)
 
         upload_data_to_ui(self.ui.tab_setting)
+        self.__load_sample()
 
     def _stop_rotation(self,obj, ev):
         # self.style.StopState()
@@ -262,60 +263,62 @@ class App(QMainWindow):
     def on_cancel(self):
         self.ui_send_cmd_signale.emit(PPSCommand.CANCEL_JOB.value)
 
-     
-
 
     def __load_sample(self):
-                
-        # Example point cloud
+        try:
+                                
+            # Example point cloud
 
-        import open3d as o3d
-        import numpy as np
-        
-        #     # Hardcoded path
-        self.vtkWidget.resize(self.ui.cloudFrame.size())
-        # path = "/mnt/c/work/projects/pointcloud/post_scan_0_20250530_130626_afterporcess.ply"
-        path = "/root/intelijet_v2/post_scan_0_20250530_130626_afterporcess.ply"
+            import open3d as o3d
+            import numpy as np
+            
+            #     # Hardcoded path
+            self.vtkWidget.resize(self.ui.cloudFrame.size())
+            # path = "/mnt/c/work/projects/pointcloud/post_scan_0_20250530_130626_afterporcess.ply"
+            path = "/root/intelijet_v2/post_scan_0_20250530_130626_afterporcess.ply"
 
-        #Đọc PLY bằng Open3D
-        pcd = o3d.io.read_point_cloud(path)
-        points = np.asarray(pcd.points)
-        colors = np.asarray(pcd.colors) 
+            #Đọc PLY bằng Open3D
+            pcd = o3d.io.read_point_cloud(path)
+            points = np.asarray(pcd.points)
+            colors = np.asarray(pcd.colors) 
 
-        #  Chuyển sang vtkPolyData
-        polydata = vtk.vtkPolyData()
-        vtk_points = vtk.vtkPoints()
-        vtk_points.SetData(numpy_support.numpy_to_vtk(points))
-        polydata.SetPoints(vtk_points)
+            #  Chuyển sang vtkPolyData
+            polydata = vtk.vtkPolyData()
+            vtk_points = vtk.vtkPoints()
+            vtk_points.SetData(numpy_support.numpy_to_vtk(points))
+            polydata.SetPoints(vtk_points)
 
-        # reader = vtk.vtkPLYReader()
-        # reader.SetFileName(path)
-        # reader.Update()
+            # reader = vtk.vtkPLYReader()
+            # reader.SetFileName(path)
+            # reader.Update()
 
-        # polydata = reader.GetOutput()
+            # polydata = reader.GetOutput()
 
-        # Chuyển màu sang vtkUnsignedCharArray
-        # Open3D màu float [0,1], VTK cần uint8 [0,255]
-        colors_uint8 = (colors * 255).astype(np.uint8)
-        vtk_colors = numpy_support.numpy_to_vtk(colors_uint8)
-        vtk_colors.SetNumberOfComponents(3)
-        vtk_colors.SetName("Colors")
-        polydata.GetPointData().SetScalars(vtk_colors)
+            # Chuyển màu sang vtkUnsignedCharArray
+            # Open3D màu float [0,1], VTK cần uint8 [0,255]
+            colors_uint8 = (colors * 255).astype(np.uint8)
+            vtk_colors = numpy_support.numpy_to_vtk(colors_uint8)
+            vtk_colors.SetNumberOfComponents(3)
+            vtk_colors.SetName("Colors")
+            polydata.GetPointData().SetScalars(vtk_colors)
 
-        vertex_filter = vtk.vtkVertexGlyphFilter()
-        vertex_filter.SetInputData(polydata)
-        vertex_filter.Update()
+            vertex_filter = vtk.vtkVertexGlyphFilter()
+            vertex_filter.SetInputData(polydata)
+            vertex_filter.Update()
 
-        mapper = vtk.vtkPolyDataMapper()
-        mapper.SetInputConnection(vertex_filter.GetOutputPort())
+            mapper = vtk.vtkPolyDataMapper()
+            mapper.SetInputConnection(vertex_filter.GetOutputPort())
 
-        actor = vtk.vtkActor()
-        actor.SetMapper(mapper)
-        actor.GetProperty().SetPointSize(1)
+            actor = vtk.vtkActor()
+            actor.SetMapper(mapper)
+            actor.GetProperty().SetPointSize(1)
 
-        self.renderer.AddActor(actor)
-        self.renderer.ResetCamera()    
+            self.renderer.AddActor(actor)
+            self.renderer.ResetCamera()    
 
+        except Exception as e:
+            rospy.logwarn(f"Load sample error: {e}")
+              
 
     @pyqtSlot(dict)
     def update_data(self, data):
