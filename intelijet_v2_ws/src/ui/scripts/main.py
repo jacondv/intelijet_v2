@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 import sys, subprocess
 import vtk
-from PyQt5.QtWidgets import QApplication, QWidget, QMessageBox, QVBoxLayout
+from PyQt5.QtWidgets import QApplication, QWidget, QMessageBox, QVBoxLayout, QLabel
 from vtk.qt.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
 from vtkmodules.vtkInteractionStyle import vtkInteractorStyleTrackballCamera
 
 from vtk.util import numpy_support
-
+from PyQt5.QtCore import Qt
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtWidgets import QMainWindow
 
@@ -176,7 +176,8 @@ class App(QMainWindow):
         self.vtkWidget.Initialize()
         self.vtkWidget.Start()
 
-        self.showFullScreen()
+        # self.showFullScreen()
+        self.showMaximized()
         self.vtkWidget.resize(self.ui.cloudFrame.size())  # Ép nó tràn ra
 
         self.ui.btnPreScan.clicked.connect(self.start_prescan)
@@ -190,6 +191,9 @@ class App(QMainWindow):
 
         self.ui.btnShutdown.clicked.connect(self.on_shutdown)
         self.setting_page_ui.btnUpdateHousingParam.clicked.connect(lambda: btnUpdateHousingParam_handler(self))
+        self.lblNotification = QLabel("Ready")
+        self.lblNotification.setStyleSheet("margin-left: 5px;")  
+        self.ui.statusbar.addWidget(self.lblNotification)
 
         upload_data_to_ui(self.ui.tab_setting)
 
@@ -205,17 +209,27 @@ class App(QMainWindow):
         event.accept()  
 
     def on_shutdown(self):
+        # Tạo QMessageBox không truyền parent → trở thành top-level
+        msg = QMessageBox()
+        msg.setWindowTitle("Confirmation")
+        msg.setText("Are you sure you want to exit?")
+        msg.setStandardButtons(QMessageBox.Yes | QMessageBox.No)
+        msg.setDefaultButton(QMessageBox.No)
 
-        reply = QMessageBox.question(
-            self,
-            "Xác nhận",
-            "Bạn có chắc muốn thoát ứng dụng?",
-            QMessageBox.Yes | QMessageBox.No,
-            QMessageBox.No
-        )
+        # Chặn toàn bộ ứng dụng và luôn nổi trên top
+        msg.setWindowModality(Qt.ApplicationModal)
+        msg.setWindowFlags(msg.windowFlags() | Qt.WindowStaysOnTopHint)
+
+        # Đẩy popup lên và kích hoạt
+        msg.raise_()
+        msg.activateWindow()
+
+        # Hiển thị modal → block code tới khi user bấm
+        reply = msg.exec_()
 
         if reply == QMessageBox.Yes:
             self.close()
+
     
     def start_prescan(self):
         # self.cmd_pub.publish(String("start_prescan"))
@@ -312,6 +326,7 @@ class App(QMainWindow):
                 
             if cfg.NOTIFICATION in data:            
                 self.ui.lblNotification.setText(data[cfg.NOTIFICATION])
+                # self.ui.statusbar.showMessage(data[cfg.NOTIFICATION], 3000)
         except Exception as e:
             rospy.logwarn(f"update_data error: {e}")
 

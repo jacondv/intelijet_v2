@@ -16,7 +16,7 @@ class Ui_MainWindow(object):
         MainWindow.resize(1080, 761)
         MainWindow.setStyleSheet("*{\n"
 "border: 0px solid green;\n"
-"color: gray;\n"
+"color: back;\n"
 "}\n"
 "\n"
 "#centralwidget {\n"
@@ -326,7 +326,7 @@ class Ui_MainWindow(object):
         self.label_4.setText(_translate("MainWindow", "LOGO"))
         self.btnPreScan.setText(_translate("MainWindow", "PRE-SCAN"))
         self.btnPostScan.setText(_translate("MainWindow", "POST-SCAN"))
-        self.btnCompare.setText(_translate("MainWindow", "PushButton"))
+        self.btnCompare.setText(_translate("MainWindow", "Compare"))
         self.btnCancel.setText(_translate("MainWindow", "CANCEL JOB"))
         self.btnOpenScanner.setText(_translate("MainWindow", "OPEN HOUSING"))
         self.btnCloseScanner.setText(_translate("MainWindow", "CLOSE HOUSING"))
