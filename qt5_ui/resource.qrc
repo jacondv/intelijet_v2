@@ -1,7 +1,7 @@
 <RCC>
   <qresource prefix="icon">
+    <file>icon/Jacon Equipment Logo PNG.png</file>
     <file>icon/power-button.png</file>
-    <file>icon/jacon_logo.png</file>
     <file>icon/arrow-31-48.ico</file>
     <file>icon/arrow-96-48.ico</file>
     <file>icon/car-4-48.ico</file>
