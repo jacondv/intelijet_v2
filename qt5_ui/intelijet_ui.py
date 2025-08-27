@@ -13,7 +13,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
-        MainWindow.resize(1080, 761)
+        MainWindow.resize(1080, 784)
         MainWindow.setStyleSheet("*{\n"
 "border: none;\n"
 "color: back;\n"
@@ -45,25 +45,28 @@ class Ui_MainWindow(object):
 "\n"
 "/* Định dạng cho tất cả QPushButton bên trong control_panel */\n"
 "#control_panel QPushButton {\n"
-"    color: #19232D;\n"
+"    color: #153E42;\n"
 "    border: none;\n"
 "    padding: 36px;\n"
-"    font-size: 15px;\n"
-"    font-weight: bold;\n"
+"    \n"
+"    font-size: 17px;\n"
+"    font-weight: normal;\n"
 "    background-color: qlineargradient(spread:pad, x1:0, y1:0, x2:1, y2:0, stop:0 #F8D40F, stop:1 #FFF9C4);\n"
 "\n"
-"    border-top-right-radius: 0px;\n"
+"    border-top-right-radius: 35px;\n"
 "    border-top-left-radius: 0px;\n"
-"    border-bottom-right-radius: 0px;\n"
+"    border-bottom-right-radius: 35px;\n"
 "    border-bottom-left-radius: 0px;\n"
 "\n"
-"    border-left: 6px solid #F8D40F;\n"
+"    border-left: 8px solid #55ff00;  /*#F8D40F;*/\n"
 "}\n"
 "\n"
 "/* Hiệu ứng hover / nhấn */\n"
 "#control_panel QPushButton:hover {\n"
-"    font-size: 16px;\n"
+"    font-size: 17px;\n"
 "    color: #212121;\n"
+"    font-weight: bold;\n"
+"\n"
 "}\n"
 "\n"
 "#control_panel QPushButton:pressed {\n"
@@ -165,7 +168,7 @@ class Ui_MainWindow(object):
         self.toolBox.setFont(font)
         self.toolBox.setObjectName("toolBox")
         self.page_4 = QtWidgets.QWidget()
-        self.page_4.setGeometry(QtCore.QRect(0, 0, 235, 658))
+        self.page_4.setGeometry(QtCore.QRect(0, 0, 235, 681))
         self.page_4.setObjectName("page_4")
         self.verticalLayout_2 = QtWidgets.QVBoxLayout(self.page_4)
         self.verticalLayout_2.setContentsMargins(0, 0, 20, 0)
@@ -303,8 +306,8 @@ class Ui_MainWindow(object):
         self.control_panel.setMaximumSize(QtCore.QSize(250, 16777215))
         self.control_panel.setObjectName("control_panel")
         self.verticalLayout_4 = QtWidgets.QVBoxLayout(self.control_panel)
-        self.verticalLayout_4.setContentsMargins(8, 0, 5, 0)
-        self.verticalLayout_4.setSpacing(1)
+        self.verticalLayout_4.setContentsMargins(18, 0, 15, 10)
+        self.verticalLayout_4.setSpacing(5)
         self.verticalLayout_4.setObjectName("verticalLayout_4")
         spacerItem3 = QtWidgets.QSpacerItem(20, 20, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Fixed)
         self.verticalLayout_4.addItem(spacerItem3)
@@ -327,14 +330,14 @@ class Ui_MainWindow(object):
         self.btnCompare = QtWidgets.QPushButton(self.control_panel)
         self.btnCompare.setObjectName("btnCompare")
         self.verticalLayout_4.addWidget(self.btnCompare)
-        spacerItem5 = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Fixed)
+        spacerItem5 = QtWidgets.QSpacerItem(20, 20, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Fixed)
         self.verticalLayout_4.addItem(spacerItem5)
         self.btnCancel = QtWidgets.QPushButton(self.control_panel)
         self.btnCancel.setIconSize(QtCore.QSize(64, 64))
         self.btnCancel.setFlat(True)
         self.btnCancel.setObjectName("btnCancel")
         self.verticalLayout_4.addWidget(self.btnCancel)
-        spacerItem6 = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Fixed)
+        spacerItem6 = QtWidgets.QSpacerItem(20, 20, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Fixed)
         self.verticalLayout_4.addItem(spacerItem6)
         self.btnOpenScanner = QtWidgets.QPushButton(self.control_panel)
         self.btnOpenScanner.setObjectName("btnOpenScanner")

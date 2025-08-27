@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>1080</width>
-    <height>761</height>
+    <height>784</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -45,25 +45,28 @@ font-size: 15px;
 
 /* Định dạng cho tất cả QPushButton bên trong control_panel */
 #control_panel QPushButton {
-    color: #19232D;
+    color: #153E42;
     border: none;
     padding: 36px;
-    font-size: 15px;
-    font-weight: bold;
+	
+    font-size: 17px;
+    font-weight: normal;
 	background-color: qlineargradient(spread:pad, x1:0, y1:0, x2:1, y2:0, stop:0 #F8D40F, stop:1 #FFF9C4);
 
-	border-top-right-radius: 0px;
+	border-top-right-radius: 35px;
 	border-top-left-radius: 0px;
-	border-bottom-right-radius: 0px;
+	border-bottom-right-radius: 35px;
 	border-bottom-left-radius: 0px;
 
-	border-left: 6px solid #F8D40F;
+	border-left: 8px solid #55ff00;  /*#F8D40F;*/
 }
 
 /* Hiệu ứng hover / nhấn */
 #control_panel QPushButton:hover {
-    font-size: 16px;
+    font-size: 17px;
 	color: #212121;
+    font-weight: bold;
+
 }
 
 #control_panel QPushButton:pressed {
@@ -189,7 +192,7 @@ QTabBar::tab:selected {
                <x>0</x>
                <y>0</y>
                <width>235</width>
-               <height>658</height>
+               <height>681</height>
               </rect>
              </property>
              <attribute name="icon">
@@ -550,19 +553,19 @@ border-radius:12px;</string>
          </property>
          <layout class="QVBoxLayout" name="verticalLayout_4">
           <property name="spacing">
-           <number>1</number>
+           <number>5</number>
           </property>
           <property name="leftMargin">
-           <number>8</number>
+           <number>18</number>
           </property>
           <property name="topMargin">
            <number>0</number>
           </property>
           <property name="rightMargin">
-           <number>5</number>
+           <number>15</number>
           </property>
           <property name="bottomMargin">
-           <number>0</number>
+           <number>10</number>
           </property>
           <item>
            <spacer name="verticalSpacer_7">
@@ -653,7 +656,7 @@ border-radius:12px;</string>
             <property name="sizeHint" stdset="0">
              <size>
               <width>20</width>
-              <height>40</height>
+              <height>20</height>
              </size>
             </property>
            </spacer>
@@ -685,7 +688,7 @@ border-radius:12px;</string>
             <property name="sizeHint" stdset="0">
              <size>
               <width>20</width>
-              <height>40</height>
+              <height>20</height>
              </size>
             </property>
            </spacer>
