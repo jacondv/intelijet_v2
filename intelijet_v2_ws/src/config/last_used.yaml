@@ -39,7 +39,7 @@ crop_box:
 housing_start_position: 15
 housing_end_position: 135
 encoder_length_at_zero_possition: 29910924
-housing_open_speed_fast: 110
+housing_open_speed_fast: 116
 housing_open_speed_medium: 110
 housing_open_speed_slow: 91
 housing_close_speed_fast: 115
