@@ -52,11 +52,11 @@ class CloudProcessorNode:
         # cloud_cropped = cloud_o3d.crop(aabb)
 
         cloud_cropped = crop_pointcloud_by_box(pcd=cloud_o3d, box_type='aabb', 
-                                               min_bound=[cfg.crop_box.min.x, cfg.crop_box.min.y, cfg.crop_box.min.x], 
+                                               min_bound=[cfg.crop_box.min.x, cfg.crop_box.min.y, cfg.crop_box.min.z], 
                                                max_bound=[cfg.crop_box.max.x, cfg.crop_box.max.y, cfg.crop_box.max.z])
 
         # Lọc nhiễu
-        cloud_cropped, _ = cloud_cropped.remove_statistical_outlier(nb_neighbors=5, std_ratio=1)
+        # cloud_cropped, _ = cloud_cropped.remove_statistical_outlier(nb_neighbors=5, std_ratio=1)
 
         # Downsample
         if not isinstance(cloud_cropped, o3d.geometry.PointCloud):

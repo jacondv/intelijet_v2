@@ -29,18 +29,18 @@ lms511:
   scan_time_seconds: None
 crop_box:
   min:
-    x: -15.0
-    y: -20.0
-    z: -20.0
+    x: 1.0
+    y: -5.0
+    z: -0.5
   max:
-    x: 25.0
-    y: 25.0
-    z: 25.0
+    x: 9.0
+    y: 5.0
+    z: 10.0
 housing_start_position: 15
-housing_end_position: 135
+housing_end_position: 145
 encoder_length_at_zero_possition: 29910924
-housing_open_speed_fast: 116
-housing_open_speed_medium: 110
+housing_open_speed_fast: 110
+housing_open_speed_medium: 105
 housing_open_speed_slow: 91
 housing_close_speed_fast: 115
 housing_close_speed_medium: 95
