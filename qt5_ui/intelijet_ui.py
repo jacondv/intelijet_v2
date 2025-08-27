@@ -15,8 +15,9 @@ class Ui_MainWindow(object):
         MainWindow.setObjectName("MainWindow")
         MainWindow.resize(1080, 761)
         MainWindow.setStyleSheet("*{\n"
-"border: 0px solid green;\n"
+"border: none;\n"
 "color: back;\n"
+"font-size: 15px;\n"
 "}\n"
 "\n"
 "#centralwidget {\n"
@@ -47,7 +48,7 @@ class Ui_MainWindow(object):
 "    color: #19232D;\n"
 "    border: none;\n"
 "    padding: 36px;\n"
-"    font-size: 14px;\n"
+"    font-size: 15px;\n"
 "    font-weight: bold;\n"
 "    background-color: qlineargradient(spread:pad, x1:0, y1:0, x2:1, y2:0, stop:0 #F8D40F, stop:1 #FFF9C4);\n"
 "\n"
@@ -61,7 +62,7 @@ class Ui_MainWindow(object):
 "\n"
 "/* Hiệu ứng hover / nhấn */\n"
 "#control_panel QPushButton:hover {\n"
-"    font-size: 15px;\n"
+"    font-size: 16px;\n"
 "    color: #212121;\n"
 "}\n"
 "\n"
@@ -91,7 +92,7 @@ class Ui_MainWindow(object):
 "    /*border-right: 1px solid #FFEB3B;     /* viền trái */\n"
 "\n"
 "    color: white;\n"
-"    font-size: 14px;\n"
+"    font-size: 15px;\n"
 "    font-weight: normal;\n"
 "\n"
 "\n"
@@ -153,18 +154,18 @@ class Ui_MainWindow(object):
         self.menu_main = QtWidgets.QWidget(self.centralFrame)
         self.menu_main.setMinimumSize(QtCore.QSize(200, 0))
         font = QtGui.QFont()
-        font.setPointSize(10)
+        font.setPointSize(-1)
         self.menu_main.setFont(font)
         self.menu_main.setObjectName("menu_main")
         self.verticalLayout = QtWidgets.QVBoxLayout(self.menu_main)
         self.verticalLayout.setObjectName("verticalLayout")
         self.toolBox = QtWidgets.QToolBox(self.menu_main)
         font = QtGui.QFont()
-        font.setPointSize(10)
+        font.setPointSize(-1)
         self.toolBox.setFont(font)
         self.toolBox.setObjectName("toolBox")
         self.page_4 = QtWidgets.QWidget()
-        self.page_4.setGeometry(QtCore.QRect(0, 0, 235, 659))
+        self.page_4.setGeometry(QtCore.QRect(0, 0, 235, 658))
         self.page_4.setObjectName("page_4")
         self.verticalLayout_2 = QtWidgets.QVBoxLayout(self.page_4)
         self.verticalLayout_2.setContentsMargins(0, 0, 20, 0)
@@ -258,42 +259,42 @@ class Ui_MainWindow(object):
         self.gridLayout_3 = QtWidgets.QGridLayout(self.widget_2)
         self.gridLayout_3.setContentsMargins(0, 0, 0, 0)
         self.gridLayout_3.setObjectName("gridLayout_3")
-        self.label_5 = QtWidgets.QLabel(self.widget_2)
-        self.label_5.setObjectName("label_5")
-        self.gridLayout_3.addWidget(self.label_5, 4, 0, 1, 3)
-        self.lblCameraStatus = QtWidgets.QLabel(self.widget_2)
-        self.lblCameraStatus.setObjectName("lblCameraStatus")
-        self.gridLayout_3.addWidget(self.lblCameraStatus, 5, 3, 1, 1)
-        self.label_6 = QtWidgets.QLabel(self.widget_2)
-        self.label_6.setObjectName("label_6")
-        self.gridLayout_3.addWidget(self.label_6, 5, 0, 1, 2)
-        self.label_3 = QtWidgets.QLabel(self.widget_2)
-        self.label_3.setObjectName("label_3")
-        self.gridLayout_3.addWidget(self.label_3, 2, 0, 1, 2)
-        self.label_2 = QtWidgets.QLabel(self.widget_2)
-        self.label_2.setObjectName("label_2")
-        self.gridLayout_3.addWidget(self.label_2, 1, 0, 1, 1)
-        self.lblPLCStatus = QtWidgets.QLabel(self.widget_2)
-        self.lblPLCStatus.setObjectName("lblPLCStatus")
-        self.gridLayout_3.addWidget(self.lblPLCStatus, 0, 2, 1, 2)
-        self.lblEncoder = QtWidgets.QLabel(self.widget_2)
-        self.lblEncoder.setObjectName("lblEncoder")
-        self.gridLayout_3.addWidget(self.lblEncoder, 3, 4, 1, 1)
-        self.label_7 = QtWidgets.QLabel(self.widget_2)
-        self.label_7.setObjectName("label_7")
-        self.gridLayout_3.addWidget(self.label_7, 0, 0, 1, 1)
-        self.lblPCANStatus = QtWidgets.QLabel(self.widget_2)
-        self.lblPCANStatus.setObjectName("lblPCANStatus")
-        self.gridLayout_3.addWidget(self.lblPCANStatus, 4, 3, 1, 1)
-        self.lblEncoderStatus = QtWidgets.QLabel(self.widget_2)
-        self.lblEncoderStatus.setObjectName("lblEncoderStatus")
-        self.gridLayout_3.addWidget(self.lblEncoderStatus, 2, 2, 1, 2)
         self.label = QtWidgets.QLabel(self.widget_2)
         self.label.setObjectName("label")
         self.gridLayout_3.addWidget(self.label, 3, 1, 1, 3)
+        self.label_2 = QtWidgets.QLabel(self.widget_2)
+        self.label_2.setObjectName("label_2")
+        self.gridLayout_3.addWidget(self.label_2, 1, 0, 1, 1)
+        self.label_3 = QtWidgets.QLabel(self.widget_2)
+        self.label_3.setObjectName("label_3")
+        self.gridLayout_3.addWidget(self.label_3, 2, 0, 1, 2)
+        self.lblEncoder = QtWidgets.QLabel(self.widget_2)
+        self.lblEncoder.setObjectName("lblEncoder")
+        self.gridLayout_3.addWidget(self.lblEncoder, 3, 4, 1, 1)
+        self.lblPCANStatus = QtWidgets.QLabel(self.widget_2)
+        self.lblPCANStatus.setObjectName("lblPCANStatus")
+        self.gridLayout_3.addWidget(self.lblPCANStatus, 4, 3, 1, 1)
+        self.label_6 = QtWidgets.QLabel(self.widget_2)
+        self.label_6.setObjectName("label_6")
+        self.gridLayout_3.addWidget(self.label_6, 5, 0, 1, 2)
+        self.label_5 = QtWidgets.QLabel(self.widget_2)
+        self.label_5.setObjectName("label_5")
+        self.gridLayout_3.addWidget(self.label_5, 4, 0, 1, 3)
+        self.lblPLCStatus = QtWidgets.QLabel(self.widget_2)
+        self.lblPLCStatus.setObjectName("lblPLCStatus")
+        self.gridLayout_3.addWidget(self.lblPLCStatus, 0, 2, 1, 2)
+        self.lblCameraStatus = QtWidgets.QLabel(self.widget_2)
+        self.lblCameraStatus.setObjectName("lblCameraStatus")
+        self.gridLayout_3.addWidget(self.lblCameraStatus, 5, 3, 1, 1)
         self.lblLidarStatus = QtWidgets.QLabel(self.widget_2)
         self.lblLidarStatus.setObjectName("lblLidarStatus")
         self.gridLayout_3.addWidget(self.lblLidarStatus, 1, 2, 1, 2)
+        self.label_7 = QtWidgets.QLabel(self.widget_2)
+        self.label_7.setObjectName("label_7")
+        self.gridLayout_3.addWidget(self.label_7, 0, 0, 1, 1)
+        self.lblEncoderStatus = QtWidgets.QLabel(self.widget_2)
+        self.lblEncoderStatus.setObjectName("lblEncoderStatus")
+        self.gridLayout_3.addWidget(self.lblEncoderStatus, 2, 2, 1, 2)
         self.verticalLayout_5.addWidget(self.widget)
         self.tab_mainview.addTab(self.tab_system, "")
         self.horizontalLayout_2.addWidget(self.tab_mainview)
@@ -307,10 +308,14 @@ class Ui_MainWindow(object):
         self.verticalLayout_4.setObjectName("verticalLayout_4")
         spacerItem3 = QtWidgets.QSpacerItem(20, 20, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Fixed)
         self.verticalLayout_4.addItem(spacerItem3)
-        self.label_4 = QtWidgets.QLabel(self.control_panel)
-        self.label_4.setAlignment(QtCore.Qt.AlignHCenter|QtCore.Qt.AlignTop)
-        self.label_4.setObjectName("label_4")
-        self.verticalLayout_4.addWidget(self.label_4)
+        self.lblLogo = QtWidgets.QLabel(self.control_panel)
+        self.lblLogo.setMaximumSize(QtCore.QSize(180, 60))
+        self.lblLogo.setText("")
+        self.lblLogo.setPixmap(QtGui.QPixmap(":/icon/icon/jacon_logo.png"))
+        self.lblLogo.setScaledContents(True)
+        self.lblLogo.setAlignment(QtCore.Qt.AlignHCenter|QtCore.Qt.AlignTop)
+        self.lblLogo.setObjectName("lblLogo")
+        self.verticalLayout_4.addWidget(self.lblLogo)
         spacerItem4 = QtWidgets.QSpacerItem(20, 20, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Fixed)
         self.verticalLayout_4.addItem(spacerItem4)
         self.btnPreScan = QtWidgets.QPushButton(self.control_panel)
@@ -352,34 +357,33 @@ class Ui_MainWindow(object):
 
         self.retranslateUi(MainWindow)
         self.toolBox.setCurrentIndex(0)
-        self.tab_mainview.setCurrentIndex(0)
+        self.tab_mainview.setCurrentIndex(2)
         self.pushButton_4.clicked['bool'].connect(self.menu_main.setHidden)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
         MainWindow.setTabOrder(self.pushButton, self.pushButton_2)
 
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
-        MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow"))
+        MainWindow.setWindowTitle(_translate("MainWindow", "Jacon Intelijet"))
         self.pushButton.setText(_translate("MainWindow", "Operator"))
         self.pushButton_2.setText(_translate("MainWindow", "Job Setting"))
         self.btnShutdown.setText(_translate("MainWindow", "Exit"))
         self.toolBox.setItemText(self.toolBox.indexOf(self.page_4), _translate("MainWindow", "General"))
         self.tab_mainview.setTabText(self.tab_mainview.indexOf(self.tab_operator), _translate("MainWindow", "3D Viewer"))
         self.tab_mainview.setTabText(self.tab_mainview.indexOf(self.tab_setting), _translate("MainWindow", "Setting"))
-        self.label_5.setText(_translate("MainWindow", "PCAN Gatway:"))
-        self.lblCameraStatus.setText(_translate("MainWindow", "--"))
-        self.label_6.setText(_translate("MainWindow", "Camera:"))
-        self.label_3.setText(_translate("MainWindow", "Encoder:"))
-        self.label_2.setText(_translate("MainWindow", "Lidar:"))
-        self.lblPLCStatus.setText(_translate("MainWindow", "--"))
-        self.lblEncoder.setText(_translate("MainWindow", "--"))
-        self.label_7.setText(_translate("MainWindow", "PLC:"))
-        self.lblPCANStatus.setText(_translate("MainWindow", "--"))
-        self.lblEncoderStatus.setText(_translate("MainWindow", "--"))
         self.label.setText(_translate("MainWindow", "Encoder value (rad):"))
+        self.label_2.setText(_translate("MainWindow", "Lidar:"))
+        self.label_3.setText(_translate("MainWindow", "Encoder:"))
+        self.lblEncoder.setText(_translate("MainWindow", "--"))
+        self.lblPCANStatus.setText(_translate("MainWindow", "--"))
+        self.label_6.setText(_translate("MainWindow", "Camera:"))
+        self.label_5.setText(_translate("MainWindow", "PCAN Gatway:"))
+        self.lblPLCStatus.setText(_translate("MainWindow", "--"))
+        self.lblCameraStatus.setText(_translate("MainWindow", "--"))
         self.lblLidarStatus.setText(_translate("MainWindow", "--"))
+        self.label_7.setText(_translate("MainWindow", "PLC:"))
+        self.lblEncoderStatus.setText(_translate("MainWindow", "--"))
         self.tab_mainview.setTabText(self.tab_mainview.indexOf(self.tab_system), _translate("MainWindow", "System"))
-        self.label_4.setText(_translate("MainWindow", "LOGO"))
         self.btnPreScan.setText(_translate("MainWindow", "PRE-SCAN"))
         self.btnPostScan.setText(_translate("MainWindow", "POST-SCAN"))
         self.btnCompare.setText(_translate("MainWindow", "Compare"))
