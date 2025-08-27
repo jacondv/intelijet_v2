@@ -393,7 +393,7 @@ class Ui_MainWindow(object):
         self.btnCancel.setText(_translate("MainWindow", "CANCEL JOB"))
         self.btnOpenScanner.setText(_translate("MainWindow", "OPEN HOUSING"))
         self.btnCloseScanner.setText(_translate("MainWindow", "CLOSE HOUSING"))
-import resource_rc
+from ui import resource_rc
 
 
 if __name__ == "__main__":
