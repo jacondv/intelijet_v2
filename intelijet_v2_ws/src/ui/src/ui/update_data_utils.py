@@ -128,3 +128,76 @@ def download_data_from_ui(widget, data_maping=data_mapping):
             
             # Cập nhật lại CONFIG tương ứng
     return cfg
+
+
+
+# ===== Hàm set style cho button =====
+
+
+BUTTON_COLORS = {
+    "active":   "#00FF00",  # Xanh lá - đang hoạt động
+    "inactive": "#CCCCCC",  # Xám - không hoạt động
+    "default":  "#CCCCCC",  # Trắng - trạng thái mặc định
+    "warning":  "#FFA500",  # Cam - cảnh báo
+    "error":    "#FF0000",  # Đỏ - lỗi nghiêm trọng
+    "ready":    "#0000FF",  # Xanh dương - sẵn sàng
+}
+
+button_state = {
+    "btnPreScan": {
+        "border-left": f"8px solid #{BUTTON_COLORS["CCCCCC"]}",   # viền trái vàng
+    },
+    "btnPostScan": {
+        "border-left": f"8px solid  #{BUTTON_COLORS["CCCCCC"]}"    # viền trái xanh dương
+    },
+    "btnCompare": {
+        "border-left": f"8px solid  #{BUTTON_COLORS["CCCCCC"]}"    # viền trái xanh dương
+    },
+    "btnCancel": {
+        "border-left": f"8px solid  #{BUTTON_COLORS["CCCCCC"]}"    # viền trái xanh dương
+    },
+    "btnOpenScanner": {
+        "border-left": f"8px solid  #{BUTTON_COLORS["CCCCCC"]}"    # viền trái xanh dương
+    },
+    "btnCloseScanner": {
+        "border-left": f"8px solid  #{BUTTON_COLORS["CCCCCC"]}"    # viền trái xanh dương
+    }
+
+}
+
+def set_button_stage(button_name, state="default"):
+
+    global button_state
+
+    hex_color = BUTTON_COLORS.get(state, BUTTON_COLORS["default"])
+    # đảm bảo hợp lệ
+    if not (isinstance(hex_color, str) and hex_color.startswith("#") and len(hex_color) == 7):
+        raise ValueError("The color must be in hex #RRGGBB, for example: #FF0000")
+
+    # Cập nhật vào state_map
+    button_state[button_name] = {
+        "border-left": f"2px solid {hex_color}"
+    }
+
+
+def update_style_to_ui(widget):
+
+    global button_state
+
+    for child in widget.findChildren(QtWidgets.QWidget):
+        obj_name = child.objectName()
+        if obj_name in button_state:
+            style_info = button_state[obj_name]
+            
+            # Build stylesheet string tự động
+            styles = []
+            if "bg" in style_info:
+                styles.append(f"background-color: {style_info['bg']};")
+            if "border" in style_info:
+                styles.append(f"border: {style_info['border']};")
+            if "color" in style_info:
+                styles.append(f"color: {style_info['color']};")
+            if "border-left" in style_info:
+                styles.append(f"border-left: {style_info['border-left']};")
+
+            child.setStyleSheet("".join(styles))

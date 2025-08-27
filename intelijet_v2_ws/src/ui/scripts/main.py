@@ -36,7 +36,6 @@ from rosgraph_msgs.msg import Log
 # from pps.utils import load_config
 from shared.config_loader import CONFIG as cfg
 
-
 class RosThread(threading.Thread):
     def __init__(self, cloud_received_signal, ui_send_cmd_signal, ui_data_update):
         super(RosThread, self).__init__()
@@ -60,12 +59,10 @@ class RosThread(threading.Thread):
 
         rospy.Subscriber('/rosout', Log, self.rosout_callback)
 
-
         rospy.Timer(rospy.Duration(1.0), self.emit_ui_data_update) # Update data 1Hz
         # rospy.Subscriber(HMI_CMD_TOPIC,Int32, self.update_hmi_cmd)
 
         rospy.spin()
-
 
     def cloud_received_signal_callback(self, msg):
         # Đẩy msg về Qt bằng signal
@@ -238,7 +235,6 @@ class App(QMainWindow):
         # self.cmd_pub.publish(String("start_prescan"))
         # self.status_label.setText("Requested PreScan...")
         
-
         self.ui_send_cmd_signale.emit(PPSCommand.START_PRESCAN.value)
 
     def start_postscan(self):
@@ -361,25 +357,17 @@ class App(QMainWindow):
 
 
 
-
-
-
-
 if __name__ == "__main__":
 
     from PyQt5.QtWidgets import QWidget
 
     # Load parameters befor work.
     
-    HMI_CMD_TOPIC = "/hmi/cmd" # config.get('HMI_CMD_TOPIC')
+    HMI_CMD_TOPIC = cfg.HMI_CMD_TOPIC
     PRE_SCAN_CLOUD_TOPIC = cfg.PRE_SCAN_CLOUD_TOPIC
     POST_SCAN_CLOUD_TOPIC = cfg.POST_SCAN_CLOUD_TOPIC
     CLOUD_COMPARED_TOPIC = cfg.CLOUD_COMPARED_TOPIC
 
-    # HMI_CMD_TOPIC = cfg.HMI_CMD_TOPIC # config.get('HMI_CMD_TOPIC')
-    # PRE_SCAN_CLOUD_TOPIC = cfg.PRE_SCAN_TOPIC
-    # POST_SCAN_CLOUD_TOPIC = cfg.POST_SCAN_TOPIC
-    # CLOUD_COMPARED_TOPIC = cfg.CLOUD_COMPARED_TOPIC
     print(cfg)
 
     app = QApplication(sys.argv)
