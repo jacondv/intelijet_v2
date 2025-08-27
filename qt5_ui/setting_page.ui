@@ -60,151 +60,10 @@ QPushButton:pressed {
          <item row="0" column="0">
           <widget class="QWidget" name="widget_2" native="true">
            <layout class="QGridLayout" name="gridLayout_2">
-            <item row="2" column="2">
-             <widget class="QTextEdit" name="txtHousingCloseMedium">
-              <property name="minimumSize">
-               <size>
-                <width>0</width>
-                <height>30</height>
-               </size>
-              </property>
-              <property name="maximumSize">
-               <size>
-                <width>16777215</width>
-                <height>30</height>
-               </size>
-              </property>
-              <property name="tabChangesFocus">
-               <bool>true</bool>
-              </property>
-             </widget>
-            </item>
-            <item row="0" column="3">
-             <widget class="QLabel" name="label_11">
-              <property name="text">
-               <string>Slow</string>
-              </property>
-             </widget>
-            </item>
-            <item row="0" column="1">
-             <widget class="QLabel" name="label_9">
-              <property name="text">
-               <string>Fast</string>
-              </property>
-             </widget>
-            </item>
-            <item row="1" column="1">
-             <widget class="QTextEdit" name="txtHousingOpenFast">
-              <property name="minimumSize">
-               <size>
-                <width>0</width>
-                <height>30</height>
-               </size>
-              </property>
-              <property name="maximumSize">
-               <size>
-                <width>16777215</width>
-                <height>30</height>
-               </size>
-              </property>
-              <property name="tabChangesFocus">
-               <bool>true</bool>
-              </property>
-              <property name="acceptRichText">
-               <bool>true</bool>
-              </property>
-             </widget>
-            </item>
-            <item row="2" column="3">
-             <widget class="QTextEdit" name="txtHousingCloseSlow">
-              <property name="minimumSize">
-               <size>
-                <width>0</width>
-                <height>30</height>
-               </size>
-              </property>
-              <property name="maximumSize">
-               <size>
-                <width>16777215</width>
-                <height>30</height>
-               </size>
-              </property>
-              <property name="tabChangesFocus">
-               <bool>true</bool>
-              </property>
-             </widget>
-            </item>
-            <item row="1" column="2">
-             <widget class="QTextEdit" name="txtHousingOpenMedium">
-              <property name="minimumSize">
-               <size>
-                <width>0</width>
-                <height>30</height>
-               </size>
-              </property>
-              <property name="maximumSize">
-               <size>
-                <width>16777215</width>
-                <height>30</height>
-               </size>
-              </property>
-              <property name="tabChangesFocus">
-               <bool>true</bool>
-              </property>
-              <property name="acceptRichText">
-               <bool>true</bool>
-              </property>
-             </widget>
-            </item>
-            <item row="1" column="3">
-             <widget class="QTextEdit" name="txtHousingOpenSlow">
-              <property name="minimumSize">
-               <size>
-                <width>0</width>
-                <height>30</height>
-               </size>
-              </property>
-              <property name="maximumSize">
-               <size>
-                <width>16777215</width>
-                <height>30</height>
-               </size>
-              </property>
-              <property name="tabChangesFocus">
-               <bool>true</bool>
-              </property>
-             </widget>
-            </item>
-            <item row="2" column="1">
-             <widget class="QTextEdit" name="txtHousingCloseFast">
-              <property name="minimumSize">
-               <size>
-                <width>0</width>
-                <height>30</height>
-               </size>
-              </property>
-              <property name="maximumSize">
-               <size>
-                <width>16777215</width>
-                <height>30</height>
-               </size>
-              </property>
-              <property name="tabChangesFocus">
-               <bool>true</bool>
-              </property>
-             </widget>
-            </item>
-            <item row="0" column="2">
+            <item row="0" column="7">
              <widget class="QLabel" name="label_10">
               <property name="text">
                <string>Medium</string>
-              </property>
-             </widget>
-            </item>
-            <item row="1" column="0">
-             <widget class="QLabel" name="label_7">
-              <property name="text">
-               <string>Housing open speed (Hz)</string>
               </property>
              </widget>
             </item>
@@ -215,80 +74,55 @@ QPushButton:pressed {
               </property>
              </widget>
             </item>
+            <item row="1" column="4">
+             <widget class="QLineEdit" name="txtHousingOpenFast"/>
+            </item>
+            <item row="1" column="7">
+             <widget class="QLineEdit" name="txtHousingOpenMedium"/>
+            </item>
+            <item row="0" column="4">
+             <widget class="QLabel" name="label_9">
+              <property name="text">
+               <string>Fast</string>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="8">
+             <widget class="QLabel" name="label_11">
+              <property name="text">
+               <string>Slow</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="8">
+             <widget class="QLineEdit" name="txtHousingOpenSlow"/>
+            </item>
+            <item row="1" column="0">
+             <widget class="QLabel" name="label_7">
+              <property name="text">
+               <string>Housing open speed (Hz)</string>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="8">
+             <widget class="QLineEdit" name="txtHousingCloseSlow_2"/>
+            </item>
+            <item row="2" column="7">
+             <widget class="QLineEdit" name="txtHousingCloseMedium"/>
+            </item>
+            <item row="2" column="4">
+             <widget class="QLineEdit" name="txtHousingCloseFast"/>
+            </item>
            </layout>
           </widget>
          </item>
          <item row="1" column="0">
           <widget class="QWidget" name="widget_3" native="true">
            <layout class="QGridLayout" name="gridLayout_3">
-            <item row="1" column="0">
-             <widget class="QLabel" name="label_13">
-              <property name="text">
-               <string>Housing end scan angle (deg)</string>
-              </property>
-             </widget>
-            </item>
             <item row="2" column="0">
              <widget class="QLabel" name="label_14">
               <property name="text">
                <string>Encoder at fully closed housing position</string>
-              </property>
-             </widget>
-            </item>
-            <item row="1" column="1">
-             <widget class="QTextEdit" name="txtHousingEndPosition">
-              <property name="minimumSize">
-               <size>
-                <width>0</width>
-                <height>30</height>
-               </size>
-              </property>
-              <property name="maximumSize">
-               <size>
-                <width>16777215</width>
-                <height>30</height>
-               </size>
-              </property>
-              <property name="tabChangesFocus">
-               <bool>true</bool>
-              </property>
-             </widget>
-            </item>
-            <item row="0" column="1">
-             <widget class="QTextEdit" name="txtHousingStartPosition">
-              <property name="minimumSize">
-               <size>
-                <width>0</width>
-                <height>30</height>
-               </size>
-              </property>
-              <property name="maximumSize">
-               <size>
-                <width>16777215</width>
-                <height>30</height>
-               </size>
-              </property>
-              <property name="tabChangesFocus">
-               <bool>true</bool>
-              </property>
-             </widget>
-            </item>
-            <item row="2" column="1">
-             <widget class="QTextEdit" name="txtHousingClosedPosition">
-              <property name="minimumSize">
-               <size>
-                <width>0</width>
-                <height>30</height>
-               </size>
-              </property>
-              <property name="maximumSize">
-               <size>
-                <width>16777215</width>
-                <height>30</height>
-               </size>
-              </property>
-              <property name="tabChangesFocus">
-               <bool>true</bool>
               </property>
              </widget>
             </item>
@@ -298,6 +132,22 @@ QPushButton:pressed {
                <string>Housing start scan angle (deg)</string>
               </property>
              </widget>
+            </item>
+            <item row="1" column="0">
+             <widget class="QLabel" name="label_13">
+              <property name="text">
+               <string>Housing end scan angle (deg)</string>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="2">
+             <widget class="QLineEdit" name="txtHousingStartPosition"/>
+            </item>
+            <item row="1" column="2">
+             <widget class="QLineEdit" name="txtHousingEndPosition"/>
+            </item>
+            <item row="2" column="2">
+             <widget class="QLineEdit" name="txtHousingClosedPosition"/>
             </item>
            </layout>
           </widget>
@@ -317,80 +167,10 @@ QPushButton:pressed {
          <string>Tunnel bounding box</string>
         </property>
         <layout class="QGridLayout" name="gridLayout">
-         <item row="1" column="1">
-          <widget class="QTextEdit" name="txtTunnelMinBoundX">
-           <property name="minimumSize">
-            <size>
-             <width>0</width>
-             <height>30</height>
-            </size>
-           </property>
-           <property name="maximumSize">
-            <size>
-             <width>16777215</width>
-             <height>30</height>
-            </size>
-           </property>
-           <property name="tabChangesFocus">
-            <bool>true</bool>
-           </property>
-           <property name="acceptRichText">
-            <bool>true</bool>
-           </property>
-          </widget>
-         </item>
-         <item row="2" column="3">
-          <widget class="QTextEdit" name="txtTunnelMaxBoundZ">
-           <property name="minimumSize">
-            <size>
-             <width>0</width>
-             <height>30</height>
-            </size>
-           </property>
-           <property name="maximumSize">
-            <size>
-             <width>16777215</width>
-             <height>30</height>
-            </size>
-           </property>
-           <property name="tabChangesFocus">
-            <bool>true</bool>
-           </property>
-          </widget>
-         </item>
-         <item row="1" column="2">
-          <widget class="QTextEdit" name="txtTunnelMinBoundY">
-           <property name="minimumSize">
-            <size>
-             <width>0</width>
-             <height>30</height>
-            </size>
-           </property>
-           <property name="maximumSize">
-            <size>
-             <width>16777215</width>
-             <height>30</height>
-            </size>
-           </property>
-           <property name="tabChangesFocus">
-            <bool>true</bool>
-           </property>
-           <property name="acceptRichText">
-            <bool>true</bool>
-           </property>
-          </widget>
-         </item>
          <item row="2" column="0">
           <widget class="QLabel" name="label_16">
            <property name="text">
             <string>Max bound</string>
-           </property>
-          </widget>
-         </item>
-         <item row="0" column="2">
-          <widget class="QLabel" name="label_51">
-           <property name="text">
-            <string>Y</string>
            </property>
           </widget>
          </item>
@@ -401,82 +181,44 @@ QPushButton:pressed {
            </property>
           </widget>
          </item>
-         <item row="1" column="3">
-          <widget class="QTextEdit" name="txtTunnelMinBoundZ">
-           <property name="minimumSize">
-            <size>
-             <width>0</width>
-             <height>30</height>
-            </size>
-           </property>
-           <property name="maximumSize">
-            <size>
-             <width>16777215</width>
-             <height>30</height>
-            </size>
-           </property>
-           <property name="tabChangesFocus">
-            <bool>true</bool>
+         <item row="0" column="5">
+          <widget class="QLabel" name="label_49">
+           <property name="text">
+            <string>X</string>
            </property>
           </widget>
          </item>
-         <item row="0" column="3">
+         <item row="0" column="6">
+          <widget class="QLabel" name="label_51">
+           <property name="text">
+            <string>Y</string>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="7">
           <widget class="QLabel" name="label_50">
            <property name="text">
             <string>Z</string>
            </property>
           </widget>
          </item>
-         <item row="2" column="2">
-          <widget class="QTextEdit" name="txtTunnelMaxBoundY">
-           <property name="minimumSize">
-            <size>
-             <width>0</width>
-             <height>30</height>
-            </size>
-           </property>
-           <property name="maximumSize">
-            <size>
-             <width>16777215</width>
-             <height>30</height>
-            </size>
-           </property>
-           <property name="tabChangesFocus">
-            <bool>true</bool>
-           </property>
-           <property name="acceptRichText">
-            <bool>true</bool>
-           </property>
-          </widget>
+         <item row="1" column="6">
+          <widget class="QLineEdit" name="txtTunnelMinBoundY"/>
          </item>
-         <item row="2" column="1">
-          <widget class="QTextEdit" name="txtTunnelMaxBoundX">
-           <property name="minimumSize">
-            <size>
-             <width>0</width>
-             <height>30</height>
-            </size>
-           </property>
-           <property name="maximumSize">
-            <size>
-             <width>16777215</width>
-             <height>30</height>
-            </size>
-           </property>
-           <property name="tabChangesFocus">
-            <bool>true</bool>
-           </property>
-           <property name="acceptRichText">
-            <bool>true</bool>
-           </property>
-          </widget>
+         <item row="1" column="7">
+          <widget class="QLineEdit" name="txtTunnelMinBoundZ"/>
          </item>
-         <item row="0" column="1">
-          <widget class="QLabel" name="label_49">
-           <property name="text">
-            <string>X</string>
-           </property>
-          </widget>
+         <item row="1" column="5">
+          <widget class="QLineEdit" name="txtTunnelMinBoundX"/>
+         </item>
+         <item row="2" column="7">
+          <widget class="QLineEdit" name="txtTunnelMaxBoundZ"/>
+         </item>
+         <item row="2" column="6">
+          <widget class="QLineEdit" name="txtTunnelMaxBoundY"/>
+         </item>
+         <item row="2" column="5">
+          <widget class="QLineEdit" name="txtTunnelMaxBoundX"/>
          </item>
         </layout>
        </widget>
@@ -532,23 +274,6 @@ QPushButton:pressed {
    </item>
   </layout>
  </widget>
- <tabstops>
-  <tabstop>txtHousingOpenFast</tabstop>
-  <tabstop>txtHousingOpenMedium</tabstop>
-  <tabstop>txtHousingOpenSlow</tabstop>
-  <tabstop>txtHousingCloseFast</tabstop>
-  <tabstop>txtHousingCloseMedium</tabstop>
-  <tabstop>txtHousingCloseSlow</tabstop>
-  <tabstop>txtHousingStartPosition</tabstop>
-  <tabstop>txtHousingEndPosition</tabstop>
-  <tabstop>txtHousingClosedPosition</tabstop>
-  <tabstop>txtTunnelMinBoundX</tabstop>
-  <tabstop>txtTunnelMinBoundY</tabstop>
-  <tabstop>txtTunnelMinBoundZ</tabstop>
-  <tabstop>txtTunnelMaxBoundX</tabstop>
-  <tabstop>txtTunnelMaxBoundY</tabstop>
-  <tabstop>txtTunnelMaxBoundZ</tabstop>
- </tabstops>
  <resources/>
  <connections/>
 </ui>
