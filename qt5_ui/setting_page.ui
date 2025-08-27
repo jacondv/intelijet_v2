@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>458</width>
-    <height>523</height>
+    <width>498</width>
+    <height>533</height>
    </rect>
   </property>
   <property name="minimumSize">
@@ -18,7 +18,7 @@
   </property>
   <property name="maximumSize">
    <size>
-    <width>500</width>
+    <width>16777215</width>
     <height>700</height>
    </size>
   </property>
@@ -47,12 +47,6 @@ QPushButton:pressed {
      <layout class="QVBoxLayout" name="verticalLayout_2">
       <item>
        <widget class="QGroupBox" name="groupBox">
-        <property name="maximumSize">
-         <size>
-          <width>1000</width>
-          <height>350</height>
-         </size>
-        </property>
         <property name="title">
          <string>Housing parameters</string>
         </property>
@@ -157,12 +151,6 @@ QPushButton:pressed {
       </item>
       <item>
        <widget class="QGroupBox" name="groupBox_2">
-        <property name="maximumSize">
-         <size>
-          <width>1000</width>
-          <height>200</height>
-         </size>
-        </property>
         <property name="title">
          <string>Tunnel bounding box</string>
         </property>

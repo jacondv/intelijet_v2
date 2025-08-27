@@ -330,7 +330,7 @@ class App(QMainWindow):
                 self.ui.lblEncoder.setText(f"{encoder_value_in_deg:.2f}")  # 2 chữ số thập phân
                 
             if cfg.NOTIFICATION in data:            
-                self.ui.lblNotification.setText(data[cfg.NOTIFICATION])
+                self.lblNotification.setText(data[cfg.NOTIFICATION])
                 # self.ui.statusbar.showMessage(data[cfg.NOTIFICATION], 3000)
         except Exception as e:
             rospy.logwarn(f"update_data error: {e}")

@@ -13,9 +13,9 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 class Ui_setting_page(object):
     def setupUi(self, setting_page):
         setting_page.setObjectName("setting_page")
-        setting_page.resize(458, 523)
+        setting_page.resize(498, 533)
         setting_page.setMinimumSize(QtCore.QSize(0, 400))
-        setting_page.setMaximumSize(QtCore.QSize(500, 700))
+        setting_page.setMaximumSize(QtCore.QSize(16777215, 700))
         setting_page.setStyleSheet("QPushButton {\n"
 "        background-color: #3498db;  /* màu nền */\n"
 "        color: balck;               /* màu chữ */\n"
@@ -37,7 +37,6 @@ class Ui_setting_page(object):
         self.verticalLayout_2 = QtWidgets.QVBoxLayout(self.widget)
         self.verticalLayout_2.setObjectName("verticalLayout_2")
         self.groupBox = QtWidgets.QGroupBox(self.widget)
-        self.groupBox.setMaximumSize(QtCore.QSize(1000, 350))
         self.groupBox.setObjectName("groupBox")
         self.gridLayout_4 = QtWidgets.QGridLayout(self.groupBox)
         self.gridLayout_4.setObjectName("gridLayout_4")
@@ -104,7 +103,6 @@ class Ui_setting_page(object):
         self.gridLayout_4.addWidget(self.widget_3, 1, 0, 1, 1)
         self.verticalLayout_2.addWidget(self.groupBox)
         self.groupBox_2 = QtWidgets.QGroupBox(self.widget)
-        self.groupBox_2.setMaximumSize(QtCore.QSize(1000, 200))
         self.groupBox_2.setObjectName("groupBox_2")
         self.gridLayout = QtWidgets.QGridLayout(self.groupBox_2)
         self.gridLayout.setObjectName("gridLayout")

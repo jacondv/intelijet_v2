@@ -13,7 +13,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
-        MainWindow.resize(1080, 784)
+        MainWindow.resize(1235, 889)
         MainWindow.setStyleSheet("*{\n"
 "border: none;\n"
 "color: back;\n"
@@ -46,15 +46,15 @@ class Ui_MainWindow(object):
 "#control_panel QPushButton {\n"
 "    color: #153E42;\n"
 "    border: none;\n"
-"    padding: 36px 0px 36px 0px;\n"
+"    padding: 40px 0px 40px 0px;\n"
 "    \n"
 "    font-size: 17px;\n"
 "    font-weight: bold;\n"
 "    background-color: qlineargradient(spread:pad, x1:0, y1:0, x2:1, y2:0, stop:0 #F8D40F, stop:1 #FFF9C4);\n"
 "\n"
-"    border-top-right-radius: 35px;\n"
+"    border-top-right-radius: 40px;\n"
 "    border-top-left-radius: 0px;\n"
-"    border-bottom-right-radius: 35px;\n"
+"    border-bottom-right-radius: 40px;\n"
 "    border-bottom-left-radius: 0px;\n"
 "\n"
 "    border-left: 8px solid #95a5a6; /*#55ff00;  #F8D40F;*/\n"
@@ -166,7 +166,7 @@ class Ui_MainWindow(object):
         self.toolBox.setFont(font)
         self.toolBox.setObjectName("toolBox")
         self.page_4 = QtWidgets.QWidget()
-        self.page_4.setGeometry(QtCore.QRect(0, 0, 235, 678))
+        self.page_4.setGeometry(QtCore.QRect(0, 0, 243, 783))
         self.page_4.setObjectName("page_4")
         self.verticalLayout_2 = QtWidgets.QVBoxLayout(self.page_4)
         self.verticalLayout_2.setContentsMargins(0, 0, 20, 0)
@@ -305,12 +305,12 @@ class Ui_MainWindow(object):
         self.control_panel.setObjectName("control_panel")
         self.verticalLayout_4 = QtWidgets.QVBoxLayout(self.control_panel)
         self.verticalLayout_4.setContentsMargins(18, 0, 15, 10)
-        self.verticalLayout_4.setSpacing(5)
+        self.verticalLayout_4.setSpacing(10)
         self.verticalLayout_4.setObjectName("verticalLayout_4")
         spacerItem3 = QtWidgets.QSpacerItem(20, 20, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Fixed)
         self.verticalLayout_4.addItem(spacerItem3)
         self.lblLogo = QtWidgets.QLabel(self.control_panel)
-        self.lblLogo.setMaximumSize(QtCore.QSize(180, 60))
+        self.lblLogo.setMaximumSize(QtCore.QSize(180, 65))
         self.lblLogo.setText("")
         self.lblLogo.setPixmap(QtGui.QPixmap(":/icon/icon/Jacon Equipment Logo PNG.png"))
         self.lblLogo.setScaledContents(True)
@@ -343,7 +343,7 @@ class Ui_MainWindow(object):
         self.verticalLayout_4.addItem(spacerItem5)
         self.horizontalLayout_2.addWidget(self.control_panel)
         self.horizontalLayout_2.setStretch(0, 2)
-        self.horizontalLayout_2.setStretch(2, 4)
+        self.horizontalLayout_2.setStretch(2, 5)
         self.horizontalLayout_2.setStretch(3, 2)
         self.gridLayout_2.addWidget(self.centralFrame, 0, 0, 1, 1)
         MainWindow.setCentralWidget(self.centralwidget)
