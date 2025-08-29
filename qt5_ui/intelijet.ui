@@ -19,9 +19,14 @@ border: none;
 color: back;
 font-size: 17px;
 }
+#statusbar {
+    background-color: #185F63;
+	
+}
 
 #centralwidget {
 	background-color: black;
+
 }
 
 #centralFrame {

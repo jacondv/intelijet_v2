@@ -100,6 +100,42 @@ class RosThread(threading.Thread):
         self.ui_data_update.emit(self.data_store)
 
 
+class TouchZoomInteractor(QVTKRenderWindowInteractor):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self._last_dist = None  # Khoảng cách giữa 2 điểm touch trước đó
+        self.setAttribute(QtCore.Qt.WA_AcceptTouchEvents)
+
+    def event(self, e):
+        if e.type() == QtCore.QEvent.TouchBegin:
+            if len(e.touchPoints()) >= 2:
+                tp1, tp2 = e.touchPoints()[0], e.touchPoints()[1]
+                self._last_dist = (tp1.pos() - tp2.pos()).manhattanLength()
+            return True
+
+        elif e.type() == QtCore.QEvent.TouchUpdate:
+            if len(e.touchPoints()) >= 2 and self._last_dist is not None:
+                tp1, tp2 = e.touchPoints()[0], e.touchPoints()[1]
+                cur_dist = (tp1.pos() - tp2.pos()).manhattanLength()
+                delta = cur_dist - self._last_dist
+                self.zoom(delta)
+                self._last_dist = cur_dist
+            return True
+
+        elif e.type() == QtCore.QEvent.TouchEnd:
+            self._last_dist = None
+            return True
+
+        return super().event(e)
+
+    def zoom(self, delta):
+        renderer = self.GetRenderWindow().GetRenderers().GetFirstRenderer()
+        camera = renderer.GetActiveCamera()
+        factor = 1.0 + delta * 0.01  # Điều chỉnh tốc độ zoom
+        if factor > 0:
+            camera.Zoom(factor)
+            self.GetRenderWindow().Render()
+
 
 class App(QMainWindow):
 
@@ -141,8 +177,9 @@ class App(QMainWindow):
         self.vl.setContentsMargins(0, 0, 0, 0)
         self.vl.setSpacing(0)
 
-        self.vtkWidget = QVTKRenderWindowInteractor(self.ui.cloudFrame)
-        
+        # self.vtkWidget = QVTKRenderWindowInteractor(self.ui.cloudFrame)
+        self.vtkWidget = TouchZoomInteractor(self.ui.cloudFrame)
+
         self.vl.addWidget(self.vtkWidget)
         
 	

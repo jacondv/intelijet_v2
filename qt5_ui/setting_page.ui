@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>498</width>
-    <height>533</height>
+    <width>450</width>
+    <height>550</height>
    </rect>
   </property>
   <property name="minimumSize">
@@ -30,7 +30,7 @@
         background-color: #3498db;  /* màu nền */
         color: balck;               /* màu chữ */
         border: 1px solid #2980b9;  /* viền */
-        padding: 5px 10px 5px 5px;          /* padding */
+        padding: 5px 25px 5px 25px;          /* padding */
 		margin: 5px 5px 5px 5px;
 
     }
@@ -41,7 +41,7 @@ QPushButton:pressed {
 
 </string>
   </property>
-  <layout class="QVBoxLayout" name="verticalLayout">
+  <layout class="QVBoxLayout">
    <item>
     <widget class="QWidget" name="widget" native="true">
      <layout class="QVBoxLayout" name="verticalLayout_2">
@@ -154,59 +154,65 @@ QPushButton:pressed {
         <property name="title">
          <string>Tunnel bounding box</string>
         </property>
-        <layout class="QGridLayout" name="gridLayout">
-         <item row="2" column="0">
-          <widget class="QLabel" name="label_16">
-           <property name="text">
-            <string>Max bound</string>
-           </property>
+        <layout class="QVBoxLayout" name="verticalLayout_3">
+         <item>
+          <widget class="QWidget" name="widget_5" native="true">
+           <layout class="QGridLayout" name="gridLayout_5">
+            <item row="0" column="1">
+             <widget class="QLabel" name="label_49">
+              <property name="text">
+               <string>X</string>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="2">
+             <widget class="QLabel" name="label_51">
+              <property name="text">
+               <string>Y</string>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="3">
+             <widget class="QLabel" name="label_50">
+              <property name="text">
+               <string>Z</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="0">
+             <widget class="QLabel" name="label_15">
+              <property name="text">
+               <string>Min bound</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="1">
+             <widget class="QLineEdit" name="txtTunnelMinBoundX"/>
+            </item>
+            <item row="1" column="2">
+             <widget class="QLineEdit" name="txtTunnelMinBoundY"/>
+            </item>
+            <item row="1" column="3">
+             <widget class="QLineEdit" name="txtTunnelMinBoundZ"/>
+            </item>
+            <item row="2" column="0">
+             <widget class="QLabel" name="label_16">
+              <property name="text">
+               <string>Max bound</string>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="1">
+             <widget class="QLineEdit" name="txtTunnelMaxBoundX"/>
+            </item>
+            <item row="2" column="2">
+             <widget class="QLineEdit" name="txtTunnelMaxBoundY"/>
+            </item>
+            <item row="2" column="3">
+             <widget class="QLineEdit" name="txtTunnelMaxBoundZ"/>
+            </item>
+           </layout>
           </widget>
-         </item>
-         <item row="1" column="0">
-          <widget class="QLabel" name="label_15">
-           <property name="text">
-            <string>Min bound</string>
-           </property>
-          </widget>
-         </item>
-         <item row="0" column="5">
-          <widget class="QLabel" name="label_49">
-           <property name="text">
-            <string>X</string>
-           </property>
-          </widget>
-         </item>
-         <item row="0" column="6">
-          <widget class="QLabel" name="label_51">
-           <property name="text">
-            <string>Y</string>
-           </property>
-          </widget>
-         </item>
-         <item row="0" column="7">
-          <widget class="QLabel" name="label_50">
-           <property name="text">
-            <string>Z</string>
-           </property>
-          </widget>
-         </item>
-         <item row="1" column="6">
-          <widget class="QLineEdit" name="txtTunnelMinBoundY"/>
-         </item>
-         <item row="1" column="7">
-          <widget class="QLineEdit" name="txtTunnelMinBoundZ"/>
-         </item>
-         <item row="1" column="5">
-          <widget class="QLineEdit" name="txtTunnelMinBoundX"/>
-         </item>
-         <item row="2" column="7">
-          <widget class="QLineEdit" name="txtTunnelMaxBoundZ"/>
-         </item>
-         <item row="2" column="6">
-          <widget class="QLineEdit" name="txtTunnelMaxBoundY"/>
-         </item>
-         <item row="2" column="5">
-          <widget class="QLineEdit" name="txtTunnelMaxBoundX"/>
          </item>
         </layout>
        </widget>
