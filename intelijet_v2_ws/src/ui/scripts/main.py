@@ -15,7 +15,8 @@ from ui.setting_page_ui import Ui_setting_page
 from ui.intelijet_ui import Ui_MainWindow as Ui_Frame
 
 from ui.utils import ros_pointcloud2_to_o3d_to_vtk_polydata_voxel
-from ui.update_data_utils import upload_data_to_ui, download_data_from_ui
+from ui.update_data_utils import DataBinder, load_config_to_ui
+
 from ui.handlers import *
 import rospy
 from sensor_msgs.msg import PointCloud2, JointState
@@ -30,6 +31,7 @@ import numpy as np
 
 from shared.pps_command import PPSCommand
 from shared.log_status import unpack_log_status
+from shared.device_monitor import DeviceStatusReader  
 from rosgraph_msgs.msg import Log
 
 
@@ -48,10 +50,12 @@ class RosThread(threading.Thread):
 
     def run(self):
         rospy.init_node("gui_node", anonymous=True, disable_signals=True)
+        self.device_status_reader = DeviceStatusReader()  # Khởi tạo DeviceStatusReader với cấu hình từ cfg
         self.cmd_pub = rospy.Publisher(HMI_CMD_TOPIC, Int32, queue_size=1)
         rospy.Subscriber(PRE_SCAN_CLOUD_TOPIC, PointCloud2, self.cloud_received_signal_callback)
         rospy.Subscriber(POST_SCAN_CLOUD_TOPIC, PointCloud2, self.cloud_received_signal_callback)
         rospy.Subscriber(CLOUD_COMPARED_TOPIC, PointCloud2, self.cloud_received_signal_callback)
+        print(self.device_status_reader.get_status())
         
 
         # listening topic update infomation for UI.
@@ -95,8 +99,8 @@ class RosThread(threading.Thread):
         
 
     def emit_ui_data_update(self, msg):
-        # self.data_store["encoder_value_in_deg"] = random.random()
-
+        self.data_store["devices"] = self.device_status_reader.get_status()
+        # print(self.data_store["devices"])
         self.ui_data_update.emit(self.data_store)
 
 
@@ -231,7 +235,11 @@ class App(QMainWindow):
         self.lblNotification.setStyleSheet("margin-left: 5px;")  
         self.ui.statusbar.addWidget(self.lblNotification)
 
-        upload_data_to_ui(self.ui.tab_setting)
+        self.data_binder = DataBinder(self.ui.tab_system)
+
+        load_config_to_ui(self.ui.tab_setting)
+        
+
         # self.__load_sample()
 
     def _stop_rotation(self,obj, ev):
@@ -365,6 +373,11 @@ class App(QMainWindow):
             if cfg.NOTIFICATION in data:            
                 self.lblNotification.setText(data[cfg.NOTIFICATION])
                 # self.ui.statusbar.showMessage(data[cfg.NOTIFICATION], 3000)
+
+            if "devices" in data:
+                devices_status = data["devices"]
+                self.data_binder.update_ui_from_status(devices_status)
+                
         except Exception as e:
             rospy.logwarn(f"update_data error: {e}")
 

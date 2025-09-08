@@ -63,7 +63,7 @@ def load_config(*paths):
 
         config_path = os.path.join(config_dir, path)
         if os.path.isfile(config_path):
-            rospy.logwarn(f"Loading config from default path: {config_path}")
+            rospy.loginfo(f"Loading config from default path: {config_path}")
             
         with open(config_path, "r") as f:
             data = yaml.safe_load(f)

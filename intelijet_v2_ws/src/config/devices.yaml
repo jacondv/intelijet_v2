@@ -1,0 +1,19 @@
+# This is just an virtual device to collect real devices or real processes status
+# You can add/remove devices in the config/devices.yaml file to monitor them
+# The node will publish the status of each device on the device_name/status topic
+devices:
+  - name: lidar
+    topic: /cloud
+    msg_type: sensor_msgs/PointCloud2
+    timeout: 3.0
+    mode: continuous
+  - name: encoder
+    topic: /encoder01/can_msg
+    msg_type: sensor_msgs/Image
+    timeout: 3.0
+    mode: continuous
+  - name: pcan
+    topic: /pcan_received_messanges
+    msg_type: can_msgs/Frame
+    timeout: 3.0
+    mode: continuous

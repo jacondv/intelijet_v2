@@ -50,6 +50,7 @@ catkin_python_setup()
 add_message_files(
   FILES
   PPSCommand.msg
+  DeviceStatus.msg
   # Message2.msg
 )
 

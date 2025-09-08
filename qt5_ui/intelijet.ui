@@ -368,7 +368,7 @@ border-radius:12px;</string>
           <enum>QTabWidget::West</enum>
          </property>
          <property name="currentIndex">
-          <number>0</number>
+          <number>2</number>
          </property>
          <property name="usesScrollButtons">
           <bool>false</bool>
@@ -432,108 +432,104 @@ border-radius:12px;</string>
           <layout class="QVBoxLayout" name="verticalLayout_5">
            <item>
             <widget class="QWidget" name="widget" native="true">
-             <widget class="QWidget" name="widget_2" native="true">
-              <property name="geometry">
-               <rect>
-                <x>10</x>
-                <y>10</y>
-                <width>300</width>
-                <height>150</height>
-               </rect>
-              </property>
-              <property name="maximumSize">
-               <size>
-                <width>300</width>
-                <height>250</height>
-               </size>
-              </property>
-              <layout class="QGridLayout" name="gridLayout_3">
-               <item row="3" column="1" colspan="3">
-                <widget class="QLabel" name="label">
-                 <property name="text">
-                  <string>Encoder value (rad):</string>
-                 </property>
-                </widget>
-               </item>
-               <item row="1" column="0">
-                <widget class="QLabel" name="label_2">
-                 <property name="text">
-                  <string>Lidar:</string>
-                 </property>
-                </widget>
-               </item>
-               <item row="2" column="0" colspan="2">
-                <widget class="QLabel" name="label_3">
-                 <property name="text">
-                  <string>Encoder:</string>
-                 </property>
-                </widget>
-               </item>
-               <item row="3" column="4">
-                <widget class="QLabel" name="lblEncoder">
-                 <property name="text">
-                  <string>--</string>
-                 </property>
-                </widget>
-               </item>
-               <item row="4" column="3">
-                <widget class="QLabel" name="lblPCANStatus">
-                 <property name="text">
-                  <string>--</string>
-                 </property>
-                </widget>
-               </item>
-               <item row="5" column="0" colspan="2">
-                <widget class="QLabel" name="label_6">
-                 <property name="text">
-                  <string>Camera:</string>
-                 </property>
-                </widget>
-               </item>
-               <item row="4" column="0" colspan="3">
-                <widget class="QLabel" name="label_5">
-                 <property name="text">
-                  <string>PCAN Gatway:</string>
-                 </property>
-                </widget>
-               </item>
-               <item row="0" column="2" colspan="2">
-                <widget class="QLabel" name="lblPLCStatus">
-                 <property name="text">
-                  <string>--</string>
-                 </property>
-                </widget>
-               </item>
-               <item row="5" column="3">
-                <widget class="QLabel" name="lblCameraStatus">
-                 <property name="text">
-                  <string>--</string>
-                 </property>
-                </widget>
-               </item>
-               <item row="1" column="2" colspan="2">
-                <widget class="QLabel" name="lblLidarStatus">
-                 <property name="text">
-                  <string>--</string>
-                 </property>
-                </widget>
-               </item>
-               <item row="0" column="0">
-                <widget class="QLabel" name="label_7">
-                 <property name="text">
-                  <string>PLC:</string>
-                 </property>
-                </widget>
-               </item>
-               <item row="2" column="2" colspan="2">
-                <widget class="QLabel" name="lblEncoderStatus">
-                 <property name="text">
-                  <string>--</string>
-                 </property>
-                </widget>
-               </item>
-              </layout>
-             </widget>
+             <layout class="QGridLayout" name="gridLayout_4">
+              <item row="0" column="0">
+               <widget class="QWidget" name="widget_2" native="true">
+                <property name="maximumSize">
+                 <size>
+                  <width>300</width>
+                  <height>250</height>
+                 </size>
+                </property>
+                <layout class="QGridLayout" name="gridLayout_3">
+                 <item row="3" column="1" colspan="3">
+                  <widget class="QLabel" name="label">
+                   <property name="text">
+                    <string>Encoder value (rad):</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="1" column="0">
+                  <widget class="QLabel" name="label_2">
+                   <property name="text">
+                    <string>Lidar:</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="2" column="0" colspan="2">
+                  <widget class="QLabel" name="label_3">
+                   <property name="text">
+                    <string>Encoder:</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="3" column="4">
+                  <widget class="QLabel" name="lblEncoder">
+                   <property name="text">
+                    <string>--</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="4" column="3">
+                  <widget class="QLabel" name="lblPCANStatus">
+                   <property name="text">
+                    <string>--</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="5" column="0" colspan="2">
+                  <widget class="QLabel" name="label_6">
+                   <property name="text">
+                    <string>Camera:</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="4" column="0" colspan="3">
+                  <widget class="QLabel" name="label_5">
+                   <property name="text">
+                    <string>PCAN Gatway:</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="0" column="2" colspan="2">
+                  <widget class="QLabel" name="lblPLCStatus">
+                   <property name="text">
+                    <string>--</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="5" column="3">
+                  <widget class="QLabel" name="lblCameraStatus">
+                   <property name="text">
+                    <string>--</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="1" column="2" colspan="2">
+                  <widget class="QLabel" name="lblLidarStatus">
+                   <property name="text">
+                    <string>--</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="0" column="0">
+                  <widget class="QLabel" name="label_7">
+                   <property name="text">
+                    <string>PLC:</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="2" column="2" colspan="2">
+                  <widget class="QLabel" name="lblEncoderStatus">
+                   <property name="text">
+                    <string>--</string>
+                   </property>
+                  </widget>
+                 </item>
+                </layout>
+               </widget>
+              </item>
+             </layout>
             </widget>
            </item>
           </layout>
