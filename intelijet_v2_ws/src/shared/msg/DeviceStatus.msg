@@ -1,7 +1,7 @@
 string name
-uint8 device_state
-uint8 process_state
-uint8 mode
+string device_state
+string process_state
+string mode
 string detail
 time   last_update
 
@@ -15,7 +15,10 @@ string IDLE         = Idle
 string PROCESSING   = Processing
 string FINISHED     = Finished
 string STANDBY      = Standby
-
+string PRESCAN     = Prescanning
+string POSTSCAN    = Postscanning
+string OPEN_HOUSING    = HousingOpening
+string CLOSE_HOUSING   = HousingClosing
 # ---- Constants for mode ----
 string CONTINUOUS   = Continuous
 string ON_DEMAND    = On-demand

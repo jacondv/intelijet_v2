@@ -28,10 +28,9 @@ from PyQt5.QtCore import pyqtSignal, pyqtSlot
 import threading
 import numpy as np
 
-
+from shared.device_monitor import DeviceStatusReader
 from shared.pps_command import PPSCommand
 from shared.log_status import unpack_log_status
-from shared.device_monitor import DeviceStatusReader  
 from rosgraph_msgs.msg import Log
 
 
@@ -50,21 +49,23 @@ class RosThread(threading.Thread):
 
     def run(self):
         rospy.init_node("gui_node", anonymous=True, disable_signals=True)
-        self.device_status_reader = DeviceStatusReader()  # Khởi tạo DeviceStatusReader với cấu hình từ cfg
         self.cmd_pub = rospy.Publisher(HMI_CMD_TOPIC, Int32, queue_size=1)
+        self.device_status_reader = DeviceStatusReader() # Autoload device config from devices.yaml
+
         rospy.Subscriber(PRE_SCAN_CLOUD_TOPIC, PointCloud2, self.cloud_received_signal_callback)
         rospy.Subscriber(POST_SCAN_CLOUD_TOPIC, PointCloud2, self.cloud_received_signal_callback)
         rospy.Subscriber(CLOUD_COMPARED_TOPIC, PointCloud2, self.cloud_received_signal_callback)
-        print(self.device_status_reader.get_status())
         
 
         # listening topic update infomation for UI.
         rospy.Subscriber("/joint_states", JointState, self.update_joint_states_status)
 
         rospy.Subscriber('/rosout', Log, self.rosout_callback)
-
+        
         rospy.Timer(rospy.Duration(1.0), self.emit_ui_data_update) # Update data 1Hz
         # rospy.Subscriber(HMI_CMD_TOPIC,Int32, self.update_hmi_cmd)
+
+
 
         rospy.spin()
 
@@ -99,8 +100,9 @@ class RosThread(threading.Thread):
         
 
     def emit_ui_data_update(self, msg):
-        self.data_store["devices"] = self.device_status_reader.get_status()
         # print(self.data_store["devices"])
+        self.data_store["devices"] = self.device_status_reader.get_status()
+        print("Emitting ui_data_update", self.data_store["devices"])
         self.ui_data_update.emit(self.data_store)
 
 
@@ -180,7 +182,7 @@ class App(QMainWindow):
         self.vl = QVBoxLayout(self.ui.cloudFrame)
         self.vl.setContentsMargins(0, 0, 0, 0)
         self.vl.setSpacing(0)
-
+        
         # self.vtkWidget = QVTKRenderWindowInteractor(self.ui.cloudFrame)
         self.vtkWidget = TouchZoomInteractor(self.ui.cloudFrame)
 
@@ -238,7 +240,7 @@ class App(QMainWindow):
         self.data_binder = DataBinder(self.ui.tab_system)
 
         load_config_to_ui(self.ui.tab_setting)
-        
+  
 
         # self.__load_sample()
 
@@ -279,7 +281,7 @@ class App(QMainWindow):
     def start_prescan(self):
         # self.cmd_pub.publish(String("start_prescan"))
         # self.status_label.setText("Requested PreScan...")
-        
+       
         self.ui_send_cmd_signale.emit(PPSCommand.START_PRESCAN.value)
 
     def start_postscan(self):

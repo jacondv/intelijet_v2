@@ -17,3 +17,8 @@ devices:
     msg_type: can_msgs/Frame
     timeout: 3.0
     mode: continuous
+  - name: pps
+    topic: /pps/state
+    msg_type: std_msgs/String
+    timeout: 3.0
+    mode: continuous

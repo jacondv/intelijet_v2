@@ -1,4 +1,5 @@
 
+BASE_DIR: "/root/intelijet_v2"
 
 HMI_CMD_TOPIC: "/hmi/cmd"
 PLC_CMD_TOPIC: "/plc/cmd"

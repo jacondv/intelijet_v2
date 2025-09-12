@@ -1,8 +1,7 @@
 from shared.config_loader import CONFIG as cfg
 from PyQt5 import QtWidgets
-from shared.msg import DeviceStatus
-
-import rospy
+from PyQt5.QtWidgets import QWidget, QLineEdit, QLabel, QPushButton, QCheckBox
+from PyQt5.QtCore import QObject
 # ===== Hàm load dữ liệu vào UI =====
 
 config_mapping = {
@@ -187,11 +186,6 @@ def set_button_stage(button_name, state="default"):
     }
 
 
-from PyQt5 import QtWidgets
-
-from PyQt5 import QtWidgets
-
-
 
 class DataBinder:
     def __init__(self,root_widget: QtWidgets.QWidget, mapping = status_ui_mapping):
@@ -228,3 +222,41 @@ class DataBinder:
                 idx = child.findText(str(value))
                 if idx >= 0:
                     child.setCurrentIndex(idx)
+
+
+
+
+class UiObjectManager(QObject):
+    def __init__(self, parent_widget: QWidget):
+        super().__init__(parent_widget)
+        self.widgets = {}
+
+        # Lưu tất cả widget con có objectName
+        for w in parent_widget.findChildren(QWidget):
+            if w.objectName():
+                self.widgets[w.objectName()] = w
+
+    def object_set_value(self, name: str, value):
+        if name not in self.widgets:
+            print(f"[WARN] Không tìm thấy widget: {name}")
+            return
+
+        w = self.widgets[name]
+
+        if isinstance(w, QLineEdit):
+            w.setText(str(value))
+        elif isinstance(w, QLabel):
+            w.setText(str(value))
+        elif isinstance(w, QPushButton):
+            w.setText(str(value))
+        elif isinstance(w, QCheckBox):
+            w.setChecked(bool(value))
+        else:
+            print(f"[INFO] Widget {name} ({type(w)}) chưa hỗ trợ set_value")
+
+    def object_set_style(self, name: str, style: str):
+        if name not in self.widgets:
+            print(f"[WARN] Không tìm thấy widget: {name}")
+            return
+
+        self.widgets[name].setStyleSheet(style)

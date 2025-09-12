@@ -6,42 +6,39 @@ from genpy.message import Message
 from shared.config_loader import load_config
 
 
+from genpy.message import Message
+import rospy
+
 def ros_msg_to_dict(msg):
     """
     Convert any ROS message to a dictionary, recursively for nested messages.
-    - Converts rospy.Time and rospy.Duration to float (seconds)
-    - Converts arrays of messages or primitive types
+    - rospy.Time and rospy.Duration -> float (seconds)
+    - Arrays -> list
     """
     result = {}
-    # ROS message slots
     for field in msg.__slots__:
         value = getattr(msg, field)
 
-        # ROS Time → float
-        if isinstance(value, rospy.Time):
+        if value is None:
+            result[field] = None
+        elif isinstance(value, rospy.Time):
             result[field] = value.to_sec()
-        # ROS Duration → float
         elif isinstance(value, rospy.Duration):
             result[field] = value.to_sec()
-        # Nested message → recursive
         elif isinstance(value, Message):
             result[field] = ros_msg_to_dict(value)
-        # List/array → convert each element
         elif isinstance(value, (list, tuple)):
-            new_list = []
-            for v in value:
-                if isinstance(v, rospy.Time):
-                    new_list.append(v.to_sec())
-                elif isinstance(v, rospy.Duration):
-                    new_list.append(v.to_sec())
-                elif isinstance(v, Message):
-                    new_list.append(ros_msg_to_dict(v))
-                else:
-                    new_list.append(v)
-            result[field] = new_list
-        # Primitive type → keep
+            result[field] = [
+                v.to_sec() if isinstance(v, (rospy.Time, rospy.Duration)) else
+                ros_msg_to_dict(v) if isinstance(v, Message) else
+                v for v in value
+            ]
         else:
-            result[field] = value
+            # Nếu object có .tolist() (numpy array), convert
+            if hasattr(value, "tolist"):
+                result[field] = value.tolist()
+            else:
+                result[field] = value
     return result
 
 class DeviceMonitor:
@@ -52,7 +49,7 @@ class DeviceMonitor:
         self.status.detail = "Init"
         self.status.device_state = DeviceStatus.DISCONNECTED
         self.status.process_state = DeviceStatus.STANDBY
-        self.status.mode = DeviceStatus.CONTINUOUS if cfg.mode == "continuous" else DeviceStatus.ON_DEMAND
+        self.status.mode = DeviceStatus.CONTINUOUS if cfg.mode.lower() == "continuous" else DeviceStatus.ON_DEMAND
 
         self.topic = cfg.topic
         self.timeout = cfg.timeout

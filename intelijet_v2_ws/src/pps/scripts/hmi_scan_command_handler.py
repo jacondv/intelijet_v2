@@ -10,6 +10,7 @@ from pps.msg import StartScanAction, StartScanGoal
 from ros_blkarc_msgs.msg import TimedScanAction, TimedScanGoal
 from shared.pps_command import PPSCommand
 from shared.log_status import log_status
+from shared.msg import DeviceStatus
 
 from pps.sick_scan_controller import SickScanController
 
@@ -20,6 +21,7 @@ def get_scanner_controller(active_lidar=cfg.active_lidar):
     if active_lidar == "lms511":
         controller = SickScanController()
         return controller
+    
 
 class ScanManagerNode:
     def __init__(self, action_server_name,
@@ -27,6 +29,9 @@ class ScanManagerNode:
         # Action client
         # action_server_name like "/blk360g2/start_scan" send request scan to device
         rospy.loginfo("Starting HMI")
+        self.state_pub = rospy.Publisher("/pps/state", String, queue_size=10, latch=True)
+        self.current_state = "IDLE"
+
         # self.scan_time_seconds = scan_time_seconds
         # self.__scan_action_client = actionlib.SimpleActionClient(action_server_name, TimedScanAction)
         # rospy.loginfo(f"Waiting for scan action server...{action_server_name}")
@@ -40,17 +45,35 @@ class ScanManagerNode:
         # rospy.logwarn("Starting AlignServiceClient")
         self.scanner_controller = get_scanner_controller()
 
+    def is_state(self, state):
+        return self.current_state == state
+    
+    def set_state(self, state):
+        self.current_state = state
+        self.state_pub.publish(String(data=state))
+
+
     def cmd_cb(self, msg):
         cmd = msg.data
         rospy.logwarn("Received HMI command: %d", cmd)
 
         if cmd == PPSCommand.START_PRESCAN.value:
             rospy.loginfo("cmd == PPSCommand.START_PRESCAN.value")
+
+            if self.is_state(DeviceStatus.PRESCAN):
+                rospy.logwarn("Already in PRESCAN state, ignoring command")
+                return
+            
+            self.set_state(DeviceStatus.PRESCAN)
             self.scanner_controller.run_prescan()
                    
             # self.__send_scan_cmd(output_topic=cfg.PRE_SCAN_TOPIC)
 
         elif cmd == PPSCommand.START_POSTSCAN.value:    
+            if self.is_state(DeviceStatus.POSTSCAN):
+                rospy.logwarn("Already in POSTSCAN state, ignoring command")
+                return
+            self.set_state(DeviceStatus.POSTSCAN)
             self.scanner_controller.run_postscan()
 
             # if self.__send_scan_cmd(output_topic=cfg.POST_SCAN_TOPIC):
@@ -70,9 +93,17 @@ class ScanManagerNode:
                 rospy.logerr("Alignment failed: %s", message)
 
         elif cmd == PPSCommand.OPEN_HOUSING.value:
+            if self.is_state(DeviceStatus.OPEN_HOUSING):
+                rospy.logwarn("Already in OPEN_HOUSING state, ignoring command")
+                return
+            self.set_state(DeviceStatus.OPEN_HOUSING)
             self.scanner_controller.open_housing_auto()
 
         elif cmd == PPSCommand.CLOSE_HOUSING.value:
+            if self.is_state(DeviceStatus.CLOSE_HOUSING):
+                rospy.logwarn("Already in CLOSE_HOUSING state, ignoring command")
+                return  
+            self.set_state(DeviceStatus.CLOSE_HOUSING)
             self.scanner_controller.close_housing_auto()
 
 
