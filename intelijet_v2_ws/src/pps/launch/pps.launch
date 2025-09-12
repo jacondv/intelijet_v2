@@ -50,9 +50,8 @@
 	<!-- UI -->
 	<include file="$(find ui)/launch/ui.launch"/>
 
-	<!-- CLOUD SAVER -->
-	<node pkg="pps" name="cloud_saver" type="cloud_saver_node.py" output="screen"/>
-
+	<!-- CLOUD SAVER 	<node pkg="pps" name="cloud_saver" type="cloud_saver_node.py" output="screen"/>-->
+	<node pkg="pps" name="cloud_saver_node" type="cloud_saver_node.py"/>
 	<!-- ROS BAG -->
 
 	  <!-- <node name="rosbag_recorder"

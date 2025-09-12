@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 import rospy
@@ -9,7 +9,7 @@ from sensor_msgs.msg import PointCloud2
 import open3d as o3d
 import numpy as np
 from shared.config_loader import CONFIG as cfg
-from pps.helpers import convert_pointcloud2_to_o3d
+from pps.helper import convert_pointcloud2_to_o3d
 
 # Các topic cần theo dõi (load từ config)
 PRE_SCAN_RAW_TOPIC = cfg.PRE_SCAN_TOPIC       # "/pre_scan_0"
@@ -18,10 +18,7 @@ PRE_SCAN_PROCESSED_TOPIC = cfg.PRE_SCAN_CLOUD_TOPIC   # "/pre_scan_cloud"
 POST_SCAN_PROCESSED_TOPIC = cfg.POST_SCAN_CLOUD_TOPIC # "/post_scan_cloud"
 
 # Thư mục gốc để lưu point cloud
-SAVE_DIR = os.path.join(cfg.BASE_DIR, "data")
-
-if not os.path.exists(SAVE_DIR):
-    os.makedirs(SAVE_DIR)
+SAVE_DIR = "/root/intelijet_v2/data" #os.path.join(cfg.BASE_DIR, "data")
 
 def cloud_callback(msg, topic_name):
     """Subscriber callback: convert and save .ply into SAVE_DIR/yyyyMMdd/"""
@@ -57,7 +54,7 @@ def cloud_callback(msg, topic_name):
 
 
 def main():
-    rospy.init_node("cloud_saver", anonymous=True)
+    rospy.init_node("cloud_saver_node", anonymous=True)
 
     # Đăng ký subscriber cho từng topic
     rospy.Subscriber(PRE_SCAN_RAW_TOPIC, PointCloud2, cloud_callback, PRE_SCAN_RAW_TOPIC)
@@ -70,6 +67,13 @@ def main():
 
 
 if __name__ == "__main__":
+
+    try:    
+        if not os.path.exists(SAVE_DIR):
+            os.makedirs(SAVE_DIR)
+    except:
+        rospy.logwarn("Create folder error")
+
     try:
         main()
     except rospy.ROSInterruptException:

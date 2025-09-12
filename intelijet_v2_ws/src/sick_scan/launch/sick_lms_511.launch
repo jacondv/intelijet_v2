@@ -50,7 +50,7 @@ Check IP-address, if you scanner is not found after roslaunch.
         <param name="scan_freq" type="double" value="25" />
          -->
 
-        <param name="ang_res" type="double" value="0.042" />
+        <param name="ang_res" type="double" value="0.1667" />
         <param name="scan_freq" type="double" value="25" />
 
         <param name="time_offset" type="double" value="-0.001" />
