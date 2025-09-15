@@ -183,8 +183,8 @@ class App(QMainWindow):
         self.vl.setContentsMargins(0, 0, 0, 0)
         self.vl.setSpacing(0)
         
-        # self.vtkWidget = QVTKRenderWindowInteractor(self.ui.cloudFrame)
-        self.vtkWidget = TouchZoomInteractor(self.ui.cloudFrame)
+        self.vtkWidget = QVTKRenderWindowInteractor(self.ui.cloudFrame)
+        # self.vtkWidget = TouchZoomInteractor(self.ui.cloudFrame)
 
         self.vl.addWidget(self.vtkWidget)
         
