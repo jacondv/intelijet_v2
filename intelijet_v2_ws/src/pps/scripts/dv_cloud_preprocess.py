@@ -62,7 +62,8 @@ class CloudProcessorNode:
         if not isinstance(cloud_cropped, o3d.geometry.PointCloud):
             rospy.logerr("cloud_cropped is not an Open3D PointCloud.")
         else:
-            cloud_cropped = cloud_cropped.voxel_down_sample(voxel_size=0.01)
+            # cloud_cropped = cloud_cropped.voxel_down_sample(voxel_size=0.01)
+            pass # giữ nguyên độ phân giải gốc
         # Chuyển sang PointCloud2
         # now = datetime.now().strftime("%Y%m%d_%H%M%S") 
         # o3d.io.write_point_cloud(f"/mnt/c/work/projects/intelijet_v2/data/cloud_{now}.ply", cloud_o3d)
