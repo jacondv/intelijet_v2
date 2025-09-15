@@ -102,7 +102,7 @@ class RosThread(threading.Thread):
     def emit_ui_data_update(self, msg):
         # print(self.data_store["devices"])
         self.data_store["devices"] = self.device_status_reader.get_status()
-        print("Emitting ui_data_update", self.data_store["devices"])
+        #print("Emitting ui_data_update", self.data_store["devices"])
         self.ui_data_update.emit(self.data_store)
 
 
