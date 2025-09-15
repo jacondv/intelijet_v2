@@ -35,7 +35,7 @@ class SickScanController(GenericScanController):
                 node=None
             )
         #  Waiting Scaner housing open around 10 degree to start collect data point from sickscan
-        if not self.wait_until_target(target_position_in_degree=cfg.housing_start_position, direction=True):
+        if not self.wait_until_target(target_position_in_degree=cfg.housing_start_position,timeout=5.0, direction=True):
             log_status(
                 name=cfg.NOTIFICATION, 
                 status=None, 
@@ -51,7 +51,7 @@ class SickScanController(GenericScanController):
         self.start_time = rospy.Time.now()
 
         #  Wait Scaner hosing open to target value
-        if not self.wait_until_target(target_position_in_degree=cfg.housing_end_position):
+        if not self.wait_until_target(target_position_in_degree=40.0, direction=True):
             log_status(
                 name=cfg.NOTIFICATION, 
                 status=None, 
@@ -60,6 +60,23 @@ class SickScanController(GenericScanController):
                 node=None
             )            
             return None
+
+        self.housing.open('slow')
+
+        # Start collect data. 
+        self.start_time = rospy.Time.now()
+
+        #  Wait Scaner hosing open to target value
+        if not self.wait_until_target(target_position_in_degree=cfg.housing_end_position, direction=True):
+            log_status(
+                name=cfg.NOTIFICATION, 
+                status=None, 
+                value=None, 
+                message="[WARN] Encoder not reaching target value on time", 
+                node=None
+            )            
+            return None
+        
 
         # Stop move housing
         self.end_time = rospy.Time.now()
