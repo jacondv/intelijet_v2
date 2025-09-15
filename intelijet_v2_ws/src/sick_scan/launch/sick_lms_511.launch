@@ -33,6 +33,7 @@ Check IP-address, if you scanner is not found after roslaunch.
         <param name="min_ang" type="double" value="-1.5"/>
         <!-- 95° -->
         <param name="max_ang" type="double" value="1.5"/>
+        <param name="range_min" type="double" value="1.1"/>
         <param name="range_max" type="double" value="25"/>
         <param name="intensity" type="bool" value="true"/>
         <param name="intensity_resolution_16bit" type="bool" value="false"/>

@@ -28,12 +28,8 @@ def cloud_callback(msg, topic_name):
         return
 
     # Prefer message timestamp; fallback to now
-    stamp = msg.header.stamp
-    if stamp.secs == 0 and stamp.nsecs == 0:
-        dt = datetime.datetime.now()
-    else:
-        dt = datetime.datetime.fromtimestamp(stamp.to_sec())
 
+    dt = datetime.datetime.now()
     day_str = dt.strftime("%Y%m%d")
     day_folder = os.path.join(SAVE_DIR, day_str)
     os.makedirs(day_folder, exist_ok=True)

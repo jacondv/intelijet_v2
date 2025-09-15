@@ -51,7 +51,7 @@ def ros_pointcloud2_to_vtk_polydata(msg):
 
     return polydata
 
-def ros_pointcloud2_to_o3d_to_vtk_polydata_voxel(msg, voxel_size=0.02):
+def ros_pointcloud2_to_o3d_to_vtk_polydata_voxel(msg, voxel_size=0.0):
     # B1: ROS PointCloud2 → Open3D
     o3d_cloud = convert_pointcloud2_to_o3d(msg)
 
