@@ -356,10 +356,12 @@ class App(QMainWindow):
 
             actor = vtk.vtkActor()
             actor.SetMapper(mapper)
-            actor.GetProperty().SetPointSize(1)
+            actor.GetProperty().SetPointSize(2)
 
             self.renderer.AddActor(actor)
             self.renderer.ResetCamera()    
+
+            
 
         except Exception as e:
             rospy.logwarn(f"Load sample error: {e}")
@@ -400,7 +402,7 @@ class App(QMainWindow):
 
         actor = vtk.vtkActor()
         actor.SetMapper(mapper)
-        actor.GetProperty().SetPointSize(1)
+        actor.GetProperty().SetPointSize(2)
 
         self.current_actor = actor
         self.renderer.AddActor(actor)
