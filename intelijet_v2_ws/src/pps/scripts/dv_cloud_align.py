@@ -92,7 +92,7 @@ class CloudAlignNode:
         self.align_srv = rospy.Service("start_align", Trigger, self.handle_start_align)
 
     def __try_align(self):
-        timeout = 10
+        timeout = 3
         start_time = rospy.Time.now().to_sec()
 
         while self.__keypoint_manager.process_status !=2:
