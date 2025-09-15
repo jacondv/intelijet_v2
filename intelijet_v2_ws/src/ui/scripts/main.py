@@ -242,7 +242,7 @@ class App(QMainWindow):
         load_config_to_ui(self.ui.tab_setting)
   
 
-        # self.__load_sample()
+        self.__load_sample()
 
     def _stop_rotation(self,obj, ev):
         # self.style.StopState()
