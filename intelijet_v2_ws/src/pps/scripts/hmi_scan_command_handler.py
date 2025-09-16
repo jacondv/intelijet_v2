@@ -58,8 +58,7 @@ class ScanManagerNode:
         rospy.logwarn("Received HMI command: %d", cmd)
 
         if cmd == PPSCommand.START_PRESCAN.value:
-            rospy.loginfo("cmd == PPSCommand.START_PRESCAN.value")
-
+        
             if self.is_state(DeviceStatus.PRESCAN):
                 rospy.logwarn("Already in PRESCAN state, ignoring command")
                 return

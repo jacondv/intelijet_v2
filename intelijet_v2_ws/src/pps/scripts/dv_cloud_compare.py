@@ -1,15 +1,20 @@
 #!/usr/bin/env python3
 import rospy
-import ros_numpy
-import numpy as np
-import open3d as o3d
+# import ros_numpy
+# import numpy as np
+# import open3d as o3d
 from sensor_msgs.msg import PointCloud2
 from pps.helper import compute_heatmap_to_plane, assign_colors_by_threshold, color_voxel_majority, \
     convert_open3d_to_pointcloud2, convert_open3d_to_pointcloud2_with_diff, convert_pointcloud2_to_o3d
 
+from shared.config_loader import CONFIG as cfg
+
 CLOUD_COMPARED  = "/cloud_compared"
 PRE_SCAN_CLOUD  = "/pre_scan_cloud"
 POST_SCAN_CLOUD = "/post_scan_cloud_aligned"
+
+THICKNESS_MIN = cfg.thickness.min
+THICKNESS_MAX = cfg.thickness.max
 
 class CloudComparer:
     def __init__(self, pubpish_topic,
@@ -65,7 +70,7 @@ class CloudComparer:
     def compare(self, pres, post):
         # Thực hiện xử lý màu hóa theo khoảng cách
         colored_source, dists = compute_heatmap_to_plane(post, pres, k=6)
-        result = assign_colors_by_threshold(colored_source, dists, threshold=[0.03, 0.045])
+        result = assign_colors_by_threshold(colored_source, dists, threshold=[THICKNESS_MIN, THICKNESS_MAX])
         result = color_voxel_majority(result, voxel_size=0.03)
         return result, dists
     
