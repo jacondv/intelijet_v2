@@ -1,0 +1,51 @@
+BASE_DIR: /root/intelijet_v2
+HMI_CMD_TOPIC: /hmi/cmd
+PLC_CMD_TOPIC: /plc/cmd
+SYSTEM_STATUS: /system_status
+PRE_SCAN_TOPIC: /pre_scan_0
+POST_SCAN_TOPIC: /post_scan_0
+PRE_SCAN_CLOUD_TOPIC: /pre_scan_cloud
+POST_SCAN_CLOUD_TOPIC: /post_scan_cloud
+CLOUD_COMPARED_TOPIC: /cloud_compared
+ENCODER_JOINT_NAME: scanner_deploy_retract
+ENCODER01_CAN_MSG: /encoder01/can_msg
+NOTIFICATION: notification
+active_lidar: lms511
+blk360g2:
+  pointcloud_topic: /blk360g2/pointcloud
+  start_scan_service: /blk360g2/start_scan
+  action_server_name: /blk360g2/start_scan
+  goal_type: StartScanGoal
+  scan_time_seconds: None
+blkarc:
+  pointcloud_topic: /blkarc/scan
+  start_scan_service: /blkarc/start_scan
+  action_server_name: /blkarc/timed_scan
+  goal_type: TimedScanGoal
+  scan_time_seconds: 10
+lms511:
+  pointcloud_topic: /lms511/scan
+  start_scan_service: /lms511/start_scan
+  action_server_name: /lms511/start_scan
+  scan_time_seconds: None
+crop_box:
+  min:
+    x: -1.0
+    y: -3.5
+    z: -1.0
+  max:
+    x: 7.0
+    y: 3.5
+    z: 8.0
+housing_start_position: 12
+housing_end_position: 135
+encoder_length_at_zero_possition: 29910924
+housing_open_speed_fast: 115
+housing_open_speed_medium: 105
+housing_open_speed_slow: 103
+housing_close_speed_fast: 110
+housing_close_speed_medium: 100
+housing_close_speed_slow: 103
+thickness:
+  min: 0.01
+  max: 0.025

@@ -13,8 +13,8 @@ CLOUD_COMPARED  = "/cloud_compared"
 PRE_SCAN_CLOUD  = "/pre_scan_cloud"
 POST_SCAN_CLOUD = "/post_scan_cloud_aligned"
 
-THICKNESS_MIN = cfg.thickness.min
-THICKNESS_MAX = cfg.thickness.max
+THICKNESS_MIN = 0.015#cfg.thickness.min
+THICKNESS_MAX = 0.025#cfg.thickness.max
 
 class CloudComparer:
     def __init__(self, pubpish_topic,
@@ -71,7 +71,7 @@ class CloudComparer:
         # Thực hiện xử lý màu hóa theo khoảng cách
         colored_source, dists = compute_heatmap_to_plane(post, pres, k=6)
         result = assign_colors_by_threshold(colored_source, dists, threshold=[THICKNESS_MIN, THICKNESS_MAX])
-        result = color_voxel_majority(result, voxel_size=0.03)
+        result = color_voxel_majority(result, voxel_size=0.05)
         return result, dists
     
     

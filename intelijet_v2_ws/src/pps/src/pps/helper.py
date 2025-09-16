@@ -256,104 +256,104 @@ def assign_colors_by_threshold(pcd, distances, threshold=[0.03, 0.04]):
     colored_pcd.colors = o3d.utility.Vector3dVector(colors)
     return colored_pcd
 
-# def color_voxel_majority(pcd, voxel_size=0.1):
-#     """
-#     Set màu voxel theo đa số. 
-#     """
-#     points = np.asarray(pcd.points)
-#     colors = np.asarray(pcd.colors)
-#     red = np.array([1.0, 0.0, 0.0])
-#     green = np.array([0.0, 1.0, 0.0])  
-
-#     # Kiểm tra điểm đỏ (dựa trên khoảng cách màu với red)
-#     is_red = np.all(np.isclose(colors, red, atol=0.1), axis=1)
-
-#     # Lấy chỉ số voxel của từng điểm
-#     voxel_indices = np.floor(points / voxel_size).astype(int)
-
-#     voxel_dict = defaultdict(list)
-#     for i, voxel_idx in enumerate(map(tuple, voxel_indices)):
-#         '''
-#         enumerate(map(tuple, voxel_indices) --> trả về tọa độ voxel dạng dict
-#         voxel_dict sẽ chứa dah sách index các điểm cùng voxel
-        
-#         {
-#           (x1, y1, z1): [0, 3, 5, 7],   # các điểm nằm trong voxel (x1, y1, z1)
-#           (x2, y2, z2): [1, 2],
-#           ...
-#         }
-        
-#         '''
-#         voxel_dict[voxel_idx].append(i)
-
-#     new_colors = colors.copy()
-
-#     for voxel_key, idx_list in voxel_dict.items():
-#         red_count = np.sum(is_red[idx_list])
-#         total = len(idx_list)
-#         if red_count > total / 2:
-#             # Đa số đỏ -> gán đỏ toàn bộ điểm voxel
-#             for idx in idx_list:
-#                 new_colors[idx] = red
-
-#         else:
-            
-#             # Ngược lại gán xanh (hoặc giữ nguyên màu hiện tại)
-#             for idx in idx_list:
-#                 new_colors[idx] = green
-
-#     pcd.colors = o3d.utility.Vector3dVector(new_colors)
-#     return pcd
-
-
-import numpy as np
-import open3d as o3d
-from collections import defaultdict
-from scipy.spatial import cKDTree
-
-def color_voxel_majority(pcd, voxel_size=0.03, color_tol=0.05):
+def color_voxel_majority(pcd, voxel_size=0.1):
     """
-    Phiên bản nhanh: gán màu voxel theo đa số, tự nhận màu,
-    tối ưu cho point cloud lớn nhờ vectorization và KDTree.
+    Set màu voxel theo đa số. 
     """
     points = np.asarray(pcd.points)
     colors = np.asarray(pcd.colors)
-    
-    # Tính chỉ số voxel
+    red = np.array([1.0, 0.0, 0.0])
+    green = np.array([0.0, 1.0, 0.0])  
+
+    # Kiểm tra điểm đỏ (dựa trên khoảng cách màu với red)
+    is_red = np.all(np.isclose(colors, red, atol=0.1), axis=1)
+
+    # Lấy chỉ số voxel của từng điểm
     voxel_indices = np.floor(points / voxel_size).astype(int)
-    
-    # Gom các điểm theo voxel
+
     voxel_dict = defaultdict(list)
-    for i, v_idx in enumerate(map(tuple, voxel_indices)):
-        voxel_dict[v_idx].append(i)
-    
+    for i, voxel_idx in enumerate(map(tuple, voxel_indices)):
+        '''
+        enumerate(map(tuple, voxel_indices) --> trả về tọa độ voxel dạng dict
+        voxel_dict sẽ chứa dah sách index các điểm cùng voxel
+        
+        {
+          (x1, y1, z1): [0, 3, 5, 7],   # các điểm nằm trong voxel (x1, y1, z1)
+          (x2, y2, z2): [1, 2],
+          ...
+        }
+        
+        '''
+        voxel_dict[voxel_idx].append(i)
+
     new_colors = colors.copy()
-    
-    # Xử lý mỗi voxel
-    for idx_list in voxel_dict.values():
-        voxel_colors = colors[idx_list]
-        
-        if len(voxel_colors) == 1:
-            new_colors[idx_list] = voxel_colors[0]
-            continue
-        
-        # Dùng KDTree để gom các màu gần nhau
-        tree = cKDTree(voxel_colors)
-        groups = tree.query_ball_tree(tree, r=color_tol)
-        
-        # Đếm số lượng điểm trong mỗi nhóm
-        # Chọn nhóm có số điểm nhiều nhất
-        group_counts = [len(g) for g in groups]
-        majority_group_idx = np.argmax(group_counts)
-        majority_indices = groups[majority_group_idx]
-        
-        majority_color = np.mean(voxel_colors[majority_indices], axis=0)
-        
-        # Gán màu đa số cho toàn bộ voxel
-        new_colors[idx_list] = majority_color
-    
+
+    for voxel_key, idx_list in voxel_dict.items():
+        red_count = np.sum(is_red[idx_list])
+        total = len(idx_list)
+        if red_count > total / 2:
+            # Đa số đỏ -> gán đỏ toàn bộ điểm voxel
+            for idx in idx_list:
+                new_colors[idx] = red
+
+        else:
+            
+            # Ngược lại gán xanh (hoặc giữ nguyên màu hiện tại)
+            for idx in idx_list:
+                new_colors[idx] = green
+
     pcd.colors = o3d.utility.Vector3dVector(new_colors)
     return pcd
+
+
+# import numpy as np
+# import open3d as o3d
+# from collections import defaultdict
+# from scipy.spatial import cKDTree
+
+# def color_voxel_majority(pcd, voxel_size=0.03, color_tol=0.05):
+#     """
+#     Phiên bản nhanh: gán màu voxel theo đa số, tự nhận màu,
+#     tối ưu cho point cloud lớn nhờ vectorization và KDTree.
+#     """
+#     points = np.asarray(pcd.points)
+#     colors = np.asarray(pcd.colors)
+    
+#     # Tính chỉ số voxel
+#     voxel_indices = np.floor(points / voxel_size).astype(int)
+    
+#     # Gom các điểm theo voxel
+#     voxel_dict = defaultdict(list)
+#     for i, v_idx in enumerate(map(tuple, voxel_indices)):
+#         voxel_dict[v_idx].append(i)
+    
+#     new_colors = colors.copy()
+    
+#     # Xử lý mỗi voxel
+#     for idx_list in voxel_dict.values():
+#         voxel_colors = colors[idx_list]
+        
+#         if len(voxel_colors) == 1:
+#             new_colors[idx_list] = voxel_colors[0]
+#             continue
+        
+#         # Dùng KDTree để gom các màu gần nhau
+#         tree = cKDTree(voxel_colors)
+#         groups = tree.query_ball_tree(tree, r=color_tol)
+        
+#         # Đếm số lượng điểm trong mỗi nhóm
+#         # Chọn nhóm có số điểm nhiều nhất
+#         group_counts = [len(g) for g in groups]
+#         majority_group_idx = np.argmax(group_counts)
+#         majority_indices = groups[majority_group_idx]
+        
+#         majority_color = np.mean(voxel_colors[majority_indices], axis=0)
+        
+#         # Gán màu đa số cho toàn bộ voxel
+#         new_colors[idx_list] = majority_color
+    
+#     pcd.colors = o3d.utility.Vector3dVector(new_colors)
+#     return pcd
 
 
 def convert_pointcloud2_to_o3d(msg):
