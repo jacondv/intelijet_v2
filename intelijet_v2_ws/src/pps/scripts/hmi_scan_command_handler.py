@@ -82,8 +82,8 @@ class ScanManagerNode:
             #     rospy.loginfo("Post scan complete")
 
         elif cmd == PPSCommand.CANCEL_JOB.value:
-            if self.scanner_controller.on_cancel():
-                self.set_state(DeviceStatus.IDLE)
+            self.scanner_controller.on_cancel()
+            self.set_state(DeviceStatus.IDLE)
 
         elif cmd == PPSCommand.START_COMPARE.value:
             rospy.loginfo("Start compare command received")

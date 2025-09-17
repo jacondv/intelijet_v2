@@ -24,25 +24,18 @@ class SickScanController(GenericScanController):
         super().__init__()
 
     def run_workflow(self,publisher=None)->PointCloud2:
-        rospy.loginfo("run_workflow Open")
+
+        if publisher.name == cfg.PRE_SCAN_TOPIC:
+            log_status(name=cfg.NOTIFICATION,message="[INFO] Starting Pre-Scan")
+        else:
+            log_status(name=cfg.NOTIFICATION,message="[INFO] Starting Post-Scan")  
+
         # Send run commant to PLC via ROS Topic. Detail in command_handler.py
         self.housing.open('fast')
-        log_status(
-                name=cfg.NOTIFICATION, 
-                status=None, 
-                value=None, 
-                message="[INFO] Scanning...", 
-                node=None
-            )
+
         #  Waiting Scaner housing open around 10 degree to start collect data point from sickscan
         if not self.wait_until_target(target_position_in_degree=cfg.housing_start_position,timeout=5.0, direction=True):
-            log_status(
-                name=cfg.NOTIFICATION, 
-                status=None, 
-                value=None, 
-                message="[WARN] Encoder not reaching target value on time", 
-                node=None
-            )    
+            log_status(name=cfg.NOTIFICATION,message="[WARN] Encoder not reaching target value on time")      
             self.housing.stop()
             return None
         
@@ -53,13 +46,7 @@ class SickScanController(GenericScanController):
 
         #  Wait Scaner hosing open to target value
         if not self.wait_until_target(target_position_in_degree=30.0, direction=True):
-            log_status(
-                name=cfg.NOTIFICATION, 
-                status=None, 
-                value=None, 
-                message="[WARN] Encoder not reaching target value on time", 
-                node=None
-            )            
+            log_status(name=cfg.NOTIFICATION,message="[WARN] Encoder not reaching target value on time")            
             self.housing.stop()
             return None
 
@@ -70,13 +57,8 @@ class SickScanController(GenericScanController):
 
         #  Wait Scaner hosing open to target value
         if not self.wait_until_target(target_position_in_degree=cfg.housing_end_position, direction=True):
-            log_status(
-                name=cfg.NOTIFICATION, 
-                status=None, 
-                value=None, 
-                message="[WARN] Encoder not reaching target value on time", 
-                node=None
-            )            
+            log_status(name=cfg.NOTIFICATION,message="[WARN] Encoder not reaching target value on time")      
+            self.housing.stop()             
             return None
         
 
@@ -93,38 +75,19 @@ class SickScanController(GenericScanController):
 
         if point_cloud is not None:
             publisher.publish(point_cloud)
-            log_status(
-                name=cfg.NOTIFICATION, 
-                status=None, 
-                value=None, 
-                message="[INFO] Scan completed", 
-                node=None
-            )
+            log_status(name=cfg.NOTIFICATION,message="[INFO] Scan completed")      
 
         # Send back command
         self.housing.close('fast')
 
         #  Wait Scaner hosing clouse to target value
         if not self.wait_until_target(target_position_in_degree=cfg.housing_start_position, direction=False):
-            log_status(
-                name=cfg.NOTIFICATION, 
-                status=None, 
-                value=None, 
-                message="[WARN] Encoder not reaching target value on time", 
-                node=None
-            )
+            log_status(name=cfg.NOTIFICATION,message="[WARN] Encoder not reaching target value on time")      
             self.housing.stop()
             return None        
         
         rospy.sleep(2)
         self.housing.stop()
-        log_status(
-                name=cfg.NOTIFICATION, 
-                status=None, 
-                value=None, 
-                message="[INFO] Done", 
-                node=None
-            )
 
         # Call service to assembler pointcloud and publish result to Prescan or PostScan topic...
         
