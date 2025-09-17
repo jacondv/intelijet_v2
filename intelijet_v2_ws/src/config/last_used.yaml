@@ -6,6 +6,7 @@ PRE_SCAN_TOPIC: /pre_scan_0
 POST_SCAN_TOPIC: /post_scan_0
 PRE_SCAN_CLOUD_TOPIC: /pre_scan_cloud
 POST_SCAN_CLOUD_TOPIC: /post_scan_cloud
+POST_SCAN_CLOUD_ALIGNED_TOPIC: /post_scan_cloud_aligned
 CLOUD_COMPARED_TOPIC: /cloud_compared
 ENCODER_JOINT_NAME: scanner_deploy_retract
 ENCODER01_CAN_MSG: /encoder01/can_msg
@@ -31,21 +32,21 @@ lms511:
 crop_box:
   min:
     x: -1.0
-    y: -3.5
-    z: -1.0
+    y: -5.0
+    z: 0.2
   max:
     x: 7.0
-    y: 3.5
+    y: 5.0
     z: 8.0
 housing_start_position: 12
 housing_end_position: 135
 encoder_length_at_zero_possition: 29910924
 housing_open_speed_fast: 115
 housing_open_speed_medium: 105
-housing_open_speed_slow: 103
+housing_open_speed_slow: 102
 housing_close_speed_fast: 110
 housing_close_speed_medium: 100
-housing_close_speed_slow: 103
+housing_close_speed_slow: 100
 thickness:
   min: 0.01
   max: 0.025

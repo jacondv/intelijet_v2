@@ -41,7 +41,7 @@ class CloudProcessorNode:
         rospy.loginfo("CloudProcessorNode initialized.")
         rospy.spin()
 
-    def process_cloud(self, msg: PointCloud2):
+    def process_cloud(self, msg: PointCloud2, rgb=[255,255,255]) -> PointCloud2:
 
         # Chuyển sang numpy
         cloud = ros_numpy.point_cloud2.pointcloud2_to_xyz_array(msg, remove_nans=True)
@@ -67,18 +67,18 @@ class CloudProcessorNode:
         # Chuyển sang PointCloud2
         # now = datetime.now().strftime("%Y%m%d_%H%M%S") 
         # o3d.io.write_point_cloud(f"/mnt/c/work/projects/intelijet_v2/data/cloud_{now}.ply", cloud_o3d)
-        return convert_open3d_to_pointcloud2(cloud_cropped, frame_id=msg.header.frame_id)
+        return convert_open3d_to_pointcloud2(cloud_cropped, frame_id=msg.header.frame_id,rgb=rgb)
 
 
     def callback_pres(self, msg):
         rospy.logwarn("Received /pre_scan_0")
-        processed = self.process_cloud(msg)
+        processed = self.process_cloud(msg, rgb=[255,255,255])
         self.pub_pre.publish(processed)
         # notify_one(self.pub_pre_topic + "_trigger")
 
     def callback_post(self, msg):
         rospy.logwarn("Received /post_scan_0")
-        processed = self.process_cloud(msg)
+        processed = self.process_cloud(msg, rgb=[255,255,0])
         if isinstance(processed, PointCloud2):
             rospy.loginfo("processed is a PointCloud2 message.")
         else:

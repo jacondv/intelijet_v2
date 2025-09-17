@@ -151,23 +151,15 @@ class GenericScanController(ABC):
 
     def on_cancel(self):       
         if self._thread is not None and self._thread.is_alive():
-            log_status(
-                    name=cfg.NOTIFICATION, 
-                    status=None, 
-                    value=None, 
-                    message="[INFO] Canceling job", 
-                    node=None
-                )
+            log_status(name=cfg.NOTIFICATION,message="[INFO] Job canceling...")
             self.cancel_job = True
             rospy.sleep(1)
             if self._thread is not None and not self._thread.is_alive():
-                log_status(
-                        name=cfg.NOTIFICATION, 
-                        status=None, 
-                        value=None, 
-                        message="Job canceled", 
-                        node=None
-                    )
+                log_status(name=cfg.NOTIFICATION, message="Job canceled")
+                return True
+            else:
+                log_status(name=cfg.NOTIFICATION, message="Job canceling failed")
+                return False
                 
     def open_housing_auto(self):
         self.__move_housing(direction=True)

@@ -9,12 +9,12 @@ from pps.helper import compute_heatmap_to_plane, assign_colors_by_threshold, col
 
 from shared.config_loader import CONFIG as cfg
 
-CLOUD_COMPARED  = "/cloud_compared"
-PRE_SCAN_CLOUD  = "/pre_scan_cloud"
-POST_SCAN_CLOUD = "/post_scan_cloud_aligned"
+CLOUD_COMPARED  = cfg.CLOUD_COMPARED_TOPIC
+PRE_SCAN_CLOUD  = cfg.PRE_SCAN_CLOUD_TOPIC
+POST_SCAN_CLOUD = cfg.POST_SCAN_CLOUD_ALIGNED_TOPIC
 
-THICKNESS_MIN = 0.015#cfg.thickness.min
-THICKNESS_MAX = 0.025#cfg.thickness.max
+THICKNESS_MIN = 0.015   #cfg.thickness.min
+THICKNESS_MAX = 0.025   #cfg.thickness.max
 
 class CloudComparer:
     def __init__(self, pubpish_topic,
@@ -44,7 +44,7 @@ class CloudComparer:
             rospy.logerr("Received message is not of type PointCloud2.")
             return
         self.pres_cloud = convert_pointcloud2_to_o3d(msg)
-        self.pub.publish(convert_open3d_to_pointcloud2(self.pres_cloud, frame_id=msg.header.frame_id))
+        # self.pub.publish(convert_open3d_to_pointcloud2(self.pres_cloud, frame_id=msg.header.frame_id))
         self.got_pres = True
 
     def callback_post(self, msg):

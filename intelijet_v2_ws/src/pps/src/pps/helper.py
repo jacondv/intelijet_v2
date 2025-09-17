@@ -179,57 +179,6 @@ def compute_heatmap_to_plane(source, target, k=10):
     source.colors = o3d.utility.Vector3dVector(colors)
     return source, distances
 
-# def compute_heatmap_to_plane(source, target, k=10):
-#     source_points = np.asarray(source.points)
-#     target_points = np.asarray(target.points)
-
-#     source_tree = o3d.geometry.KDTreeFlann(source)
-#     target_tree = o3d.geometry.KDTreeFlann(target)
-
-#     errors = []
-
-#     for pt in source_points:
-#         # 1. Mặt phẳng cục bộ quanh pt (source)
-#         [_, idx_s, _] = source_tree.search_knn_vector_3d(pt, k)
-#         neighbors_s = source_points[idx_s]
-#         centroid_s = neighbors_s.mean(axis=0)
-#         cov_s = np.cov((neighbors_s - centroid_s).T)
-#         _, _, vh_s = np.linalg.svd(cov_s)
-#         normal_s = vh_s[-1]
-
-#         # 2. Tìm điểm gần nhất trong target và tạo mặt phẳng tương ứng
-#         [_, idx_t, _] = target_tree.search_knn_vector_3d(pt, k)
-#         neighbors_t = target_points[idx_t]
-#         centroid_t = neighbors_t.mean(axis=0)
-#         cov_t = np.cov((neighbors_t - centroid_t).T)
-#         _, _, vh_t = np.linalg.svd(cov_t)
-#         normal_t = vh_t[-1]
-
-#         # 3. Khoảng cách giữa hai mặt phẳng
-#         plane_dist = np.abs(np.dot(centroid_s - centroid_t, normal_t))
-
-#         # 4. Góc giữa hai normal
-#         # cos_theta = np.clip(np.dot(normal_s, normal_t), -1.0, 1.0)
-#         # angle_rad = np.arccos(np.abs(cos_theta))  # Lấy abs để bỏ định hướng
-#         # angle_deg = np.degrees(angle_rad)
-
-#         # 5. Tổng hợp lỗi
-#         total_error = plane_dist #+ angle_deg / 90.0  # Góc max 90°, chia chuẩn hóa
-#         errors.append(total_error)
-
-#     errors = np.array(errors, dtype=np.float32)
-
-#     # Normalize để tạo heatmap
-#     errors_log = np.log1p(errors)
-#     errors_normalized = (errors_log - errors_log.min()) / (errors_log.ptp() + 1e-9)
-
-#     cmap = plt.get_cmap("jet")
-#     colors = cmap(errors_normalized)[:, :3]
-
-#     source.colors = o3d.utility.Vector3dVector(colors)
-#     return source, errors
-
-
 def assign_colors_by_threshold(pcd, distances, threshold=[0.03, 0.04]):
     """
     Gán màu cho point cloud dựa trên khoảng cách và ngưỡng.
@@ -389,7 +338,7 @@ def convert_pointcloud2_to_o3d(msg):
     return cloud_o3d
 
 
-def convert_open3d_to_pointcloud2(o3d_cloud, frame_id="base_link"):
+def convert_open3d_to_pointcloud2(o3d_cloud, frame_id="base_link",rgb=[255,0,0]):
     """
     Chuyển đổi Open3D point cloud sang ROS PointCloud2.
     """
@@ -414,7 +363,7 @@ def convert_open3d_to_pointcloud2(o3d_cloud, frame_id="base_link"):
     else:
         rospy.loginfo("Converting Open3D has no colors ")
         # Adding red color to point cloud
-        colors = np.tile(np.array([255, 0, 0], dtype=np.uint8), (points.shape[0], 1))
+        colors = np.tile(np.array(rgb, dtype=np.uint8), (points.shape[0], 1))
 
     rgb_packed = ((colors[:, 0].astype(np.uint32) << 16) |
             (colors[:, 1].astype(np.uint32) << 8) |

@@ -43,6 +43,7 @@ class SickScanController(GenericScanController):
                 message="[WARN] Encoder not reaching target value on time", 
                 node=None
             )    
+            self.housing.stop()
             return None
         
         self.housing.open('medium')
@@ -51,7 +52,7 @@ class SickScanController(GenericScanController):
         self.start_time = rospy.Time.now()
 
         #  Wait Scaner hosing open to target value
-        if not self.wait_until_target(target_position_in_degree=40.0, direction=True):
+        if not self.wait_until_target(target_position_in_degree=30.0, direction=True):
             log_status(
                 name=cfg.NOTIFICATION, 
                 status=None, 
@@ -59,6 +60,7 @@ class SickScanController(GenericScanController):
                 message="[WARN] Encoder not reaching target value on time", 
                 node=None
             )            
+            self.housing.stop()
             return None
 
         self.housing.open('slow')
@@ -91,6 +93,13 @@ class SickScanController(GenericScanController):
 
         if point_cloud is not None:
             publisher.publish(point_cloud)
+            log_status(
+                name=cfg.NOTIFICATION, 
+                status=None, 
+                value=None, 
+                message="[INFO] Scan completed", 
+                node=None
+            )
 
         # Send back command
         self.housing.close('fast')
@@ -104,10 +113,18 @@ class SickScanController(GenericScanController):
                 message="[WARN] Encoder not reaching target value on time", 
                 node=None
             )
+            self.housing.stop()
             return None        
         
         rospy.sleep(2)
         self.housing.stop()
+        log_status(
+                name=cfg.NOTIFICATION, 
+                status=None, 
+                value=None, 
+                message="[INFO] Done", 
+                node=None
+            )
 
         # Call service to assembler pointcloud and publish result to Prescan or PostScan topic...
         

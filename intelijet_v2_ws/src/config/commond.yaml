@@ -13,6 +13,8 @@ POST_SCAN_TOPIC: "/post_scan_0"
 # Preprocess point cloud data
 PRE_SCAN_CLOUD_TOPIC: "/pre_scan_cloud"
 POST_SCAN_CLOUD_TOPIC: "/post_scan_cloud"
+POST_SCAN_CLOUD_ALIGNED_TOPIC: "/post_scan_cloud_aligned"
+
 # Cloud after compare between Pres can and Post scan point cloud
 CLOUD_COMPARED_TOPIC: "/cloud_compared"
 

@@ -14,7 +14,6 @@ from shared.msg import DeviceStatus
 
 from pps.sick_scan_controller import SickScanController
 
-
 from shared.config_loader import CONFIG as cfg
 
 def get_scanner_controller(active_lidar=cfg.active_lidar):
@@ -45,9 +44,11 @@ class ScanManagerNode:
         # rospy.logwarn("Starting AlignServiceClient")
         self.scanner_controller = get_scanner_controller()
 
+
     def is_state(self, state):
         return self.current_state == state
     
+
     def set_state(self, state):
         self.current_state = state
         self.state_pub.publish(String(data=state))
@@ -81,7 +82,8 @@ class ScanManagerNode:
             #     rospy.loginfo("Post scan complete")
 
         elif cmd == PPSCommand.CANCEL_JOB.value:
-            self.scanner_controller.on_cancel()
+            if self.scanner_controller.on_cancel():
+                self.set_state(DeviceStatus.IDLE)
 
         elif cmd == PPSCommand.START_COMPARE.value:
             rospy.loginfo("Start compare command received")
