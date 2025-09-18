@@ -28,7 +28,8 @@ from PyQt5.QtCore import pyqtSignal, pyqtSlot
 import threading
 import numpy as np
 
-from shared.device_monitor import DeviceStatusReader
+# from shared.device_monitor import DeviceStatusReader
+from shared.device_monitor import StatusReader 
 from shared.pps_command import PPSCommand
 from shared.log_status import unpack_log_status
 from rosgraph_msgs.msg import Log
@@ -43,14 +44,13 @@ class RosThread(threading.Thread):
         self.daemon = True  
         self.cloud_received_signal = cloud_received_signal
         self.ui_send_cmd_signal = ui_send_cmd_signal
-
         self.ui_data_update = ui_data_update # Data update to UI
         self.data_store = {}
 
     def run(self):
         rospy.init_node("gui_node", anonymous=True, disable_signals=True)
         self.cmd_pub = rospy.Publisher(HMI_CMD_TOPIC, Int32, queue_size=1)
-        self.device_status_reader = DeviceStatusReader() # Autoload device config from devices.yaml
+        self.device_status_reader = StatusReader() # Autoload device config from devices.yaml
 
         rospy.Subscriber(PRE_SCAN_CLOUD_TOPIC, PointCloud2, self.cloud_received_signal_callback)
         rospy.Subscriber(POST_SCAN_CLOUD_TOPIC, PointCloud2, self.cloud_received_signal_callback)
@@ -64,8 +64,6 @@ class RosThread(threading.Thread):
         
         rospy.Timer(rospy.Duration(1.0), self.emit_ui_data_update) # Update data 1Hz
         # rospy.Subscriber(HMI_CMD_TOPIC,Int32, self.update_hmi_cmd)
-
-
 
         rospy.spin()
 
@@ -102,51 +100,14 @@ class RosThread(threading.Thread):
     def emit_ui_data_update(self, msg):
         # print(self.data_store["devices"])
         self.data_store["devices"] = self.device_status_reader.get_status()
-        #print("Emitting ui_data_update", self.data_store["devices"])
+        # print("Emitting ui_data_update", self.data_store["devices"])
         self.ui_data_update.emit(self.data_store)
-
-
-class TouchZoomInteractor(QVTKRenderWindowInteractor):
-    def __init__(self, parent=None):
-        super().__init__(parent)
-        self._last_dist = None  # Khoảng cách giữa 2 điểm touch trước đó
-        self.setAttribute(QtCore.Qt.WA_AcceptTouchEvents)
-
-    def event(self, e):
-        if e.type() == QtCore.QEvent.TouchBegin:
-            if len(e.touchPoints()) >= 2:
-                tp1, tp2 = e.touchPoints()[0], e.touchPoints()[1]
-                self._last_dist = (tp1.pos() - tp2.pos()).manhattanLength()
-            return True
-
-        elif e.type() == QtCore.QEvent.TouchUpdate:
-            if len(e.touchPoints()) >= 2 and self._last_dist is not None:
-                tp1, tp2 = e.touchPoints()[0], e.touchPoints()[1]
-                cur_dist = (tp1.pos() - tp2.pos()).manhattanLength()
-                delta = cur_dist - self._last_dist
-                self.zoom(delta)
-                self._last_dist = cur_dist
-            return True
-
-        elif e.type() == QtCore.QEvent.TouchEnd:
-            self._last_dist = None
-            return True
-
-        return super().event(e)
-
-    def zoom(self, delta):
-        renderer = self.GetRenderWindow().GetRenderers().GetFirstRenderer()
-        camera = renderer.GetActiveCamera()
-        factor = 1.0 + delta * 0.01  # Điều chỉnh tốc độ zoom
-        if factor > 0:
-            camera.Zoom(factor)
-            self.GetRenderWindow().Render()
 
 
 class App(QMainWindow):
 
     cloud_received_signal = pyqtSignal(object)
-    ui_send_cmd_signale = pyqtSignal(int)
+    ui_send_cmd_signal = pyqtSignal(int)
     ui_data_update = pyqtSignal(dict)
 
     def __init__(self, parent=None):
@@ -168,12 +129,12 @@ class App(QMainWindow):
             self.ui.tab_setting.setLayout(QVBoxLayout())
         self.ui.tab_setting.layout().addWidget(self.setting_page_widget)
 	
-        self.ros_thread = RosThread(self.cloud_received_signal, self.ui_send_cmd_signale, self.ui_data_update)
+        self.ros_thread = RosThread(self.cloud_received_signal, self.ui_send_cmd_signal, self.ui_data_update)
 
         self.cloud_received_signal.connect(self.update_pointcloud)
         self.ui_data_update.connect(self.update_data)
 
-        self.ui_send_cmd_signale.connect(self.ros_thread.send_command)
+        self.ui_send_cmd_signal.connect(self.ros_thread.send_command)
         
         self.ros_thread.start()
         
@@ -184,7 +145,6 @@ class App(QMainWindow):
         self.vl.setSpacing(0)
         
         self.vtkWidget = QVTKRenderWindowInteractor(self.ui.cloudFrame)
-        #self.vtkWidget = TouchZoomInteractor(self.ui.cloudFrame)
 
         self.vl.addWidget(self.vtkWidget)
         
@@ -237,7 +197,7 @@ class App(QMainWindow):
         self.lblNotification.setStyleSheet("margin-left: 5px;")  
         self.ui.statusbar.addWidget(self.lblNotification)
 
-        self.data_binder = DataBinder(self.ui.tab_system)
+        self.data_binder = DataBinder(self.ui.centralFrame)
 
         load_config_to_ui(self.ui.tab_setting)
   
@@ -259,7 +219,7 @@ class App(QMainWindow):
         # Tạo QMessageBox không truyền parent → trở thành top-level
         msg = QMessageBox()
         msg.setWindowTitle("Confirmation")
-        msg.setText("Are you sure you want to exit?")
+        msg.setText("Are you sure you want to quit?")
         msg.setStandardButtons(QMessageBox.Yes | QMessageBox.No)
         msg.setDefaultButton(QMessageBox.No)
 
@@ -279,34 +239,32 @@ class App(QMainWindow):
 
     
     def start_prescan(self):
-        # self.cmd_pub.publish(String("start_prescan"))
-        # self.status_label.setText("Requested PreScan...")
-       
-        self.ui_send_cmd_signale.emit(PPSCommand.START_PRESCAN.value)
+        rospy.loginfo("Start prescan")
+        self.ui_send_cmd_signal.emit(PPSCommand.START_PRESCAN.value)
 
     def start_postscan(self):
-        self.ui_send_cmd_signale.emit(PPSCommand.START_POSTSCAN.value)
-        # self.status_label.setText("Requested PostScan...")
+        rospy.loginfo("Start postscan")
+        self.ui_send_cmd_signal.emit(PPSCommand.START_POSTSCAN.value)
 
     def start_compare(self):
-        self.ui_send_cmd_signale.emit(PPSCommand.START_COMPARE.value)
-        # self.status_label.setText("Requested Compare...")        
+        rospy.loginfo("Start compare")
+        self.ui_send_cmd_signal.emit(PPSCommand.START_COMPARE.value)
     
     def cloud_callback(self, msg):
-        rospy.logwarn("Received pointcloud")
+        rospy.loginfo("Received pointcloud")
         self.cloud_received.emit(msg)
 
     def open_scanner(self):
-        # self.cmd_pub.publish(String("open_scanner"))
-        # self.status_label.setText("Opening Scanner...")
-        self.ui_send_cmd_signale.emit(PPSCommand.OPEN_HOUSING.value)
+        rospy.loginfo("Open scanner")
+        self.ui_send_cmd_signal.emit(PPSCommand.OPEN_HOUSING.value)
 
     def close_scanner(self):
-        # Cancel job and stop scaner
-        self.ui_send_cmd_signale.emit(PPSCommand.CLOSE_HOUSING.value)
+        rospy.loginfo("Close scanner")
+        self.ui_send_cmd_signal.emit(PPSCommand.CLOSE_HOUSING.value)
    
     def on_cancel(self):
-        self.ui_send_cmd_signale.emit(PPSCommand.CANCEL_JOB.value)
+        rospy.loginfo("Cancel current job")
+        self.ui_send_cmd_signal.emit(PPSCommand.CANCEL_JOB.value)
 
 
     def __load_sample(self):

@@ -29,7 +29,7 @@ class ScanManagerNode:
         # action_server_name like "/blk360g2/start_scan" send request scan to device
         rospy.loginfo("Starting HMI")
         self.state_pub = rospy.Publisher("/pps/state", String, queue_size=10, latch=True)
-        self.current_state = "IDLE"
+        self.current_state = DeviceStatus.IDLE
 
         # self.scan_time_seconds = scan_time_seconds
         # self.__scan_action_client = actionlib.SimpleActionClient(action_server_name, TimedScanAction)

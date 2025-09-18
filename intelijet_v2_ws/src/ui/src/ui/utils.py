@@ -3,18 +3,9 @@ import numpy as np
 import struct
 import sensor_msgs.point_cloud2 as pc2
 from vtk.util import numpy_support
-from sensor_msgs.msg import PointCloud2
 
-import rospy
-import std_msgs.msg
 import numpy as np
-import ros_numpy
-from collections import defaultdict
-from datetime import datetime
-from cv_bridge import CvBridge
-import cv2
-import matplotlib
-import matplotlib.pyplot as plt
+
 
 def ros_pointcloud2_to_vtk_polydata(msg):
     points = []

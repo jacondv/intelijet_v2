@@ -1,7 +1,9 @@
 from shared.config_loader import CONFIG as cfg
 from PyQt5 import QtWidgets
-from PyQt5.QtWidgets import QWidget, QLineEdit, QLabel, QPushButton, QCheckBox
 from PyQt5.QtCore import QObject
+
+from PyQt5.QtWidgets import QWidget, QLineEdit, QLabel, QPushButton, QCheckBox
+from shared.msg import DeviceStatus
 # ===== Hàm load dữ liệu vào UI =====
 
 config_mapping = {
@@ -130,14 +132,6 @@ def load_ui_to_config(widget, data_maping=config_mapping):
     return cfg
 
 
-# ===== Hàm set style cho button =====
-status_ui_mapping = {
-    "lidar": "lblLidarStatus",  
-    "encoder": "lblEncoderStatus",
-    "pcan": "lblPCANStatus",
-    "camera": "lblCameraStatus",
-}
-
 
 BUTTON_COLORS = {
     "active":   "#00FF00",  # Xanh lá - đang hoạt động
@@ -148,82 +142,91 @@ BUTTON_COLORS = {
     "ready":    "#0000FF",  # Xanh dương - sẵn sàng
 }
 
-button_state = {
-
-    "btnPreScan": {
-        "border-left": f"8px solid {BUTTON_COLORS['default']}"
-    },
-    "btnPostScan": {
-        "border-left": f"8px solid  {BUTTON_COLORS['default']}"    
-    },
-    "btnCompare": {
-        "border-left": f"8px solid  {BUTTON_COLORS['default']}"   
-    },
-    "btnCancel": {
-        "border-left": f"8px solid  {BUTTON_COLORS['default']}"   
-    },
-    "btnOpenScanner": {
-        "border-left": f"8px solid  {BUTTON_COLORS['default']}"    
-    },
-    "btnCloseScanner": {
-        "border-left": f"8px solid  {BUTTON_COLORS['default']}"    
-    }
-
-}
-
-def set_button_stage(button_name, state="default"):
-
-    global button_state
-
+def set_control_button_stage(widget, state="default"):
     hex_color = BUTTON_COLORS.get(state, BUTTON_COLORS['default'])
     # đảm bảo hợp lệ
     if not (isinstance(hex_color, str) and hex_color.startswith("#") and len(hex_color) == 7):
         raise ValueError("The color must be in hex #RRGGBB, for example: #FF0000")
 
     # Cập nhật vào state_map
-    button_state[button_name] = {
-        "border-left": f"2px solid {hex_color}"
+    style_dict = {
+        "border-left": f"8px solid {hex_color}",
+        "padding": "40px 0px 40px 0px"
     }
+    style_str = "; ".join([f"{k}: {v}" for k, v in style_dict.items()])
+    if widget:
+        widget.setStyleSheet(style_str)
 
 
 
 class DataBinder:
-    def __init__(self,root_widget: QtWidgets.QWidget, mapping = status_ui_mapping):
+    def __init__(self,root_widget: QtWidgets.QWidget):
         """
         mapping: dict ánh xạ key trong status -> objectName của widget
         root_widget: QMainWindow/QWidget gốc
         """
-        self.mapping = mapping
+
         self.root_widget = root_widget
         self._widget_cache = {}
         self._build_cache()
 
     def _build_cache(self):
-        """Tìm và lưu tất cả widget vào cache"""
-        for key, widget_name in self.mapping.items():
-            child = self.root_widget.findChild(QtWidgets.QWidget, widget_name)
-            if child:
-                self._widget_cache[key] = child
+        """Quét toàn bộ widget con và lưu theo objectName"""
+        for child in self.root_widget.findChildren(QtWidgets.QWidget):
+            name = child.objectName()
+            if name:  # chỉ cache widget có đặt tên
+                self._widget_cache[name] = child
 
-    def update_ui_from_status(self, status: dict):
-        """Update UI từ dict status, dùng cache để tránh findChild nhiều lần"""
+
+    def _update_control_button_style(self, status: dict):
         for key, values in status.items():
-            value = values['device_state']
-            child = self._widget_cache.get(key)
-            if not child:
-                continue
-            if isinstance(child, (QtWidgets.QLineEdit, QtWidgets.QLabel)):
-                child.setText(str(value))
-            elif isinstance(child, QtWidgets.QCheckBox):
-                child.setChecked(bool(value))
-            elif isinstance(child, QtWidgets.QSpinBox):
-                child.setValue(int(value))
-            elif isinstance(child, QtWidgets.QComboBox):
-                idx = child.findText(str(value))
-                if idx >= 0:
-                    child.setCurrentIndex(idx)
+            if key.lower() in ['pps']:
+                value = values['process_state']
 
+                if value == DeviceStatus.PRESCAN:
+                    for btn_name in ['btnPreScan', 'btnPostScan', 'btnCompare', 'btnCancel', 'btnOpenScanner', 'btnCloseScanner']:
+                        widget = self._widget_cache.get(btn_name)
+                        if not widget:
+                            continue  
+                        if btn_name == 'btnPreScan':
+                            set_control_button_stage(widget, 'active')
+                        else:
+                            set_control_button_stage(widget, 'inactive')
+                elif value == DeviceStatus.POSTSCAN:
 
+                    for btn_name in ['btnPreScan', 'btnPostScan', 'btnCompare', 'btnCancel', 'btnOpenScanner', 'btnCloseScanner']:
+                        widget = self._widget_cache.get(btn_name)
+                        if btn_name == 'btnPostScan':               
+                            set_control_button_stage(widget, 'active')
+                        else:
+                            set_control_button_stage(widget, 'inactive')
+                
+                elif value == DeviceStatus.OPEN_HOUSING:
+                    for btn_name in ['btnPreScan', 'btnPostScan', 'btnCompare', 'btnCancel', 'btnOpenScanner', 'btnCloseScanner']:
+                        widget = self._widget_cache.get(btn_name)
+                        if btn_name == 'btnOpenScanner':               
+                            set_control_button_stage(widget, 'active')
+                        else:
+                            set_control_button_stage(widget, 'inactive')
+                
+                elif value == DeviceStatus.CLOSE_HOUSING:
+                    for btn_name in ['btnPreScan', 'btnPostScan', 'btnCompare', 'btnCancel', 'btnOpenScanner', 'btnCloseScanner']:
+                        widget = self._widget_cache.get(btn_name)                        
+                        if btn_name == 'btnCloseScanner':               
+                            set_control_button_stage(widget, 'active')
+                        else:
+                            set_control_button_stage(widget, 'inactive')
+                
+                else:
+
+                    for btn_name in ['btnPreScan', 'btnPostScan', 'btnCompare', 'btnCancel', 'btnOpenScanner', 'btnCloseScanner']:
+                        widget = self._widget_cache.get(btn_name)
+                        set_control_button_stage(widget, 'default')
+
+                
+    def update_ui_from_status(self, status: dict):
+        self._update_control_button_style(status)
+       
 
 
 class UiObjectManager(QObject):

@@ -9,7 +9,7 @@ devices:
     mode: continuous
   - name: encoder
     topic: /encoder01/can_msg
-    msg_type: sensor_msgs/Image
+    msg_type: can_msgs/Frame
     timeout: 3.0
     mode: continuous
   - name: pcan
