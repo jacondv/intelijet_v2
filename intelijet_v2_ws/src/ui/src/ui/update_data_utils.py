@@ -1,3 +1,5 @@
+from enum import Enum
+
 from shared.config_loader import CONFIG as cfg
 from PyQt5 import QtWidgets
 from PyQt5.QtCore import QObject
@@ -132,23 +134,22 @@ def load_ui_to_config(widget, data_maping=config_mapping):
     return cfg
 
 
+class Status(Enum):
+    ACTIVE   = ("Active", "#00FF00")
+    INACTIVE = ("Inactive", "#CCCCCC")
+    DEFAULT  = ("Default", "#FFFFFF")
+    WARNING  = ("Warning", "#FFA500")
+    ERROR    = ("Error", "#FF0000")
+    READY    = ("Ready", "#0000FF")
 
-BUTTON_COLORS = {
-    "active":   "#00FF00",  # Xanh lá - đang hoạt động
-    "inactive": "#CCCCCC",  # Xám - không hoạt động
-    "default":  "#FFA500",  # Trắng - trạng thái mặc định
-    "warning":  "#FFA500",  # Cam - cảnh báo
-    "error":    "#FF0000",  # Đỏ - lỗi nghiêm trọng
-    "ready":    "#0000FF",  # Xanh dương - sẵn sàng
-}
+    def label(self):
+        return self.value[0]
 
-def set_control_button_stage(widget, state="default"):
-    hex_color = BUTTON_COLORS.get(state, BUTTON_COLORS['default'])
-    # đảm bảo hợp lệ
-    if not (isinstance(hex_color, str) and hex_color.startswith("#") and len(hex_color) == 7):
-        raise ValueError("The color must be in hex #RRGGBB, for example: #FF0000")
+    def color(self):
+        return self.value[1]
 
-    # Cập nhật vào state_map
+def set_control_button_stage(widget, state=Status.DEFAULT):
+    hex_color = state.color()
     style_dict = {
         "border-left": f"8px solid {hex_color}",
         "padding": "40px 0px 40px 0px"
@@ -189,39 +190,35 @@ class DataBinder:
                         if not widget:
                             continue  
                         if btn_name == 'btnPreScan':
-                            set_control_button_stage(widget, 'active')
+                            set_control_button_stage(widget, Status.ACTIVE)
                         else:
-                            set_control_button_stage(widget, 'inactive')
+                            set_control_button_stage(widget, Status.INACTIVE)
                 elif value == DeviceStatus.POSTSCAN:
 
                     for btn_name in ['btnPreScan', 'btnPostScan', 'btnCompare', 'btnCancel', 'btnOpenScanner', 'btnCloseScanner']:
                         widget = self._widget_cache.get(btn_name)
                         if btn_name == 'btnPostScan':               
-                            set_control_button_stage(widget, 'active')
+                            set_control_button_stage(widget, Status.ACTIVE)
                         else:
-                            set_control_button_stage(widget, 'inactive')
+                            set_control_button_stage(widget, Status.INACTIVE)
                 
                 elif value == DeviceStatus.OPEN_HOUSING:
                     for btn_name in ['btnPreScan', 'btnPostScan', 'btnCompare', 'btnCancel', 'btnOpenScanner', 'btnCloseScanner']:
                         widget = self._widget_cache.get(btn_name)
                         if btn_name == 'btnOpenScanner':               
-                            set_control_button_stage(widget, 'active')
+                            set_control_button_stage(widget, Status.ACTIVE)
                         else:
-                            set_control_button_stage(widget, 'inactive')
+                            set_control_button_stage(widget, Status.INACTIVE)
                 
                 elif value == DeviceStatus.CLOSE_HOUSING:
                     for btn_name in ['btnPreScan', 'btnPostScan', 'btnCompare', 'btnCancel', 'btnOpenScanner', 'btnCloseScanner']:
                         widget = self._widget_cache.get(btn_name)                        
                         if btn_name == 'btnCloseScanner':               
-                            set_control_button_stage(widget, 'active')
+                            set_control_button_stage(widget, Status.ACTIVE)
                         else:
-                            set_control_button_stage(widget, 'inactive')
-                
-                else:
+                            set_control_button_stage(widget, Status.INACTIVE)
 
-                    for btn_name in ['btnPreScan', 'btnPostScan', 'btnCompare', 'btnCancel', 'btnOpenScanner', 'btnCloseScanner']:
-                        widget = self._widget_cache.get(btn_name)
-                        set_control_button_stage(widget, 'default')
+                return
 
                 
     def update_ui_from_status(self, status: dict):

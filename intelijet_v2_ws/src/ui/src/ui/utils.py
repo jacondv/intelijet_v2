@@ -134,3 +134,8 @@ def convert_pointcloud2_to_o3d(msg):
     except Exception as e:
         rospy.logerr(f"Failed to convert PointCloud2 to Open3D format: {e}")
         return None
+
+
+
+
+

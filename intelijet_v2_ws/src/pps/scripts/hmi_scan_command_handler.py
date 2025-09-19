@@ -16,9 +16,9 @@ from pps.sick_scan_controller import SickScanController
 
 from shared.config_loader import CONFIG as cfg
 
-def get_scanner_controller(active_lidar=cfg.active_lidar):
+def get_scanner_controller(status_callback=None, active_lidar=cfg.active_lidar):
     if active_lidar == "lms511":
-        controller = SickScanController()
+        controller = SickScanController(status_callback=status_callback)
         return controller
     
 
@@ -42,7 +42,7 @@ class ScanManagerNode:
 
         self.__align_service_client = AlignServiceClient()
         # rospy.logwarn("Starting AlignServiceClient")
-        self.scanner_controller = get_scanner_controller()
+        self.scanner_controller = get_scanner_controller(status_callback=self.set_state)
 
 
     def is_state(self, state):
@@ -53,39 +53,30 @@ class ScanManagerNode:
         self.current_state = state
         self.state_pub.publish(String(data=state))
 
-
     def cmd_cb(self, msg):
         cmd = msg.data
-        rospy.logwarn("Received HMI command: %d", cmd)
+        rospy.loginfo("[ScanManagerNode] Received HMI command: %d", cmd)
 
         if cmd == PPSCommand.START_PRESCAN.value:
-        
             if self.is_state(DeviceStatus.PRESCAN):
-                rospy.logwarn("Already in PRESCAN state, ignoring command")
+                rospy.logwarn("[ScanManagerNode] Already in PRESCAN state, ignoring command")
                 return
             
-            self.set_state(DeviceStatus.PRESCAN)
             self.scanner_controller.run_prescan()
                    
-            # self.__send_scan_cmd(output_topic=cfg.PRE_SCAN_TOPIC)
-
         elif cmd == PPSCommand.START_POSTSCAN.value:    
             if self.is_state(DeviceStatus.POSTSCAN):
                 rospy.logwarn("Already in POSTSCAN state, ignoring command")
                 return
-            self.set_state(DeviceStatus.POSTSCAN)
+            
             self.scanner_controller.run_postscan()
-
-            # if self.__send_scan_cmd(output_topic=cfg.POST_SCAN_TOPIC):
-            #     # post_scan_cloud_trigger được gọi bằng hàm notify sẽ sinh ra 1 message rỗng sau khi cloud duoc publish
-            #     # rospy.wait_for_message("/post_scan_cloud_trigger", Empty, timeout=30)
-            #     rospy.loginfo("Post scan complete")
 
         elif cmd == PPSCommand.CANCEL_JOB.value:
             self.scanner_controller.on_cancel()
             self.set_state(DeviceStatus.IDLE)
 
         elif cmd == PPSCommand.START_COMPARE.value:
+
             rospy.loginfo("Start compare command received")
             success, message = self.__align_service_client.call()
             if success:
@@ -97,16 +88,13 @@ class ScanManagerNode:
             if self.is_state(DeviceStatus.OPEN_HOUSING):
                 rospy.logwarn("Already in OPEN_HOUSING state, ignoring command")
                 return
-            self.set_state(DeviceStatus.OPEN_HOUSING)
             self.scanner_controller.open_housing_auto()
 
         elif cmd == PPSCommand.CLOSE_HOUSING.value:
             if self.is_state(DeviceStatus.CLOSE_HOUSING):
                 rospy.logwarn("Already in CLOSE_HOUSING state, ignoring command")
                 return  
-            self.set_state(DeviceStatus.CLOSE_HOUSING)
             self.scanner_controller.close_housing_auto()
-
 
         else:
             pass
