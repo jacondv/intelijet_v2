@@ -120,9 +120,9 @@ class App(QMainWindow):
         #     self.vtk_viewer.update(polydata)
 
     def on_select_job_clicked(self):
+        self.jobsetting_page_in_toolbox.load_jobs_from_disk()
         if not self.jobsetting_page_in_toolbox.isVisible():
             self.jobsetting_page_in_toolbox.setVisible(True)
-            self.jobsetting_page_in_toolbox.load_jobs_from_disk()
 
     def accept_job(self):
         job_name = None

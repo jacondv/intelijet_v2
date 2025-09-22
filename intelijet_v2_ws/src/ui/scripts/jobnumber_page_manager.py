@@ -28,6 +28,7 @@ class JobNumberPageManager(QWidget):
 
 
     def load_jobs_from_disk(self):
+        self.ui.lstJobnumber.clear()
         for job_name in os.listdir(self.jobs_root):
             job_path = os.path.join(self.jobs_root, job_name)
             if os.path.isdir(job_path):

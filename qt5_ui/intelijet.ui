@@ -14,7 +14,65 @@
    <string>Jacon Intelijet</string>
   </property>
   <property name="styleSheet">
-   <string notr="true">*{
+   <string notr="true">
+/* --- Button mặc định --- */
+QPushButton {
+    background-color: #2196F3;     /* xanh dương */
+    color: white;
+    border-radius: 6px;
+    padding: 8px 16px;
+    font-size: 14px;
+    font-weight: bold;
+}
+QPushButton:hover {
+    background-color: #1976D2;
+}
+QPushButton:pressed {
+    background-color: #0D47A1;
+}
+
+/* --- Text editor (QLineEdit &amp; QTextEdit) --- */
+QLineEdit, QTextEdit {
+    border: 1px solid #BDBDBD;
+    border-radius: 4px;
+    padding: 6px;
+    font-size: 14px;
+    background: #FAFAFA;
+}
+QLineEdit:focus, QTextEdit:focus {
+    border: 1px solid #2196F3;
+    background: #FFFFFF;
+}
+
+QListWidget {
+    border: 1px solid #BDBDBD;
+    border-radius: 6px;
+    padding: 4px;
+    background: #FAFAFA;
+}
+
+QListWidget::item {
+    height: 40px;
+    padding-left: 10px;
+    border-bottom: 1px solid #E0E0E0;
+    font-size: 14px;
+}
+
+QListWidget::item:selected {
+    background-color: #2196F3;
+    color: white;
+    font-weight: bold;
+}
+
+QListWidget::item:hover {
+    background-color: #BBDEFB;
+}
+
+
+
+
+
+*{
 border: none;
 color: back;
 font-size: 17px;
@@ -92,6 +150,17 @@ font-size: 17px;
     background-color: #185F63;
 }
 
+#btnShutdown {
+    background-color: #185F63;
+
+}
+#lblCurrentJob, #lblCurrentJob_title {
+	color: white;
+}
+#btnSelectJob {
+	border: 1px solid white;
+}
+
 #menu_small {
 
 }
@@ -114,8 +183,6 @@ font-size: 17px;
 
 
 }
-
-
 
 QTabBar::tab {
     height: 110px;     
@@ -145,14 +212,13 @@ QTabBar::tab:selected {
 
 
 
-
 </string>
   </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QGridLayout" name="gridLayout_2">
     <item row="0" column="0">
      <widget class="QWidget" name="centralFrame" native="true">
-      <layout class="QHBoxLayout" name="horizontalLayout_2" stretch="2,0,5,2">
+      <layout class="QHBoxLayout" name="horizontalLayout_2" stretch="3,0,5,2">
        <property name="spacing">
         <number>0</number>
        </property>
@@ -186,16 +252,13 @@ QTabBar::tab:selected {
               <pointsize>-1</pointsize>
              </font>
             </property>
-            <property name="currentIndex">
-             <number>0</number>
-            </property>
-            <widget class="QWidget" name="page_4">
+            <widget class="QWidget" name="tboxPage1">
              <property name="geometry">
               <rect>
                <x>0</x>
                <y>0</y>
-               <width>243</width>
-               <height>783</height>
+               <width>332</width>
+               <height>676</height>
               </rect>
              </property>
              <attribute name="icon">
@@ -203,7 +266,7 @@ QTabBar::tab:selected {
                <normaloff>:/icon/icon/home-4-48 (2).ico</normaloff>:/icon/icon/home-4-48 (2).ico</iconset>
              </attribute>
              <attribute name="label">
-              <string>General</string>
+              <string>Jobs view</string>
              </attribute>
              <layout class="QVBoxLayout" name="verticalLayout_2">
               <property name="spacing">
@@ -222,35 +285,30 @@ QTabBar::tab:selected {
                <number>0</number>
               </property>
               <item>
-               <widget class="QPushButton" name="pushButton">
-                <property name="minimumSize">
-                 <size>
-                  <width>0</width>
-                  <height>0</height>
-                 </size>
-                </property>
-                <property name="tabletTracking">
-                 <bool>false</bool>
-                </property>
-                <property name="text">
-                 <string>Operator</string>
-                </property>
-                <property name="checkable">
-                 <bool>true</bool>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="QPushButton" name="pushButton_2">
-                <property name="minimumSize">
-                 <size>
-                  <width>0</width>
-                  <height>0</height>
-                 </size>
-                </property>
-                <property name="text">
-                 <string>Job Setting</string>
-                </property>
+               <widget class="QWidget" name="widget_3" native="true">
+                <layout class="QHBoxLayout" name="horizontalLayout_4" stretch="0,3,2">
+                 <item>
+                  <widget class="QLabel" name="lblCurrentJob_title">
+                   <property name="text">
+                    <string>Job: </string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QLabel" name="lblCurrentJob">
+                   <property name="text">
+                    <string>#Jobtitle</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QPushButton" name="btnSelectJob">
+                   <property name="text">
+                    <string>Select Job</string>
+                   </property>
+                  </widget>
+                 </item>
+                </layout>
                </widget>
               </item>
               <item>
@@ -266,34 +324,53 @@ QTabBar::tab:selected {
                 </property>
                </spacer>
               </item>
-              <item>
-               <widget class="QPushButton" name="btnShutdown">
-                <property name="minimumSize">
-                 <size>
-                  <width>0</width>
-                  <height>0</height>
-                 </size>
-                </property>
-                <property name="text">
-                 <string>Exit</string>
-                </property>
-                <property name="icon">
-                 <iconset resource="resource.qrc">
-                  <normaloff>:/icon/icon/power-button.png</normaloff>:/icon/icon/power-button.png</iconset>
-                </property>
-                <property name="iconSize">
-                 <size>
-                  <width>32</width>
-                  <height>32</height>
-                 </size>
-                </property>
-                <property name="checkable">
-                 <bool>false</bool>
-                </property>
-               </widget>
-              </item>
              </layout>
             </widget>
+            <widget class="QWidget" name="tboxPage2">
+             <property name="geometry">
+              <rect>
+               <x>0</x>
+               <y>0</y>
+               <width>332</width>
+               <height>676</height>
+              </rect>
+             </property>
+             <attribute name="label">
+              <string>History</string>
+             </attribute>
+            </widget>
+           </widget>
+          </item>
+          <item>
+           <widget class="QWidget" name="exit_widget" native="true">
+            <layout class="QHBoxLayout" name="horizontalLayout_3">
+             <item>
+              <widget class="QPushButton" name="btnShutdown">
+               <property name="minimumSize">
+                <size>
+                 <width>0</width>
+                 <height>0</height>
+                </size>
+               </property>
+               <property name="text">
+                <string>Exit</string>
+               </property>
+               <property name="icon">
+                <iconset resource="resource.qrc">
+                 <normaloff>:/icon/icon/power-button.png</normaloff>:/icon/icon/power-button.png</iconset>
+               </property>
+               <property name="iconSize">
+                <size>
+                 <width>32</width>
+                 <height>32</height>
+                </size>
+               </property>
+               <property name="checkable">
+                <bool>false</bool>
+               </property>
+              </widget>
+             </item>
+            </layout>
            </widget>
           </item>
          </layout>
@@ -321,6 +398,12 @@ QTabBar::tab:selected {
              <size>
               <width>25</width>
               <height>100</height>
+             </size>
+            </property>
+            <property name="maximumSize">
+             <size>
+              <width>25</width>
+              <height>16777215</height>
              </size>
             </property>
             <property name="styleSheet">
@@ -368,7 +451,7 @@ border-radius:12px;</string>
           <enum>QTabWidget::West</enum>
          </property>
          <property name="currentIndex">
-          <number>2</number>
+          <number>0</number>
          </property>
          <property name="usesScrollButtons">
           <bool>false</bool>
@@ -424,6 +507,11 @@ border-radius:12px;</string>
            <string>Setting</string>
           </attribute>
           <layout class="QGridLayout" name="gridLayout"/>
+         </widget>
+         <widget class="QWidget" name="tab_jobnumber">
+          <attribute name="title">
+           <string>Job No.</string>
+          </attribute>
          </widget>
          <widget class="QWidget" name="tab_system">
           <attribute name="title">
@@ -625,6 +713,9 @@ border-radius:12px;</string>
           </item>
           <item>
            <widget class="QPushButton" name="btnPreScan">
+            <property name="styleSheet">
+             <string notr="true"/>
+            </property>
             <property name="text">
              <string>PRE-SCAN</string>
             </property>
@@ -704,10 +795,6 @@ border-radius:12px;</string>
    </property>
   </widget>
  </widget>
- <tabstops>
-  <tabstop>pushButton</tabstop>
-  <tabstop>pushButton_2</tabstop>
- </tabstops>
  <resources>
   <include location="resource.qrc"/>
  </resources>
