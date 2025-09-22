@@ -45,6 +45,7 @@ class SickScanController(GenericScanController):
         rospy.sleep(2)
         if point_cloud and publisher:
             publisher.publish(point_cloud)
+            point_cloud = None
             log_status(name=cfg.NOTIFICATION, message="[INFO] Scan completed")
 
         # ---- Close housing back ----
@@ -82,8 +83,8 @@ class SickScanController(GenericScanController):
         # speed, target, timeout (giây)
         speeds_targets = [
             ('fast', cfg.housing_end_position, 5.0),   # Step bắt đầu close nhanh
-            ('medium', (cfg.housing_start_position + cfg.housing_end_position)/2, 8.0),  # Step giữa
-            ('slow', cfg.housing_start_position, 12.0)  # Step cuối, tới vị trí start
+            ('medium', (cfg.housing_start_position + cfg.housing_end_position)/2, 10.0),  # Step giữa
+            ('slow', cfg.housing_start_position-5.0, 3.0)  # Step cuối, tới vị trí start
         ]
 
         for speed, target, timeout in speeds_targets:
@@ -91,11 +92,11 @@ class SickScanController(GenericScanController):
             if not self.wait_until_target(target, direction=False, timeout=timeout):
                 log_status(name=cfg.NOTIFICATION,
                         message=f"[WARN] Encoder did not reach target {target}° while closing at speed {speed}")
-                self.housing.stop()
+                self.housing.stop()     
                 return False
 
+        # rospy.sleep(2)
         self.housing.stop()
-        rospy.sleep(2)
         return True
 
 

@@ -133,8 +133,8 @@ class GenericScanController(ABC):
         try:
             cloud = self.run_workflow(publisher)
             self.reset()
-            if cloud is not None and publisher:
-                publisher.publish(cloud)
+            # if cloud is not None and publisher:
+            #     publisher.publish(cloud)
         except Exception as e:
             rospy.logerr(f"Error during scan workflow: {e}")
         finally:
