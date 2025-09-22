@@ -5,8 +5,8 @@ from PyQt5.QtCore import pyqtSignal
 from ui.jobsetting_page_ui import Ui_frmJobSetting
 from shared.config_loader import CONFIG as cfg
 
-# BASE_DIR = cfg.BASE_DIR
-BASE_DIR = "/mnt/c/work/projects/intelijet_v2"
+BASE_DIR = cfg.BASE_DIR
+# BASE_DIR = "/mnt/c/work/projects/intelijet_v2"
 class JobNumberPageManager(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
