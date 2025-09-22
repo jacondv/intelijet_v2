@@ -184,11 +184,19 @@ class App(QMainWindow):
             # print("UTC:",   time.strftime("%Y%m%d_%H%M%S", time.gmtime()))
             timestamp_str = time.strftime("%Y%m%d_%H%M%S", time.localtime())
             filename = os.path.join(folder, f"{job_number}_{timestamp_str}_{safe_topic}.ply")
+
+            #Color process
+            colors = polydata.GetPointData().GetScalars()
+            if colors is not None:
+                colors.SetName("RGB")  # đặt tên cho array
+                polydata.GetPointData().SetScalars(colors)
+
             writer = vtk.vtkPLYWriter()
             writer.SetFileName(filename)
             writer.SetInputData(polydata)
             writer.SetFileTypeToBinary()  # hoặc SetFileTypeToBinary() để tiết kiệm dung lượng
             writer.SetColorModeToDefault()  # ghi màu nếu có
+            writer.SetArrayName("RGB")
             writer.Update()
             writer.Write()
 

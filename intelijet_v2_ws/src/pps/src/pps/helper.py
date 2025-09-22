@@ -418,8 +418,8 @@ def convert_open3d_to_pointcloud2_with_diff(o3d_cloud, diff_array=None, frame_id
         fields.append(('rgb', np.float32))
     
     if diff_array is not None:
-        assert len(diff_array) == num_points, f"diff_array phải cùng số điểm với point cloud"
-        fields.append(('diff', np.float32))
+        assert len(diff_array) == num_points, f"diff_array must have the same number of points as the point cloud"
+        fields.append(('Distances', np.float32))
 
     # Tạo array
     data = np.zeros(num_points, dtype=fields)
@@ -429,7 +429,7 @@ def convert_open3d_to_pointcloud2_with_diff(o3d_cloud, diff_array=None, frame_id
     if has_colors:
         data['rgb'] = rgb_float
     if diff_array is not None:
-        data['diff'] = diff_array.astype(np.float32)
+        data['Distances'] = diff_array.astype(np.float32)
 
     # Tạo header
     header = std_msgs.msg.Header()
