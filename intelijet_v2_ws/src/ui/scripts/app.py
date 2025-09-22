@@ -115,9 +115,9 @@ class App(QMainWindow):
 
         # --- Show main window ---
         self.showMaximized()
-        polydata = self.__load_sample()
-        if polydata:
-            self.vtk_viewer.update(polydata)
+        # polydata = self.__load_sample()
+        # if polydata:
+        #     self.vtk_viewer.update(polydata)
 
     def on_select_job_clicked(self):
         if not self.jobsetting_page_in_toolbox.isVisible():
