@@ -1,3 +1,4 @@
+import os
 import vtk
 import numpy as np
 import struct
@@ -136,6 +137,35 @@ def convert_pointcloud2_to_o3d(msg):
         return None
 
 
+def load_ply_as_polydata(filepath, voxel_size=0.01):
+    """
+    Load a PLY file using Open3D, downsample by voxel, and convert to vtkPolyData.
+
+    Args:
+        filepath (str): path to .ply file
+        voxel_size (float): voxel size for downsampling
+
+    Returns:
+        vtk.vtkPolyData: downsampled polydata, or None if failed
+    """
+    import open3d as o3d
+
+    if not os.path.isfile(filepath):
+        print(f"Error: File does not exist: {filepath}")
+        return None
+
+    # Load PLY bằng Open3D
+    pcd = o3d.io.read_point_cloud(filepath)
+    if pcd.is_empty():
+        print(f"Warning: PLY is empty: {filepath}")
+        return None
+
+    # Downsample bằng voxel
+    pcd = pcd.voxel_down_sample(voxel_size=voxel_size)
+
+    polydata = o3d_to_vtk_polydata(pcd)
+
+    return polydata
 
 
 

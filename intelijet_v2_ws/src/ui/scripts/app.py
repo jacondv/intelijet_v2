@@ -1,10 +1,13 @@
 #!/usr/bin/env python3
 import os
+#allow create file with full permission
+os.umask(0)
+
 import re
 import time
 
 import sys, subprocess
-from PyQt5.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QLabel, QWidget, QPushButton, QHBoxLayout
+from PyQt5.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QLabel, QWidget, QPushButton
 from PyQt5.QtCore import pyqtSignal
 
 
@@ -12,6 +15,7 @@ from PyQt5.QtCore import pyqtSignal
 from vtk_viewer import VTKViewer
 from ros_thread import RosThread
 from jobnumber_page_manager import JobNumberPageManager
+from history_page_manager import HistoryPageManager
 
 from data_binder import DataBinder
 from ui.update_data_utils import DataBinder, load_config_to_ui
@@ -68,12 +72,12 @@ class App(QMainWindow):
         self.ui.tboxPage1.layout().insertWidget(1,self.jobsetting_page_in_toolbox)
 
         #Page 2: History view
-        self.history_page_in_toolbox = JobNumberPageManager(self.ui.tboxPage2)
-        self.history_page_in_toolbox.ui.widget_2.hide()
-        self.history_page_in_toolbox.hide_all_delete_buttons()
+        self.history_page_in_toolbox = HistoryPageManager(self.ui.tboxPage2)
         if self.ui.tboxPage2.layout() is None:
             self.ui.tboxPage2.setLayout(QVBoxLayout())
         self.ui.tboxPage2.layout().insertWidget(1,self.history_page_in_toolbox)
+
+        self.history_page_in_toolbox.polydataSignal.connect(self.update_pointcloud_from_data)
 
 
         # --- VTK Viewer ---
@@ -141,6 +145,10 @@ class App(QMainWindow):
         self.vtk_viewer.update(polydata)
         if polydata:
             self.__save_pointcloud_polydata_as_ply(polydata, topic_name)
+
+    def update_pointcloud_from_data(self, polydata):
+        print("updated polydata from file")
+        self.vtk_viewer.update(polydata)
 
 
     # --- Slot để cập nhật dữ liệu từ ROS ---

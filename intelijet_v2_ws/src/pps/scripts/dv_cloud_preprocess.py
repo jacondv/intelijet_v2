@@ -60,31 +60,34 @@ class CloudProcessorNode:
 
         # Downsample
         if not isinstance(cloud_cropped, o3d.geometry.PointCloud):
-            rospy.logerr("cloud_cropped is not an Open3D PointCloud.")
+            rospy.logerr("[%s] cloud_cropped is not an Open3D PointCloud." % rospy.get_name())
         else:
             # cloud_cropped = cloud_cropped.voxel_down_sample(voxel_size=0.01)
             pass # giữ nguyên độ phân giải gốc
-        # Chuyển sang PointCloud2
-        # now = datetime.now().strftime("%Y%m%d_%H%M%S") 
-        # o3d.io.write_point_cloud(f"/mnt/c/work/projects/intelijet_v2/data/cloud_{now}.ply", cloud_o3d)
+
         return convert_open3d_to_pointcloud2(cloud_cropped, frame_id=msg.header.frame_id,rgb=rgb)
 
 
     def callback_pres(self, msg):
-        rospy.logwarn("Received /pre_scan_0")
+        rospy.loginfo("Received /pre_scan_0")
         processed = self.process_cloud(msg, rgb=[255,255,255])
+        if isinstance(processed, PointCloud2):
+            rospy.loginfo("processed is a PointCloud2 message.")
+        else:
+            rospy.logerr("processed is NOT a PointCloud2 message.")
+
         self.pub_pre.publish(processed)
-        # notify_one(self.pub_pre_topic + "_trigger")
+
 
     def callback_post(self, msg):
-        rospy.logwarn("Received /post_scan_0")
+        rospy.loginfo("Received /post_scan_0")
         processed = self.process_cloud(msg, rgb=[255,255,0])
         if isinstance(processed, PointCloud2):
             rospy.loginfo("processed is a PointCloud2 message.")
         else:
             rospy.logerr("processed is NOT a PointCloud2 message.")
+            
         self.pub_post.publish(processed)
-        # notify_one(self.pub_post_topic + "_trigger")
 
 def main():
     rospy.init_node("dv_cloud_process", anonymous=False)

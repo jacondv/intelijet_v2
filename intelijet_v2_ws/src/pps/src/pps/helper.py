@@ -548,3 +548,5 @@ def convert_pointcloud2_to_pointcloud(pc2_msg):
 
     pc_msg.points = points
     return pc_msg
+
+

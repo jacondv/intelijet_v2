@@ -98,7 +98,7 @@ class CloudAlignNode:
         while self.__keypoint_manager.process_status !=2:
              rospy.sleep(0.1)
              if rospy.Time.now().to_sec() - start_time > timeout:
-                rospy.logwarn("Timeout: keypoint_manager is not ready after 10 seconds.")
+                rospy.logwarn(f"Timeout: keypoint_manager is not ready after {timeout} seconds.")
                 break
              
         if self.__keypoint_manager.is_ready():    

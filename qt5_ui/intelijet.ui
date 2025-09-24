@@ -168,7 +168,6 @@ font-size: 17px;
 #menu_main QPushButton {
     /*border-right: 1px solid #FFEB3B;     /* viền trái */
 
-    color: white;
     font-weight: normal;
 
 
@@ -178,10 +177,12 @@ font-size: 17px;
 #menu_main QPushButton:hover {
     /*border-right: 1px solid #FFEB3B;     /* viền trái */
 
-    color: white;
     font-weight: bold;
 
 
+}
+#menu_main {
+	color: while;
 }
 
 QTabBar::tab {
