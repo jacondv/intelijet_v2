@@ -136,6 +136,7 @@ class FileItemWidget(QWidget):
         self.label.setStyleSheet("""
                         QLabel {
                             color: white;
+                            font-size: 10px;
                         }
 
                     """)
