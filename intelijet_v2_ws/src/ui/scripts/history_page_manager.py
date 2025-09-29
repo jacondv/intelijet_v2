@@ -1,6 +1,6 @@
 import os
-from PyQt5.QtWidgets import QWidget, QHBoxLayout, QLineEdit, QPushButton, QListWidgetItem, QMessageBox
-from PyQt5.QtCore import pyqtSignal
+from PyQt5.QtWidgets import QWidget, QHBoxLayout, QLineEdit, QPushButton, QListWidgetItem, QMessageBox, QAbstractItemView
+from PyQt5.QtCore import pyqtSignal, Qt
 
 from ui.historyview_page_ui import Ui_frmHistoryView
 from ui.job_item_widget import JobItemWidget, FileItemWidget
@@ -20,6 +20,9 @@ class HistoryPageManager(QWidget):
         self.ui = Ui_frmHistoryView()
         self.ui.setupUi(self)
         self.load_jobs_from_disk()
+        self.ui.lstJobDetail.setHorizontalScrollBarPolicy(Qt.ScrollBarAsNeeded)
+        self.ui.lstJobDetail.setHorizontalScrollMode(QAbstractItemView.ScrollPerPixel)
+
 
 
     def setup_job_signals(self, job_widget, item, job_path):
