@@ -8,6 +8,7 @@ from sensor_msgs.msg import PointCloud2
 from laser_assembler.srv import AssembleScans2
 from shared.config_loader import CONFIG as cfg
 from shared.log_status import log_status
+from shared.msg import DeviceStatus
 
 def assemble_cloud_client(start_time, end_time):
     #rospy.wait_for_service('assemble_scans2')
@@ -34,6 +35,11 @@ class SickScanController(GenericScanController):
 
         # ---- Open housing in steps ----
         if not self._open_housing_sequence():
+            if self.status_callback:
+                if topic_name == cfg.PRE_SCAN_TOPIC:
+                    self.status_callback(DeviceStatus.PRESCAN_ERROR)
+                else:
+                    self.status_callback(DeviceStatus.POSTSCAN_ERROR)
             return None
         
         # ---- Stop housing movement before assemble ----
@@ -43,6 +49,7 @@ class SickScanController(GenericScanController):
         # ---- Assemble point cloud ----
         point_cloud = assemble_cloud_client(start_time=self.start_time, end_time=self.end_time)
         rospy.sleep(2)
+
         if point_cloud and publisher:
             publisher.publish(point_cloud)
             point_cloud = None
@@ -50,6 +57,12 @@ class SickScanController(GenericScanController):
 
         # ---- Close housing back ----
         if not self._close_housing_sequence():
+            if self.status_callback:
+                if topic_name == cfg.PRE_SCAN_TOPIC:
+                    self.status_callback(DeviceStatus.PRESCAN_ERROR)
+                else:
+                    self.status_callback(DeviceStatus.POSTSCAN_ERROR)
+
             return point_cloud  # vẫn trả về cloud nếu có
 
         return point_cloud

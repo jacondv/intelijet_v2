@@ -24,5 +24,5 @@ housing_close_speed_medium : 100 # speed in hz
 housing_close_speed_slow : 100 # speed in hz
 
 thickness:
-  min: 0.01 # minimum thickness in meter
-  max: 0.025  # maximum thickness in meter
+  target: 10  # target thickness in mm
+  tolerance: 5 # allowable tolerance in mm

@@ -9,7 +9,7 @@ from std_msgs.msg import Int32
 import threading
 from shared.config_loader import CONFIG as cfg
 
-from shared.device_monitor import StatusReader 
+from shared.device_monitor import  StatusReader 
 from shared.pps_command import PPSCommand
 from shared.log_status import unpack_log_status
 from rosgraph_msgs.msg import Log

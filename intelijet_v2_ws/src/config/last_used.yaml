@@ -45,8 +45,8 @@ housing_open_speed_fast: 115
 housing_open_speed_medium: 105
 housing_open_speed_slow: 102
 housing_close_speed_fast: 110
-housing_close_speed_medium: 110
-housing_close_speed_slow: 110
+housing_close_speed_medium: 100
+housing_close_speed_slow: 100
 thickness:
-  min: 0.01
-  max: 0.025
+  target: 10
+  tolerance: 5

@@ -10,6 +10,7 @@ from cv_bridge import CvBridge
 import cv2
 import matplotlib
 import matplotlib.pyplot as plt
+from scipy.spatial import cKDTree
 matplotlib.use('Agg')  # Không dùng GUI backend
 from sensor_msgs.msg import PointCloud2, PointCloud
 
@@ -141,7 +142,8 @@ def process_cloud(pcd, voxel_size=0.015):
     return pcd_croped
     
 
-def compute_heatmap_to_plane(source, target, k=10):
+
+def compute_heatmap_to_plane(source, target, k=10,target_thickness=0.015, tolerance_thickness=0.005):
     # Tính trước normal cho target
     target.estimate_normals(
         search_param=o3d.geometry.KDTreeSearchParamKNN(knn=k)
@@ -149,35 +151,64 @@ def compute_heatmap_to_plane(source, target, k=10):
 
     target_points = np.asarray(target.points)
     target_normals = np.asarray(target.normals)
-    target_tree = o3d.geometry.KDTreeFlann(target)
-
+    target_tree = cKDTree(target_points)
     source_points = np.asarray(source.points)
 
     distances = []
 
-    for pt in source_points:
-        # Tìm điểm gần nhất trong target
-        [_, idx, _] = target_tree.search_knn_vector_3d(pt, 1)
-        nearest_idx = idx[0]
+    distances_nn, indices = target_tree.query(source_points, k=1) # We don't need distances_nn here because we compute point-to-plane distance
 
-        centroid = target_points[nearest_idx]
-        normal = target_normals[nearest_idx]
-
-        # Khoảng cách point-to-plane
-        dist = np.abs(np.dot(pt - centroid, normal))
-        distances.append(dist)
-
-    distances = np.array(distances, dtype=np.float32)
-
-    # Scale và tô màu heatmap
-    distances_log = np.log1p(distances)
-    distances_normalized = (distances_log - distances_log.min()) / (distances_log.ptp() + 1e-9)
-
-    cmap = plt.get_cmap("jet")
-    colors = cmap(distances_normalized)[:, :3]
+    centroids = target_points[indices] 
+    normals   = target_normals[indices] 
+    diff = source_points - centroids 
+    distances = np.sum(diff * normals, axis=1)  # (N,)
+    distances = distances.astype(np.float32)
+    
+    _min_thinkness_allow = target_thickness - tolerance_thickness
+    _max_thinkness_allow = target_thickness + tolerance_thickness
+    colors = map_distances_to_colors(distances, highlight_range=[_min_thinkness_allow, _max_thinkness_allow])
 
     source.colors = o3d.utility.Vector3dVector(colors)
     return source, distances
+
+
+# def compute_heatmap_to_plane(source, target, k=10):
+#     # Tính trước normal cho target
+#     target.estimate_normals(
+#         search_param=o3d.geometry.KDTreeSearchParamKNN(knn=k)
+#     )
+
+#     target_points = np.asarray(target.points)
+#     target_normals = np.asarray(target.normals)
+#     target_tree = o3d.geometry.KDTreeFlann(target)
+
+#     source_points = np.asarray(source.points)
+
+#     distances = []
+
+#     for pt in source_points:
+#         # Tìm điểm gần nhất trong target
+#         [_, idx, _] = target_tree.search_knn_vector_3d(pt, 1)
+#         nearest_idx = idx[0]
+
+#         centroid = target_points[nearest_idx]
+#         normal = target_normals[nearest_idx]
+
+#         # Khoảng cách point-to-plane
+#         dist = np.abs(np.dot(pt - centroid, normal))
+#         distances.append(dist)
+
+#     distances = np.array(distances, dtype=np.float32)
+
+#     # Scale và tô màu heatmap
+#     distances_log = np.log1p(distances)
+#     distances_normalized = (distances_log - distances_log.min()) / (distances_log.ptp() + 1e-9)
+
+#     cmap = plt.get_cmap("jet")
+#     colors = cmap(distances_normalized)[:, :3]
+
+#     source.colors = o3d.utility.Vector3dVector(colors)
+#     return source, distances
 
 def assign_colors_by_threshold(pcd, distances, threshold=[0.03, 0.04]):
     """
@@ -550,3 +581,199 @@ def convert_pointcloud2_to_pointcloud(pc2_msg):
     return pc_msg
 
 
+
+
+from shared.config_loader import CONFIG as cfg
+
+def map_distances_to_colors(distances, 
+                            clip_max=0.15, # THICKNESS_MAX 150mm
+                            cmap_name="jet_r", 
+                            highlight_range=(0.1, 0.15),
+                            out_of_range_color=(0.5, 0.0, 0.5),
+                            highlight_color=(0.0, 1.0, 0.0)):
+    """
+    Map distances to RGB colors with special rules:
+      - Values in [0, clip_max] → mapped using colormap.
+      - Values in green_range → forced to green.
+      - Values > clip_max → assigned out_of_range_color.
+
+    Args:
+        distances (np.ndarray): input distances (1D array).
+        clip_max (float): max distance for colormap scaling.
+        green_range (tuple): (low, high) range for green override.
+        cmap_name (str): matplotlib colormap name.
+        out_of_range_color (tuple): RGB for out-of-range values.
+        green_color (tuple): RGB for green override.
+
+    Returns:
+        np.ndarray: (N, 3) RGB array.
+    """
+    # Clip & normalize
+    distances_clipped = np.clip(distances, 0, clip_max)
+    distances_normalized = distances_clipped / clip_max
+
+    # Map with colormap
+    cmap = plt.get_cmap(cmap_name)
+    colors = cmap(distances_normalized)[:, :3]
+
+    # Apply out-of-range color
+    mask_out = distances > clip_max
+    colors[mask_out] = out_of_range_color
+
+    # Apply green override
+    mask_green = (distances >= highlight_range[0]) & (distances <= highlight_range[1])
+    colors[mask_green] = highlight_color
+
+    return colors
+
+
+
+def remove_point(pcd, key_points, radius):
+    pts = np.asarray(pcd.points)
+    if isinstance(key_points, o3d.geometry.PointCloud):
+        query_pts = np.asarray(key_points.points)
+    else:
+        query_pts = np.asarray(key_points)
+
+    tree = cKDTree(pts)
+    idx_list = tree.query_ball_point(query_pts, r=radius)
+    remove_idx = np.unique(np.concatenate(idx_list))
+
+    pcd_filtered = pcd.select_by_index(remove_idx, invert=True)
+    return pcd_filtered
+
+
+
+def remove_ground_with_pca(pcd_origin, z_threshold=0.3, angle_deg=5,voxel_size=0.05,radius_remove=0.05, plane="xy"):
+    # Estimate normals bằng PCA trong Open3D
+    pcd = pcd_origin.voxel_down_sample(voxel_size=voxel_size)
+    pcd.estimate_normals(
+        search_param=o3d.geometry.KDTreeSearchParamKNN(knn=30)
+    )
+    pcd.orient_normals_consistent_tangent_plane(30)
+
+    normals = np.asarray(pcd.normals)
+    points = np.asarray(pcd.points)
+
+    # vector pháp tuyến chuẩn (Oxy plane -> normal = (0,0,1))
+    if plane.lower() in ["xy", "yx"]:
+        z_axis = np.array([0, 0, 1])
+        axis = 2
+    elif plane.lower() in ["yz", "zy"]:
+        z_axis = np.array([1, 0, 0])
+        axis = 0
+    elif plane.lower() in ["xz", "zx"]:
+        z_axis = np.array([0, 1, 0])
+        axis = 1
+
+
+    # cos(angle) giữa normal và z_axis
+    cos_angle = np.abs(normals @ z_axis)
+    angles = np.arccos(np.clip(cos_angle, -1.0, 1.0))  # rad
+
+    # ngưỡng theo độ
+    angle_threshold = np.deg2rad(angle_deg)
+
+    # mask: chọn điểm có normal gần song song z, và nằm dưới z_threshold
+
+    mask = (angles < angle_threshold) & (points[:, axis] < z_threshold)
+
+    # giữ lại ground
+    ground = pcd.select_by_index(np.where(mask)[0])
+    # giữ lại non-ground (cloud đã "cắt bỏ mp")
+    # non_ground = pcd.select_by_index(np.where(mask)[0], invert=True)
+    non_ground = remove_point(pcd_origin, np.asarray(ground.points), radius=radius_remove)
+
+    return non_ground
+
+
+def detect_boundary_pca(pcd, k=30, angle_threshold=np.pi):
+    """
+    Boundary detection dựa trên PCA của lân cận.
+    
+    Args:
+        pcd (o3d.geometry.PointCloud): input cloud
+        k (int): số điểm lân cận dùng cho PCA
+        angle_threshold (float): góc tối đa (rad) để coi là boundary
+    
+    Returns:
+        mask (np.ndarray): boolean mask các điểm boundary
+        boundary_points (np.ndarray): tọa độ các điểm boundary
+    """
+    points = np.asarray(pcd.points)
+    N = len(points)
+    kdtree = o3d.geometry.KDTreeFlann(pcd)
+    mask = np.zeros(N, dtype=bool)
+
+    for i, p in enumerate(points):
+        _, idx, _ = kdtree.search_knn_vector_3d(p, k)
+        
+        if len(idx) < 5:
+            # Nếu không đủ điểm, coi luôn là boundary
+            mask[i] = True
+            continue
+
+        neighbors = points[idx]
+
+        # PCA: tìm 2 vector chính của lân cận
+        C = np.cov(neighbors.T)
+        eigvals, eigvecs = np.linalg.eigh(C)
+        order = np.argsort(eigvals)[::-1]
+        plane_axes = eigvecs[:, order[:2]]   # 2 vector chính
+
+        # chiếu lân cận lên mặt phẳng
+        proj = (neighbors - p) @ plane_axes
+        norms = np.linalg.norm(proj, axis=1)
+        valid = norms > 1e-6
+        proj = proj[valid] / norms[valid][:, None]
+
+        if len(proj) < 2:
+            # quá ít điểm, coi là boundary
+            mask[i] = True
+            continue
+
+        # tính góc cực
+        angles = np.arctan2(proj[:,1], proj[:,0])
+        angles = np.sort((angles + 2*np.pi) % (2*np.pi))
+        diffs = np.diff(np.r_[angles, angles[0]+2*np.pi])
+        max_gap = np.max(diffs)
+
+        if max_gap > angle_threshold:
+            mask[i] = True
+        
+    boundary_points = points[mask]
+    return mask, boundary_points
+
+def remove_boundary_region(original_pcd, boundary_points, radius=0.1):
+    """
+    Remove toàn bộ điểm trong cloud gốc nằm gần boundary points (khoảng cách < radius).
+
+    Parameters
+    ----------
+    original_pcd : open3d.geometry.PointCloud
+        Cloud gốc (full resolution)
+    boundary_points : (N,3) np.ndarray
+        Tọa độ boundary points (tìm từ cloud downsample)
+    radius : float
+        Bán kính loại bỏ
+
+    Returns
+    -------
+    filtered_pcd : open3d.geometry.PointCloud
+        Cloud sau khi remove điểm gần biên
+    """
+    points = np.asarray(original_pcd.points)
+
+    # KDTree trên cloud gốc để search nhanh
+    kdtree = o3d.geometry.KDTreeFlann(original_pcd)
+    mask_remove = np.zeros(len(points), dtype=bool)
+
+    for bp in boundary_points:
+        [_, idx, _] = kdtree.search_radius_vector_3d(bp, radius)
+        mask_remove[idx] = True
+
+    # giữ lại những điểm không bị remove
+    keep_idx = np.where(~mask_remove)[0]
+    filtered_pcd = original_pcd.select_by_index(keep_idx)
+
+    return filtered_pcd

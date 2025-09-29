@@ -30,9 +30,10 @@ POST_SCAN_IMAGE = "/post_scan_0/image"
 ENABLE_ALIGNMENT = True
 
 #IPC Param
-ICP_THRESHOLDS = [0.3, 0.15, 0.05]      # coarse → fine
-ICP_MAX_ITERS = [30, 40, 50]           # coarse → fine
+ICP_THRESHOLDS = [0.5, 0.3, 0.02]      # coarse → fine
+ICP_MAX_ITERS = [20, 20, 30]           # coarse → fine
 ICP_ALIGN_AREA = None                  # hoặc [[xmin, xmax], [ymin, ymax], [zmin, zmax]]
+ICP_VOXEL_RADII = [0.25, 0.15, 0.01]  # coarse → fine
 
 # === Keypoint Matching Parameters ===
 # CAMERA_INTRINSICS = [653.76474515, 655.82709085, 756.55566752, 541.23742774]
@@ -241,7 +242,8 @@ def main():
             config=ICPConfig(
                 threshold=ICP_THRESHOLDS,
                 max_iters=ICP_MAX_ITERS,
-                align_area=ICP_ALIGN_AREA
+                align_area=ICP_ALIGN_AREA,
+                voxel_radii=ICP_VOXEL_RADII
             )
         )
     )

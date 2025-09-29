@@ -1,6 +1,5 @@
 from enum import Enum
-
-from shared.config_loader import CONFIG as cfg
+from shared.config_loader import CONFIG as cfg, save_config, reload_config 
 from PyQt5 import QtWidgets
 from PyQt5.QtCore import QObject
 
@@ -72,6 +71,14 @@ config_mapping = {
         "get": lambda: cfg.crop_box.max.z,
         "set": lambda v: setattr(cfg.crop_box.max, "z", v)
     },
+    "txtTargetThickness":{
+        "get": lambda: cfg.thickness.target,
+        "set": lambda v: setattr(cfg.thickness,"target", v)
+    },
+        "txtThicknessTolerance":{
+        "get": lambda: cfg.thickness.tolerance,
+        "set": lambda v: setattr(cfg.thickness,"tolerance", v)
+    },
 }
 
 def load_config_to_ui(widget, tube_dict = config_mapping):
@@ -131,6 +138,7 @@ def load_ui_to_config(widget, data_maping=config_mapping):
             data_maping[obj_name]["set"](value)
             
             # Cập nhật lại CONFIG tương ứng
+    save_config(cfg)
     return cfg
 
 
@@ -180,10 +188,13 @@ class DataBinder:
 
 
     def _update_control_button_style(self, status: dict):
-        for key, values in status.items():
-            if key.lower() in ['pps']:
-                value = values['process_state']
 
+        if "devices" not in status:
+            return
+        for key, values in status["devices"].items():
+
+            if key.lower() in ['pps']:
+                value = values['device_state']
                 if value == DeviceStatus.PRESCAN:
                     for btn_name in ['btnPreScan', 'btnPostScan', 'btnCompare', 'btnCancel', 'btnOpenScanner', 'btnCloseScanner']:
                         widget = self._widget_cache.get(btn_name)
@@ -215,6 +226,29 @@ class DataBinder:
                         widget = self._widget_cache.get(btn_name)                        
                         if btn_name == 'btnCloseScanner':               
                             set_control_button_stage(widget, Status.ACTIVE)
+                        else:
+                            set_control_button_stage(widget, Status.INACTIVE)
+
+                elif value == DeviceStatus.IDLE:
+                    for btn_name in ['btnPreScan', 'btnPostScan', 'btnCompare', 'btnCancel', 'btnOpenScanner', 'btnCloseScanner']:
+                        widget = self._widget_cache.get(btn_name)
+                        if not widget:
+                            continue  
+                        set_control_button_stage(widget, Status.INACTIVE)
+
+                elif value == DeviceStatus.PRESCAN_ERROR:
+                    for btn_name in ['btnPreScan', 'btnPostScan', 'btnCompare', 'btnCancel', 'btnOpenScanner', 'btnCloseScanner']:
+                        widget = self._widget_cache.get(btn_name)
+                        if btn_name == 'btnPreScan':               
+                            set_control_button_stage(widget, Status.ERROR)
+                        else:
+                            set_control_button_stage(widget, Status.INACTIVE)
+
+                elif value == DeviceStatus.POSTSCAN_ERROR:
+                    for btn_name in ['btnPreScan', 'btnPostScan', 'btnCompare', 'btnCancel', 'btnOpenScanner', 'btnCloseScanner']:
+                        widget = self._widget_cache.get(btn_name)
+                        if btn_name == 'btnPostScan':               
+                            set_control_button_stage(widget, Status.ERROR)
                         else:
                             set_control_button_stage(widget, Status.INACTIVE)
 

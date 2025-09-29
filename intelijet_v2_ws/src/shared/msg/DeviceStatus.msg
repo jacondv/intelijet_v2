@@ -9,6 +9,8 @@ time   last_update
 string CONNECTED    = Connected
 string DISCONNECTED = Disconnected
 string ERROR        = Error
+string PRESCAN_ERROR = PrescanningError
+string POSTSCAN_ERROR = PostscanningError
 
 # ---- Constants for process_state ----
 string IDLE         = Idle

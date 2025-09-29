@@ -138,8 +138,8 @@ class GenericScanController(ABC):
         except Exception as e:
             rospy.logerr(f"Error during scan workflow: {e}")
         finally:
-            if self.status_callback:
-                self.status_callback(DeviceStatus.STANDBY)
+            # if self.status_callback:
+            #     self.status_callback(DeviceStatus.IDLE)
             self.reset()
 
     # ----- Housing auto -----
@@ -169,12 +169,9 @@ class GenericScanController(ABC):
                 self.wait_until_target(0.0, direction=direction, timeout=2)
 
         except Exception as e:
-            
             rospy.logerr(f"Error during housing move: {e}")
         
         finally:
-            if self.status_callback:
-                self.status_callback(DeviceStatus.STANDBY)
             self.housing.stop()
 
     # ----- Thread helper -----

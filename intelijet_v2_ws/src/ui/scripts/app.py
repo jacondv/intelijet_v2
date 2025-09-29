@@ -18,7 +18,7 @@ from jobnumber_page_manager import JobNumberPageManager
 from history_page_manager import HistoryPageManager
 
 from data_binder import DataBinder
-from ui.update_data_utils import DataBinder, load_config_to_ui
+from ui.update_data_utils import DataBinder, load_config_to_ui, load_ui_to_config   
 from ui.utils import ros_pointcloud2_to_o3d_to_vtk_polydata_voxel
 
 from shared.pps_command import PPSCommand
@@ -46,9 +46,14 @@ class App(QMainWindow):
         self.setting_page_ui = Ui_setting_page()
         self.setting_page_ui.setupUi(self.setting_page_widget)
 
+        self.setting_page_ui.btnUpdateHousingParam.released.connect(lambda: load_ui_to_config(self.ui.tab_setting))
+        self.setting_page_ui.btnCancelHousingParam.released.connect(lambda: load_config_to_ui(self.ui.tab_setting))
+
         if self.ui.tab_setting.layout() is None:
             self.ui.tab_setting.setLayout(QVBoxLayout())
+        
         self.ui.tab_setting.layout().addWidget(self.setting_page_widget)
+ 
 
         # ------Tab JobSetting ---
         self.jobsetting_page = JobNumberPageManager(self.ui.tab_jobnumber)
@@ -94,7 +99,7 @@ class App(QMainWindow):
         self.ui_data_update.connect(self.update_data)
         self.ui_send_cmd_signal.connect(self.ros_thread.send_command)
 
-        # --- Buttons ---
+        # --- Control Buttons ---
         self.ui.btnPreScan.released.connect(lambda: self.ui_send_cmd_signal.emit(PPSCommand.START_PRESCAN.value))
         self.ui.btnPostScan.released.connect(lambda: self.ui_send_cmd_signal.emit(PPSCommand.START_POSTSCAN.value))
         self.ui.btnCompare.released.connect(lambda: self.ui_send_cmd_signal.emit(PPSCommand.START_COMPARE.value))

@@ -13,8 +13,8 @@ CLOUD_COMPARED  = cfg.CLOUD_COMPARED_TOPIC
 PRE_SCAN_CLOUD  = cfg.PRE_SCAN_CLOUD_TOPIC
 POST_SCAN_CLOUD = cfg.POST_SCAN_CLOUD_ALIGNED_TOPIC
 
-THICKNESS_MIN = 0.015   #cfg.thickness.min
-THICKNESS_MAX = 0.025   #cfg.thickness.max
+THICKNESS_TARGET = cfg.thickness.target/1000  # Target thickness in meter -> convert mm to m
+THICKNESS_TOLERANCE = cfg.thickness.tolerance/1000  # Allowable tolerance in meter of thickness
 
 class CloudComparer:
     def __init__(self, pubpish_topic,
@@ -32,6 +32,9 @@ class CloudComparer:
         self.got_pres = False
         self.got_post = False
         self.frame_id = "base_link"
+
+        self.target_thickness = THICKNESS_TARGET # Target thickness in meter
+        self.tolerance_thickness = THICKNESS_TOLERANCE # Allowable tolerance in meter of thickness
 
         self.pub = rospy.Publisher(self.publish_topic, PointCloud2, queue_size=1)
         rospy.Subscriber(self.pres_topic, PointCloud2, self.callback_pres)
@@ -69,21 +72,14 @@ class CloudComparer:
 
     def compare(self, pres, post):
         # Thực hiện xử lý màu hóa theo khoảng cách
-        colored_source, dists = compute_heatmap_to_plane(post, pres, k=6)
-        result = assign_colors_by_threshold(colored_source, dists, threshold=[THICKNESS_MIN, THICKNESS_MAX])
-        result = color_voxel_majority(result, voxel_size=0.05)
+        result, dists = compute_heatmap_to_plane(post, pres, k=6, 
+                                                 target_thickness=self.target_thickness, 
+                                                 tolerance_thickness=self.tolerance_thickness)
+        # result = assign_colors_by_threshold(result, dists, threshold=[THICKNESS_MIN, THICKNESS_MAX])
+        # result = color_voxel_majority(result, voxel_size=0.05)
         return result, dists
     
     
-    # def convert_pointcloud2_to_o3d(self, msg):
-    #     """Convert PointCloud2 message to Open3D PointCloud."""
-    #     if not isinstance(msg, PointCloud2):
-    #         rospy.logerr("Input message is not of type PointCloud2.")
-    #         return None
-    #     cloud_np = ros_numpy.point_cloud2.pointcloud2_to_xyz_array(msg, remove_nans=True)
-    #     cloud_o3d = o3d.geometry.PointCloud()
-    #     cloud_o3d.points = o3d.utility.Vector3dVector(cloud_np)
-    #     return cloud_o3d
 
 def main():
     rospy.init_node("dv_cloud_compare", anonymous=False)
