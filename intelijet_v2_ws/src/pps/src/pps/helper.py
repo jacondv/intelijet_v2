@@ -585,44 +585,40 @@ def convert_pointcloud2_to_pointcloud(pc2_msg):
 
 from shared.config_loader import CONFIG as cfg
 
-def map_distances_to_colors(distances, 
-                            clip_max=0.15, # THICKNESS_MAX 150mm
-                            cmap_name="jet_r", 
-                            highlight_range=(0.1, 0.15),
-                            out_of_range_color=(0.5, 0.0, 0.5),
-                            highlight_color=(0.0, 1.0, 0.0)):
+def map_distances_to_colors(
+    distances, 
+    clip_max=0.15,
+    highlight_range=(0.01, 0.015),
+    out_of_range_color=(0.5, 0.0, 0.5)
+):
     """
-    Map distances to RGB colors with special rules:
-      - Values in [0, clip_max] → mapped using colormap.
-      - Values in green_range → forced to green.
-      - Values > clip_max → assigned out_of_range_color.
-
-    Args:
-        distances (np.ndarray): input distances (1D array).
-        clip_max (float): max distance for colormap scaling.
-        green_range (tuple): (low, high) range for green override.
-        cmap_name (str): matplotlib colormap name.
-        out_of_range_color (tuple): RGB for out-of-range values.
-        green_color (tuple): RGB for green override.
-
-    Returns:
-        np.ndarray: (N, 3) RGB array.
+    Map distances to RGB colors with smooth transitions:
+      - dist < highlight_range[0] → red → green gradient
+      - dist in highlight_range → pure green
+      - dist > highlight_range[1] → green → blue gradient
+      - dist > clip_max → out_of_range_color
     """
-    # Clip & normalize
-    distances_clipped = np.clip(distances, 0, clip_max)
-    distances_normalized = distances_clipped / clip_max
+    colors = np.zeros((len(distances), 3))
 
-    # Map with colormap
-    cmap = plt.get_cmap(cmap_name)
-    colors = cmap(distances_normalized)[:, :3]
+    low, high = highlight_range
 
-    # Apply out-of-range color
-    mask_out = distances > clip_max
-    colors[mask_out] = out_of_range_color
+    for i, d in enumerate(distances):
+        if d > clip_max:
+            colors[i] = out_of_range_color
 
-    # Apply green override
-    mask_green = (distances >= highlight_range[0]) & (distances <= highlight_range[1])
-    colors[mask_green] = highlight_color
+        elif d < low:
+            # Gradient red (1,0,0) → green (0,1,0)
+            t = d / low if low > 0 else 0
+            colors[i] = (1 - t, t, 0)
+
+        elif d <= high:
+            # Pure green
+            colors[i] = (0, 1, 0)
+
+        else:
+            # Gradient green (0,1,0) → blue (0,0,1)
+            t = (d - high) / (clip_max - high) if clip_max > high else 1
+            colors[i] = (0, 1 - t, t)
 
     return colors
 

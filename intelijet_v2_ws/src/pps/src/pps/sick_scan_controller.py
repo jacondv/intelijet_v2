@@ -95,14 +95,17 @@ class SickScanController(GenericScanController):
         """Close housing gradually back to start position with step-specific speed and timeout"""
         # speed, target, timeout (giây)
         speeds_targets = [
-            ('fast', cfg.housing_end_position, 5.0),   # Step bắt đầu close nhanh
-            ('medium', (cfg.housing_start_position + cfg.housing_end_position)/2, 10.0),  # Step giữa
+            ('fast', cfg.housing_end_position, 15.0),   # Step bắt đầu close nhanh
+            ('medium', (cfg.housing_start_position + cfg.housing_end_position)/2, 15.0),  # Step giữa
             ('slow', cfg.housing_start_position-5.0, 3.0)  # Step cuối, tới vị trí start
         ]
 
         for speed, target, timeout in speeds_targets:
             self.housing.close(speed)
             if not self.wait_until_target(target, direction=False, timeout=timeout):
+                if speed == 'slow':
+                    return True  # cho phép không đạt chính xác vị trí start khi đóng chậm
+                
                 log_status(name=cfg.NOTIFICATION,
                         message=f"[WARN] Encoder did not reach target {target}° while closing at speed {speed}")
                 self.housing.stop()     
