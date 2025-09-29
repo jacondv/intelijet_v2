@@ -161,7 +161,7 @@ class GenericScanController(ABC):
                 self.housing.close('fast')
 
             if not self.wait_until_target(target, direction=direction):
-                return
+                return 
 
             if not direction:
                 # Wait another 2 seconds to ensure the housing closing process is complete
@@ -172,6 +172,7 @@ class GenericScanController(ABC):
             rospy.logerr(f"Error during housing move: {e}")
         
         finally:
+            self.status_callback(DeviceStatus.IDLE) if self.status_callback else None
             self.housing.stop()
 
     # ----- Thread helper -----
