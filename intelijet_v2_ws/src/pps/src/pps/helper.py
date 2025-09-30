@@ -145,6 +145,8 @@ def process_cloud(pcd, voxel_size=0.015):
 
 def compute_heatmap_to_plane(source, target, k=10,target_thickness=0.015, tolerance_thickness=0.005):
     # Tính trước normal cho target
+    start_time = time.time()
+
     target.estimate_normals(
         search_param=o3d.geometry.KDTreeSearchParamKNN(knn=k)
     )
@@ -164,9 +166,9 @@ def compute_heatmap_to_plane(source, target, k=10,target_thickness=0.015, tolera
     distances = np.sum(diff * normals, axis=1)  # (N,)
     distances = distances.astype(np.float32)
     
-    _min_thinkness_allow = target_thickness - tolerance_thickness
-    _max_thinkness_allow = target_thickness + tolerance_thickness
-    colors = map_distances_to_colors(distances, highlight_range=[_min_thinkness_allow, _max_thinkness_allow])
+    _min = -(target_thickness + tolerance_thickness)    
+    _max = target_thickness + tolerance_thickness
+    colors = map_distances_to_colors(distances,highlight_range=[_min],clip_max=0.15)
 
     source.colors = o3d.utility.Vector3dVector(colors)
     return source, distances
@@ -588,7 +590,7 @@ from shared.config_loader import CONFIG as cfg
 def map_distances_to_colors(
     distances, 
     clip_max=0.15,
-    highlight_range=(0.01, 0.015),
+    highlight_range=(0.01, 0.02),
     out_of_range_color=(0.5, 0.0, 0.5)
 ):
     """
@@ -598,6 +600,7 @@ def map_distances_to_colors(
       - dist > highlight_range[1] → green → blue gradient
       - dist > clip_max → out_of_range_color
     """
+    distances = np.abs(distances)
     colors = np.zeros((len(distances), 3))
 
     low, high = highlight_range
@@ -609,7 +612,8 @@ def map_distances_to_colors(
         elif d < low:
             # Gradient red (1,0,0) → green (0,1,0)
             t = d / low if low > 0 else 0
-            colors[i] = (1 - t, t, 0)
+            # colors[i] = (1 - t, t, 0)
+            colors[i] = (0.5, 0, 0)
 
         elif d <= high:
             # Pure green
@@ -773,3 +777,4 @@ def remove_boundary_region(original_pcd, boundary_points, radius=0.1):
     filtered_pcd = original_pcd.select_by_index(keep_idx)
 
     return filtered_pcd
+

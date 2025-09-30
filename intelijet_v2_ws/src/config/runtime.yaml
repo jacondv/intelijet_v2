@@ -17,12 +17,12 @@ encoder_length_at_zero_possition: 29910924 # this value is readed from encoder w
 
 housing_open_speed_fast : 115 # speed in hz
 housing_open_speed_medium : 105 # speed in hz
-housing_open_speed_slow : 102 # speed in hz
+housing_open_speed_slow : 103 # speed in hz
 
-housing_close_speed_fast : 110 # speed in hz
-housing_close_speed_medium : 100 # speed in hz
-housing_close_speed_slow : 100 # speed in hz
+housing_close_speed_fast : 115 # speed in hz
+housing_close_speed_medium : 110 # speed in hz
+housing_close_speed_slow : 105 # speed in hz
 
 thickness:
-  target: 10  # target thickness in mm
-  tolerance: 5 # allowable tolerance in mm
+  target: 30  # target thickness in mm
+  tolerance: 10 # allowable tolerance in mm
