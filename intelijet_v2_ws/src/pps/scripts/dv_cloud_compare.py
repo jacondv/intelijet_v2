@@ -65,7 +65,7 @@ class CloudComparer:
             rospy.logwarn("No comparison result available yet.")
             return
         rospy.loginfo("Publishing compared cloud...")
-        self.compared_cloud = convert_open3d_to_pointcloud2_with_diff(self.compared_cloud, diff_array=diff, frame_id=self.frame_id)
+        self.compared_cloud = convert_open3d_to_pointcloud2(self.compared_cloud, frame_id=self.frame_id)
         self.pub.publish(self.compared_cloud)
         self.got_post = False
 

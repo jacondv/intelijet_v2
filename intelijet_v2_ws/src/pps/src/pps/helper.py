@@ -145,7 +145,7 @@ def process_cloud(pcd, voxel_size=0.015):
 
 def compute_heatmap_to_plane(source, target, k=10,target_thickness=0.015, tolerance_thickness=0.005):
     # Tính trước normal cho target
-    start_time = time.time()
+    # start_time = time.time()
 
     target.estimate_normals(
         search_param=o3d.geometry.KDTreeSearchParamKNN(knn=k)
@@ -166,9 +166,9 @@ def compute_heatmap_to_plane(source, target, k=10,target_thickness=0.015, tolera
     distances = np.sum(diff * normals, axis=1)  # (N,)
     distances = distances.astype(np.float32)
     
-    _min = -(target_thickness + tolerance_thickness)    
+    _min = (target_thickness - tolerance_thickness)    
     _max = target_thickness + tolerance_thickness
-    colors = map_distances_to_colors(distances,highlight_range=[_min],clip_max=0.15)
+    colors = map_distances_to_colors(distances,highlight_range=[_min,_max],clip_max=0.15)
 
     source.colors = o3d.utility.Vector3dVector(colors)
     return source, distances
