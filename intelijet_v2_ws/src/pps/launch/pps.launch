@@ -24,13 +24,13 @@
 	<include file="$(find sick_scan)/launch/sick_lms_511.launch"/>
 
 	<!--Interlacing process for sickscan LMS511 when it operates in interlaced mode-->
-	<node pkg="pps" name="sickscan_interlate_process_node" type="sickscan_interlate_process_node.py" />
+	<!-- <node pkg="pps" name="sickscan_interlate_process_node" type="sickscan_interlate_process_node.py" /> -->
 
 	<!-- Laser assembler Service-->
 	<node pkg="laser_assembler" type="point_cloud2_assembler" name="assembler_node" output="screen">
 		<param name="frame_id" value="LMS_511_scan_plane"/>
 
-		<remap from="/cloud" to="/cloud_interlaced"/>
+		<!-- <remap from="/cloud" to="/cloud_interlaced"/> -->
 		<param name="fixed_frame" type="string" value="base_link" />
 		<param name="max_clouds" type="int" value="6000" />
 		<param name="ignore_laser_skew" type="bool" value="false" />
