@@ -2,6 +2,9 @@ from weasyprint import HTML
 from ui.tunnel_report.template_manager import render_template
 from ui.tunnel_report.report_data_model import ReportData
 from ui.tunnel_report.report_utils import PLYProcessor
+from shared.config_loader import CONFIG as cfg
+
+BASE_DIR = cfg.BASE_DIR
 
 class ReportGenerator:
     def __init__(self):
@@ -31,7 +34,7 @@ class ReportGenerator:
 
         #---------------------
         thickness_chart_img = processor.export_distribution_chart(bins=bins, save_path=None)
-        tunnel_view_img = "/mnt/c/work/projects/intelijet_v2/data/Jobnumber1/tunnel.png"
+        tunnel_view_img = f"{BASE_DIR}/intelijet_v2_ws/src/ui/src/ui/tunnel_report/assets/images/tunnel.png"
         shotcrete_volume = processor.shotcrete_volume()
         avg_thickness = processor.avg_thickness()
 
@@ -42,7 +45,7 @@ class ReportGenerator:
             tolerance=10,
             avg_thickness=avg_thickness,
             shotcrete_volume=shotcrete_volume,
-            logo="/mnt/c/work/projects/intelijet_v2/intelijet_v2_ws/src/ui/src/ui/tunnel_report/assets/images/logo.png",
+            logo=f"{BASE_DIR}/intelijet_v2_ws/src/ui/src/ui/tunnel_report/assets/images/logo.png",
             tunnel_view=tunnel_view_img,
             thickness_chart=thickness_chart_img
         )
