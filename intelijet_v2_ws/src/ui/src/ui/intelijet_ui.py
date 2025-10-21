@@ -15,13 +15,11 @@ class Ui_MainWindow(object):
         MainWindow.setObjectName("MainWindow")
         MainWindow.resize(1235, 889)
         MainWindow.setStyleSheet("\n"
-"/* --- Button mặc định --- */\n"
+"/* ==================== PUSHBUTTON ==================== */\n"
 "QPushButton {\n"
-"    background-color: #2196F3;     /* xanh dương */\n"
-"    color: white;\n"
 "    border-radius: 6px;\n"
 "    padding: 8px 16px;\n"
-"    font-size: 14px;\n"
+"    font-size: 17px;\n"
 "    font-weight: bold;\n"
 "}\n"
 "QPushButton:hover {\n"
@@ -30,6 +28,7 @@ class Ui_MainWindow(object):
 "QPushButton:pressed {\n"
 "    background-color: #0D47A1;\n"
 "}\n"
+"\n"
 "\n"
 "/* --- Text editor (QLineEdit & QTextEdit) --- */\n"
 "QLineEdit, QTextEdit {\n"
@@ -44,37 +43,27 @@ class Ui_MainWindow(object):
 "    background: #FFFFFF;\n"
 "}\n"
 "\n"
-"QListWidget {\n"
-"    border: 1px solid #BDBDBD;\n"
-"    border-radius: 6px;\n"
-"    padding: 4px;\n"
-"    background: #FAFAFA;\n"
+"/* ==================== SCROLLBAR ==================== */\n"
+"QScrollBar:vertical {\n"
+"    width: 12px;\n"
+"    background: #f0f0f0;\n"
+"    margin: 0;\n"
+"    border-radius: 0px;\n"
 "}\n"
-"\n"
-"QListWidget::item {\n"
-"    height: 40px;\n"
-"    padding-left: 10px;\n"
-"    border-bottom: 1px solid #E0E0E0;\n"
-"    font-size: 14px;\n"
+"QScrollBar::handle:vertical {\n"
+"    background: #b0b0b0;\n"
+"    min-height: 20px;\n"
+"    border-radius: 0px;\n"
 "}\n"
-"\n"
-"QListWidget::item:selected {\n"
-"    background-color: #2196F3;\n"
-"    color: white;\n"
-"    font-weight: bold;\n"
+"QScrollBar::handle:vertical:hover {\n"
+"    background: #909090;\n"
 "}\n"
-"\n"
-"QListWidget::item:hover {\n"
-"    background-color: #BBDEFB;\n"
+"QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {\n"
+"    height: 0;\n"
 "}\n"
-"\n"
-"\n"
-"\n"
-"\n"
 "\n"
 "*{\n"
 "border: none;\n"
-"color: back;\n"
 "font-size: 17px;\n"
 "}\n"
 "#statusbar {\n"
@@ -95,7 +84,6 @@ class Ui_MainWindow(object):
 "#control_panel{\n"
 "    /*background-color: #00796B;*/\n"
 "\n"
-"    \n"
 "    background-color: qlineargradient(spread:pad, x1:0, y1:0, x2:1, y2:0, stop:0.3 #185F63, stop:1 #185F63);\n"
 "    border-left: 8px solid #F8D40F;     /* viền trái */\n"
 "    border-top-right-radius: 25px;\n"
@@ -111,7 +99,7 @@ class Ui_MainWindow(object):
 "    border: none;\n"
 "    padding: 40px 0px 40px 0px;\n"
 "    \n"
-"    font-size: 17px;\n"
+"    font-size:18px;\n"
 "    font-weight: bold;\n"
 "    background-color: qlineargradient(spread:pad, x1:0, y1:0, x2:1, y2:0, stop:0 #F8D40F, stop:1 #FFF9C4);\n"
 "\n"
@@ -120,15 +108,14 @@ class Ui_MainWindow(object):
 "    border-bottom-right-radius: 40px;\n"
 "    border-bottom-left-radius: 0px;\n"
 "\n"
-"    border-left: 8px solid #95a5a6; /*#55ff00;  #F8D40F;*/\n"
+"    border-left: 24px solid #95a5a6; /*#55ff00;  #F8D40F;*/\n"
 "}\n"
 "\n"
 "/* Hiệu ứng hover / nhấn */\n"
 "#control_panel QPushButton:hover {\n"
-"    font-size: 17px;\n"
+"    font-size: 18px;\n"
 "    color: #00aa7f;\n"
 "    padding: 36px 5px 36px 0px;\n"
-"\n"
 "\n"
 "}\n"
 "\n"
@@ -141,18 +128,28 @@ class Ui_MainWindow(object):
 "    color: #dcdcdc;\n"
 "}\n"
 "\n"
-"#toolBox:tab {\n"
+"#toolBox{\n"
+"    padding-top:30px;\n"
 "    color:white;\n"
-"    border-bottom: 1px solid white;\n"
+"}\n"
+"\n"
+"#toolBox:tab {\n"
+"    border-bottom: 2px solid white;\n"
+"    padding-left: 2px;\n"
+"    padding-bottom: 2px;\n"
 "}\n"
 "\n"
 "#toolBox QWidget{\n"
-"    background-color: #185F63;\n"
+"    /*background-color: #185F63;*/\n"
+"    background: transparent;\n"
+"    color: white;\n"
+"\n"
 "}\n"
+"\n"
 "\n"
 "#btnShutdown {\n"
 "    background-color: #185F63;\n"
-"\n"
+"    color: white;\n"
 "}\n"
 "#lblCurrentJob, #lblCurrentJob_title {\n"
 "    color: white;\n"
@@ -168,9 +165,7 @@ class Ui_MainWindow(object):
 "#menu_main QPushButton {\n"
 "    /*border-right: 1px solid #FFEB3B;     /* viền trái */\n"
 "\n"
-"    color: white;\n"
 "    font-weight: normal;\n"
-"\n"
 "\n"
 "}\n"
 "\n"
@@ -178,9 +173,13 @@ class Ui_MainWindow(object):
 "#menu_main QPushButton:hover {\n"
 "    /*border-right: 1px solid #FFEB3B;     /* viền trái */\n"
 "\n"
-"    color: white;\n"
 "    font-weight: bold;\n"
 "\n"
+"\n"
+"}\n"
+"#menu_main {\n"
+"    color: white;\n"
+"    \n"
 "\n"
 "}\n"
 "\n"
@@ -188,11 +187,13 @@ class Ui_MainWindow(object):
 "    height: 110px;     \n"
 "    width: 20px;\n"
 "    margin: 0;\n"
+"    color: #ddd;\n"
 "\n"
 "    border: none;\n"
 "    font-weight: normal;\n"
 "    padding-top: 30px;\n"
 "    padding-left: 10px;\n"
+"    padding-right: 8px;\n"
 "    min-height: 100px;\n"
 "\n"
 "}\n"
@@ -200,16 +201,20 @@ class Ui_MainWindow(object):
 "QTabBar::tab:selected {\n"
 "    font-size: 18px;\n"
 "    font-weight: bold;\n"
-"    color: #fff;\n"
+"    color: #ee0;\n"
 "    border-left: 4px solid #FFEB3B;\n"
 "\n"
 "}\n"
 "\n"
-"\n"
-"\n"
-"\n"
-"\n"
-"\n"
+"QWidget#widget_6 QPushButton {\n"
+"    background-color: #aaa;\n"
+"    color: white;\n"
+"    border-radius: 0px;\n"
+"    padding: 6px 12px;\n"
+"}\n"
+"QWidget#widget_6 QPushButton:hover {\n"
+"    background-color: #2A8C91;\n"
+"}\n"
 "\n"
 "\n"
 "")
@@ -232,12 +237,9 @@ class Ui_MainWindow(object):
         self.verticalLayout = QtWidgets.QVBoxLayout(self.menu_main)
         self.verticalLayout.setObjectName("verticalLayout")
         self.toolBox = QtWidgets.QToolBox(self.menu_main)
-        font = QtGui.QFont()
-        font.setPointSize(-1)
-        self.toolBox.setFont(font)
         self.toolBox.setObjectName("toolBox")
         self.tboxPage1 = QtWidgets.QWidget()
-        self.tboxPage1.setGeometry(QtCore.QRect(0, 0, 332, 676))
+        self.tboxPage1.setGeometry(QtCore.QRect(0, 0, 332, 611))
         self.tboxPage1.setObjectName("tboxPage1")
         self.verticalLayout_2 = QtWidgets.QVBoxLayout(self.tboxPage1)
         self.verticalLayout_2.setContentsMargins(0, 0, 20, 0)
@@ -264,8 +266,31 @@ class Ui_MainWindow(object):
         icon = QtGui.QIcon()
         icon.addPixmap(QtGui.QPixmap(":/icon/icon/home-4-48 (2).ico"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.toolBox.addItem(self.tboxPage1, icon, "")
+        self.tboxPage3 = QtWidgets.QWidget()
+        self.tboxPage3.setGeometry(QtCore.QRect(0, 0, 332, 611))
+        self.tboxPage3.setObjectName("tboxPage3")
+        self.widget_6 = QtWidgets.QWidget(self.tboxPage3)
+        self.widget_6.setGeometry(QtCore.QRect(0, 10, 321, 601))
+        self.widget_6.setObjectName("widget_6")
+        self.verticalLayout_9 = QtWidgets.QVBoxLayout(self.widget_6)
+        self.verticalLayout_9.setContentsMargins(0, 0, 0, 0)
+        self.verticalLayout_9.setObjectName("verticalLayout_9")
+        self.widget_5 = QtWidgets.QWidget(self.widget_6)
+        self.widget_5.setObjectName("widget_5")
+        self.verticalLayout_8 = QtWidgets.QVBoxLayout(self.widget_5)
+        self.verticalLayout_8.setObjectName("verticalLayout_8")
+        self.btnViewReport = QtWidgets.QPushButton(self.widget_5)
+        self.btnViewReport.setObjectName("btnViewReport")
+        self.verticalLayout_8.addWidget(self.btnViewReport)
+        self.btnCompare2 = QtWidgets.QPushButton(self.widget_5)
+        self.btnCompare2.setObjectName("btnCompare2")
+        self.verticalLayout_8.addWidget(self.btnCompare2)
+        spacerItem1 = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding)
+        self.verticalLayout_8.addItem(spacerItem1)
+        self.verticalLayout_9.addWidget(self.widget_5)
+        self.toolBox.addItem(self.tboxPage3, "")
         self.tboxPage2 = QtWidgets.QWidget()
-        self.tboxPage2.setGeometry(QtCore.QRect(0, 0, 332, 676))
+        self.tboxPage2.setGeometry(QtCore.QRect(0, 0, 332, 611))
         self.tboxPage2.setObjectName("tboxPage2")
         self.toolBox.addItem(self.tboxPage2, "")
         self.verticalLayout.addWidget(self.toolBox)
@@ -288,8 +313,8 @@ class Ui_MainWindow(object):
         self.menu_small.setObjectName("menu_small")
         self.verticalLayout_3 = QtWidgets.QVBoxLayout(self.menu_small)
         self.verticalLayout_3.setObjectName("verticalLayout_3")
-        spacerItem1 = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding)
-        self.verticalLayout_3.addItem(spacerItem1)
+        spacerItem2 = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding)
+        self.verticalLayout_3.addItem(spacerItem2)
         self.pushButton_4 = QtWidgets.QPushButton(self.menu_small)
         self.pushButton_4.setMinimumSize(QtCore.QSize(25, 100))
         self.pushButton_4.setMaximumSize(QtCore.QSize(25, 16777215))
@@ -303,8 +328,8 @@ class Ui_MainWindow(object):
         self.pushButton_4.setCheckable(True)
         self.pushButton_4.setObjectName("pushButton_4")
         self.verticalLayout_3.addWidget(self.pushButton_4)
-        spacerItem2 = QtWidgets.QSpacerItem(0, 0, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.MinimumExpanding)
-        self.verticalLayout_3.addItem(spacerItem2)
+        spacerItem3 = QtWidgets.QSpacerItem(0, 0, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.MinimumExpanding)
+        self.verticalLayout_3.addItem(spacerItem3)
         self.horizontalLayout_2.addWidget(self.menu_small)
         self.tab_mainview = QtWidgets.QTabWidget(self.centralFrame)
         self.tab_mainview.setEnabled(True)
@@ -398,8 +423,8 @@ class Ui_MainWindow(object):
         self.verticalLayout_4.setContentsMargins(18, 0, 15, 10)
         self.verticalLayout_4.setSpacing(10)
         self.verticalLayout_4.setObjectName("verticalLayout_4")
-        spacerItem3 = QtWidgets.QSpacerItem(20, 20, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Fixed)
-        self.verticalLayout_4.addItem(spacerItem3)
+        spacerItem4 = QtWidgets.QSpacerItem(20, 20, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Fixed)
+        self.verticalLayout_4.addItem(spacerItem4)
         self.lblLogo = QtWidgets.QLabel(self.control_panel)
         self.lblLogo.setMaximumSize(QtCore.QSize(180, 65))
         self.lblLogo.setText("")
@@ -408,8 +433,8 @@ class Ui_MainWindow(object):
         self.lblLogo.setAlignment(QtCore.Qt.AlignHCenter|QtCore.Qt.AlignTop)
         self.lblLogo.setObjectName("lblLogo")
         self.verticalLayout_4.addWidget(self.lblLogo)
-        spacerItem4 = QtWidgets.QSpacerItem(20, 20, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Fixed)
-        self.verticalLayout_4.addItem(spacerItem4)
+        spacerItem5 = QtWidgets.QSpacerItem(20, 20, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Fixed)
+        self.verticalLayout_4.addItem(spacerItem5)
         self.btnPreScan = QtWidgets.QPushButton(self.control_panel)
         self.btnPreScan.setStyleSheet("")
         self.btnPreScan.setObjectName("btnPreScan")
@@ -431,8 +456,8 @@ class Ui_MainWindow(object):
         self.btnCloseScanner = QtWidgets.QPushButton(self.control_panel)
         self.btnCloseScanner.setObjectName("btnCloseScanner")
         self.verticalLayout_4.addWidget(self.btnCloseScanner)
-        spacerItem5 = QtWidgets.QSpacerItem(20, 119, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding)
-        self.verticalLayout_4.addItem(spacerItem5)
+        spacerItem6 = QtWidgets.QSpacerItem(20, 119, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding)
+        self.verticalLayout_4.addItem(spacerItem6)
         self.horizontalLayout_2.addWidget(self.control_panel)
         self.horizontalLayout_2.setStretch(0, 3)
         self.horizontalLayout_2.setStretch(2, 5)
@@ -445,6 +470,7 @@ class Ui_MainWindow(object):
         MainWindow.setStatusBar(self.statusbar)
 
         self.retranslateUi(MainWindow)
+        self.toolBox.layout().setSpacing(6)
         self.tab_mainview.setCurrentIndex(0)
         self.pushButton_4.clicked['bool'].connect(self.menu_main.setHidden)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
@@ -456,6 +482,9 @@ class Ui_MainWindow(object):
         self.lblCurrentJob.setText(_translate("MainWindow", "#Jobtitle"))
         self.btnSelectJob.setText(_translate("MainWindow", "Select Job"))
         self.toolBox.setItemText(self.toolBox.indexOf(self.tboxPage1), _translate("MainWindow", "Jobs view"))
+        self.btnViewReport.setText(_translate("MainWindow", "View Report"))
+        self.btnCompare2.setText(_translate("MainWindow", "Compare"))
+        self.toolBox.setItemText(self.toolBox.indexOf(self.tboxPage3), _translate("MainWindow", "Compare"))
         self.toolBox.setItemText(self.toolBox.indexOf(self.tboxPage2), _translate("MainWindow", "History"))
         self.btnShutdown.setText(_translate("MainWindow", "Exit"))
         self.tab_mainview.setTabText(self.tab_mainview.indexOf(self.tab_operator), _translate("MainWindow", "3D Viewer"))

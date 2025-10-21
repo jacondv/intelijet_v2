@@ -11,6 +11,10 @@ def get_config_dir():
     config_dir = os.path.join(pkg_path, "config")
     return config_dir
 
+CONFIG = None
+CONFIG_FILE_NAME = "last_used.yaml"
+CONFIG_PATH = os.path.join(get_config_dir(),CONFIG_FILE_NAME )
+
 def _guess_calling_package():
     """
     Tries to guess the calling package by inspecting __file__ variable
@@ -40,6 +44,15 @@ def dict_to_namespace(d):
         return [dict_to_namespace(v) for v in d]
     return d
 
+
+def namespace_to_dict(ns):
+    if isinstance(ns, SimpleNamespace):
+        return {k: namespace_to_dict(v) for k, v in vars(ns).items()}
+    elif isinstance(ns, list):
+        return [namespace_to_dict(v) for v in ns]
+    return ns
+
+
 def deep_merge(dict1, dict2):
     """Gộp dict2 vào dict1 (deep merge)."""
     for k, v in dict2.items():
@@ -48,6 +61,7 @@ def deep_merge(dict1, dict2):
         else:
             dict1[k] = v
     return dict1
+
 
 def load_config(*paths):
     merged = {}
@@ -72,15 +86,8 @@ def load_config(*paths):
     return dict_to_namespace(merged)
 
 
-def save_config(config_obj, filename="last_used.yaml"):
+def save_config(config_obj, filename=CONFIG_FILE_NAME):
     """Lưu config object (SimpleNamespace) thành YAML."""
-
-    def namespace_to_dict(ns):
-        if isinstance(ns, SimpleNamespace):
-            return {k: namespace_to_dict(v) for k, v in vars(ns).items()}
-        elif isinstance(ns, list):
-            return [namespace_to_dict(v) for v in ns]
-        return ns
 
     data = namespace_to_dict(config_obj)
 
@@ -106,13 +113,13 @@ def save_config(config_obj, filename="last_used.yaml"):
 def reload_config():
     global CONFIG
     config_dir = get_config_dir()
-    config_path = os.path.join(config_dir, "last_used.yaml")
+    config_path = os.path.join(config_dir, CONFIG_FILE_NAME)
 
     if os.path.isfile(config_path):
-        new_config = load_config("last_used.yaml")
+        new_config = load_config(CONFIG_FILE_NAME)
     else:
         new_config = load_config("commond.yaml", "lidar.yaml", "runtime.yaml")
-        save_config(new_config, filename="last_used.yaml")
+        save_config(new_config, filename=CONFIG_FILE_NAME)
 
     if CONFIG is None:
         CONFIG = new_config
@@ -120,9 +127,10 @@ def reload_config():
         # giữ reference cũ, update __dict__
         CONFIG.__dict__.clear()
         CONFIG.__dict__.update(new_config.__dict__)
+    
+    return CONFIG
 
 
-CONFIG = None
 reload_config()
 if __name__ == "__main__":
     # Test loading and saving config

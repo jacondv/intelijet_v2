@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import rospy
 import std_msgs.msg
-import open3d as o3d
+# import open3d as o3d
 import numpy as np
 import ros_numpy
 from collections import defaultdict
@@ -12,7 +12,9 @@ import matplotlib
 import matplotlib.pyplot as plt
 from scipy.spatial import cKDTree
 matplotlib.use('Agg')  # Không dùng GUI backend
-from sensor_msgs.msg import PointCloud2, PointCloud
+from sensor_msgs.msg import PointCloud2, PointCloud, PointField
+
+from pps.data_converter import cloudconverter
 
 
 def compute_distance_histogram(
@@ -86,6 +88,8 @@ def crop_pointcloud_by_box(pcd, box_type='aabb', center=None, extent=None,
     Returns:
         cropped_pcd (open3d.geometry.PointCloud): The cropped point cloud.
     """
+    import open3d as o3d
+
     if box_type == 'aabb':
         if min_bound is None or max_bound is None:
             raise ValueError("For AABB, both min_bound and max_bound are required.")
@@ -117,6 +121,9 @@ def crop(pcd, xlim, ylim, zlim):
     Trả về:
         - point cloud đã được cắt
     """
+
+    import open3d as o3d
+
     points = np.asarray(pcd.points)
     
     mask = (
@@ -142,10 +149,13 @@ def process_cloud(pcd, voxel_size=0.015):
     return pcd_croped
     
 
-
-def compute_heatmap_to_plane(source, target, k=10,target_thickness=0.015, tolerance_thickness=0.005):
+def compute_heatmap_to_plane(source, target, k=10,target_thickness=0.03, tolerance_thickness=0.01):
     # Tính trước normal cho target
     # start_time = time.time()
+    import open3d as o3d
+
+    source = cloudconverter.tensor_to_o3d_legacy(source)
+    target = cloudconverter.tensor_to_o3d_legacy(target)
 
     target.estimate_normals(
         search_param=o3d.geometry.KDTreeSearchParamKNN(knn=k)
@@ -171,46 +181,61 @@ def compute_heatmap_to_plane(source, target, k=10,target_thickness=0.015, tolera
     colors = map_distances_to_colors(distances,highlight_range=[_min,_max],clip_max=0.15)
 
     source.colors = o3d.utility.Vector3dVector(colors)
+
+    source = cloudconverter.o3d_legacy_to_tensor(source)
+    distances_mm = np.round(distances * 1000).astype(np.int32)
+    distances_mm = distances_mm.reshape(-1, 1)
+
+    n_points = source.point["positions"]
+    if len(distances) != len(n_points):
+        raise ValueError(f"Number of element distances ({len(distances)}) does not match number of point clouds ({n_points})")
+
+    source.point["distances"] = o3d.core.Tensor(distances_mm, dtype=o3d.core.Dtype.Int32)
+
     return source, distances
 
 
-# def compute_heatmap_to_plane(source, target, k=10):
-#     # Tính trước normal cho target
-#     target.estimate_normals(
-#         search_param=o3d.geometry.KDTreeSearchParamKNN(knn=k)
-#     )
+def compute_heatmap_to_plane_old_version(source, target, k=10):
 
-#     target_points = np.asarray(target.points)
-#     target_normals = np.asarray(target.normals)
-#     target_tree = o3d.geometry.KDTreeFlann(target)
+    import open3d as o3d
 
-#     source_points = np.asarray(source.points)
+    # Tính trước normal cho target
+    target.estimate_normals(
+        search_param=o3d.geometry.KDTreeSearchParamKNN(knn=k)
+    )
 
-#     distances = []
+    target_points = np.asarray(target.points)
+    target_normals = np.asarray(target.normals)
+    target_tree = o3d.geometry.KDTreeFlann(target)
 
-#     for pt in source_points:
-#         # Tìm điểm gần nhất trong target
-#         [_, idx, _] = target_tree.search_knn_vector_3d(pt, 1)
-#         nearest_idx = idx[0]
+    source_points = np.asarray(source.points)
 
-#         centroid = target_points[nearest_idx]
-#         normal = target_normals[nearest_idx]
+    distances = []
 
-#         # Khoảng cách point-to-plane
-#         dist = np.abs(np.dot(pt - centroid, normal))
-#         distances.append(dist)
+    for pt in source_points:
+        # Tìm điểm gần nhất trong target
+        [_, idx, _] = target_tree.search_knn_vector_3d(pt, 1)
+        nearest_idx = idx[0]
 
-#     distances = np.array(distances, dtype=np.float32)
+        centroid = target_points[nearest_idx]
+        normal = target_normals[nearest_idx]
 
-#     # Scale và tô màu heatmap
-#     distances_log = np.log1p(distances)
-#     distances_normalized = (distances_log - distances_log.min()) / (distances_log.ptp() + 1e-9)
+        # Khoảng cách point-to-plane
+        dist = np.abs(np.dot(pt - centroid, normal))
+        distances.append(dist)
 
-#     cmap = plt.get_cmap("jet")
-#     colors = cmap(distances_normalized)[:, :3]
+    distances = np.array(distances, dtype=np.float32)
 
-#     source.colors = o3d.utility.Vector3dVector(colors)
-#     return source, distances
+    # Scale và tô màu heatmap
+    distances_log = np.log1p(distances)
+    distances_normalized = (distances_log - distances_log.min()) / (distances_log.ptp() + 1e-9)
+
+    cmap = plt.get_cmap("jet")
+    colors = cmap(distances_normalized)[:, :3]
+
+    source.colors = o3d.utility.Vector3dVector(colors)
+    return source, distances
+
 
 def assign_colors_by_threshold(pcd, distances, threshold=[0.03, 0.04]):
     """
@@ -219,6 +244,7 @@ def assign_colors_by_threshold(pcd, distances, threshold=[0.03, 0.04]):
     - Vàng: lệch nhẹ
     - Đỏ: Chính xác
     """
+    import open3d as o3d
 
     colors = []
     for d in distances:
@@ -238,10 +264,13 @@ def assign_colors_by_threshold(pcd, distances, threshold=[0.03, 0.04]):
     colored_pcd.colors = o3d.utility.Vector3dVector(colors)
     return colored_pcd
 
+
 def color_voxel_majority(pcd, voxel_size=0.1):
     """
     Set màu voxel theo đa số. 
     """
+    import open3d as o3d
+
     points = np.asarray(pcd.points)
     colors = np.asarray(pcd.colors)
     red = np.array([1.0, 0.0, 0.0])
@@ -288,58 +317,12 @@ def color_voxel_majority(pcd, voxel_size=0.1):
     return pcd
 
 
-# import numpy as np
-# import open3d as o3d
-# from collections import defaultdict
-# from scipy.spatial import cKDTree
-
-# def color_voxel_majority(pcd, voxel_size=0.03, color_tol=0.05):
-#     """
-#     Phiên bản nhanh: gán màu voxel theo đa số, tự nhận màu,
-#     tối ưu cho point cloud lớn nhờ vectorization và KDTree.
-#     """
-#     points = np.asarray(pcd.points)
-#     colors = np.asarray(pcd.colors)
-    
-#     # Tính chỉ số voxel
-#     voxel_indices = np.floor(points / voxel_size).astype(int)
-    
-#     # Gom các điểm theo voxel
-#     voxel_dict = defaultdict(list)
-#     for i, v_idx in enumerate(map(tuple, voxel_indices)):
-#         voxel_dict[v_idx].append(i)
-    
-#     new_colors = colors.copy()
-    
-#     # Xử lý mỗi voxel
-#     for idx_list in voxel_dict.values():
-#         voxel_colors = colors[idx_list]
-        
-#         if len(voxel_colors) == 1:
-#             new_colors[idx_list] = voxel_colors[0]
-#             continue
-        
-#         # Dùng KDTree để gom các màu gần nhau
-#         tree = cKDTree(voxel_colors)
-#         groups = tree.query_ball_tree(tree, r=color_tol)
-        
-#         # Đếm số lượng điểm trong mỗi nhóm
-#         # Chọn nhóm có số điểm nhiều nhất
-#         group_counts = [len(g) for g in groups]
-#         majority_group_idx = np.argmax(group_counts)
-#         majority_indices = groups[majority_group_idx]
-        
-#         majority_color = np.mean(voxel_colors[majority_indices], axis=0)
-        
-#         # Gán màu đa số cho toàn bộ voxel
-#         new_colors[idx_list] = majority_color
-    
-#     pcd.colors = o3d.utility.Vector3dVector(new_colors)
-#     return pcd
-
-
 def convert_pointcloud2_to_o3d(msg):
+    
     """Convert a ROS PointCloud2 message into an Open3D PointCloud."""
+
+    import open3d as o3d
+
     if not isinstance(msg, PointCloud2):
         rospy.logerr("Input message is not of type PointCloud2.")
         return None
@@ -375,7 +358,7 @@ def convert_open3d_to_pointcloud2(o3d_cloud, frame_id="base_link",rgb=[255,0,0])
     """
     Chuyển đổi Open3D point cloud sang ROS PointCloud2.
     """
-
+    import open3d as o3d 
     # o3d.io.write_point_cloud("cloud_output.ply", o3d_cloud)
     if not isinstance(o3d_cloud, o3d.geometry.PointCloud):
         rospy.logerr("Input is not an Open3D PointCloud.")
@@ -420,6 +403,97 @@ def convert_open3d_to_pointcloud2(o3d_cloud, frame_id="base_link",rgb=[255,0,0])
     msg.is_bigendian = False  # đảm bảo đúng cho ROS chạy trên x86
     return msg 
 
+
+
+def convert_open3d_to_pointcloud2_v2(o3d_cloud, frame_id="base_link", default_rgb=(255, 0, 0)):
+    """
+    Convert Open3D PointCloud -> ROS PointCloud2
+    - Giữ nguyên màu nếu có
+    - Tự thêm màu mặc định nếu không có
+    - Tự động add các field custom như distance_mm, intensity...
+    """
+
+    header = std_msgs.msg.Header()
+    header.stamp = rospy.Time.now()
+    header.frame_id = frame_id
+
+    points = np.asarray(o3d_cloud.points)
+    has_color = hasattr(o3d_cloud, "colors") and len(o3d_cloud.colors) > 0
+    rgb = np.array(default_rgb, dtype=np.uint8)
+
+    if has_color:
+        colors = np.asarray(o3d_cloud.colors)
+        if colors.shape[0] == points.shape[0] and colors.shape[1] == 3:
+            rospy.loginfo("Converting Open3D cloud: has colors.")
+            colors = (colors * 255).astype(np.uint8)
+        else:
+            rospy.loginfo("Color size mismatch, applying default color.")
+            colors = np.tile(rgb, (points.shape[0], 1))
+    else:
+        rospy.loginfo("Converting Open3D cloud: no colors, applying default color.")
+        colors = np.tile(rgb, (points.shape[0], 1))
+
+    rgb_packed = (
+        (colors[:, 0].astype(np.uint32) << 16)
+        | (colors[:, 1].astype(np.uint32) << 8)
+        | (colors[:, 2].astype(np.uint32))
+    )
+    rgb_float = rgb_packed.view(np.float32)
+
+    # --- Base fields ---
+    fields = [
+        PointField("x", 0, PointField.FLOAT32, 1),
+        PointField("y", 4, PointField.FLOAT32, 1),
+        PointField("z", 8, PointField.FLOAT32, 1),
+        PointField("rgb", 12, PointField.FLOAT32, 1),
+    ]
+    offset = 16  # bytes used so far
+
+    # --- Custom fields (Open3D >= 0.17) ---
+    extra_data = {}
+    if hasattr(o3d_cloud, "point"):
+        for key in o3d_cloud.point.keys():
+            if key in ["positions", "points", "normals", "colors"]:
+                continue
+            arr = np.asarray(o3d_cloud.point[key])
+            if arr.ndim == 1:
+                arr = arr[:, np.newaxis]
+
+            # chọn kiểu dữ liệu phù hợp
+            dtype = arr.dtype
+            if dtype == np.float32:
+                ros_type = PointField.FLOAT32
+                size = 4
+            elif np.issubdtype(dtype, np.int16):
+                ros_type = PointField.INT16
+                size = 2
+            elif np.issubdtype(dtype, np.uint16):
+                ros_type = PointField.UINT16
+                size = 2
+            else:
+                rospy.logwarn(f"Unsupported field {key} with dtype {dtype}, skipped.")
+                continue
+
+            fields.append(PointField(name=key, offset=offset, datatype=ros_type, count=1))
+            extra_data[key] = arr[:, 0]
+            offset += size
+
+    # --- Tạo structured array ---
+    dtype_list = [(f.name, np.float32 if f.datatype == PointField.FLOAT32 else np.int16) for f in fields]
+    structured = np.zeros(points.shape[0], dtype=dtype_list)
+
+    structured["x"] = points[:, 0]
+    structured["y"] = points[:, 1]
+    structured["z"] = points[:, 2]
+    structured["rgb"] = rgb_float
+
+    for k, v in extra_data.items():
+        structured[k] = v
+
+    # --- Tạo PointCloud2 ROS message ---
+    msg = pc2.create_cloud(header, fields, structured)
+    return msg
+
 def convert_open3d_to_pointcloud2_with_diff(o3d_cloud, diff_array=None, frame_id="base_link"):
     """
     Chuyển đổi Open3D point cloud sang ROS PointCloud2, thêm field 'diff' nếu có.
@@ -452,7 +526,7 @@ def convert_open3d_to_pointcloud2_with_diff(o3d_cloud, diff_array=None, frame_id
     
     if diff_array is not None:
         assert len(diff_array) == num_points, f"diff_array must have the same number of points as the point cloud"
-        fields.append(('Distances', np.float32))
+        fields.append(('distances', np.float32))
 
     # Tạo array
     data = np.zeros(num_points, dtype=fields)
@@ -462,7 +536,7 @@ def convert_open3d_to_pointcloud2_with_diff(o3d_cloud, diff_array=None, frame_id
     if has_colors:
         data['rgb'] = rgb_float
     if diff_array is not None:
-        data['Distances'] = diff_array.astype(np.float32)
+        data['distances'] = diff_array.astype(np.float32)
 
     # Tạo header
     header = std_msgs.msg.Header()
@@ -471,65 +545,6 @@ def convert_open3d_to_pointcloud2_with_diff(o3d_cloud, diff_array=None, frame_id
 
     # Convert sang PointCloud2
     return ros_numpy.point_cloud2.array_to_pointcloud2(data, frame_id=header.frame_id, stamp=header.stamp)
-
-import numpy as np
-from scipy.interpolate import UnivariateSpline
-
-def smooth_laser_scan_message(points, window_size=50, overlap=0.5, spline_order=3, multiplier=1.0):
-    """
-    Làm mượt chuỗi pointcloud 2D bằng cách chia thành nhiều đoạn nhỏ và áp dụng spline từng đoạn.
-
-    Args:
-        points (ndarray): Mảng N×2 gồm các điểm (x, y).
-        window_size (int): Số điểm trong mỗi đoạn con.
-        overlap (float): Phần trăm chồng lắp giữa các đoạn (0.0–0.99).
-        spline_order (int): Bậc của spline (thường là 2 hoặc 3).
-        multiplier (float): Điều chỉnh độ mượt spline.
-
-    Returns:
-        ndarray: Mảng điểm sau khi đã làm mượt từng đoạn và ghép lại.
-    """
-    points = np.asarray(points)
-    N = len(points)
-    step = max(1, int(window_size * (1 - overlap)))
-
-    smoothed_points = []
-    for start in range(0, N - window_size + 1, step):
-        segment = points[start:start + window_size]
-        x = segment[:, 0]
-        y = segment[:, 1]
-
-        # Arc length
-        distances = np.sqrt(np.diff(x)**2 + np.diff(y)**2)
-        # Ước lượng độ nhiễu
-
-
-        if np.max(distances) > np.mean(distances) + 1 * np.std(distances):
-            segment_smooth = np.stack((x, y), axis=1)
-            segment_smooth = segment_smooth[int(window_size * overlap):]
-        else:
-            dy = np.diff(y)
-            estimated_std = np.std(dy) / np.sqrt(2)
-            arc_lengths = np.concatenate([[0], np.cumsum(distances)])
-
-            estimated_var = estimated_std ** 2
-            s = len(segment) * estimated_var * multiplier
-
-            spline_x = UnivariateSpline(arc_lengths, x, k=spline_order, s=s)
-            spline_y = UnivariateSpline(arc_lengths, y, k=spline_order, s=s)
-
-            arc_uniform = np.linspace(0, arc_lengths[-1], window_size)
-            x_smooth = spline_x(arc_uniform)
-            y_smooth = spline_y(arc_uniform)
-            segment_smooth = np.stack((x_smooth, y_smooth), axis=1)
-
-            # Tránh trùng điểm ở vùng chồng lắp
-            if smoothed_points:
-                segment_smooth = segment_smooth[int(window_size * overlap):]
-                
-        smoothed_points.append(segment_smooth)
-
-    return np.vstack(smoothed_points)
 
 
 def convert_msg_to_image(msg):
@@ -583,15 +598,13 @@ def convert_pointcloud2_to_pointcloud(pc2_msg):
     return pc_msg
 
 
-
-
 from shared.config_loader import CONFIG as cfg
 
 def map_distances_to_colors(
     distances, 
     clip_max=0.15,
-    highlight_range=(0.01, 0.02),
-    out_of_range_color=(0.5, 0.0, 0.5)
+    highlight_range=(0.02, 0.04),
+    out_of_range_color=(0.678, 0.847, 0.902) #Light blue
 ):
     """
     Map distances to RGB colors with smooth transitions:
@@ -611,7 +624,7 @@ def map_distances_to_colors(
 
         elif d < low:
             # Gradient red (1,0,0) → green (0,1,0)
-            t = d / low if low > 0 else 0
+            # t = d / low if low > 0 else 0
             # colors[i] = (1 - t, t, 0)
             colors[i] = (0.5, 0, 0)
 
@@ -621,14 +634,14 @@ def map_distances_to_colors(
 
         else:
             # Gradient green (0,1,0) → blue (0,0,1)
-            t = (d - high) / (clip_max - high) if clip_max > high else 1
-            colors[i] = (0, 1 - t, t)
+            colors[i] = (0, 1, 0)
 
     return colors
 
 
-
 def remove_point(pcd, key_points, radius):
+    import open3d as o3d
+
     pts = np.asarray(pcd.points)
     if isinstance(key_points, o3d.geometry.PointCloud):
         query_pts = np.asarray(key_points.points)
@@ -643,9 +656,10 @@ def remove_point(pcd, key_points, radius):
     return pcd_filtered
 
 
-
 def remove_ground_with_pca(pcd_origin, z_threshold=0.3, angle_deg=5,voxel_size=0.05,radius_remove=0.05, plane="xy"):
     # Estimate normals bằng PCA trong Open3D
+    import open3d as o3d
+    
     pcd = pcd_origin.voxel_down_sample(voxel_size=voxel_size)
     pcd.estimate_normals(
         search_param=o3d.geometry.KDTreeSearchParamKNN(knn=30)
@@ -700,6 +714,8 @@ def detect_boundary_pca(pcd, k=30, angle_threshold=np.pi):
         mask (np.ndarray): boolean mask các điểm boundary
         boundary_points (np.ndarray): tọa độ các điểm boundary
     """
+
+    import open3d as o3d
     points = np.asarray(pcd.points)
     N = len(points)
     kdtree = o3d.geometry.KDTreeFlann(pcd)
@@ -744,6 +760,7 @@ def detect_boundary_pca(pcd, k=30, angle_threshold=np.pi):
     boundary_points = points[mask]
     return mask, boundary_points
 
+
 def remove_boundary_region(original_pcd, boundary_points, radius=0.1):
     """
     Remove toàn bộ điểm trong cloud gốc nằm gần boundary points (khoảng cách < radius).
@@ -762,6 +779,9 @@ def remove_boundary_region(original_pcd, boundary_points, radius=0.1):
     filtered_pcd : open3d.geometry.PointCloud
         Cloud sau khi remove điểm gần biên
     """
+
+    import open3d as o3d
+
     points = np.asarray(original_pcd.points)
 
     # KDTree trên cloud gốc để search nhanh
@@ -777,4 +797,17 @@ def remove_boundary_region(original_pcd, boundary_points, radius=0.1):
     filtered_pcd = original_pcd.select_by_index(keep_idx)
 
     return filtered_pcd
+
+
+def load_ply(filepath):
+    import open3d as o3d
+    try:
+        pcd = o3d.io.read_point_cloud(filepath)
+        if len(pcd.points) == 0:
+            print("⚠️ File have no data:", filepath)
+            return None
+        return pcd
+    except Exception as e:
+        print(f"❌ Can't load file {filepath}: {e}")
+        return None
 

@@ -3,6 +3,10 @@ import vtk
 import numpy as np
 import struct
 import sensor_msgs.point_cloud2 as pc2
+from sensor_msgs.msg import PointCloud2
+
+import ros_numpy
+
 from vtk.util import numpy_support
 
 import numpy as np
@@ -56,9 +60,12 @@ def ros_pointcloud2_to_o3d_to_vtk_polydata_voxel(msg, voxel_size=0.0):
     return polydata
 
     
-def o3d_to_vtk_polydata(pcd):
+def o3d_to_vtk_polydata(pcd, voxel_size=0.0):
     import vtk
     import numpy as np
+
+    if voxel_size > 0:
+        o3d_cloud = o3d_cloud.voxel_down_sample(voxel_size)
 
     points = np.asarray(pcd.points)
     has_colors = pcd.has_colors()
@@ -135,6 +142,115 @@ def convert_pointcloud2_to_o3d(msg):
     except Exception as e:
         rospy.logerr(f"Failed to convert PointCloud2 to Open3D format: {e}")
         return None
+
+def convert_pointcloud2_to_o3d_v2(msg):
+    import ros_numpy
+    import open3d as o3d
+
+
+    """Convert a ROS PointCloud2 message into an Open3D PointCloud, preserving extra fields."""
+    # if not isinstance(msg, PointCloud2):
+    #     rospy.logerr("Input message is not of type PointCloud2.")
+    #     return None
+
+    # Convert to structured NumPy array
+    cloud_arr = ros_numpy.point_cloud2.pointcloud2_to_array(msg)
+    field_names = cloud_arr.dtype.names
+
+    # Extract XYZ
+    if not all(k in field_names for k in ('x', 'y', 'z')):
+        return None
+
+    xyz = np.vstack((cloud_arr['x'], cloud_arr['y'], cloud_arr['z'])).T
+    o3d_cloud = o3d.geometry.PointCloud()
+    o3d_cloud.points = o3d.utility.Vector3dVector(xyz)
+
+    # === Handle RGB ===
+    if 'rgb' in field_names:
+        rgb_packed = cloud_arr['rgb']
+        rgb_uint8 = np.zeros((rgb_packed.shape[0], 3), dtype=np.uint8)
+        rgb_view = rgb_packed.view(np.uint32)
+        rgb_uint8[:, 0] = (rgb_view >> 16) & 255
+        rgb_uint8[:, 1] = (rgb_view >> 8) & 255
+        rgb_uint8[:, 2] = rgb_view & 255
+        o3d_cloud.colors = o3d.utility.Vector3dVector(rgb_uint8.astype(np.float32) / 255.0)
+
+    # === Handle any other extra fields (e.g., distances, intensity, normals) ===
+    skip_fields = {'x', 'y', 'z', 'rgb'}
+    for field in field_names:
+        if field in skip_fields:
+            continue
+        data = cloud_arr[field].astype(np.float32).reshape(-1)
+        print(f"Adding extra field to Open3D: {field} (len={len(data)})")
+        o3d_cloud.point[field] = o3d.utility.Vector3dVector(np.expand_dims(data, axis=1)) if data.ndim == 1 else o3d.utility.Vector3dVector(data)
+
+    return o3d_cloud
+
+
+def convert_pointcloud2_to_o3d_tensor(msg: PointCloud2):
+    """
+    Convert ROS PointCloud2 message -> Open3D Tensor PointCloud (o3d.t.geometry.PointCloud).
+    Giữ tất cả các field có trong PointCloud2 (x, y, z, rgb, intensity, distance, ...).
+    """
+    import open3d as o3d
+
+    if not isinstance(msg, PointCloud2):
+        print("[convert_pointcloud2_to_o3d_tensor] Input message is not of type PointCloud2.")
+        return None
+
+    # Convert to structured NumPy array
+    cloud_arr = ros_numpy.point_cloud2.pointcloud2_to_array(msg)
+    field_names = cloud_arr.dtype.names
+
+    if field_names is None:
+        print("[convert_pointcloud2_to_o3d_tensor] PointCloud2 message has no fields.")
+        return None
+
+    # Extract XYZ
+    xyz = ros_numpy.point_cloud2.get_xyz_points(cloud_arr, remove_nans=True)
+    pcd_t = o3d.t.geometry.PointCloud()
+    pcd_t.point["positions"] = o3d.core.Tensor(xyz, dtype=o3d.core.Dtype.Float32)
+
+    # Loop over all fields except x,y,z
+    for field in field_names:
+        if field in ["x", "y", "z"]:
+            continue
+
+        data = np.asarray(cloud_arr[field])
+
+        # Handle RGB (float32 packed)
+        if field == "rgb" and data.dtype == np.float32:
+            rgb_view = data.view(np.uint32)
+            r = ((rgb_view >> 16) & 255).astype(np.uint8)
+            g = ((rgb_view >> 8) & 255).astype(np.uint8)
+            b = (rgb_view & 255).astype(np.uint8)
+            colors = np.stack([r, g, b], axis=-1).astype(np.float32) / 255.0
+            pcd_t.point["colors"] = o3d.core.Tensor(colors, dtype=o3d.core.Dtype.Float32)
+            continue
+
+        # Convert to 2D array if needed
+        if data.ndim == 1:
+            data = data.reshape(-1, 1)
+
+        # Map NumPy dtype -> Open3D dtype
+        dtype_map = {
+            np.dtype('float32'): o3d.core.Dtype.Float32,
+            np.dtype('float64'): o3d.core.Dtype.Float64,
+            np.dtype('int8'): o3d.core.Dtype.Int8,
+            np.dtype('int16'): o3d.core.Dtype.Int16,
+            np.dtype('int32'): o3d.core.Dtype.Int32,
+            np.dtype('uint8'): o3d.core.Dtype.UInt8,
+            np.dtype('uint16'): o3d.core.Dtype.UInt16,
+            np.dtype('uint32'): o3d.core.Dtype.UInt32,
+        }
+        dtype = dtype_map.get(data.dtype, o3d.core.Dtype.Float32)
+
+        # Add field
+        pcd_t.point[field] = o3d.core.Tensor(data, dtype=dtype)
+
+    print(f"Converted PointCloud2 to Open3D Tensor Cloud with fields: {list(pcd_t.point.keys())}")
+    return pcd_t
+
 
 
 def load_ply_as_polydata(filepath, voxel_size=0.01):

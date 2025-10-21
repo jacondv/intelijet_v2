@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <style>
+        @page {
+            size: A4;
+            margin: 10mm;
+        }
+
+        body {
+            font-family: "Arial", sans-serif;
+            color: #222;
+        }
+
+        /* ---- HEADER ---- */
+        .header {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+            border-bottom: 2px solid #2980b9;
+            padding-bottom: 6px;
+            margin-bottom: 5px;
+        }
+
+        .logo {
+            width: 180px;
+            height: auto;
+        }
+
+        .title {
+            flex: 1;
+            text-align: center;
+            font-size: 25px;
+            font-weight: bold;
+            color: #000;
+            letter-spacing: 0.6px;
+        }
+
+        /* ---- INFO TABLE ---- */
+        table.info {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+            font-size: 13px;
+        }
+
+        table.info th, table.info td {
+            border: 2px solid #000;
+            padding: 5px 8px;
+        }
+
+        table.info th {
+            background-color: #f5f5f5;
+            text-align: left;
+            font-weight: bold;
+            width: 25%;
+        }
+
+        /* ---- SECTION ---- */
+        .section {
+            margin-top: 5px;
+            border: 2px solid #000;
+        }
+
+        .section-title {
+            font-size: 15px;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 2px;
+            padding-top: 5px;
+            padding-left: 10px;
+        }
+
+        .image-container {
+            text-align: center;
+            margin-top: 5px;
+            /* border: 2px solid #000; */
+        }
+
+        .image-container img {
+            /* width: 95%; */
+            max-height: 70mm;
+            /* border: 1px solid #000; */
+            /* border-radius: 6px; */
+            object-fit: contain;
+            margin-top: 8px;
+            margin-bottom: 2px;
+        }
+
+        /* ---- FOOTER ---- */
+        .footer {
+            margin-top: 20px;
+            font-size: 12px;
+        }
+
+        .signature {
+            text-align: right;
+            margin-top: 40px;
+        }
+
+        .signature-line {
+            border-top: 1px solid #444;
+            width: 150px;
+            float: right;
+            text-align: center;
+            padding-top: 3px;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- HEADER -->
+    <div class="header">
+        <img src="{{ data.logo }}" alt="Logo" class="logo">
+        <div class="title">SHOTCRETE THICKNESS REPORT</div>
+    </div>
+
+    <!-- INFO TABLE -->
+    <table class="info">
+        <tr>
+            <th>Site</th>
+            <td>{{ data.site_name }}</td>
+            <th>Shotcrete Applied</th>
+            <td>{{ data.applied_thickness }} (mm) ±{{ data.tolerance }} mm</td>
+        </tr>
+        <tr>
+            <th>Jobname</th>
+            <td>{{ data.job_name }}</td>
+            <th>Average Thickness</th>
+            <td>{{ data.avg_thickness }} (mm)</td>
+        </tr>
+        <tr>
+            <th>Date</th>
+            <td>{{ data.date }}</td>
+            <th>Shotcrete Volume</th>
+            <td>{{ data.shotcrete_volume }} (m³)</td>
+        </tr>
+        <tr>
+            <th>Time</th>
+            <td>{{ data.time }}</td>
+            <th></th>
+            <td></td>
+        </tr>
+    </table>
+
+    <!-- SECTION 1: TUNNEL VIEW -->
+    <div class="section">
+        <div class="section-title">TUNNEL VIEW</div>
+        <div class="image-container">
+            <img src="{{ data.tunnel_view_uri }}" alt="Tunnel View">
+        </div>
+    </div>
+
+    <!-- SECTION 2: THICKNESS DISTRIBUTION -->
+    <div class="section">
+        <div class="section-title">SHOTCRETE THICKNESS DISTRIBUTION</div>
+        <div class="image-container">
+            <img src="{{ data.thickness_chart_uri }}" alt="Thickness Chart">
+        </div>
+    </div>
+
+    <!-- FOOTER -->
+    <div class="footer">
+        <div class="signature">
+            <div class="signature-line">Authorized Signature</div>
+        </div>
+        <div style="margin-top: 60px; text-align: right;">
+            Date: {{ date }}
+        </div>
+    </div>
+
+</body>
+</html>

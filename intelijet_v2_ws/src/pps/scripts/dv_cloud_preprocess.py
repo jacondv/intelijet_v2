@@ -3,6 +3,7 @@
 # This is the first step after the system receives cloud data from the lidar device
 
 from pps.helper import convert_open3d_to_pointcloud2, crop_pointcloud_by_box, notify_one, detect_boundary_pca, remove_boundary_region
+from pps.tunnel_processing import TunnelProcessing
 from std_msgs.msg import Empty
 import rospy
 from sensor_msgs.msg import PointCloud2
@@ -55,6 +56,10 @@ class CloudProcessorNode:
                                                min_bound=[cfg.crop_box.min.x, cfg.crop_box.min.y, cfg.crop_box.min.z], 
                                                max_bound=[cfg.crop_box.max.x, cfg.crop_box.max.y, cfg.crop_box.max.z])
         
+        
+        tunnel = TunnelProcessing(result)
+        result = tunnel.run_processing_pipeline()
+
 
         # Lọc nhiễu
         # cloud_cropped, _ = cloud_cropped.remove_statistical_outlier(nb_neighbors=5, std_ratio=1)

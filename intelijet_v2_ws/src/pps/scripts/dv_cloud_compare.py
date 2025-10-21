@@ -5,7 +5,10 @@ import rospy
 # import open3d as o3d
 from sensor_msgs.msg import PointCloud2
 from pps.helper import compute_heatmap_to_plane, assign_colors_by_threshold, color_voxel_majority, \
-    convert_open3d_to_pointcloud2, convert_open3d_to_pointcloud2_with_diff, convert_pointcloud2_to_o3d
+    convert_open3d_to_pointcloud2, convert_open3d_to_pointcloud2_with_diff, convert_pointcloud2_to_o3d, convert_open3d_to_pointcloud2_v2
+from pps.data_converter import CloudConverter
+
+cloudconverter = CloudConverter()
 
 from shared.config_loader import CONFIG as cfg
 
@@ -46,7 +49,8 @@ class CloudComparer:
         if not isinstance(msg, PointCloud2):
             rospy.logerr("Received message is not of type PointCloud2.")
             return
-        self.pres_cloud = convert_pointcloud2_to_o3d(msg)
+        # self.pres_cloud = convert_pointcloud2_to_o3d(msg)
+        self.pres_cloud = cloudconverter.pointcloud2_to_o3d_tensor(msg)
         # self.pub.publish(convert_open3d_to_pointcloud2(self.pres_cloud, frame_id=msg.header.frame_id))
         self.got_pres = True
 
@@ -55,17 +59,19 @@ class CloudComparer:
         if not isinstance(msg, PointCloud2):
             rospy.logerr("Received message is not of type PointCloud2.")
             return
-        self.post_cloud = convert_pointcloud2_to_o3d(msg)
+        # self.post_cloud = convert_pointcloud2_to_o3d(msg)
+        self.post_cloud = cloudconverter.pointcloud2_to_o3d_tensor(msg)
         self.got_post = True
 
         if self.got_pres and self.got_post:
-            self.compared_cloud, diff = self.compare(self.pres_cloud, self.post_cloud)
+            self.compared_cloud = self.compare(self.pres_cloud, self.post_cloud)
 
         if self.compared_cloud is None:
             rospy.logwarn("No comparison result available yet.")
             return
         rospy.loginfo("Publishing compared cloud...")
-        self.compared_cloud = convert_open3d_to_pointcloud2(self.compared_cloud, frame_id=self.frame_id)
+        # self.compared_cloud = convert_open3d_to_pointcloud2_v2(self.compared_cloud, frame_id=self.frame_id)
+        self.compared_cloud = cloudconverter.o3d_tensor_to_pointcloud2(self.compared_cloud, frame_id=self.frame_id)
         self.pub.publish(self.compared_cloud)
         self.got_post = False
 
@@ -77,7 +83,7 @@ class CloudComparer:
                                                  tolerance_thickness=self.tolerance_thickness)
         # result = assign_colors_by_threshold(result, dists, threshold=[THICKNESS_MIN, THICKNESS_MAX])
         # result = color_voxel_majority(result, voxel_size=0.05)
-        return result, dists
+        return result
     
     
 

@@ -5,6 +5,8 @@ from PyQt5.QtCore import QObject
 
 from PyQt5.QtWidgets import QWidget, QLineEdit, QLabel, QPushButton, QCheckBox
 from shared.msg import DeviceStatus
+from pps.helper import notify_one
+
 # ===== Hàm load dữ liệu vào UI =====
 
 config_mapping = {
@@ -139,6 +141,8 @@ def load_ui_to_config(widget, data_maping=config_mapping):
             
             # Cập nhật lại CONFIG tương ứng
     save_config(cfg)
+
+    notify_one("/system/config/update")
     return cfg
 
 

@@ -26,3 +26,11 @@ housing_close_speed_slow : 105 # speed in hz
 thickness:
   target: 30  # target thickness in mm
   tolerance: 10 # allowable tolerance in mm
+
+report:
+  sitename: "Jacon Equipment (test only)"
+  jobnumer: "Jobnumber (test only)"
+  target: 30
+  tolerance: 10
+  thickness_avg: 0
+  shotcrete_vol: 0

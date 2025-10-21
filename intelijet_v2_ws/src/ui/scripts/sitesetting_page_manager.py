@@ -1,51 +1,55 @@
 import os
 
-from PyQt5.QtWidgets import QWidget, QHBoxLayout, QLineEdit, QPushButton, QListWidgetItem, QMessageBox
+from PyQt5.QtWidgets import QWidget, QListWidget, QListWidgetItem, QMessageBox
 from PyQt5.QtCore import pyqtSignal
-from ui.jobsetting_page_ui import Ui_frmJobSetting
-from ui.job_item_widget import JobItemWidget
+from ui.sitesetting_page_ui import Ui_frmSiteSetting
+from ui.job_item_widget import FolderItemWidget
 from shared.config_loader import CONFIG as cfg
 
 BASE_DIR = cfg.BASE_DIR
 # BASE_DIR = "/mnt/c/work/projects/intelijet_v2"
-class JobNumberPageManager(QWidget):
+class SiteSettingPageManager(QWidget):
     def __init__(self, parent=None, mode="view"):
         super().__init__(parent)
-        self.jobs_root = os.path.join(BASE_DIR, "data")
+        self.sites_root = os.path.join(BASE_DIR, "data")
+        # self.jobs_root = os.path.join(BASE_DIR, "data")
         # Load UI đã thiết kế
-        self.ui = Ui_frmJobSetting()
+        self.ui = Ui_frmSiteSetting()
         self.ui.setupUi(self)
         self.view_mode = mode  # "view" hoặc "label"
 
         # Kết nối signal
-        self.ui.btnCreateJob.clicked.connect(self.add_job)
-        self.load_jobs_from_disk()
+        self.ui.btnCreateSite.clicked.connect(self.add_site)
+        self.load_folder_item(self.sites_root, self.ui.lstSites)
+        self.ui.txtSearchSite.textChanged.connect(self.filter_site)
 
-        self.ui.txtFilter.textChanged.connect(self.filter_jobs)
+
+    def setup_signals(self, parent:QListWidget, folder_widget, item, full_path):
+        folder_widget.folder_deleted.connect(lambda name: self.delete_folder(parent, item, name, full_path))
+        folder_widget.folder_renamed.connect(self.rename_folder)
+        folder_widget.clickedSignal.connect(lambda: self.on_item_selected(item, full_path))
 
 
-    def setup_job_signals(self, job_widget, item, job_path):
-        job_widget.job_deleted.connect(lambda name: self.delete_job(item, name, job_path))
-        job_widget.job_renamed.connect(self.rename_job)
-        job_widget.clickedSignal.connect(lambda: self.on_item_selected(item, job_path))
-
-    def on_item_selected(self, item, job_path):
+    def on_item_selected(self, item, full_path):
         self.ui.lstJobnumber.setCurrentItem(item)
 
-    def load_jobs_from_disk(self):
-        self.ui.lstJobnumber.clear()
+
+    def load_folder_item(self, dir_path, parent:QListWidget):
+        parent.clear()
         mode=self.view_mode
-        for job_name in os.listdir(self.jobs_root):
-            job_path = os.path.join(self.jobs_root, job_name)
-            if os.path.isdir(job_path):
-                item = QListWidgetItem(self.ui.lstJobnumber)
-                job_widget = JobItemWidget(job_name)
+        for p in os.listdir(dir_path):
+            full_path = os.path.join(dir_path, p)
+            if os.path.isdir(full_path):
+                item = QListWidgetItem(parent)
+                item_widget = FolderItemWidget(p)
                 if mode == "label":
-                    job_widget.show_only_label()
-                item.setSizeHint(job_widget.sizeHint())
-                self.ui.lstJobnumber.addItem(item)
-                self.ui.lstJobnumber.setItemWidget(item, job_widget)
-                self.setup_job_signals(job_widget, item, job_path)
+                    item_widget.show_only_label()
+                item.setSizeHint(item_widget.sizeHint())
+                parent.addItem(item)
+                parent.setItemWidget(item, item_widget)
+
+                self.setup_signals(parent, item_widget, item, full_path)
+
 
     def get_selected_job(self):
         item = self.ui.lstJobnumber.currentItem()
@@ -58,12 +62,12 @@ class JobNumberPageManager(QWidget):
             return selected_job_name
         
 
-
     def add_job(self):
         job_name = self.ui.txtJobNumber.text().strip().replace(" ", "_")
         if not job_name:
             QMessageBox.warning(self, "⚠️ Warning", "Please enter Job Number before adding.")
             return
+
 
         # Tạo thư mục job
         job_path = os.path.join(self.jobs_root, job_name)
@@ -128,6 +132,7 @@ class JobNumberPageManager(QWidget):
             job_name = widget.txtJobname.text().lower()
             item.setHidden(text not in job_name)
 
+
     # ----------------- Hàm ẩn / hiện -----------------
     def set_visible(self, visible: bool):
         """
@@ -140,6 +145,7 @@ class JobNumberPageManager(QWidget):
         for child in self.findChildren(QWidget):
             child.setEnabled(visible)
             
+
     def hide_all_delete_buttons(self):
         for i in range(self.ui.lstJobnumber.count()):
             item = self.ui.lstJobnumber.item(i)
@@ -147,3 +153,22 @@ class JobNumberPageManager(QWidget):
             if widget and hasattr(widget, "btnDelete"):
                 widget.btnDelete.hide()
             
+
+    def delete_folder(self,parent:QListWidget, item, name, path):
+        reply = QMessageBox.question(self, "Confirmation",
+                                     f"Are you sure you want to delete '{name}'?",
+                                     QMessageBox.Yes | QMessageBox.No,
+                                     QMessageBox.No)
+
+        if reply == QMessageBox.Yes:
+            # Xóa thư mục trên disk
+            import shutil
+            if os.path.exists(path):
+                shutil.rmtree(path)
+
+                row =parent.row(item)
+                removed_item = parent.takeItem(row)
+                widget = parent.itemWidget(removed_item)
+                if widget:
+                    widget.deleteLater()
+                del removed_item

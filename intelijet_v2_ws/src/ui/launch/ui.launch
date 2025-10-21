@@ -1,3 +1,4 @@
 <launch>
+	<node pkg="shared" name="config_manager_node" type="config_manager_node.py" />
 	<node pkg="ui" type="app.py" name="app" output="screen"/>
 </launch>

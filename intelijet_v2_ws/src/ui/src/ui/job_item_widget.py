@@ -1,86 +1,64 @@
-from PyQt5.QtWidgets import QWidget, QHBoxLayout, QLineEdit, QPushButton, QMessageBox, QLabel
+from PyQt5.QtWidgets import QWidget, QHBoxLayout, QLineEdit, QPushButton, QMessageBox, QLabel, QVBoxLayout
 from PyQt5.QtCore import pyqtSignal, QEvent
+from ui.job_item_ui import Ui_Form
+from ui.file_item_detail import Ui_frmFileItemDetail
+import os
+from datetime import datetime
 
 
-class JobItemWidget(QWidget):
-    job_renamed = pyqtSignal(str, str,object)   # old_name, new_name
+
+class JobItemWidget(QWidget, Ui_Form):
+    job_renamed = pyqtSignal(str, str, object)
     job_deleted = pyqtSignal(str)
-    clickedSignal = pyqtSignal() 
+    job_selected = pyqtSignal(str)
+    clickedSignal = pyqtSignal()
 
     def __init__(self, job_name="", parent=None):
         super().__init__(parent)
-        layout = QHBoxLayout(self)
-        layout.setContentsMargins(5, 2, 5, 2)
+        self.setupUi(self)   # nạp layout từ file job_item_ui.py
 
         self.original_name = job_name
+        self.txtJobname.setText(job_name)
 
-        # Ô nhập tên Job (ban đầu disable)
-        self.txtJobname = QLineEdit(job_name)
-        self.txtJobname.setReadOnly(True)
-        self.txtJobname.setStyleSheet("""
-            QLineEdit {
-                border: None;
-                margin: 5px;
-                color: white;     
-                padding: 2px;
-
-            }                     
-            QLineEdit:hover {
-                padding-left: 8px;   
-            }
-                                      
-        """)
-        layout.addWidget(self.txtJobname)
-
-        # Nút Edit
-        self.btnEdit = QPushButton("Edit")
-        self.btnEdit.setStyleSheet(self._btn_style("#2196F3"))
-        self.btnEdit.hide()
-        layout.addWidget(self.btnEdit)
-
-        # Nút Save (ẩn ban đầu)
-        self.btnSave = QPushButton("Save")
-        self.btnSave.setStyleSheet(self._btn_style("#4CAF50"))
-        self.btnSave.hide()
-        layout.addWidget(self.btnSave)
-
-        # Nút Cancel (ẩn ban đầu)
-        self.btnCancel = QPushButton("Cancel")
-        self.btnCancel.setStyleSheet(self._btn_style("#9E9E9E"))
-        self.btnCancel.hide()
-        layout.addWidget(self.btnCancel)
-
-        # Nút Delete
-        self.btnDelete = QPushButton("X")
-        self.btnDelete.setStyleSheet(self._btn_style("#f44336"))
-        self.btnDelete.hide()        
-        layout.addWidget(self.btnDelete)
-
-        # Kết nối sự kiện
+        # kết nối sự kiện
         self.btnEdit.clicked.connect(self.enable_edit)
         self.btnSave.clicked.connect(self.save_edit)
         self.btnCancel.clicked.connect(self.cancel_edit)
         self.btnDelete.clicked.connect(lambda: self.job_deleted.emit(self.original_name))
+        self.btnSelect.clicked.connect(self.job_selected.emit)
+
+        # Ẩn các nút khi load
+        self.show_view_mode()
 
         self.txtJobname.installEventFilter(self)
 
-    def _btn_style(self, color):
-        """Tạo style cho nút với màu nền"""
-        return f"""
-            QPushButton {{
-                background-color: {color};
-                color: white;
-                font-size: 12px;
-                border-radius: 6px;
-                padding: 2px 6px;
-                min-width: 40px;
-                min-height: 24px;
-            }}
-            QPushButton:hover {{
-                background-color: #555;
-            }}
-        """
+    def show_edit_mode(self):
+        """Chế độ edit: hiện Save, Cancel; ẩn Edit, Delete"""
+        self.btnEdit.hide()
+        self.btnDelete.hide()
+        self.btnSave.show()
+        self.btnCancel.show()
+        self.txtJobname.setReadOnly(False)
+        self.txtJobname.setFocus()
+        self.btnSelect.hide()
 
+    def show_view_mode(self):
+        """Chế độ xem: hiện Edit, Delete; ẩn Save, Cancel"""
+        self.btnSave.hide()
+        self.btnCancel.hide()
+        self.btnEdit.show()
+        self.btnDelete.show()
+        self.txtJobname.setReadOnly(True)
+        self.btnSelect.hide()
+
+    def show_only_label(self):
+        """Chỉ hiện tên job, ẩn toàn bộ nút"""
+        self.btnEdit.hide()
+        self.btnSave.hide()
+        self.btnCancel.hide()
+        self.btnDelete.hide()
+        self.txtJobname.setReadOnly(True)
+        self.btnSelect.hide()
 
     def eventFilter(self, obj, event):
         if obj is self.txtJobname and event.type() == QEvent.MouseButtonPress:
@@ -91,11 +69,7 @@ class JobItemWidget(QWidget):
     def enable_edit(self):
         """Chuyển sang chế độ edit"""
         self.original_name = self.txtJobname.text()
-        self.txtJobname.setReadOnly(False)
-        self.txtJobname.setFocus()
-        self.btnEdit.hide()
-        self.btnSave.show()
-        self.btnCancel.show()
+        self.show_edit_mode()
 
     def save_edit(self):
         """Xác nhận thay đổi"""
@@ -104,10 +78,7 @@ class JobItemWidget(QWidget):
             self.job_renamed.emit(self.original_name, new_name, self)
             self.original_name = new_name
 
-        self.txtJobname.setDisabled(True)
-        self.btnSave.hide()
-        self.btnCancel.hide()
-        self.btnEdit.show()
+        self.show_view_mode()
 
     def rollback_name(self):
         """Khôi phục lại tên cũ nếu rename fail"""
@@ -116,54 +87,143 @@ class JobItemWidget(QWidget):
     def cancel_edit(self):
         """Hủy thay đổi và khôi phục giá trị cũ"""
         self.txtJobname.setText(self.original_name)
-        self.txtJobname.setDisabled(True)
-        self.btnSave.hide()
-        self.btnCancel.hide()
-        self.btnEdit.show()
+        self.show_view_mode()
 
 
 class FileItemWidget(QWidget):
+
     openSignal = pyqtSignal()
-    def __init__(self, filename, filepath, parent=None):
+
+    def __init__(self, filename, filepath, parent=None, view_mode="auto"):
         super().__init__(parent)
+        self.ui = Ui_frmFileItemDetail()
+        self.ui.setupUi(self) 
         self.filepath = filepath
+        self.filename = filename
+        self.fullpath = os.path.join(self.filepath, self.filename)
 
-        layout = QHBoxLayout(self)
-        layout.setContentsMargins(0, 0, 0, 0)
-        layout.setSpacing(0) 
+        filename_info = self.parse_filename(filename=filename)
 
-        self.label = QLabel(filename)
-        self.label.setStyleSheet("""
-                        QLabel {
-                            color: white;
-                            font-size: 10px;
-                        }
+        self.ui.lblRow1.setText(filename_info['jobname'])
+        self.ui.lblRow2.setText(filename_info['name'])
+        self.ui.lblRow3.setText(filename_info['datetime'])
+        self.ui.btnOpen.clicked.connect(self.on_open_clicked)
+        if view_mode.lower() == 'label':
+            self.__view_label_mode()
 
-                    """)
-        layout.addWidget(self.label)
 
-        self.btn_open = QPushButton("Open")
-        self.btn_open.setStyleSheet("""
-                        QPushButton {
-                            border: 2px solid #005a9e;   /* màu border */
-                            border-radius: 0px;       /* bo góc */
-                            background-color: #0078d7;   /* màu nền */
-                        }
-                        QPushButton:hover {
-                            background-color: #005a9e;   /* khi hover */
-                        }
-                        QPushButton:pressed {
-                            background-color: #004578;   /* khi nhấn */
-                        }
+    def __view_label_mode(self):
+        self.ui.btnOpen.hide()
 
-                    """)
-        self.btn_open.setFixedSize(80, 35)  # width=60, height=25
-        layout.addWidget(self.btn_open)
 
-        # connect button
-        self.btn_open.clicked.connect(self.on_open_clicked)
+    def parse_filename(self,filename: str):
+        """
+        Phân tích filename dạng: Jobname#yyyymmdd_hhmmss#name.ply
+        Trả về dict chứa jobname, datetime, name và original filename.
+        """
+        base = os.path.basename(filename)              # Lấy tên file (bỏ đường dẫn)
+        name_no_ext, _ = os.path.splitext(base)        # Bỏ phần .ply
         
+        parts = name_no_ext.split("#")
+        jobname, datetime_raw, name = parts if len(parts) >= 3 else ("Unknown", "Unknown", name_no_ext)
 
+        try:
+            dt = datetime.strptime(datetime_raw, "%Y%m%d_%H%M%S")
+            datetime_str = dt.strftime("%d/%m/%Y %H:%M:%S")
+            datetime_str = f"Scan time: {datetime_str}"
+        except ValueError:
+            datetime_str = datetime_raw  # nếu lỗi định dạng, giữ nguyên
+
+        return {
+            "jobname": jobname,
+            "name": name,
+            "datetime": datetime_str,
+        }
+        
     
     def on_open_clicked(self):
         self.openSignal.emit()
+
+
+
+class FolderItemWidget(QWidget, Ui_Form):
+    folder_renamed = pyqtSignal(str, str, object)
+    folder_deleted = pyqtSignal(str)
+    folder_selected = pyqtSignal(str)
+    clickedSignal = pyqtSignal()
+
+    def __init__(self, folder_name="", parent=None):
+        super().__init__(parent)
+        self.setupUi(self)   # nạp layout từ file job_item_ui.py
+
+        self.original_name = folder_name
+        self.txtName.setText(folder_name)
+
+        # kết nối sự kiện
+        self.btnEdit.clicked.connect(self.enable_edit)
+        self.btnSave.clicked.connect(self.save_edit)
+        self.btnCancel.clicked.connect(self.cancel_edit)
+        self.btnDelete.clicked.connect(lambda: self.folder_deleted.emit(self.original_name))
+        self.btnSelect.clicked.connect(self.folder_selected.emit)
+
+        # Ẩn các nút khi load
+        self.show_view_mode()
+
+        self.txtName.installEventFilter(self)
+
+    def show_edit_mode(self):
+        """Chế độ edit: hiện Save, Cancel; ẩn Edit, Delete"""
+        self.btnEdit.hide()
+        self.btnDelete.hide()
+        self.btnSave.show()
+        self.btnCancel.show()
+        self.txtName.setReadOnly(False)
+        self.txtName.setFocus()
+        self.btnSelect.hide()
+
+    def show_view_mode(self):
+        """Chế độ xem: hiện Edit, Delete; ẩn Save, Cancel"""
+        self.btnSave.hide()
+        self.btnCancel.hide()
+        self.btnEdit.show()
+        self.btnDelete.show()
+        self.txtName.setReadOnly(True)
+        self.btnSelect.hide()
+
+    def show_only_label(self):
+        """Chỉ hiện tên job, ẩn toàn bộ nút"""
+        self.btnEdit.hide()
+        self.btnSave.hide()
+        self.btnCancel.hide()
+        self.btnDelete.hide()
+        self.txtName.setReadOnly(True)
+        self.btnSelect.hide()
+
+    def eventFilter(self, obj, event):
+        if obj is self.txtName and event.type() == QEvent.MouseButtonPress:
+            self.clickedSignal.emit()
+            return True   # chặn event, không để QLineEdit xử lý nữa
+        return super().eventFilter(obj, event)
+    
+    def enable_edit(self):
+        """Chuyển sang chế độ edit"""
+        self.original_name = self.txtName.text()
+        self.show_edit_mode()
+
+    def save_edit(self):
+        """Xác nhận thay đổi"""
+        new_name = self.txtName.text().strip().replace(" ", "_")
+        if new_name and new_name != self.original_name:
+            self.folder_renamed.emit(self.original_name, new_name, self)
+            self.original_name = new_name
+
+        self.show_view_mode()
+
+    def rollback_name(self):
+        """Khôi phục lại tên cũ nếu rename fail"""
+        self.txtName.setText(self.original_name)
+
+    def cancel_edit(self):
+        """Hủy thay đổi và khôi phục giá trị cũ"""
+        self.txtName.setText(self.original_name)
+        self.show_view_mode()
