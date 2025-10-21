@@ -76,9 +76,9 @@ class SickScanController(GenericScanController):
         """Open housing gradually: fast -> medium -> slow, check encoder each step"""
         # speed, target, timeout (giây)
         speeds_targets = [
-            ('fast', cfg.housing_start_position, 5.0),
-            ('medium', 30.0, 30.0),
-            ('slow', cfg.housing_end_position, 75.0)
+            ('fast', cfg.housing_start_position, 10.0),
+            ('medium', 30.0, 60.0),
+            ('slow', cfg.housing_end_position, 180.0)
         ]
 
         for speed, target, timeout in speeds_targets:
@@ -94,11 +94,9 @@ class SickScanController(GenericScanController):
     def _close_housing_sequence(self):
         """Close housing gradually back to start position with step-specific speed and timeout"""
         # speed, target, timeout (giây)
-        speeds_targets = [
-            ('fast', cfg.housing_end_position, 15.0),   # Step bắt đầu close nhanh
-            ('medium', (cfg.housing_start_position + cfg.housing_end_position)/2, 15.0),  # Step giữa
-            ('slow', cfg.housing_start_position-5.0, 3.0)  # Step cuối, tới vị trí start
-        ]
+        speeds_targets = [('fast', cfg.housing_end_position+30.0, 35.0), 
+                          ('medium', 30.0, 35.0),
+                          ('slow', cfg.housing_start_position-5.0, 3.0)]
 
         for speed, target, timeout in speeds_targets:
             self.housing.close(speed)
