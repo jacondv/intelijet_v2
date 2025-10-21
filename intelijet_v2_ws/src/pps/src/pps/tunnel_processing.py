@@ -1,4 +1,4 @@
-import open3d as o3d
+# import open3d as o3d
 import numpy as np
 from scipy.spatial import ConvexHull
 from matplotlib.path import Path
@@ -17,7 +17,7 @@ class TunnelProcessing:
     - Visualization
     """
 
-    def __init__(self, pcd: o3d.geometry.PointCloud):
+    def __init__(self, pcd):
         """
         Initialize with a point cloud.
 
@@ -39,11 +39,11 @@ class TunnelProcessing:
     # ------------------------------
 
     def crop(self, 
-            pcd: o3d.geometry.PointCloud, 
+            pcd, 
             min_bound: np.ndarray, 
             max_bound: np.ndarray, 
             normal: np.ndarray = None
-            ) -> o3d.geometry.PointCloud:
+            ):
         """
         Cắt point cloud bằng hộp giới hạn (bounding box).
         - Nếu normal được truyền vào: xoay cloud sao cho mặt phẳng có normal này song song với mặt XY,
@@ -59,7 +59,7 @@ class TunnelProcessing:
         Returns:
             o3d.geometry.PointCloud: cloud sau khi cắt
         """
-
+        import open3d as o3d
         if normal is None:
             # --- Crop trực tiếp bằng AABB ---
             aabb = o3d.geometry.AxisAlignedBoundingBox(min_bound, max_bound)
@@ -106,6 +106,9 @@ class TunnelProcessing:
         Returns:
             layers (list of o3d.t.geometry.PointCloud)
         """
+
+        import open3d as o3d
+
         if not isinstance(pcd, o3d.t.geometry.PointCloud):
             pcd = o3d.t.geometry.PointCloud.from_legacy(pcd)
         
@@ -152,16 +155,18 @@ class TunnelProcessing:
         print(f"✅ Generated {len(layers)} layers along {axis.upper()} axis")
         return layers
 
-    def combine_pointcloud_list(self,voxel_list):
+    def combine_pointcloud_list(self,slices_list):
         """
         Nhận list các PointCloud GPU (o3d.t.geometry.PointCloud trên CUDA)
         và trả về 1 PointCloud CPU duy nhất.
         """
+
+        import open3d as o3d
         all_points_list = []
         all_colors_list = []
         # has_colors = any(pc.point.colors is not None for pc in voxel_list)
 
-        for pc in voxel_list:
+        for pc in slices_list:
             # Lấy positions tensor và chuyển về CPU
             pts = pc.point.positions.cpu().numpy()  # shape (Ni,3)
             all_points_list.append(pts)
@@ -187,12 +192,12 @@ class TunnelProcessing:
         return cloud_t
 
     def upsample(self,
-        pcd: o3d.t.geometry.PointCloud,
+        pcd,
         min_gap: float = 0.02,
         step: float = 0.01,
         axis: str = 'x',
         max_gap: float = 0.5
-    ) -> o3d.t.geometry.PointCloud:
+    ):
         """
         Nội suy các điểm còn thiếu trong cloud 2D theo thứ tự góc quanh trục chỉ định.
 
@@ -209,6 +214,9 @@ class TunnelProcessing:
         Returns:
             o3d.t.geometry.PointCloud : point cloud sau khi nội suy.
         """
+
+        import open3d as o3d
+
         axis_map = {'x': 0, 'y': 1, 'z': 2}
         if axis not in axis_map:
             raise ValueError("axis phải là 'x', 'y' hoặc 'z'")
@@ -271,7 +279,7 @@ class TunnelProcessing:
         return pcd_new
 
 
-    def downsample(self, voxel_size: float = 0.05) -> o3d.geometry.PointCloud:
+    def downsample(self, voxel_size: float = 0.05):
         """
         Downsample the point cloud using voxel grid.
 
@@ -300,7 +308,7 @@ class TunnelProcessing:
     # ------------------------------
     # Ground & plane operations
     # ------------------------------
-    def estimate_normals(self, knn: int = 30) -> o3d.geometry.PointCloud:
+    def estimate_normals(self, knn: int = 30):
         """
         Estimate surface normals for the point cloud using PCA.
 
@@ -315,6 +323,9 @@ class TunnelProcessing:
         pcd_with_normals : o3d.geometry.PointCloud
             Point cloud with estimated normals.
         """
+
+        import open3d as o3d
+
         # Tính normal cho self.pcd
         self.pcd.estimate_normals(
             search_param=o3d.geometry.KDTreeSearchParamKNN(knn=knn)
@@ -330,7 +341,7 @@ class TunnelProcessing:
 
 
     def get_plane(self,
-        pcd: o3d.geometry.PointCloud,
+        pcd,
         normal_angle_threshold: float = 5.0,
         radius: float = 0.2,
         reference_plane: str = "xy",
@@ -366,7 +377,7 @@ class TunnelProcessing:
         ground_center : np.ndarray, shape (3,)
             Centroid of ground points.
         """
-
+        import open3d as o3d
         # --- Step 0: Crop point cloud if crop_box provided ---
         crop_box = o3d.geometry.AxisAlignedBoundingBox(min_bound, max_bound)
 
@@ -434,7 +445,7 @@ class TunnelProcessing:
     # ------------------------------
     # Registration & alignment
     # ------------------------------
-    def align(self, target_pcd: o3d.geometry.PointCloud,
+    def align(self, target_pcd,
                   init_transformation: np.ndarray = np.eye(4)):
         """Align this cloud with target using ICP."""
         pass
@@ -466,7 +477,7 @@ class TunnelProcessing:
         return min_bound, max_bound
 
 
-    def compute_plane_normal(self, cloud: o3d.geometry.PointCloud) -> np.ndarray:
+    def compute_plane_normal(self, cloud) -> np.ndarray:
         """
         Tính vector pháp tuyến đại diện cho một point cloud gần phẳng bằng PCA.
 
@@ -563,12 +574,12 @@ class TunnelProcessing:
 
     def run_upsample(self, pcd):
         slices = self.slice_cloud_vectorized(pcd, axis='x', layer_thickness=0.01)
-        upsamples = []
+        slice_upsample = []
         for s in slices:
-            sli = self.upsample(s,min_gap=0.02, step=0.02, axis='x', max_gap=0.5)
-            upsamples.append(sli)
+            one_slice = self.upsample(s,min_gap=0.02, step=0.02, axis='x', max_gap=0.5)
+            slice_upsample.append(one_slice)
 
-        cloud_combine  = self.combine_pointcloud_list(upsamples)
+        cloud_combine  = self.combine_pointcloud_list(slice_upsample)
         return cloud_combine
 
 

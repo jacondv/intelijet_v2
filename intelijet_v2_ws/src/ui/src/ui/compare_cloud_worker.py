@@ -4,7 +4,7 @@ from PyQt5.QtCore import QTimer, QObject, pyqtSignal
 from pps.helper import compute_heatmap_to_plane, load_ply
 
 from pps.data_converter import cloudconverter
-
+from pps.tunnel_processing import TunnelProcessing
 class CloudManager(QObject):
     _instance = None  # Singleton instance
     compare_done = pyqtSignal(object)   # object = kết quả point cloud hoặc polydata
@@ -50,10 +50,16 @@ class CloudManager(QObject):
             try:
                 if self.pre_cloud is None or self.post_cloud is None:
                     raise ValueError("Pre or Post cloud not loaded")
+                
+                pre_tunnel = TunnelProcessing(self.pre_cloud)
+                pre_cloud = pre_tunnel.run_processing_pipeline()
+                post_tunnel = TunnelProcessing(self.post_cloud)
+                post_cloud = post_tunnel.run_processing_pipeline()
+
 
                 print("[CloudManager] Comparing clouds...")
                 cloud_compared, distance = compute_heatmap_to_plane(
-                    source=self.post_cloud, target=self.pre_cloud
+                    source=post_cloud, target=pre_cloud
                 )
                 # o3d.t.io.write_point_cloud("/mnt/c/work/projects/intelijet_v2/data/Jobnumber1/cloud_compared_new2.ply", cloud_compared)
 

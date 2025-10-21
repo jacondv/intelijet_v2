@@ -74,7 +74,11 @@ class ReportSelectManager(QDialog):
 
     def on_file_opened(self, filepath):
         import subprocess
-        subprocess.Popen(["xdg-open", filepath])
+        print(filepath)
+        if os.path.exists(filepath):
+            subprocess.Popen(["xdg-open", filepath])
+        else:
+            print(f"File not found: {filepath}")
 
 
 reportselect_dlg = ReportSelectManager()
