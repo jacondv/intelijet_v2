@@ -1,7 +1,7 @@
 # tunnel_ui/logic/cloud_manager.py
 import threading
 from PyQt5.QtCore import QTimer, QObject, pyqtSignal
-from pps.helper import compute_heatmap_to_plane, load_ply
+from pps.helper import compute_heatmap_to_plane, load_ply,cloud_downsample
 
 from pps.data_converter import cloudconverter
 from pps.tunnel_processing import TunnelProcessing
@@ -51,17 +51,20 @@ class CloudManager(QObject):
                 if self.pre_cloud is None or self.post_cloud is None:
                     raise ValueError("Pre or Post cloud not loaded")
                 
-                pre_tunnel = TunnelProcessing(self.pre_cloud)
-                pre_cloud = pre_tunnel.run_processing_pipeline()
-                post_tunnel = TunnelProcessing(self.post_cloud)
-                post_cloud = post_tunnel.run_processing_pipeline()
+                tunnel = TunnelProcessing(self.pre_cloud)
+                pre_cloud = tunnel.run_processing_pipeline()
+                
+                tunnel = TunnelProcessing(self.post_cloud)
+                post_cloud = tunnel.run_processing_pipeline()
 
 
                 print("[CloudManager] Comparing clouds...")
                 cloud_compared, distance = compute_heatmap_to_plane(
                     source=post_cloud, target=pre_cloud
                 )
-                # o3d.t.io.write_point_cloud("/mnt/c/work/projects/intelijet_v2/data/Jobnumber1/cloud_compared_new2.ply", cloud_compared)
+
+                # tunnel = TunnelProcessing()
+                # cloud_compared = tunnel.run_upsample(cloud_compared, axis='x', min_gap=0.02,max_gap=0.5)
 
                 self.compare_done.emit(cloud_compared)
                 # from ui.tunnel_report.report_data_model import ReportHeader

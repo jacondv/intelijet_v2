@@ -4,9 +4,9 @@ import rospy
 # import numpy as np
 # import open3d as o3d
 from sensor_msgs.msg import PointCloud2
-from pps.helper import compute_heatmap_to_plane, assign_colors_by_threshold, color_voxel_majority, \
-    convert_open3d_to_pointcloud2, convert_open3d_to_pointcloud2_with_diff, convert_pointcloud2_to_o3d, convert_open3d_to_pointcloud2_v2
+from pps.helper import compute_heatmap_to_plane
 from pps.data_converter import CloudConverter
+from pps.tunnel_processing import TunnelProcessing
 
 cloudconverter = CloudConverter()
 
@@ -70,7 +70,7 @@ class CloudComparer:
             rospy.logwarn("No comparison result available yet.")
             return
         rospy.loginfo("Publishing compared cloud...")
-        # self.compared_cloud = convert_open3d_to_pointcloud2_v2(self.compared_cloud, frame_id=self.frame_id)
+
         self.compared_cloud = cloudconverter.o3d_tensor_to_pointcloud2(self.compared_cloud, frame_id=self.frame_id)
         self.pub.publish(self.compared_cloud)
         self.got_post = False
@@ -81,8 +81,9 @@ class CloudComparer:
         result, dists = compute_heatmap_to_plane(post, pres, k=6, 
                                                  target_thickness=self.target_thickness, 
                                                  tolerance_thickness=self.tolerance_thickness)
-        # result = assign_colors_by_threshold(result, dists, threshold=[THICKNESS_MIN, THICKNESS_MAX])
-        # result = color_voxel_majority(result, voxel_size=0.05)
+
+        tunnel = TunnelProcessing()
+        result = tunnel.run_upsample(result, axis='x', min_gap=0.02,max_gap=0.5)
         return result
     
     

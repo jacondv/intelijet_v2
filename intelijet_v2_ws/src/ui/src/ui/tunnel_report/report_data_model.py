@@ -115,7 +115,7 @@ class ReportData:
             "applied_thickness": self.applied_thickness,
             "tolerance": self.tolerance,
             "job_name": self.job_name,
-            "avg_thickness": self.applied_thickness,
+            "avg_thickness": self.avg_thickness,
             "date": self.date,
             "time": self.time,
             "shotcrete_volume": self.shotcrete_volume,

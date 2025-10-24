@@ -32,6 +32,11 @@ from ui.tunnel_report.report_controler import ReportGenerator
 
 import vtk
 
+from shared.config_loader import CONFIG as cfg
+
+BASE_DIR = cfg.BASE_DIR
+CLOUD_COMPARED_TOPIC = cfg.CLOUD_COMPARED_TOPIC
+
 class App(QMainWindow):
 
     cloud_received_signal = pyqtSignal(object, str)
@@ -158,22 +163,32 @@ class App(QMainWindow):
 
     # --- Slot để cập nhật pointcloud ---
     def update_pointcloud(self, msg, topic_name):
-        o3d_cloud = convert_pointcloud2_to_o3d_v2(msg)
+
+        from pps.data_converter import CloudConverter
+        cloudconverter = CloudConverter()
+    
+        # o3d_cloud = convert_pointcloud2_to_o3d_v2(msg)
+        o3d_cloud = cloudconverter.pointcloud2_to_o3d_tensor(msg)
         polydata = o3d_to_vtk_polydata(o3d_cloud)
-        # polydata = ros_pointcloud2_to_o3d_to_vtk_polydata_voxel(msg)
+
         self.vtk_viewer.update(polydata)
         if polydata:
-            self.__save_cloud(o3d_cloud, topic_name)
-            # self.__save_pointcloud_polydata_as_ply(polydata, topic_name)
+            self.save_job(o3d_cloud, topic_name)
+
 
     def update_pointcloud_from_data(self, data):
-        from pps.data_converter import cloudconverter
+        from pps.data_converter import CloudConverter
+        cloudconverter = CloudConverter()
+
         polydata = cloudconverter.o3d_to_vtk_polydata(data)
         print("updated polydata from file")
         self.vtk_viewer.update(polydata)
 
         report = ReportGenerator()
-        report.export(pcd=data,output_path="/mnt/c/work/projects/intelijet_v2/data/Jobnumber1/Test_3m_v4#20251007_005243#report.pdf")
+        import datetime
+        timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+        filename = f"Test_report#{timestamp}.pdf"
+        report.export(pcd=data,output_path=f"{BASE_DIR}/data/reports/{filename}")
 
 
     def on_compare(self):
@@ -185,11 +200,13 @@ class App(QMainWindow):
         if jobcompare_dlg.exec_() == QDialog.Accepted:
             data = jobcompare_dlg.get_result()
             print("Data:", data)
-
-        pre = data['file1']
-        post = data['file2']
-        if pre is None and post is  None:
+            pre = data['file1']
+            post = data['file2']
+            if pre is None or post is None:
+                return
+        else:
             return
+
         
         from pps.cloud_processing.align_manager import PointCloudAlignerManager
         from pps.cloud_processing.icp_aligner import ICPConfig
@@ -257,48 +274,47 @@ class App(QMainWindow):
         if reply == QMessageBox.Yes:
             self.close()
 
-    def _generate_filename(self, topic_name: str, ext = "ply") -> str:
 
-
-        jobs_root = self.jobsetting_page.jobs_root
-        job_number = self.ui.lblCurrentJob.text()
-        
-        # Chuẩn hóa tên topic
-        safe_topic = re.sub(r'[^a-zA-Z0-9_-]', '', topic_name)
-
-        # Tạo thư mục cho job nếu chưa tồn tại
-        folder = os.path.join(jobs_root, job_number)
-        os.makedirs(folder, exist_ok=True)
-        index = sum(topic_name in f for f in os.listdir(folder)) +  1
-
-        # Timestamp hiện tại
-        timestamp_str = time.strftime("%Y%m%d_%H%M%S", time.localtime())
-
-        filename = os.path.join(folder, f"{job_number}#{safe_topic}_{index:02d}#{timestamp_str}.{ext}")
-
-        return filename
-
-    def __save_cloud(self, o3d_cloud, topic_name):
+    def save_job(self, o3d_cloud, topic_name):
         """
         Lưu Open3D PointCloud (legacy hoặc tensor) ra .ply, giữ color và các field extra như 'distances' hoặc 'distance_mm'.
         Tên file: {job_number}_{YYYYmmdd_HHMMSS}_{safe_topic}.ply
         """
+        def _generate_filename(topic_name: str, ext = "ply") -> str:
 
-        from pps.data_converter import cloudconverter
+            jobs_root = self.jobsetting_page.jobs_root
+            job_number = self.ui.lblCurrentJob.text()
+            
+            # Chuẩn hóa tên topic
+            safe_topic = re.sub(r'[^a-zA-Z0-9_-]', '', topic_name)
+
+            # Tạo thư mục cho job nếu chưa tồn tại
+            folder = os.path.join(jobs_root, job_number)
+            os.makedirs(folder, exist_ok=True)
+            index = sum(topic_name in f for f in os.listdir(folder)) +  1
+
+            # Timestamp hiện tại
+            timestamp_str = time.strftime("%Y%m%d_%H%M%S", time.localtime())
+
+            filename = os.path.join(folder, f"{job_number}#{safe_topic}_{index:02d}#{timestamp_str}.{ext}")
+
+            return filename
+
+        from pps.data_converter import CloudConverter
+        cloudconverter = CloudConverter()
+
         from ui.tunnel_report.report_data_model import ReportHeader
 
         try:
-            filepath = self._generate_filename(topic_name, ext="ply")
-            
-
-            cloudconverter.o3d_to_ply(o3d_cloud, filepath)
+            filepath = _generate_filename(topic_name, ext="ply")
+            cloudconverter.o3d_to_ply(o3d_cloud, filepath) #save cloud to ply file.
 
             #Save job information to json file, it provides information for later visualization and report generation
 
             job_number = filepath.split("#")[0] if "#" in filepath else "--"
 
             header = ReportHeader(
-                    site_name = job_number,
+                    site_name = "Jacon Equipment",
                     job_name= job_number,
                     applied_thickness = 30,
                     tolerance = 10,
@@ -306,6 +322,17 @@ class App(QMainWindow):
             )
 
             header.save(path=filepath.replace(".ply", ".json"))
+
+            if topic_name in CLOUD_COMPARED_TOPIC:
+                from ui.tunnel_report.report_controler import ReportGenerator
+                report = ReportGenerator()
+                report.set_info(
+                    site_name = header.site_name,
+                    job_name= header.job_number,
+                    applied_thickness = header.applied_thickness,
+                    tolerance = header.tolerance
+                )
+                report.export(o3d_cloud,output_path=filepath.replace(".ply", ".pdf"))
 
         except Exception as e:
             print("Error occurred while saving Open3D pointcloud:", e)

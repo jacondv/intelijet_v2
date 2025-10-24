@@ -40,10 +40,16 @@ class PLYProcessor:
         return img #image is base64 format for report teamplate html
     
     def avg_thickness(self):
-        return 25
+        if self.distances is None or len(self.distances) == 0:
+            return 0
+        return np.average(self.distances)
     
     def shotcrete_volume(self):
-        return 10
+        if self.distances is None or len(self.distances) == 0:
+            return 0
+        
+        vol = np.sum(self.distances)/1000 * (0.02*0.02) 
+        return vol
     
     
 
@@ -61,6 +67,16 @@ class PLYProcessor:
         import base64
 
         # Convert to millimeters
+        if self.distances is None or len(self.distances) == 0:
+            from PIL import Image
+            from io import BytesIO
+
+            img = Image.new("RGB", (100, 100), (255, 255, 255))  # RGB trắng hoàn toàn
+            buffered = BytesIO()
+            img.save(buffered, format="PNG")
+            img_base64 = base64.b64encode(buffered.getvalue()).decode("utf-8")
+
+            return f"data:image/png;base64,{img_base64}", 0, 0 
         total = len(distances)
 
         counts = []

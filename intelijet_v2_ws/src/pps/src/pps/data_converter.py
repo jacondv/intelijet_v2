@@ -5,7 +5,6 @@ cloud_converter.py
 Module hỗ trợ chuyển đổi giữa ROS PointCloud2 và Open3D (legacy & tensor).
 """
 
-import rospy
 import numpy as np
 import ros_numpy
 from sensor_msgs.msg import PointCloud2
@@ -97,7 +96,7 @@ class CloudConverter:
             return None
 
         # Lấy danh sách field
-        point_attrs = list(pcd_t.point.keys())
+        point_attrs = list(pcd_t.point)
 
         # Luôn cần có "positions"
         if "positions" not in point_attrs:
@@ -249,6 +248,7 @@ class CloudConverter:
         else:
             return None
 
+    # ------------------------------------------------------------------------------
 
     @staticmethod    
     def o3d_to_vtk_polydata(pcd, voxel_size=0.0):
@@ -286,6 +286,7 @@ class CloudConverter:
 
         return polydata
 
+    # ------------------------------------------------------------------------------
 
     @staticmethod
     def load_ply(filepath):
@@ -295,6 +296,119 @@ class CloudConverter:
         import open3d as o3d
         pcd = o3d.t.io.read_point_cloud(filepath)  # trả về tensor PointCloud
         return pcd
+
+    # ------------------------------------------------------------------------------
+
+    @staticmethod
+    def crop(pcd, min_bound, max_bound):
+        """
+        Crop point cloud theo giới hạn min/max.
+        Hỗ trợ cả legacy và tensor PointCloud.
+        """
+
+        import open3d as o3d
+        # --- Nếu là legacy (numpy) ---
+        if isinstance(pcd, o3d.geometry.PointCloud):
+            points = np.asarray(pcd.points)
+            mask = np.all((points >= min_bound) & (points <= max_bound), axis=1)
+
+            cropped = o3d.geometry.PointCloud()
+            cropped.points = o3d.utility.Vector3dVector(points[mask])
+
+            if pcd.has_colors():
+                cropped.colors = o3d.utility.Vector3dVector(np.asarray(pcd.colors)[mask])
+            if pcd.has_normals():
+                cropped.normals = o3d.utility.Vector3dVector(np.asarray(pcd.normals)[mask])
+            return cropped
+
+        # --- Nếu là tensor (GPU/CPU Tensor) ---
+        elif isinstance(pcd, o3d.t.geometry.PointCloud):
+            points = pcd.point["positions"]
+            mask = ((points >= min_bound) & (points <= max_bound)).all(dim=1)
+            return pcd.select_by_mask(mask)
+
+        else:
+            raise TypeError(f"Error {type(pcd)}")
+
+    # ------------------------------------------------------------------------------
+
+    @staticmethod
+    def voxel_down_sample(pcd_tensor, voxel_size):
+        """
+        Downsample Open3D Tensor PointCloud bằng voxel grid.
+        Giữ colors và tính lại distances trung bình, vectorized (không loop Python).
+        
+        Args:
+            pcd_tensor: o3d.t.geometry.PointCloud
+            voxel_size: float, kích thước voxel
+        
+        Returns:
+            o3d.t.geometry.PointCloud: point cloud đã downsample
+        """
+
+        import open3d as o3d
+        device = pcd_tensor.device
+
+        # --- 1. Chuyển tensor sang numpy ---
+        points = pcd_tensor.point.positions.cpu().numpy()
+        if points.ndim != 2 or points.shape[1] != 3:
+            points = points.reshape(-1,3)
+        points = points.astype(np.float64)
+
+        colors = None
+        if "colors" in pcd_tensor.point:
+            colors = pcd_tensor.point.colors.cpu().numpy()
+            if colors.ndim != 2 or colors.shape[1] != 3:
+                colors = colors.reshape(-1,3)
+            colors = colors.astype(np.float64)
+
+        distances = None
+        if "distances" in pcd_tensor.point:
+            distances = pcd_tensor.point["distances"].cpu().numpy()
+            if distances.ndim == 1:
+                distances = distances.reshape(-1,1)
+
+        # --- 2. Tạo voxel index ---
+        voxel_idx = np.floor(points / voxel_size).astype(np.int64)
+
+        # --- 3. Lấy unique voxel và mapping point->voxel ---
+        keys, inverse = np.unique(voxel_idx, axis=0, return_inverse=True)
+        num_voxels = keys.shape[0]
+
+        # --- 4. Tính trung bình positions vectorized ---
+        sum_points = np.zeros((num_voxels,3), dtype=np.float64)
+        count = np.zeros((num_voxels,1), dtype=np.int64)
+        np.add.at(sum_points, inverse, points)
+        np.add.at(count, inverse, 1)
+        down_points = sum_points / count
+
+        # --- 5. Tính trung bình colors vectorized ---
+        down_colors = None
+        if colors is not None:
+            sum_colors = np.zeros((num_voxels,3), dtype=np.float64)
+            np.add.at(sum_colors, inverse, colors)
+            down_colors = sum_colors / count
+
+        # --- 6. Tính trung bình distances vectorized ---
+        down_distances = None
+        if distances is not None:
+            dist_dim = distances.shape[1]
+            sum_dist = np.zeros((num_voxels, dist_dim), dtype=np.float64)
+            np.add.at(sum_dist, inverse, distances)
+            down_distances = sum_dist / count
+
+        # --- 7. Tạo lại Tensor point cloud ---
+        new_pcd = o3d.t.geometry.PointCloud()
+        new_pcd.point.positions = o3d.core.Tensor(down_points, device=device)
+        if down_colors is not None:
+            new_pcd.point.colors = o3d.core.Tensor(down_colors, device=device)
+        if down_distances is not None:
+            new_pcd.point["distances"] = o3d.core.Tensor(down_distances, device=device)
+
+        return new_pcd
+
+
+# ------------------------------------------------------------------------------
 
 cloudconverter = CloudConverter()
 

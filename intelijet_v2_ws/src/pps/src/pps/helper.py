@@ -195,46 +195,46 @@ def compute_heatmap_to_plane(source, target, k=10,target_thickness=0.03, toleran
     return source, distances
 
 
-def compute_heatmap_to_plane_old_version(source, target, k=10):
+# def compute_heatmap_to_plane_old_version(source, target, k=10):
 
-    import open3d as o3d
+#     import open3d as o3d
 
-    # Tính trước normal cho target
-    target.estimate_normals(
-        search_param=o3d.geometry.KDTreeSearchParamKNN(knn=k)
-    )
+#     # Tính trước normal cho target
+#     target.estimate_normals(
+#         search_param=o3d.geometry.KDTreeSearchParamKNN(knn=k)
+#     )
 
-    target_points = np.asarray(target.points)
-    target_normals = np.asarray(target.normals)
-    target_tree = o3d.geometry.KDTreeFlann(target)
+#     target_points = np.asarray(target.points)
+#     target_normals = np.asarray(target.normals)
+#     target_tree = o3d.geometry.KDTreeFlann(target)
 
-    source_points = np.asarray(source.points)
+#     source_points = np.asarray(source.points)
 
-    distances = []
+#     distances = []
 
-    for pt in source_points:
-        # Tìm điểm gần nhất trong target
-        [_, idx, _] = target_tree.search_knn_vector_3d(pt, 1)
-        nearest_idx = idx[0]
+#     for pt in source_points:
+#         # Tìm điểm gần nhất trong target
+#         [_, idx, _] = target_tree.search_knn_vector_3d(pt, 1)
+#         nearest_idx = idx[0]
 
-        centroid = target_points[nearest_idx]
-        normal = target_normals[nearest_idx]
+#         centroid = target_points[nearest_idx]
+#         normal = target_normals[nearest_idx]
 
-        # Khoảng cách point-to-plane
-        dist = np.abs(np.dot(pt - centroid, normal))
-        distances.append(dist)
+#         # Khoảng cách point-to-plane
+#         dist = np.abs(np.dot(pt - centroid, normal))
+#         distances.append(dist)
 
-    distances = np.array(distances, dtype=np.float32)
+#     distances = np.array(distances, dtype=np.float32)
 
-    # Scale và tô màu heatmap
-    distances_log = np.log1p(distances)
-    distances_normalized = (distances_log - distances_log.min()) / (distances_log.ptp() + 1e-9)
+#     # Scale và tô màu heatmap
+#     distances_log = np.log1p(distances)
+#     distances_normalized = (distances_log - distances_log.min()) / (distances_log.ptp() + 1e-9)
 
-    cmap = plt.get_cmap("jet")
-    colors = cmap(distances_normalized)[:, :3]
+#     cmap = plt.get_cmap("jet")
+#     colors = cmap(distances_normalized)[:, :3]
 
-    source.colors = o3d.utility.Vector3dVector(colors)
-    return source, distances
+#     source.colors = o3d.utility.Vector3dVector(colors)
+#     return source, distances
 
 
 def assign_colors_by_threshold(pcd, distances, threshold=[0.03, 0.04]):
@@ -811,3 +811,49 @@ def load_ply(filepath):
         print(f"❌ Can't load file {filepath}: {e}")
         return None
 
+
+
+def cloud_downsample(pcd, voxel_size: float):
+    """
+    Downsample point cloud (tensor) và tính trung bình colors + distances theo voxel.
+
+    Args:
+        pcd: o3d.t.geometry.PointCloud, phải có fields 'points', 'colors', 'distances'
+        voxel_size: kích thước voxel
+
+    Returns:
+        down_pcd: o3d.t.geometry.PointCloud đã downsample
+    """
+    import open3d as o3d
+
+    # Kiểm tra fields
+    for field in ["positions", "colors", "distances"]:
+        if field not in pcd.point:
+            raise ValueError(f"PointCloud thiếu field '{field}'")
+
+    # Downsample và trace
+    down_pcd, trace = pcd.voxel_down_sample_and_trace(voxel_size=voxel_size)
+
+    # trace: tensor int32, trace[i] = voxel index của point i
+    trace = trace.to(dtype=o3d.core.Dtype.Int32)
+
+    # Lấy colors và distances gốc
+    colors = pcd.point["colors"]
+    distances = pcd.point["distances"]
+
+    # Tính trung bình distances theo voxel
+    voxel_count = o3d.core.Tensor.zeros([len(down_pcd.point["positions"])], dtype=o3d.core.Dtype.Int32)
+    voxel_sum = o3d.core.Tensor.zeros([len(down_pcd.point["positions"])], dtype=o3d.core.Dtype.Float32)
+    voxel_sum.scatter_add_(trace, distances)
+    voxel_count.scatter_add_(trace, o3d.core.Tensor.ones_like(trace, dtype=o3d.core.Dtype.Int32))
+    distances_down = voxel_sum / voxel_count.to(o3d.core.Dtype.Float32)
+    down_pcd.point["distances"] = distances_down
+
+    # Tính trung bình colors theo voxel
+    color_sum = o3d.core.Tensor.zeros([len(down_pcd.point["positions"]), 3], dtype=o3d.core.Dtype.Float32)
+    color_sum.scatter_add_(trace, colors)
+    voxel_count_float = voxel_count.to(o3d.core.Dtype.Float32).reshape([-1, 1])
+    colors_down = color_sum / voxel_count_float
+    down_pcd.point["colors"] = colors_down
+
+    return down_pcd

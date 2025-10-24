@@ -53,26 +53,12 @@ class CloudProcessorNode:
         # cloud_cropped = cloud_o3d.crop(aabb)
 
         result = crop_pointcloud_by_box(pcd=cloud_o3d, box_type='aabb', 
-                                               min_bound=[cfg.crop_box.min.x, cfg.crop_box.min.y, cfg.crop_box.min.z], 
-                                               max_bound=[cfg.crop_box.max.x, cfg.crop_box.max.y, cfg.crop_box.max.z])
+                                        min_bound=[cfg.crop_box.min.x, cfg.crop_box.min.y, cfg.crop_box.min.z], 
+                                        max_bound=[cfg.crop_box.max.x, cfg.crop_box.max.y, cfg.crop_box.max.z])
         
         
         tunnel = TunnelProcessing(result)
         result = tunnel.run_processing_pipeline()
-
-
-        # Lọc nhiễu
-        # cloud_cropped, _ = cloud_cropped.remove_statistical_outlier(nb_neighbors=5, std_ratio=1)
-
-        # mask, boder = detect_boundary_pca(result.voxel_down_sample(0.1), k=30, angle_threshold=np.pi/2)
-        # result = remove_boundary_region(result, boder, radius=0.1)
-
-        # Downsample
-        if not isinstance(result, o3d.geometry.PointCloud):
-            rospy.logerr("[%s] cloud_cropped is not an Open3D PointCloud." % rospy.get_name())
-        else:
-            # cloud_cropped = cloud_cropped.voxel_down_sample(voxel_size=0.01)
-            pass # giữ nguyên độ phân giải gốc
 
         return convert_open3d_to_pointcloud2(result, frame_id=msg.header.frame_id,rgb=rgb)
 
