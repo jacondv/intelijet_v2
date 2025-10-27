@@ -565,7 +565,7 @@ class TunnelProcessing:
 
     def run_processing_pipeline(self):
 
-        FRONT_BOX = [(0.5, -5.0, -0.5), 
+        FRONT_BOX = [(0, -5.0, -0.5), 
                      (3.5, 5.0, 8.0)]
         BACK_BOX = [(4.0, -5.0, 0.0), 
                     (11.0, 5.0, 8.0)]
@@ -610,6 +610,14 @@ class TunnelProcessing:
                         max_bound=LEFT_BOX[1]
                         )
         
+        _, _, front_center, self.front_wall_normal = self.get_plane(self.pcd,
+                        normal_angle_threshold=5,
+                        radius=0.15, 
+                        reference_plane="yz",
+                        min_bound=FRONT_BOX[0],
+                        max_bound=FRONT_BOX[1]
+                        )
+        
 
         def safe_bound_value(center, idx, offset, default):
             if center is None:
@@ -621,7 +629,7 @@ class TunnelProcessing:
         # minbound = [2.1, right_center[1]-0.3, ground_center[2]+0.3]
         # maxbound = [back_center[0]-0.2, left_center[1]+0.3, 6.2]
         minbound = [
-            2.5,
+            safe_bound_value(front_center, 0, -0.3, 0.5),
             safe_bound_value(right_center, 1, -0.3, -5.0),   # fallback khi right_center None
             safe_bound_value(ground_center, 2, +0.3, 0.0)
         ]
@@ -631,7 +639,7 @@ class TunnelProcessing:
             safe_bound_value(left_center, 1, +0.3, 5.0),
             11.0
         ]
-
+        print(minbound, maxbound)
         cloud = self.crop(pcd=self.pcd, min_bound=minbound, max_bound=maxbound, normal=self.ground_plane_normal)
         return cloud
 

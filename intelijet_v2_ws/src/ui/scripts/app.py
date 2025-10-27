@@ -20,7 +20,7 @@ from history_page_manager import HistoryPageManager
 
 from data_binder import DataBinder
 from ui.update_data_utils import DataBinder, load_config_to_ui, load_ui_to_config   
-from ui.utils import convert_pointcloud2_to_o3d_v2, o3d_to_vtk_polydata
+from ui.utils import o3d_to_vtk_polydata
 from ui.compare_cloud_worker import cloud_compare
 
 from shared.pps_command import PPSCommand
@@ -29,8 +29,6 @@ from ui.setting_page_ui import Ui_setting_page
 from ui.intelijet_ui import Ui_MainWindow 
 
 from ui.tunnel_report.report_controler import ReportGenerator
-
-import vtk
 
 from shared.config_loader import CONFIG as cfg
 
@@ -91,7 +89,7 @@ class App(QMainWindow):
             self.ui.tboxPage2.setLayout(QVBoxLayout())
         self.ui.tboxPage2.layout().insertWidget(1,self.history_page_in_toolbox)
 
-        self.history_page_in_toolbox.polydataSignal.connect(self.update_pointcloud_from_data)
+        self.history_page_in_toolbox.polydataSignal.connect(lambda cloud: self.update_pointcloud_from_data(cloud, None))
 
         #Page 3: Compare page
         self.ui.btnCompare2.released.connect(self.on_compare)
@@ -161,7 +159,15 @@ class App(QMainWindow):
         self.jobsetting_page_in_toolbox.setVisible(False)
 
 
-    # --- Slot để cập nhật pointcloud ---
+    # 1.--- Update commond data from ROS ---
+    def update_data(self, data):
+        self.data_binder.update_ui_from_status(data)
+        if "encoder_value_in_deg" in data:
+            self.ui.lblEncoder.setText(f"{data['encoder_value_in_deg']:.2f}")
+        if "notification" in data:
+            self.lblNotification.setText(data["notification"])
+
+    # 2.--- Update pointcloud from reatime signal ---
     def update_pointcloud(self, msg, topic_name):
 
         from pps.data_converter import CloudConverter
@@ -175,22 +181,40 @@ class App(QMainWindow):
         if polydata:
             self.save_job(o3d_cloud, topic_name)
 
-
-    def update_pointcloud_from_data(self, data):
+    # 3.--- Update pointcloud from available data---
+    def update_pointcloud_from_data(self, data, filename):
         from pps.data_converter import CloudConverter
         cloudconverter = CloudConverter()
 
         polydata = cloudconverter.o3d_to_vtk_polydata(data)
-        print("updated polydata from file")
+        if filename:
+            print("updated polydata from file:", filename)
         self.vtk_viewer.update(polydata)
+
+    # 4.--- Show report view dialog---
+    def on_viewreport_dlg(self):
+        from reportselect_dlg_manager import reportselect_dlg
+        reportselect_dlg.exec_()
+
+
+    # 5.--- Export report after compare done---
+    def on_export_report(self, data, filename):
 
         report = ReportGenerator()
         import datetime
-        timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-        filename = f"Test_report#{timestamp}.pdf"
-        report.export(pcd=data,output_path=f"{BASE_DIR}/data/reports/{filename}")
+
+        if filename.lower().endswith(".ply"):
+            filename = filename.replace(".ply",".pdf")
+            
+        else:
+            timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+            filename = f"Test_report#{timestamp}.pdf"
+            filename = f"{BASE_DIR}/data/reports/{filename}"
+            
+        report.export(pcd=data,output_path=filename)
 
 
+    # 6.--- Start compare 2 cloud selected for dialog---
     def on_compare(self):
 
         # import subprocess
@@ -208,61 +232,48 @@ class App(QMainWindow):
             return
 
         
-        from pps.cloud_processing.align_manager import PointCloudAlignerManager
-        from pps.cloud_processing.icp_aligner import ICPConfig
-        from pps.data_converter import cloudconverter
+        # from pps.cloud_processing.align_manager import PointCloudAlignerManager
+        # from pps.cloud_processing.icp_aligner import ICPConfig
+        # from pps.data_converter import cloudconverter
 
-        ICP_THRESHOLDS = [0.5, 0.3, 0.02]      # coarse → fine
-        ICP_MAX_ITERS = [20, 20, 30]           # coarse → fine
-        ICP_ALIGN_AREA = None                  # hoặc [[xmin, xmax], [ymin, ymax], [zmin, zmax]]
-        ICP_VOXEL_RADII = [0.25, 0.15, 0.01]  # coarse → fine
-        aligner = PointCloudAlignerManager(
-                    strategy="icp",
-                    config=ICPConfig(
-                        threshold=ICP_THRESHOLDS,
-                        max_iters=ICP_MAX_ITERS,
-                        align_area=ICP_ALIGN_AREA,
-                        voxel_radii=ICP_VOXEL_RADII
-                    )
-                )
+        # ICP_THRESHOLDS = [0.5, 0.3, 0.02]      # coarse → fine
+        # ICP_MAX_ITERS = [20, 20, 30]           # coarse → fine
+        # ICP_ALIGN_AREA = None                  # hoặc [[xmin, xmax], [ymin, ymax], [zmin, zmax]]
+        # ICP_VOXEL_RADII = [0.25, 0.15, 0.01]  # coarse → fine
+        # aligner = PointCloudAlignerManager(
+        #             strategy="icp",
+        #             config=ICPConfig(
+        #                 threshold=ICP_THRESHOLDS,
+        #                 max_iters=ICP_MAX_ITERS,
+        #                 align_area=ICP_ALIGN_AREA,
+        #                 voxel_radii=ICP_VOXEL_RADII
+        #             )
+        #         )
 
-        pre = cloudconverter.load_ply(pre)
-        pre = cloudconverter.tensor_to_o3d_legacy(pre)
-        post = cloudconverter.load_ply(post)
-        post = cloudconverter.tensor_to_o3d_legacy(post)
+        # pre = cloudconverter.load_ply(pre)
+        # pre = cloudconverter.tensor_to_o3d_legacy(pre)
+        # post = cloudconverter.load_ply(post)
+        # post = cloudconverter.tensor_to_o3d_legacy(post)
 
-        aligner.align(post, pre)
-        T = aligner.get_transformation_matrix()
-        post.transform(T)
+        # aligner.align(post, pre)
+        # T = aligner.get_transformation_matrix()
+        # post.transform(T)
+
         cloud_compare.set_prescan(pre)
         cloud_compare.set_postscan(post)
+        cloud_compare.align()
         cloud_compare.compare()
 
 
-    def on_viewreport_dlg(self):
-        from reportselect_dlg_manager import reportselect_dlg
-        reportselect_dlg.exec_()
-
-    def on_export_report(self, data):
-        pass
-        
-
-    # --- Slot để cập nhật dữ liệu từ ROS ---
-    def update_data(self, data):
-        self.data_binder.update_ui_from_status(data)
-        if "encoder_value_in_deg" in data:
-            self.ui.lblEncoder.setText(f"{data['encoder_value_in_deg']:.2f}")
-        if "notification" in data:
-            self.lblNotification.setText(data["notification"])
-
-
+    # 7.--- Close event handler ---
     def closeEvent(self, event):
         subprocess.call(["rosnode", "kill", "-a"])
         subprocess.call("pkill -f ros", shell=True)
         subprocess.call(["rosclean", "purge", "-y"])
         event.accept()  
 
-    # --- Shutdown handler ---
+
+    # 8.--- Shutdown handler ---
     def on_shutdown(self):
         msg = QMessageBox()
         msg.setWindowTitle("Confirmation")
@@ -275,6 +286,7 @@ class App(QMainWindow):
             self.close()
 
 
+    # 9.--- Save job to disk ---
     def save_job(self, o3d_cloud, topic_name):
         """
         Lưu Open3D PointCloud (legacy hoặc tensor) ra .ply, giữ color và các field extra như 'distances' hoặc 'distance_mm'.
