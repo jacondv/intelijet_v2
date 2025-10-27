@@ -5,6 +5,8 @@ class PLYProcessor:
     def __init__(self):
         self.distances = None
         self.pcd = None
+        self.target_thickness = 0
+        self.tolerance = 0
 
     def load(self, ply_path):
         import open3d as o3d
@@ -28,6 +30,10 @@ class PLYProcessor:
 
         return pcd
     
+    def set_parameters(self, target_thickness, tolerance):
+        self.target_thickness = target_thickness
+        self.tolerance = tolerance
+
     def get_header(self):
         header = {
             
@@ -48,7 +54,9 @@ class PLYProcessor:
         if self.distances is None or len(self.distances) == 0:
             return 0
         
-        vol = np.sum(self.distances)/1000 * (0.02*0.02) 
+        min_val = self.target_thickness - self.tolerance
+        mask = self.distances[np.abs(self.distances) >= min_val]
+        vol = np.sum(mask)/1000 * (0.02*0.02) # volumn in m3
         return vol
     
     

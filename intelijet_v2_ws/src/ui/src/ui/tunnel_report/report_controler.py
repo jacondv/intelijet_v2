@@ -58,8 +58,6 @@ class ReportGenerator:
 
     def export(self,pcd,output_path=None):
 
-        processor = PLYProcessor()
-        processor.load(pcd)
 
         #initial data to test
         site_name= self.site_name
@@ -69,6 +67,13 @@ class ReportGenerator:
         date =  self.date
         time = self.time
         bins = [applied_thickness-tolerance, applied_thickness+tolerance]
+
+        processor = PLYProcessor()
+        processor.load(pcd)
+        processor.set_parameters(
+            target_thickness=applied_thickness,
+            tolerance=tolerance
+        )
 
         #---------------------
         thickness_chart_img = processor.export_distribution_chart(bins=bins, save_path=None)
