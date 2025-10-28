@@ -40,8 +40,15 @@ class JobSelectManager(QDialog):
     def load_jobs_from_disk(self):
         self.ui.lstJobs.clear()
         mode=self.view_mode
-        for job_name in os.listdir(self.jobs_root):
+
+        job_folders = [
+            f for f in os.listdir(self.jobs_root)
+            if os.path.isdir(os.path.join(self.jobs_root, f))
+        ]
+        
+        for job_name in job_folders:
             job_path = os.path.join(self.jobs_root, job_name)
+            
             if os.path.isdir(job_path):
                 item = QListWidgetItem(self.ui.lstJobs)
                 job_widget = JobItemWidget(job_name)
@@ -59,7 +66,7 @@ class JobSelectManager(QDialog):
         self.ui.lstJobCompare.clear()  
         try:
             files = [
-                f for f in os.listdir(job_path)
+                f for f in os.listdir(job_path) if f.lower().endswith(".ply")
             ]
         except Exception as e:
             return

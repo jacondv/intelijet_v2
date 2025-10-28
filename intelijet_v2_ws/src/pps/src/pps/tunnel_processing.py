@@ -335,10 +335,11 @@ class TunnelProcessing:
         else:
             neighbor_vals = valid_dists[idxs]
 
-        weighted_sum = np.sum(w * neighbor_vals, axis=1)
+        # weighted_sum = np.sum(w * neighbor_vals, axis=1)
         
-        sum_w = np.sum(w, axis=1)
-        filled_vals = weighted_sum / sum_w
+        # sum_w = np.sum(w, axis=1)
+        # filled_vals = weighted_sum / sum_w
+        filled_vals = np.mean(neighbor_vals, axis=1)
 
         # --- Gộp lại ---
         new_distances = distances.copy()

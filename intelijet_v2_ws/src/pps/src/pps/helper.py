@@ -634,7 +634,7 @@ def map_distances_to_colors(
 
         else:
             # Gradient green (0,1,0) → blue (0,0,1)
-            colors[i] = (0, 1, 0)
+            colors[i] = (0, 0, 1)
 
     return colors
 

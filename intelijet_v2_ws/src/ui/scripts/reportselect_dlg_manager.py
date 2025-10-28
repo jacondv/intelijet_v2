@@ -64,7 +64,7 @@ class ReportSelectManager(QDialog):
         # Hiển thị lên lstJobDetail
         for f in files:
             item = QListWidgetItem(self.ui.lstJobItems)
-            f_widget = FileItemWidget(f,job_path, view_mode='view')
+            f_widget = FileItemWidget(f,job_path, view_mode='auto')
             filepath = os.path.join(job_path, f)
             item.setSizeHint(f_widget.sizeHint())
             

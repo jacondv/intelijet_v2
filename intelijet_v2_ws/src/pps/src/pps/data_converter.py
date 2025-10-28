@@ -74,7 +74,7 @@ class CloudConverter:
             # Add field
             pcd_t.point[field] = o3d.core.Tensor(data, dtype=dtype)
 
-        print(f"Converted PointCloud2 to Open3D Tensor Cloud with fields: {list(pcd_t.point.keys())}")
+        print(f"Converted PointCloud2 to Open3D Tensor Cloud with fields: {list(pcd_t.point)}")
         return pcd_t
 
     # --------------------------------------------------------------------------

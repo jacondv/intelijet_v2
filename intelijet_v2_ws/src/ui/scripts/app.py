@@ -175,7 +175,7 @@ class App(QMainWindow):
     
         # o3d_cloud = convert_pointcloud2_to_o3d_v2(msg)
         o3d_cloud = cloudconverter.pointcloud2_to_o3d_tensor(msg)
-        polydata = o3d_to_vtk_polydata(o3d_cloud)
+        polydata = cloudconverter.o3d_to_vtk_polydata(o3d_cloud)
 
         self.vtk_viewer.update(polydata)
         if polydata:
@@ -199,9 +199,23 @@ class App(QMainWindow):
 
     # 5.--- Export report after compare done---
     def on_export_report(self, data, filename):
+        from datetime import datetime
 
         report = ReportGenerator()
-        import datetime
+        basename = os.path.basename(filename)
+        basename_parts = basename.split("#")
+        job_name = basename_parts[0] if len(basename_parts) > 0 else "Unknown"
+        dt = datetime.strptime(basename_parts[1], "%Y%m%d_%H%M%S").date()
+        tt = datetime.strptime(basename_parts[1], "%Y%m%d_%H%M%S").time()
+
+        report.set_info(
+                    site_name = "Jacon Equipment",
+                    job_name= job_name,
+                    applied_thickness = 30,
+                    tolerance = 10,
+                    date = dt,
+                    time = tt
+                )
 
         if filename.lower().endswith(".ply"):
             filename = filename.replace(".ply",".pdf")
@@ -262,7 +276,7 @@ class App(QMainWindow):
         cloud_compare.set_prescan(pre)
         cloud_compare.set_postscan(post)
         cloud_compare.align()
-        cloud_compare.compare()
+        cloud_compare.compare() #--> output signal compare_done the cloud result.
 
 
     # 7.--- Close event handler ---
@@ -303,12 +317,12 @@ class App(QMainWindow):
             # Tạo thư mục cho job nếu chưa tồn tại
             folder = os.path.join(jobs_root, job_number)
             os.makedirs(folder, exist_ok=True)
-            index = sum(topic_name in f for f in os.listdir(folder)) +  1
+            index = sum(safe_topic in f for f in os.listdir(folder) if f.endswith('.ply')) +  1
 
             # Timestamp hiện tại
             timestamp_str = time.strftime("%Y%m%d_%H%M%S", time.localtime())
 
-            filename = os.path.join(folder, f"{job_number}#{safe_topic}_{index:02d}#{timestamp_str}.{ext}")
+            filename = os.path.join(folder, f"{job_number}#{timestamp_str}#{safe_topic}_{index:02d}.{ext}")
 
             return filename
 
@@ -319,11 +333,12 @@ class App(QMainWindow):
 
         try:
             filepath = _generate_filename(topic_name, ext="ply")
+            fname = os.path.basename(filepath)
             cloudconverter.o3d_to_ply(o3d_cloud, filepath) #save cloud to ply file.
 
             #Save job information to json file, it provides information for later visualization and report generation
 
-            job_number = filepath.split("#")[0] if "#" in filepath else "--"
+            job_number = fname.split("#")[0] if "#" in filepath else "--"
 
             header = ReportHeader(
                     site_name = "Jacon Equipment",
@@ -340,7 +355,7 @@ class App(QMainWindow):
                 report = ReportGenerator()
                 report.set_info(
                     site_name = header.site_name,
-                    job_name= header.job_number,
+                    job_name= header.job_name,
                     applied_thickness = header.applied_thickness,
                     tolerance = header.tolerance
                 )

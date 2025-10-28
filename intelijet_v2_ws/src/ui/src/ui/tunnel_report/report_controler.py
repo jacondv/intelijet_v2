@@ -22,7 +22,7 @@ class ReportGenerator:
         self.site_name=site_name
         self.job_name=job_name
         self.applied_thickness=applied_thickness
-        self.tolerance=tolerance,
+        self.tolerance=tolerance
         self.date = date or self.date
         self.time = time or self.time
 

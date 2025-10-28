@@ -96,8 +96,8 @@ class CloudManager(QObject):
                         source=post_cloud, target=pre_cloud
                     )
 
-                    # tunnel = TunnelProcessing()
-                    # cloud_compared = tunnel.run_upsample(cloud_compared, axis='x', min_gap=0.02,max_gap=0.5)
+                    tunnel = TunnelProcessing()
+                    cloud_compared = tunnel.run_upsample(cloud_compared, axis='x', min_gap=0.02,max_gap=0.5)
 
                     self.compare_done.emit(cloud_compared, self.filename)
 

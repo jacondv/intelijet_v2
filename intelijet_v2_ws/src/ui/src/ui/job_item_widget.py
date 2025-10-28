@@ -109,10 +109,10 @@ class FileItemWidget(QWidget):
         self.ui.lblRow3.setText(filename_info['datetime'])
         self.ui.btnOpen.clicked.connect(self.on_open_clicked)
         if view_mode.lower() == 'label':
-            self.__view_label_mode()
+            self.show_only_label()
 
 
-    def __view_label_mode(self):
+    def show_only_label(self):
         self.ui.btnOpen.hide()
 
 
