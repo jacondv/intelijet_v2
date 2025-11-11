@@ -58,7 +58,6 @@ class ReportGenerator:
 
     def export(self,pcd,output_path=None):
 
-
         #initial data to test
         site_name= self.site_name
         job_name = self.job_name
@@ -77,9 +76,11 @@ class ReportGenerator:
 
         #---------------------
         thickness_chart_img = processor.export_distribution_chart(bins=bins, save_path=None)
-        tunnel_view_img = f"{BASE_DIR}/intelijet_v2_ws/src/ui/src/ui/tunnel_report/assets/images/tunnel.png"
-        shotcrete_volume = round(processor.shotcrete_volume(),2)
-        avg_thickness = round(processor.avg_thickness(),2)
+        # tunnel_view_img = f"{BASE_DIR}/intelijet_v2_ws/src/ui/src/ui/tunnel_report/assets/images/tunnel.png"
+        tunnel_view_img = processor.export_tunnel_view_image(out_path=None)
+        
+        shotcrete_volume = round(processor.volume(),3)
+        avg_thickness = round(processor.avg_thickness(),0)
         
 
         data = ReportData.from_inputs(
@@ -95,6 +96,7 @@ class ReportGenerator:
             date=date,
             time=time
         )
-       
+    
         self.create_pdf(report_data=data.to_json(), output_path=output_path, debug_html=False)
+    
 

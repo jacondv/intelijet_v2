@@ -82,8 +82,8 @@ class CloudComparer:
                                                  target_thickness=self.target_thickness, 
                                                  tolerance_thickness=self.tolerance_thickness)
 
-        tunnel = TunnelProcessing()
-        result = tunnel.run_upsample(result, axis='x', min_gap=0.02,max_gap=0.5)
+        # tunnel = TunnelProcessing()
+        # result = tunnel.run_upsample(result, axis='x', min_gap=0.02,max_gap=0.5)
         
         return result
     

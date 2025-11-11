@@ -1,5 +1,17 @@
 <RCC>
   <qresource prefix="icon">
+    <file>icon/rename.png</file>
+    <file>icon/add-file.png</file>
+    <file>icon/add-folder.png</file>
+    <file>icon/folders.png</file>
+    <file>icon/file.png</file>
+    <file>icon/visual.png</file>
+    <file>icon/mark.png</file>
+    <file>icon/note.png</file>
+    <file>icon/check.png</file>
+    <file>icon/delete.png</file>
+    <file>icon/multiplication.png</file>
+    <file>icon/save.png</file>
     <file>icon/Jacon Equipment Logo PNG.png</file>
     <file>icon/power-button.png</file>
     <file>icon/arrow-31-48.ico</file>

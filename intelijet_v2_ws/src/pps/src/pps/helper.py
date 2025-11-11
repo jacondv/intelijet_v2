@@ -149,7 +149,7 @@ def process_cloud(pcd, voxel_size=0.015):
     return pcd_croped
     
 
-def compute_heatmap_to_plane(source, target, k=10,target_thickness=0.03, tolerance_thickness=0.01):
+def compute_heatmap_to_plane(source, target, k=6,target_thickness=0.03, tolerance_thickness=0.01):
     # Tính trước normal cho target
     # start_time = time.time()
     import open3d as o3d
@@ -160,6 +160,7 @@ def compute_heatmap_to_plane(source, target, k=10,target_thickness=0.03, toleran
     target.estimate_normals(
         search_param=o3d.geometry.KDTreeSearchParamKNN(knn=k)
     )
+    target.orient_normals_consistent_tangent_plane(k=3*k)
 
     target_points = np.asarray(target.points)
     target_normals = np.asarray(target.normals)
@@ -183,16 +184,67 @@ def compute_heatmap_to_plane(source, target, k=10,target_thickness=0.03, toleran
     source.colors = o3d.utility.Vector3dVector(colors)
 
     source = cloudconverter.o3d_legacy_to_tensor(source)
-    distances_mm = np.round(distances * 1000).astype(np.int32)
+    distances_mm = np.round(distances * 1000).astype(np.float32)
     distances_mm = distances_mm.reshape(-1, 1)
 
     n_points = source.point["positions"]
     if len(distances) != len(n_points):
         raise ValueError(f"Number of element distances ({len(distances)}) does not match number of point clouds ({n_points})")
 
-    source.point["distances"] = o3d.core.Tensor(distances_mm, dtype=o3d.core.Dtype.Int32)
+    source.point["distances"] = o3d.core.Tensor(distances_mm, dtype=o3d.core.Dtype.Float32)
 
     return source, distances
+
+
+
+
+def smooth_cloud(tcloud, k=8, m=3, threshold=20.0):
+    """
+    Smooth distances and colors in a tensor PointCloud using KDTreeFlann (legacy).
+    Converts t.geometry.PointCloud -> geometry.PointCloud internally.
+
+    Args:
+        tcloud: o3d.t.geometry.PointCloud with 'distances' and 'colors'
+        k: number of neighbors
+        m: min number of neighbors > threshold to trigger smoothing
+        threshold: distance threshold for outlier detection (in mm)
+
+    Returns:
+        o3d.t.geometry.PointCloud: smoothed cloud (in-place)
+    """
+
+    import open3d as o3d
+
+    # Convert to legacy geometry
+    legacy_pc = tcloud.to_legacy()
+    distances = tcloud.point['distances'].cpu().numpy()
+    distances = np.abs(distances)
+    colors = tcloud.point['colors'].cpu().numpy()
+    new_distances = distances.copy()
+    new_colors = colors.copy()
+    
+    # Build KDTree
+    tree = o3d.geometry.KDTreeFlann(legacy_pc)
+    
+    for i, val in enumerate(distances):
+        if val < threshold:
+            continue
+        
+        # Search k nearest neighbors
+        [_, idxs, _] = tree.search_knn_vector_3d(legacy_pc.points[i], k)
+        neighbor_vals = distances[idxs]
+        count_above = np.sum(neighbor_vals > threshold)
+        
+        if count_above <= m:
+            new_distances[i] = neighbor_vals.mean()
+            new_colors[i] = colors[idxs].mean(axis=0)
+    
+    # Update tensor cloud in-place
+    tcloud.point['distances'] = o3d.core.Tensor(new_distances.astype(np.float32))
+    tcloud.point['colors'] = o3d.core.Tensor(new_colors.astype(np.float32))
+        
+    return tcloud
+
 
 
 # def compute_heatmap_to_plane_old_version(source, target, k=10):
@@ -613,7 +665,7 @@ def map_distances_to_colors(
       - dist > highlight_range[1] → green → blue gradient
       - dist > clip_max → out_of_range_color
     """
-    distances = np.abs(distances)
+
     colors = np.zeros((len(distances), 3))
 
     low, high = highlight_range
@@ -637,6 +689,30 @@ def map_distances_to_colors(
             colors[i] = (0, 0, 1)
 
     return colors
+
+
+def assign_colors(tcloud, clip_max=150, highlight_range=(20, 40)):
+    """
+    Map the 'distances' field of a tensor PointCloud to 'colors'.
+    
+    Args:
+        tcloud: o3d.t.geometry.PointCloud, must have 'distances' field
+        clip_max: maximum distance to clip (values above get out_of_range_color)
+        highlight_range: (low, high) range for pure green
+    
+    Returns:
+        tcloud with updated 'colors' field (in-place)
+    """
+    import open3d as o3d
+    if 'distances' not in tcloud.point:
+        raise ValueError("PointCloud must have 'distances' field")
+    
+    distances = tcloud.point['distances'].cpu().numpy()  # CPU numpy array
+    colors = map_distances_to_colors(distances, clip_max=clip_max, highlight_range=highlight_range)
+
+    # Update tensor cloud colors
+    tcloud.point['colors'] = o3d.core.Tensor(colors.astype(np.float32))
+    return tcloud
 
 
 def remove_point(pcd, key_points, radius):

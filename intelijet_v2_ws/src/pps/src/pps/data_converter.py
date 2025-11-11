@@ -308,6 +308,10 @@ class CloudConverter:
 
         import open3d as o3d
         # --- Nếu là legacy (numpy) ---
+
+        min_bound = np.asarray(min_bound, dtype=np.float32)
+        max_bound = np.asarray(max_bound, dtype=np.float32)
+
         if isinstance(pcd, o3d.geometry.PointCloud):
             points = np.asarray(pcd.points)
             mask = np.all((points >= min_bound) & (points <= max_bound), axis=1)

@@ -1,0 +1,801 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>frm_ProjectPage</class>
+ <widget class="QWidget" name="frm_ProjectPage">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>1021</width>
+    <height>610</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Form</string>
+  </property>
+  <property name="styleSheet">
+   <string notr="true">QFrame #frame,
+QFrame #frame_2,
+QFrame #frame_3,
+{
+    border: 1px solid #ddd;
+}</string>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout_7">
+   <property name="spacing">
+    <number>0</number>
+   </property>
+   <property name="leftMargin">
+    <number>0</number>
+   </property>
+   <property name="topMargin">
+    <number>0</number>
+   </property>
+   <property name="rightMargin">
+    <number>0</number>
+   </property>
+   <property name="bottomMargin">
+    <number>0</number>
+   </property>
+   <item>
+    <widget class="QWidget" name="ftm_ProjectManager" native="true">
+     <property name="styleSheet">
+      <string notr="true">QListWidget {
+    background: #ffffff;
+    border: 1px solid #cccccc;
+    font-family: &quot;Segoe UI&quot;, &quot;Roboto&quot;, sans-serif;
+    font-size: 14px;
+    color: #222;
+    outline: none;
+    padding: 0px;
+}
+
+QListWidget::item {
+    background: #ffffff;
+    border: none;
+    padding: 10px 12px;      /* tăng chiều cao item */
+    margin: 0;
+}
+
+QListWidget::item:selected {
+    background: #e6f0ff;
+    color: #003366;
+}
+
+QListWidget::item:hover {
+    background: #f5f9ff;
+}
+
+/* ---- Scrollbar ---- */
+QScrollBar:vertical {
+    border: none;
+    background: #f0f0f0;
+    width: 18px;              /* to hơn mặc định */
+    margin: 0px;
+}
+
+QScrollBar::handle:vertical {
+    background: #c0c0c0;
+    min-height: 30px;
+    border-radius: 6px;
+}
+
+QScrollBar::handle:vertical:hover {
+    background: #a6a6a6;
+}
+
+QScrollBar::add-line:vertical,
+QScrollBar::sub-line:vertical {
+    height: 0px;              /* bỏ nút mũi tên */
+}
+
+QScrollBar::add-page:vertical,
+QScrollBar::sub-page:vertical {
+    background: none;
+}
+
+
+
+</string>
+     </property>
+     <layout class="QVBoxLayout" name="verticalLayout_6">
+      <property name="spacing">
+       <number>0</number>
+      </property>
+      <property name="leftMargin">
+       <number>0</number>
+      </property>
+      <property name="topMargin">
+       <number>0</number>
+      </property>
+      <property name="rightMargin">
+       <number>0</number>
+      </property>
+      <property name="bottomMargin">
+       <number>0</number>
+      </property>
+      <item>
+       <widget class="QWidget" name="widget_7" native="true">
+        <layout class="QHBoxLayout" name="horizontalLayout_6" stretch="2,2,3">
+         <item>
+          <widget class="QFrame" name="frame">
+           <property name="frameShape">
+            <enum>QFrame::StyledPanel</enum>
+           </property>
+           <property name="frameShadow">
+            <enum>QFrame::Raised</enum>
+           </property>
+           <layout class="QVBoxLayout" name="verticalLayout">
+            <property name="leftMargin">
+             <number>0</number>
+            </property>
+            <property name="rightMargin">
+             <number>0</number>
+            </property>
+            <property name="bottomMargin">
+             <number>0</number>
+            </property>
+            <item>
+             <widget class="QLabel" name="label_3">
+              <property name="font">
+               <font>
+                <weight>75</weight>
+                <bold>true</bold>
+               </font>
+              </property>
+              <property name="styleSheet">
+               <string notr="true">padding-left:10px;</string>
+              </property>
+              <property name="text">
+               <string>Project List</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QWidget" name="widget_3" native="true">
+              <layout class="QVBoxLayout" name="verticalLayout_5">
+               <item>
+                <widget class="QWidget" name="widget_2" native="true">
+                 <layout class="QHBoxLayout" name="horizontalLayout">
+                  <item>
+                   <widget class="QLabel" name="lblProjectName">
+                    <property name="font">
+                     <font>
+                      <weight>75</weight>
+                      <bold>true</bold>
+                     </font>
+                    </property>
+                    <property name="text">
+                     <string>#CurrnetProject</string>
+                    </property>
+                   </widget>
+                  </item>
+                 </layout>
+                </widget>
+               </item>
+               <item>
+                <widget class="QWidget" name="widget_5" native="true">
+                 <property name="styleSheet">
+                  <string notr="true">background-color: rgb(255, 255, 255);
+border: 1px solid rgb(200, 200, 200);
+border-radius: 20px; </string>
+                 </property>
+                 <layout class="QHBoxLayout" name="horizontalLayout_3">
+                  <property name="spacing">
+                   <number>6</number>
+                  </property>
+                  <property name="leftMargin">
+                   <number>6</number>
+                  </property>
+                  <property name="topMargin">
+                   <number>2</number>
+                  </property>
+                  <property name="rightMargin">
+                   <number>6</number>
+                  </property>
+                  <property name="bottomMargin">
+                   <number>2</number>
+                  </property>
+                  <item>
+                   <widget class="QPushButton" name="btnSearchProject">
+                    <property name="minimumSize">
+                     <size>
+                      <width>30</width>
+                      <height>30</height>
+                     </size>
+                    </property>
+                    <property name="maximumSize">
+                     <size>
+                      <width>30</width>
+                      <height>30</height>
+                     </size>
+                    </property>
+                    <property name="styleSheet">
+                     <string notr="true"> border: none;
+</string>
+                    </property>
+                    <property name="text">
+                     <string/>
+                    </property>
+                    <property name="icon">
+                     <iconset resource="resource.qrc">
+                      <normaloff>:/icon/icon/search-3-48.ico</normaloff>:/icon/icon/search-3-48.ico</iconset>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QLineEdit" name="txtSearchProject">
+                    <property name="minimumSize">
+                     <size>
+                      <width>150</width>
+                      <height>40</height>
+                     </size>
+                    </property>
+                    <property name="font">
+                     <font>
+                      <pointsize>17</pointsize>
+                     </font>
+                    </property>
+                    <property name="styleSheet">
+                     <string notr="true">border: none;</string>
+                    </property>
+                   </widget>
+                  </item>
+                 </layout>
+                </widget>
+               </item>
+               <item>
+                <widget class="QWidget" name="widget_4" native="true">
+                 <layout class="QHBoxLayout" name="horizontalLayout_2">
+                  <property name="leftMargin">
+                   <number>6</number>
+                  </property>
+                  <property name="topMargin">
+                   <number>0</number>
+                  </property>
+                  <property name="rightMargin">
+                   <number>6</number>
+                  </property>
+                  <property name="bottomMargin">
+                   <number>0</number>
+                  </property>
+                  <item>
+                   <widget class="QPushButton" name="btnNewProject">
+                    <property name="maximumSize">
+                     <size>
+                      <width>40</width>
+                      <height>40</height>
+                     </size>
+                    </property>
+                    <property name="icon">
+                     <iconset resource="resource.qrc">
+                      <normaloff>:/icon/icon/add-folder.png</normaloff>:/icon/icon/add-folder.png</iconset>
+                    </property>
+                    <property name="iconSize">
+                     <size>
+                      <width>40</width>
+                      <height>40</height>
+                     </size>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QPushButton" name="btnRenameProject">
+                    <property name="maximumSize">
+                     <size>
+                      <width>40</width>
+                      <height>40</height>
+                     </size>
+                    </property>
+                    <property name="icon">
+                     <iconset resource="resource.qrc">
+                      <normaloff>:/icon/icon/rename.png</normaloff>:/icon/icon/rename.png</iconset>
+                    </property>
+                    <property name="iconSize">
+                     <size>
+                      <width>40</width>
+                      <height>40</height>
+                     </size>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QPushButton" name="btnDeleteProject">
+                    <property name="maximumSize">
+                     <size>
+                      <width>40</width>
+                      <height>40</height>
+                     </size>
+                    </property>
+                    <property name="icon">
+                     <iconset resource="resource.qrc">
+                      <normaloff>:/icon/icon/delete.png</normaloff>:/icon/icon/delete.png</iconset>
+                    </property>
+                    <property name="iconSize">
+                     <size>
+                      <width>40</width>
+                      <height>40</height>
+                     </size>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <spacer name="horizontalSpacer_2">
+                    <property name="orientation">
+                     <enum>Qt::Horizontal</enum>
+                    </property>
+                    <property name="sizeHint" stdset="0">
+                     <size>
+                      <width>40</width>
+                      <height>20</height>
+                     </size>
+                    </property>
+                   </spacer>
+                  </item>
+                 </layout>
+                </widget>
+               </item>
+              </layout>
+             </widget>
+            </item>
+            <item>
+             <widget class="QListWidget" name="lstProject">
+              <property name="styleSheet">
+               <string notr="true">border: none;</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+         </item>
+         <item>
+          <widget class="QFrame" name="frame_2">
+           <property name="frameShape">
+            <enum>QFrame::StyledPanel</enum>
+           </property>
+           <property name="frameShadow">
+            <enum>QFrame::Raised</enum>
+           </property>
+           <layout class="QVBoxLayout" name="verticalLayout_2">
+            <property name="leftMargin">
+             <number>0</number>
+            </property>
+            <property name="rightMargin">
+             <number>0</number>
+            </property>
+            <item>
+             <widget class="QLabel" name="label_4">
+              <property name="font">
+               <font>
+                <weight>75</weight>
+                <bold>true</bold>
+               </font>
+              </property>
+              <property name="styleSheet">
+               <string notr="true">padding-left:10px;</string>
+              </property>
+              <property name="text">
+               <string>Job List</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QWidget" name="widget_8" native="true">
+              <layout class="QVBoxLayout" name="verticalLayout_4">
+               <item>
+                <widget class="QWidget" name="widget_9" native="true">
+                 <layout class="QHBoxLayout" name="horizontalLayout_8">
+                  <item>
+                   <widget class="QLabel" name="lblJobName">
+                    <property name="font">
+                     <font>
+                      <weight>75</weight>
+                      <bold>true</bold>
+                     </font>
+                    </property>
+                    <property name="text">
+                     <string>#CurrnetJob</string>
+                    </property>
+                   </widget>
+                  </item>
+                 </layout>
+                </widget>
+               </item>
+               <item>
+                <widget class="QWidget" name="widget_6" native="true">
+                 <property name="styleSheet">
+                  <string notr="true">background-color: rgb(255, 255, 255);
+border: 1px solid rgb(200, 200, 200);
+border-radius: 20px; </string>
+                 </property>
+                 <layout class="QHBoxLayout" name="horizontalLayout_4">
+                  <property name="spacing">
+                   <number>6</number>
+                  </property>
+                  <property name="leftMargin">
+                   <number>6</number>
+                  </property>
+                  <property name="topMargin">
+                   <number>2</number>
+                  </property>
+                  <property name="rightMargin">
+                   <number>6</number>
+                  </property>
+                  <property name="bottomMargin">
+                   <number>2</number>
+                  </property>
+                  <item>
+                   <widget class="QPushButton" name="btnSearchProject_2">
+                    <property name="minimumSize">
+                     <size>
+                      <width>30</width>
+                      <height>30</height>
+                     </size>
+                    </property>
+                    <property name="maximumSize">
+                     <size>
+                      <width>30</width>
+                      <height>30</height>
+                     </size>
+                    </property>
+                    <property name="styleSheet">
+                     <string notr="true"> border: none;
+</string>
+                    </property>
+                    <property name="text">
+                     <string/>
+                    </property>
+                    <property name="icon">
+                     <iconset resource="resource.qrc">
+                      <normaloff>:/icon/icon/search-3-48.ico</normaloff>:/icon/icon/search-3-48.ico</iconset>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QLineEdit" name="txtSearchJob">
+                    <property name="minimumSize">
+                     <size>
+                      <width>150</width>
+                      <height>40</height>
+                     </size>
+                    </property>
+                    <property name="font">
+                     <font>
+                      <pointsize>17</pointsize>
+                     </font>
+                    </property>
+                    <property name="styleSheet">
+                     <string notr="true">border: none;</string>
+                    </property>
+                   </widget>
+                  </item>
+                 </layout>
+                </widget>
+               </item>
+               <item>
+                <widget class="QWidget" name="widget_10" native="true">
+                 <layout class="QHBoxLayout" name="horizontalLayout_9">
+                  <property name="topMargin">
+                   <number>0</number>
+                  </property>
+                  <property name="bottomMargin">
+                   <number>0</number>
+                  </property>
+                  <item>
+                   <widget class="QPushButton" name="btnNewJob">
+                    <property name="minimumSize">
+                     <size>
+                      <width>40</width>
+                      <height>40</height>
+                     </size>
+                    </property>
+                    <property name="maximumSize">
+                     <size>
+                      <width>40</width>
+                      <height>40</height>
+                     </size>
+                    </property>
+                    <property name="icon">
+                     <iconset resource="resource.qrc">
+                      <normaloff>:/icon/icon/add-file.png</normaloff>:/icon/icon/add-file.png</iconset>
+                    </property>
+                    <property name="iconSize">
+                     <size>
+                      <width>32</width>
+                      <height>32</height>
+                     </size>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QPushButton" name="btnEditJob">
+                    <property name="minimumSize">
+                     <size>
+                      <width>40</width>
+                      <height>40</height>
+                     </size>
+                    </property>
+                    <property name="maximumSize">
+                     <size>
+                      <width>40</width>
+                      <height>40</height>
+                     </size>
+                    </property>
+                    <property name="icon">
+                     <iconset resource="resource.qrc">
+                      <normaloff>:/icon/icon/note.png</normaloff>:/icon/icon/note.png</iconset>
+                    </property>
+                    <property name="iconSize">
+                     <size>
+                      <width>32</width>
+                      <height>32</height>
+                     </size>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QPushButton" name="btnDeleteJob">
+                    <property name="minimumSize">
+                     <size>
+                      <width>40</width>
+                      <height>40</height>
+                     </size>
+                    </property>
+                    <property name="maximumSize">
+                     <size>
+                      <width>40</width>
+                      <height>40</height>
+                     </size>
+                    </property>
+                    <property name="icon">
+                     <iconset resource="resource.qrc">
+                      <normaloff>:/icon/icon/delete.png</normaloff>:/icon/icon/delete.png</iconset>
+                    </property>
+                    <property name="iconSize">
+                     <size>
+                      <width>32</width>
+                      <height>32</height>
+                     </size>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <spacer name="horizontalSpacer">
+                    <property name="orientation">
+                     <enum>Qt::Horizontal</enum>
+                    </property>
+                    <property name="sizeHint" stdset="0">
+                     <size>
+                      <width>40</width>
+                      <height>20</height>
+                     </size>
+                    </property>
+                   </spacer>
+                  </item>
+                 </layout>
+                </widget>
+               </item>
+              </layout>
+             </widget>
+            </item>
+            <item>
+             <widget class="QListWidget" name="lstJob">
+              <property name="styleSheet">
+               <string notr="true">border: none;</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QWidget" name="widget_12" native="true">
+              <layout class="QHBoxLayout" name="horizontalLayout_5">
+               <property name="leftMargin">
+                <number>0</number>
+               </property>
+               <property name="topMargin">
+                <number>0</number>
+               </property>
+               <property name="bottomMargin">
+                <number>0</number>
+               </property>
+              </layout>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+         </item>
+         <item>
+          <widget class="QFrame" name="frame_3">
+           <property name="frameShape">
+            <enum>QFrame::StyledPanel</enum>
+           </property>
+           <property name="frameShadow">
+            <enum>QFrame::Raised</enum>
+           </property>
+           <layout class="QVBoxLayout" name="verticalLayout_9">
+            <property name="leftMargin">
+             <number>0</number>
+            </property>
+            <property name="topMargin">
+             <number>0</number>
+            </property>
+            <property name="rightMargin">
+             <number>0</number>
+            </property>
+            <property name="bottomMargin">
+             <number>0</number>
+            </property>
+            <item>
+             <widget class="QWidget" name="widget_11" native="true">
+              <property name="maximumSize">
+               <size>
+                <width>16777215</width>
+                <height>320</height>
+               </size>
+              </property>
+              <layout class="QVBoxLayout" name="verticalLayout_8">
+               <item>
+                <widget class="QLabel" name="label_5">
+                 <property name="font">
+                  <font>
+                   <weight>75</weight>
+                   <bold>true</bold>
+                  </font>
+                 </property>
+                 <property name="styleSheet">
+                  <string notr="true">padding-left:10px;</string>
+                 </property>
+                 <property name="text">
+                  <string>Job Detail</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QListWidget" name="lstJobDetail">
+                 <property name="styleSheet">
+                  <string notr="true">border: none;</string>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </widget>
+            </item>
+            <item>
+             <widget class="QWidget" name="widget_14" native="true">
+              <layout class="QHBoxLayout" name="horizontalLayout_10">
+               <property name="leftMargin">
+                <number>0</number>
+               </property>
+               <property name="topMargin">
+                <number>0</number>
+               </property>
+               <property name="rightMargin">
+                <number>0</number>
+               </property>
+               <property name="bottomMargin">
+                <number>0</number>
+               </property>
+               <item>
+                <widget class="QPushButton" name="btnAdd">
+                 <property name="minimumSize">
+                  <size>
+                   <width>0</width>
+                   <height>40</height>
+                  </size>
+                 </property>
+                 <property name="maximumSize">
+                  <size>
+                   <width>150</width>
+                   <height>40</height>
+                  </size>
+                 </property>
+                 <property name="font">
+                  <font>
+                   <pointsize>12</pointsize>
+                  </font>
+                 </property>
+                 <property name="text">
+                  <string>Schedule</string>
+                 </property>
+                 <property name="icon">
+                  <iconset resource="resource.qrc">
+                   <normaloff>:/icon/icon/check.png</normaloff>:/icon/icon/check.png</iconset>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QPushButton" name="btnRemove">
+                 <property name="minimumSize">
+                  <size>
+                   <width>0</width>
+                   <height>40</height>
+                  </size>
+                 </property>
+                 <property name="maximumSize">
+                  <size>
+                   <width>150</width>
+                   <height>40</height>
+                  </size>
+                 </property>
+                 <property name="font">
+                  <font>
+                   <pointsize>12</pointsize>
+                  </font>
+                 </property>
+                 <property name="text">
+                  <string>Unschedule</string>
+                 </property>
+                 <property name="icon">
+                  <iconset resource="resource.qrc">
+                   <normaloff>:/icon/icon/multiplication.png</normaloff>:/icon/icon/multiplication.png</iconset>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </widget>
+            </item>
+            <item>
+             <widget class="QWidget" name="widget" native="true">
+              <layout class="QVBoxLayout" name="verticalLayout_3">
+               <item>
+                <widget class="QLabel" name="label_6">
+                 <property name="font">
+                  <font>
+                   <weight>75</weight>
+                   <bold>true</bold>
+                  </font>
+                 </property>
+                 <property name="styleSheet">
+                  <string notr="true">padding-left:10px;</string>
+                 </property>
+                 <property name="text">
+                  <string>Active Work Orders</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QListWidget" name="lstJobActive">
+                 <property name="styleSheet">
+                  <string notr="true">border: none;</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QWidget" name="widget_13" native="true">
+                 <property name="minimumSize">
+                  <size>
+                   <width>40</width>
+                   <height>0</height>
+                  </size>
+                 </property>
+                 <layout class="QHBoxLayout" name="horizontalLayout_7">
+                  <property name="leftMargin">
+                   <number>0</number>
+                  </property>
+                  <property name="topMargin">
+                   <number>0</number>
+                  </property>
+                  <property name="bottomMargin">
+                   <number>0</number>
+                  </property>
+                 </layout>
+                </widget>
+               </item>
+              </layout>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <resources>
+  <include location="resource.qrc"/>
+ </resources>
+ <connections/>
+</ui>

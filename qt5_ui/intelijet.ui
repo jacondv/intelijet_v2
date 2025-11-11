@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1235</width>
-    <height>889</height>
+    <width>1270</width>
+    <height>870</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -15,13 +15,11 @@
   </property>
   <property name="styleSheet">
    <string notr="true">
-/* --- Button mặc định --- */
+/* ==================== PUSHBUTTON ==================== */
 QPushButton {
-    background-color: #2196F3;     /* xanh dương */
-    color: white;
     border-radius: 6px;
     padding: 8px 16px;
-    font-size: 14px;
+    font-size: 15px;
     font-weight: bold;
 }
 QPushButton:hover {
@@ -30,6 +28,7 @@ QPushButton:hover {
 QPushButton:pressed {
     background-color: #0D47A1;
 }
+
 
 /* --- Text editor (QLineEdit &amp; QTextEdit) --- */
 QLineEdit, QTextEdit {
@@ -44,38 +43,28 @@ QLineEdit:focus, QTextEdit:focus {
     background: #FFFFFF;
 }
 
-QListWidget {
-    border: 1px solid #BDBDBD;
-    border-radius: 6px;
-    padding: 4px;
-    background: #FAFAFA;
+/* ==================== SCROLLBAR ==================== */
+QScrollBar:vertical {
+    width: 12px;
+    background: #f0f0f0;
+    margin: 0;
+    border-radius: 0px;
 }
-
-QListWidget::item {
-    height: 40px;
-    padding-left: 10px;
-    border-bottom: 1px solid #E0E0E0;
-    font-size: 14px;
+QScrollBar::handle:vertical {
+    background: #b0b0b0;
+    min-height: 20px;
+    border-radius: 0px;
 }
-
-QListWidget::item:selected {
-    background-color: #2196F3;
-    color: white;
-    font-weight: bold;
+QScrollBar::handle:vertical:hover {
+    background: #909090;
 }
-
-QListWidget::item:hover {
-    background-color: #BBDEFB;
+QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
+    height: 0;
 }
-
-
-
-
 
 *{
 border: none;
-color: back;
-font-size: 17px;
+font-size: 15px;
 }
 #statusbar {
     background-color: #185F63;
@@ -95,7 +84,6 @@ font-size: 17px;
 #control_panel{
     /*background-color: #00796B;*/
 
-	
 	background-color: qlineargradient(spread:pad, x1:0, y1:0, x2:1, y2:0, stop:0.3 #185F63, stop:1 #185F63);
     border-left: 8px solid #F8D40F;     /* viền trái */
 	border-top-right-radius: 25px;
@@ -111,7 +99,7 @@ font-size: 17px;
     border: none;
     padding: 40px 0px 40px 0px;
 	
-    font-size: 17px;
+    font-size:18px;
     font-weight: bold;
 	background-color: qlineargradient(spread:pad, x1:0, y1:0, x2:1, y2:0, stop:0 #F8D40F, stop:1 #FFF9C4);
 
@@ -120,15 +108,14 @@ font-size: 17px;
 	border-bottom-right-radius: 40px;
 	border-bottom-left-radius: 0px;
 
-	border-left: 8px solid #95a5a6; /*#55ff00;  #F8D40F;*/
+	border-left: 24px solid #95a5a6; /*#55ff00;  #F8D40F;*/
 }
 
 /* Hiệu ứng hover / nhấn */
 #control_panel QPushButton:hover {
-    font-size: 17px;
+    font-size: 18px;
 	color: #00aa7f;
     padding: 36px 5px 36px 0px;
-
 
 }
 
@@ -141,25 +128,30 @@ font-size: 17px;
     color: #dcdcdc;
 }
 
-#toolBox:tab {
+#toolBox{
+	padding-top:30px;
 	color:white;
-	border-bottom: 1px solid white;
+}
+
+#toolBox:tab {
+	border-bottom: 2px solid white;
+	padding-left: 2px;
+	padding-bottom: 2px;
 }
 
 #toolBox QWidget{
-    background-color: #185F63;
+    /*background-color: #185F63;*/
+	background: transparent;
+	color: white;
+
 }
+
 
 #btnShutdown {
     background-color: #185F63;
-
-}
-#lblCurrentJob, #lblCurrentJob_title {
 	color: white;
 }
-#btnSelectJob {
-	border: 1px solid white;
-}
+
 
 #menu_small {
 
@@ -170,7 +162,6 @@ font-size: 17px;
 
     font-weight: normal;
 
-
 }
 
 
@@ -179,21 +170,22 @@ font-size: 17px;
 
     font-weight: bold;
 
-
 }
 #menu_main {
-	color: while;
+	color: none;
 }
 
 QTabBar::tab {
     height: 110px;     
     width: 20px;
     margin: 0;
+	color: #ddd;
 
     border: none;
 	font-weight: normal;
 	padding-top: 30px;
 	padding-left: 10px;
+	padding-right: 8px;
 	min-height: 100px;
 
 }
@@ -201,16 +193,20 @@ QTabBar::tab {
 QTabBar::tab:selected {
     font-size: 18px;
 	font-weight: bold;
-	color: #fff;
+	color: #ee0;
 	border-left: 4px solid #FFEB3B;
 
 }
 
-
-
-
-
-
+QWidget#widget_6 QPushButton {
+    background-color: #aaa;
+    color: white;
+    border-radius: 0px;
+    padding: 6px 12px;
+}
+QWidget#widget_6 QPushButton:hover {
+    background-color: #2A8C91;
+}
 
 
 </string>
@@ -248,18 +244,16 @@ QTabBar::tab:selected {
          <layout class="QVBoxLayout" name="verticalLayout">
           <item>
            <widget class="QToolBox" name="toolBox">
-            <property name="font">
-             <font>
-              <pointsize>-1</pointsize>
-             </font>
+            <property name="tabSpacing">
+             <number>6</number>
             </property>
             <widget class="QWidget" name="tboxPage1">
              <property name="geometry">
               <rect>
                <x>0</x>
                <y>0</y>
-               <width>332</width>
-               <height>676</height>
+               <width>342</width>
+               <height>601</height>
               </rect>
              </property>
              <attribute name="icon">
@@ -313,6 +307,35 @@ QTabBar::tab:selected {
                </widget>
               </item>
               <item>
+               <widget class="QComboBox" name="cbbJobSelect">
+                <property name="minimumSize">
+                 <size>
+                  <width>0</width>
+                  <height>40</height>
+                 </size>
+                </property>
+                <property name="styleSheet">
+                 <string notr="true">QComboBox::drop-down {
+    width: 40px;               /* rộng hơn để mũi tên lớn hơn */
+}
+
+QComboBox::down-arrow {
+    width: 18px;               /* mũi tên lớn */
+    height: 18px;
+}
+
+QComboBox QAbstractItemView {
+    background-color: rgb(60, 60, 60);  /* màu nền dropdown */
+    selection-background-color: rgb(100, 100, 100);
+}
+</string>
+                </property>
+                <property name="editable">
+                 <bool>false</bool>
+                </property>
+               </widget>
+              </item>
+              <item>
                <spacer name="verticalSpacer">
                 <property name="orientation">
                  <enum>Qt::Vertical</enum>
@@ -327,13 +350,71 @@ QTabBar::tab:selected {
               </item>
              </layout>
             </widget>
+            <widget class="QWidget" name="tboxPage3">
+             <property name="geometry">
+              <rect>
+               <x>0</x>
+               <y>0</y>
+               <width>342</width>
+               <height>601</height>
+              </rect>
+             </property>
+             <attribute name="label">
+              <string>Compare</string>
+             </attribute>
+             <widget class="QWidget" name="widget_6" native="true">
+              <property name="geometry">
+               <rect>
+                <x>0</x>
+                <y>10</y>
+                <width>321</width>
+                <height>601</height>
+               </rect>
+              </property>
+              <layout class="QVBoxLayout" name="verticalLayout_9">
+               <item>
+                <widget class="QWidget" name="widget_5" native="true">
+                 <layout class="QVBoxLayout" name="verticalLayout_8">
+                  <item>
+                   <widget class="QPushButton" name="btnViewReport">
+                    <property name="text">
+                     <string>View Report</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QPushButton" name="btnCompare2">
+                    <property name="text">
+                     <string>Compare</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <spacer name="verticalSpacer_4">
+                    <property name="orientation">
+                     <enum>Qt::Vertical</enum>
+                    </property>
+                    <property name="sizeHint" stdset="0">
+                     <size>
+                      <width>20</width>
+                      <height>40</height>
+                     </size>
+                    </property>
+                   </spacer>
+                  </item>
+                 </layout>
+                </widget>
+               </item>
+              </layout>
+             </widget>
+            </widget>
             <widget class="QWidget" name="tboxPage2">
              <property name="geometry">
               <rect>
                <x>0</x>
                <y>0</y>
-               <width>332</width>
-               <height>676</height>
+               <width>342</width>
+               <height>601</height>
               </rect>
              </property>
              <attribute name="label">
@@ -452,7 +533,7 @@ border-radius:12px;</string>
           <enum>QTabWidget::West</enum>
          </property>
          <property name="currentIndex">
-          <number>1</number>
+          <number>0</number>
          </property>
          <property name="usesScrollButtons">
           <bool>false</bool>
@@ -807,8 +888,8 @@ border-radius:12px;</string>
    <slot>setHidden(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>232</x>
-     <y>28</y>
+     <x>411</x>
+     <y>405</y>
     </hint>
     <hint type="destinationlabel">
      <x>155</x>

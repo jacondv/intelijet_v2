@@ -13,7 +13,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
-        MainWindow.resize(1235, 889)
+        MainWindow.resize(1270, 889)
         MainWindow.setStyleSheet("\n"
 "/* ==================== PUSHBUTTON ==================== */\n"
 "QPushButton {\n"
@@ -64,7 +64,7 @@ class Ui_MainWindow(object):
 "\n"
 "*{\n"
 "border: none;\n"
-"font-size: 17px;\n"
+"font-size: 15px;\n"
 "}\n"
 "#statusbar {\n"
 "    background-color: #185F63;\n"
@@ -239,7 +239,7 @@ class Ui_MainWindow(object):
         self.toolBox = QtWidgets.QToolBox(self.menu_main)
         self.toolBox.setObjectName("toolBox")
         self.tboxPage1 = QtWidgets.QWidget()
-        self.tboxPage1.setGeometry(QtCore.QRect(0, 0, 332, 611))
+        self.tboxPage1.setGeometry(QtCore.QRect(0, 0, 342, 611))
         self.tboxPage1.setObjectName("tboxPage1")
         self.verticalLayout_2 = QtWidgets.QVBoxLayout(self.tboxPage1)
         self.verticalLayout_2.setContentsMargins(0, 0, 20, 0)
@@ -261,13 +261,32 @@ class Ui_MainWindow(object):
         self.horizontalLayout_4.setStretch(1, 3)
         self.horizontalLayout_4.setStretch(2, 2)
         self.verticalLayout_2.addWidget(self.widget_3)
+        self.cbbJobSelect = QtWidgets.QComboBox(self.tboxPage1)
+        self.cbbJobSelect.setMinimumSize(QtCore.QSize(0, 40))
+        self.cbbJobSelect.setStyleSheet("QComboBox::drop-down {\n"
+"    width: 40px;               /* rộng hơn để mũi tên lớn hơn */\n"
+"}\n"
+"\n"
+"QComboBox::down-arrow {\n"
+"    width: 18px;               /* mũi tên lớn */\n"
+"    height: 18px;\n"
+"}\n"
+"\n"
+"QComboBox QAbstractItemView {\n"
+"    background-color: rgb(60, 60, 60);  /* màu nền dropdown */\n"
+"    selection-background-color: rgb(100, 100, 100);\n"
+"}\n"
+"")
+        # self.cbbJobSelect.setEditable(True)
+        self.cbbJobSelect.setObjectName("cbbJobSelect")
+        self.verticalLayout_2.addWidget(self.cbbJobSelect)
         spacerItem = QtWidgets.QSpacerItem(20, 437, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding)
         self.verticalLayout_2.addItem(spacerItem)
         icon = QtGui.QIcon()
         icon.addPixmap(QtGui.QPixmap(":/icon/icon/home-4-48 (2).ico"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.toolBox.addItem(self.tboxPage1, icon, "")
         self.tboxPage3 = QtWidgets.QWidget()
-        self.tboxPage3.setGeometry(QtCore.QRect(0, 0, 332, 611))
+        self.tboxPage3.setGeometry(QtCore.QRect(0, 0, 342, 611))
         self.tboxPage3.setObjectName("tboxPage3")
         self.widget_6 = QtWidgets.QWidget(self.tboxPage3)
         self.widget_6.setGeometry(QtCore.QRect(0, 10, 321, 601))
@@ -290,7 +309,7 @@ class Ui_MainWindow(object):
         self.verticalLayout_9.addWidget(self.widget_5)
         self.toolBox.addItem(self.tboxPage3, "")
         self.tboxPage2 = QtWidgets.QWidget()
-        self.tboxPage2.setGeometry(QtCore.QRect(0, 0, 332, 611))
+        self.tboxPage2.setGeometry(QtCore.QRect(0, 0, 342, 611))
         self.tboxPage2.setObjectName("tboxPage2")
         self.toolBox.addItem(self.tboxPage2, "")
         self.verticalLayout.addWidget(self.toolBox)

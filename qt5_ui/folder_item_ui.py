@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'job_item.ui'
+# Form implementation generated from reading ui file 'folder_item.ui'
 #
 # Created by: PyQt5 UI code generator 5.14.1
 #
@@ -40,14 +40,11 @@ class Ui_Form(object):
         self.horizontalLayout.setContentsMargins(-1, 0, 0, 0)
         self.horizontalLayout.setSpacing(6)
         self.horizontalLayout.setObjectName("horizontalLayout")
-        self.txtJobname = QtWidgets.QLineEdit(self.widget)
-        self.txtJobname.setMinimumSize(QtCore.QSize(0, 40))
-        self.txtJobname.setMaximumSize(QtCore.QSize(16777215, 45))
-        font = QtGui.QFont()
-        font.setPointSize(17)
-        self.txtJobname.setFont(font)
-        self.txtJobname.setObjectName("txtJobname")
-        self.horizontalLayout.addWidget(self.txtJobname)
+        self.txtName = QtWidgets.QLineEdit(self.widget)
+        self.txtName.setMinimumSize(QtCore.QSize(0, 40))
+        self.txtName.setMaximumSize(QtCore.QSize(16777215, 45))
+        self.txtName.setObjectName("txtName")
+        self.horizontalLayout.addWidget(self.txtName)
         self.btnSelect = QtWidgets.QPushButton(self.widget)
         self.btnSelect.setMinimumSize(QtCore.QSize(40, 40))
         self.btnSelect.setMaximumSize(QtCore.QSize(40, 40))

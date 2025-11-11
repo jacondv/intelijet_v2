@@ -32,8 +32,18 @@ from ui.tunnel_report.report_controler import ReportGenerator
 
 from shared.config_loader import CONFIG as cfg
 
+from project_dlg_manager import ProjectManager 
+
+
+
+
 BASE_DIR = cfg.BASE_DIR
 CLOUD_COMPARED_TOPIC = cfg.CLOUD_COMPARED_TOPIC
+
+DATA_DIR = cfg.DATA_DIR
+PROJECT_DIR = os.path.join(BASE_DIR, DATA_DIR, "Projects")
+ACTIVE_JOB_FILE = os.path.join(PROJECT_DIR, "active_jobs.json")
+
 
 class App(QMainWindow):
 
@@ -64,10 +74,14 @@ class App(QMainWindow):
  
 
         # ------Tab JobSetting ---
-        self.jobsetting_page = JobNumberPageManager(self.ui.tab_jobnumber)
+        # self.jobsetting_page = JobNumberPageManager(self.ui.tab_jobnumber)
+        # if self.ui.tab_jobnumber.layout() is None:
+        #     self.ui.tab_jobnumber.setLayout(QVBoxLayout())
+        # self.ui.tab_jobnumber.layout().addWidget(self.jobsetting_page)
+        self.project_manager = ProjectManager()
         if self.ui.tab_jobnumber.layout() is None:
             self.ui.tab_jobnumber.setLayout(QVBoxLayout())
-        self.ui.tab_jobnumber.layout().addWidget(self.jobsetting_page)
+        self.ui.tab_jobnumber.layout().addWidget(self.project_manager)
 
         #-------ToolBox-----------
         #Page 1: Jobs view
@@ -140,6 +154,20 @@ class App(QMainWindow):
         # if polydata:
         #     self.vtk_viewer.update(polydata)
 
+        orig_show = self.ui.cbbJobSelect.showPopup
+        def new_show():
+            self.load_active_jobs(self.ui.cbbJobSelect, ACTIVE_JOB_FILE)
+            orig_show()
+
+        self.ui.cbbJobSelect.showPopup = new_show
+        
+        # --- Project and Job Manager ---
+        # self.project_manager = None
+        # self.open_project_manager()
+
+        # self.job_select_manage = None
+        # self.open_job_select_manager()
+
 
     def on_select_job_clicked(self):
         self.jobsetting_page_in_toolbox.load_jobs_from_disk()
@@ -191,6 +219,7 @@ class App(QMainWindow):
             print("updated polydata from file:", filename)
         self.vtk_viewer.update(polydata)
 
+
     # 4.--- Show report view dialog---
     def on_viewreport_dlg(self):
         from reportselect_dlg_manager import reportselect_dlg
@@ -199,34 +228,56 @@ class App(QMainWindow):
 
     # 5.--- Export report after compare done---
     def on_export_report(self, data, filename):
-        from datetime import datetime
+        try:
+            from datetime import datetime
+            from ui.models import JobInfo
+            
 
-        report = ReportGenerator()
-        basename = os.path.basename(filename)
-        basename_parts = basename.split("#")
-        job_name = basename_parts[0] if len(basename_parts) > 0 else "Unknown"
-        dt = datetime.strptime(basename_parts[1], "%Y%m%d_%H%M%S").date()
-        tt = datetime.strptime(basename_parts[1], "%Y%m%d_%H%M%S").time()
+            report = ReportGenerator()
+            job_folder = os.path.dirname(filename)
+            project_name = os.path.basename(job_folder) 
+            basename = os.path.basename(filename)
+            basename_parts = basename.split("#")
+            job_name = basename_parts[0] if len(basename_parts) > 0 else "Unknown"    
+            
+            try:
+                dt = datetime.strptime(basename_parts[1], "%Y%m%d_%H%M%S").date()
+            except:
+                dt = None
+            try:
+                tt = datetime.strptime(basename_parts[1], "%Y%m%d_%H%M%S").time()
+            except:
+                tt = None
 
-        report.set_info(
-                    site_name = "Jacon Equipment",
+            job_info = JobInfo.load(job_folder)
+            if job_info is not None:
+                report.set_info(
+                    site_name = project_name,
+                    job_name= job_name,
+                    applied_thickness = job_info.parameters.get("target_thickness", 30),
+                    tolerance = job_info.parameters.get("tolerance", 10),
+                    operator = "Unknown"
+                )
+            else:
+                report.set_info(
+                    site_name = "Unknown",
                     job_name= job_name,
                     applied_thickness = 30,
                     tolerance = 10,
-                    date = dt,
-                    time = tt
+                    operator = "Unknown"
                 )
 
-        if filename.lower().endswith(".ply"):
-            filename = filename.replace(".ply",".pdf")
-            
-        else:
-            timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-            filename = f"Test_report#{timestamp}.pdf"
-            filename = f"{BASE_DIR}/data/reports/{filename}"
-            
-        report.export(pcd=data,output_path=filename)
-
+            if filename.lower().endswith(".ply"):
+                filename = filename.replace(".ply",".pdf")
+                
+            else:
+                timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+                filename = f"Test_report#{timestamp}.pdf"
+                filename = f"{BASE_DIR}/data/reports/{filename}"
+                
+            report.export(pcd=data,output_path=filename)
+        except Exception as e:
+            print(f"[App] Failed to export report: {e}")
 
     # 6.--- Start compare 2 cloud selected for dialog---
     def on_compare(self):
@@ -246,33 +297,6 @@ class App(QMainWindow):
             return
 
         
-        # from pps.cloud_processing.align_manager import PointCloudAlignerManager
-        # from pps.cloud_processing.icp_aligner import ICPConfig
-        # from pps.data_converter import cloudconverter
-
-        # ICP_THRESHOLDS = [0.5, 0.3, 0.02]      # coarse → fine
-        # ICP_MAX_ITERS = [20, 20, 30]           # coarse → fine
-        # ICP_ALIGN_AREA = None                  # hoặc [[xmin, xmax], [ymin, ymax], [zmin, zmax]]
-        # ICP_VOXEL_RADII = [0.25, 0.15, 0.01]  # coarse → fine
-        # aligner = PointCloudAlignerManager(
-        #             strategy="icp",
-        #             config=ICPConfig(
-        #                 threshold=ICP_THRESHOLDS,
-        #                 max_iters=ICP_MAX_ITERS,
-        #                 align_area=ICP_ALIGN_AREA,
-        #                 voxel_radii=ICP_VOXEL_RADII
-        #             )
-        #         )
-
-        # pre = cloudconverter.load_ply(pre)
-        # pre = cloudconverter.tensor_to_o3d_legacy(pre)
-        # post = cloudconverter.load_ply(post)
-        # post = cloudconverter.tensor_to_o3d_legacy(post)
-
-        # aligner.align(post, pre)
-        # T = aligner.get_transformation_matrix()
-        # post.transform(T)
-
         cloud_compare.set_prescan(pre)
         cloud_compare.set_postscan(post)
         cloud_compare.align()
@@ -308,9 +332,13 @@ class App(QMainWindow):
         """
         def _generate_filename(topic_name: str, ext = "ply") -> str:
 
-            jobs_root = self.jobsetting_page.jobs_root
-            job_number = self.ui.lblCurrentJob.text()
+            # jobs_root = self.jobsetting_page.jobs_root
+            # job_number = self.ui.lblCurrentJob.text()
             
+            project_name = self.ui.cbbJobSelect.currentText().split(" / ")[0]
+            job_number = self.ui.cbbJobSelect.currentText().split(" / ")[1]
+            jobs_root = os.path.join(PROJECT_DIR, project_name)
+
             # Chuẩn hóa tên topic
             safe_topic = re.sub(r'[^a-zA-Z0-9_-]', '', topic_name)
 
@@ -364,6 +392,20 @@ class App(QMainWindow):
         except Exception as e:
             print("Error occurred while saving Open3D pointcloud:", e)
             return None
+        
+
+    def load_active_jobs(self,comboBox, json_file="active_job.json"):
+        import json
+        comboBox.clear()  # xóa item cũ
+        if not os.path.exists(json_file):
+            return
+        with open(json_file, "r") as f:
+            jobs = json.load(f)
+
+        for job in jobs:
+            # text hiển thị trong combobox
+            display_text = f"{job['project']}/{job['job']}"
+            comboBox.addItem(display_text, job)  # lưu dict job vào data
 
 if __name__ == "__main__":
 

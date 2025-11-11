@@ -27,11 +27,14 @@ run_container() {
         sudo docker run -it \
             --name $CONTAINER_NAME \
             -v /home/nuc/intelijet_v2:/root/intelijet_v2 \
+            -v /etc/localtime:/etc/localtime:ro \
+            -v /etc/timezone:/etc/timezone:ro \
             -e DISPLAY=$DISPLAY \
             -e QT_X11_NO_MITSHM=1 \
             -v /tmp/.X11-unix:/tmp/.X11-unix:rw \
             -v /dev/dri:/dev/dri \
             --network host \
+            --cap-add=SYS_TIME \
             $IMAGE_NAME \
             bash -c "$QT_ENV /root/intelijet_v2/run_intelijet.sh"
 
@@ -42,5 +45,4 @@ run_container() {
 
 
 run_container
-
 

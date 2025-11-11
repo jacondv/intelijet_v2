@@ -20,6 +20,8 @@ class PLYProcessor:
                 pcd = o3d.t.io.read_point_cloud(ply_path)
             else:
                 raise TypeError("The cloud not type of TensorPointCloud which have on open3d >= 0.17")
+            
+            self.pcd = pcd
 
             if "distances" not in pcd.point:
                 raise ValueError("PLY file doesn't contain the [distances] field.")
@@ -29,10 +31,12 @@ class PLYProcessor:
             return None
 
         return pcd
-    
+
+
     def set_parameters(self, target_thickness, tolerance):
         self.target_thickness = target_thickness
         self.tolerance = tolerance
+
 
     def get_header(self):
         header = {
@@ -40,27 +44,39 @@ class PLYProcessor:
         }
         return 
 
+
     def export_distribution_chart(self,bins, save_path=None):
         # self.pcd = self.load_ply(self.ply_path)
         img,_,_ = self.__plot_distance_distribution(self.distances, bins, save_path=None)
         return img #image is base64 format for report teamplate html
     
+
+    def export_tunnel_view_image(self, out_path=None):
+        
+        img_base64 = self.__render_pointcloud_to_image(self.pcd, out_path=out_path)
+        return img_base64
+    
+
     def avg_thickness(self):
         if self.distances is None or len(self.distances) == 0:
             return 0
         return np.average(self.distances)
     
-    def shotcrete_volume(self):
+
+    def volume(self):
         if self.distances is None or len(self.distances) == 0:
             return 0
         
-        min_val = self.target_thickness - self.tolerance
-        mask = self.distances[np.abs(self.distances) >= min_val]
-        vol = np.sum(mask)/1000 * (0.02*0.02) # volumn in m3
+        # min_val = self.target_thickness - self.tolerance
+        min_val = self.tolerance
+        valid_dist =  self.distances
+        valid_dist[np.abs(valid_dist) < min_val] = 0.0
+        # valid_dist = np.clip(valid_dist, 0, None)
+        valid_dist = valid_dist / 1000.0 # convert to meter
+        vol = np.sum(valid_dist * (0.02*0.02)) # volumn in m3
         return vol
     
     
-
     def __plot_distance_distribution(self,distances, bins, save_path=None):
         """
         Plot distance distribution with arbitrary bin edges.
@@ -144,3 +160,90 @@ class PLYProcessor:
         #     plt.show()  # nếu không có path thì show bình thường
 
         return f"data:image/png;base64,{img_base64}", counts, percents 
+
+
+    def __render_pointcloud_to_image(self, pcd, out_path=None,
+                                    width=800, height=600,
+                                    fov_deg=60.0,
+                                    point_size=2.0,
+                                    background=(0.5, 0.5, 0.0, 1.0)):
+        """
+        Render an Open3D pointcloud to an image (base64 + optional file).
+        Supports both legacy and tensor pointclouds.
+        """
+        import io, base64
+        import numpy as np
+        import open3d as o3d
+        from PIL import Image
+
+        # --- Convert to tensor pointcloud ---
+        if isinstance(pcd, o3d.geometry.PointCloud):
+            tpc = o3d.t.geometry.PointCloud.from_legacy(pcd)
+        elif isinstance(pcd, o3d.t.geometry.PointCloud):
+            tpc = pcd
+        else:
+            raise TypeError("pcd must be open3d.geometry.PointCloud or open3d.t.geometry.PointCloud")
+
+        if not tpc.point["positions"].shape[0]:
+            raise ValueError("Empty pointcloud")
+
+        # --- Ensure colors ---
+        if "colors" not in tpc.point:
+            if isinstance(pcd, o3d.geometry.PointCloud) and pcd.has_colors():
+                colors = np.asarray(pcd.colors, dtype=np.float32)
+                if colors.max() > 1.0:
+                    colors /= 255.0
+                tpc.point["colors"] = o3d.core.Tensor(colors, dtype=o3d.core.Dtype.Float32)
+            else:
+                colors = np.ones((tpc.point["positions"].shape[0], 3), dtype=np.float32)
+                tpc.point["colors"] = o3d.core.Tensor(colors)
+
+        # --- Material ---
+        try:
+            mat = o3d.visualization.rendering.MaterialRecord()
+            mat.shader = "defaultUnlit"
+            mat.point_size = float(point_size)
+
+            # --- Renderer ---
+            renderer = o3d.visualization.rendering.OffscreenRenderer(width, height)
+            renderer.scene.set_background(np.array(background, dtype=np.float32))
+
+            legacy_pc = tpc.to_legacy()
+            renderer.scene.add_geometry("pc", legacy_pc, mat)
+
+            # --- Auto-fit camera ---
+            bounds = legacy_pc.get_axis_aligned_bounding_box()
+            center = bounds.get_center()
+            extent = bounds.get_extent()
+            radius = np.linalg.norm(extent) * 0.5
+            # eye = center + np.array([0, 0, radius * 3.0])
+            eye = np.array([-4.0, 0.0, 0.0])
+            up = np.array([0, 0, 1])
+
+            cam = renderer.scene.camera
+            cam.set_projection(fov_deg, width / height, 0.1, 1000.0,
+                            o3d.visualization.rendering.Camera.FovType.Vertical)
+            cam.look_at(center, eye, up)
+
+            # --- Render ---
+            img_o3d = renderer.render_to_image()
+
+            # --- Convert to Base64 ---
+            img_np = np.asarray(img_o3d)
+            img_pil = Image.fromarray(img_np)
+            buf = io.BytesIO()
+            img_pil.save(buf, format="PNG")
+            img_base64 = base64.b64encode(buf.getvalue()).decode("utf-8")
+            img_base64_str = f"data:image/png;base64,{img_base64}"
+
+            # --- Save file if requested ---
+            if out_path:
+                o3d.io.write_image(out_path, img_o3d)
+
+            del renderer
+            return img_base64_str
+        
+        except Exception as e:
+            print(f"[PLYProcessor] Failed to render image from cloud: {e}")
+            return None
+

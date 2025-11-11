@@ -1,10 +1,16 @@
 # tunnel_ui/logic/cloud_manager.py
 import threading
 from PyQt5.QtCore import QTimer, QObject, pyqtSignal
-from pps.helper import compute_heatmap_to_plane, load_ply,cloud_downsample
+from pps.helper import compute_heatmap_to_plane, load_ply,smooth_cloud,assign_colors
 
 from pps.data_converter import cloudconverter
 from pps.tunnel_processing import TunnelProcessing
+
+from shared.config_loader import CONFIG as cfg
+
+THICKNESS_TARGET = cfg.thickness.target/1000  # Target thickness in meter -> convert mm to m
+THICKNESS_TOLERANCE = cfg.thickness.tolerance/1000  # Allowable tolerance in meter of thickness
+
 class CloudManager(QObject):
     _instance = None  # Singleton instance
     compare_done = pyqtSignal(object,str)   # object = kết quả point cloud hoặc polydata
@@ -93,12 +99,18 @@ class CloudManager(QObject):
 
                     print(f"[CloudManager] Comparing clouds {self.filename}")
                     cloud_compared, distance = compute_heatmap_to_plane(
-                        source=post_cloud, target=pre_cloud
+                        source=post_cloud, 
+                        target=pre_cloud, 
+                        target_thickness=THICKNESS_TARGET, 
+                        tolerance_thickness=THICKNESS_TOLERANCE, 
+                        k=6
                     )
 
-                    tunnel = TunnelProcessing()
-                    cloud_compared = tunnel.run_upsample(cloud_compared, axis='x', min_gap=0.02,max_gap=0.5)
-
+                    # tunnel = TunnelProcessing()
+                    # cloud_compared = tunnel.run_upsample(cloud_compared, axis='x', min_gap=0.02,max_gap=0.5)
+                    # cloud_compared = smooth_cloud(cloud_compared, k=8, m=2, threshold=20.0)
+                    # cloud_compared = assign_colors(cloud_compared, highlight_range=[20,40])
+                    
                     self.compare_done.emit(cloud_compared, self.filename)
 
                     # from ui.tunnel_report.report_data_model import ReportHeader

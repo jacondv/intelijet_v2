@@ -36,5 +36,18 @@ pip install python-box
 
 # Build project
 ```bash
+```
 
+# Report package
+```bash
+pip install weasyprint jinja2
+pip install "weasyprint==59.0" "pydyf==0.9.0" --force-reinstall
 
+# Install evince, PDF viewer on Linux
+sudo apt install evince
+```
+
+# Config loaded
+```bash
+pip3 install watchdog
+```
