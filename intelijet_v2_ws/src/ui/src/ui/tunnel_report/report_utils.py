@@ -70,7 +70,7 @@ class PLYProcessor:
         # min_val = self.target_thickness - self.tolerance
         min_val = self.tolerance
         valid_dist =  self.distances
-        valid_dist[np.abs(valid_dist) < min_val] = 0.0
+        valid_dist[np.abs(valid_dist) > min_val] = 0.0
         # valid_dist = np.clip(valid_dist, 0, None)
         valid_dist = valid_dist / 1000.0 # convert to meter
         vol = np.sum(valid_dist * (0.02*0.02)) # volumn in m3
