@@ -32,6 +32,16 @@ def length_to_angle_polynomial(draw_wire_length):
     return scanner_arm_angle_in_radians 
 
 import rospy
+
+def convert_can_to_encoder_value(message_data):
+    raw_value = (
+        float(message_data[0]) +
+        float(message_data[1]) * 256.0 +
+        float(message_data[2]) * 256.0**2 +
+        float(message_data[3]) * 256.0**3
+    )
+    return raw_value
+
 def convert_draw_wire_length(message_data, draw_wire_gain_term=draw_wire_gain_term):
     """
     Chuyển đổi 4 byte đầu tiên của message.data thành chiều dài dây kéo ra.
@@ -44,12 +54,7 @@ def convert_draw_wire_length(message_data, draw_wire_gain_term=draw_wire_gain_te
         float: Chiều dài dây kéo ra (đơn vị: mét hoặc mm, tùy gain).
     """
    
-    raw_value = (
-        float(message_data[0]) +
-        float(message_data[1]) * 256.0 +
-        float(message_data[2]) * 256.0**2 +
-        float(message_data[3]) * 256.0**3
-    )
+    raw_value = convert_can_to_encoder_value(message_data)
 
     return (raw_value-cfg.encoder_length_at_zero_possition) * draw_wire_gain_term + 248
 

@@ -18,13 +18,14 @@ class ReportGenerator:
         self.time = datetime.now().strftime("%H:%M:%S")
 
 
-    def set_info(self, site_name="Unknown", job_name="Unknown",date=None, time=None,applied_thickness=30,tolerance=10):
+    def set_info(self, site_name="Unknown", job_name="Unknown",operator="Unknown",date=None, time=None,applied_thickness=30,tolerance=10):
         self.site_name=site_name
         self.job_name=job_name
         self.applied_thickness=applied_thickness
         self.tolerance=tolerance
         self.date = date or self.date
         self.time = time or self.time
+        self.operator=operator
 
 
     def get_info(self) -> dict:

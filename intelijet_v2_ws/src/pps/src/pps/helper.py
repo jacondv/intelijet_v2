@@ -665,7 +665,7 @@ def map_distances_to_colors(
       - dist > highlight_range[1] → green → blue gradient
       - dist > clip_max → out_of_range_color
     """
-
+    distances = np.abs(distances)
     colors = np.zeros((len(distances), 3))
 
     low, high = highlight_range

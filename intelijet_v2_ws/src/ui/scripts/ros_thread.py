@@ -18,6 +18,7 @@ HMI_CMD_TOPIC = cfg.HMI_CMD_TOPIC
 PRE_SCAN_CLOUD_TOPIC = cfg.PRE_SCAN_CLOUD_TOPIC
 POST_SCAN_CLOUD_TOPIC = cfg.POST_SCAN_CLOUD_TOPIC
 CLOUD_COMPARED_TOPIC = cfg.CLOUD_COMPARED_TOPIC
+ENCODER_DATA_TOPIC =  cfg.ENCODER01_DATA
 
 class RosThread(threading.Thread):
     def __init__(self, cloud_received_signal, ui_send_cmd_signal, ui_data_update):
@@ -36,8 +37,10 @@ class RosThread(threading.Thread):
         rospy.Subscriber(PRE_SCAN_CLOUD_TOPIC, PointCloud2, self.cloud_received_signal_callback,callback_args=PRE_SCAN_CLOUD_TOPIC)
         rospy.Subscriber(POST_SCAN_CLOUD_TOPIC, PointCloud2, self.cloud_received_signal_callback,callback_args=POST_SCAN_CLOUD_TOPIC)
         rospy.Subscriber(CLOUD_COMPARED_TOPIC, PointCloud2, self.cloud_received_signal_callback,callback_args=CLOUD_COMPARED_TOPIC)
-        
 
+        # listennig Encoder value
+        rospy.Subscriber(ENCODER_DATA_TOPIC, Int32, self.update_encoder_raw_value)
+        
         # listening topic update infomation for UI.
         rospy.Subscriber("/joint_states", JointState, self.update_joint_states_status)
 
@@ -70,17 +73,25 @@ class RosThread(threading.Thread):
             rospy.logwarn(f"Joint {cfg.ENCODER_JOINT_NAME} not found in JointState")
 
 
+    def update_encoder_raw_value(self,msg):
+        if msg is None or not hasattr(msg, "data"):
+            return
+        self.data_store["encoder_value_raw"] = msg.data
+
+
     def rosout_callback(self,msg):
         # Lọc theo mức INFO
         data = unpack_log_status(msg)
         if data is not None:
             name = data.get("name")
             self.data_store[name] = data.get("message")
-        
+
+
 
     def emit_ui_data_update(self, msg):
         # print(self.data_store["devices"])
         self.data_store["devices"] = self.device_status_reader.get_status()
         # print("Emitting ui_data_update", self.data_store["devices"])
         self.ui_data_update.emit(self.data_store)
+
 

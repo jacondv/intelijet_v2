@@ -121,12 +121,32 @@ class FileItemWidget(QWidget):
         Phân tích filename dạng: Jobname#yyyymmdd_hhmmss#name.ply
         Trả về dict chứa jobname, datetime, name và original filename.
         """
+
+        def format_name(name: str) -> str:
+            name_lower = name.lower()
+            if "pre" in name_lower:
+                # tách số cuối
+                import re
+                match = re.search(r"(\d+)$", name)
+                number = match.group(1) if match else ""
+                return f"PRESCAN ({number})"
+            elif "post" in name_lower: 
+                import re
+                match = re.search(r"(\d+)$", name)
+                number = match.group(1) if match else ""
+                return f"POSTSCAN ({number})"           
+            else:
+                return name  # giữ nguyên nếu không có "pre"
+            
         base = os.path.basename(filename)              # Lấy tên file (bỏ đường dẫn)
         name_no_ext, _ = os.path.splitext(base)        # Bỏ phần .ply
         
         parts = name_no_ext.split("#")
         jobname, datetime_raw, name = parts if len(parts) >= 3 else ("Unknown", "Unknown", name_no_ext)
-
+        name = format_name(name)
+        
+        
+            
         try:
             dt = datetime.strptime(datetime_raw, "%Y%m%d_%H%M%S")
             datetime_str = dt.strftime("%d/%m/%Y %H:%M:%S")

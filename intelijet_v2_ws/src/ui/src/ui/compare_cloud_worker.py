@@ -8,13 +8,13 @@ from pps.tunnel_processing import TunnelProcessing
 
 from shared.config_loader import CONFIG as cfg
 
-THICKNESS_TARGET = cfg.thickness.target/1000  # Target thickness in meter -> convert mm to m
-THICKNESS_TOLERANCE = cfg.thickness.tolerance/1000  # Allowable tolerance in meter of thickness
+THICKNESS_TARGET = cfg.thickness.target  # Target thickness in meter -> convert mm to m
+THICKNESS_TOLERANCE = cfg.thickness.tolerance  # Allowable tolerance in meter of thickness
 
 class CloudManager(QObject):
     _instance = None  # Singleton instance
     compare_done = pyqtSignal(object,str)   # object = kết quả point cloud hoặc polydata
-
+    
     def __new__(cls, ui=None):
         if cls._instance is None:
             cls._instance = super().__new__(cls)
@@ -25,6 +25,8 @@ class CloudManager(QObject):
             cls._instance.thread = None
             cls._instance.is_running = False
             cls._instance.filename = "None"
+            cls.target_thickness = THICKNESS_TARGET
+            cls.tolerance = THICKNESS_TOLERANCE
         return cls._instance
 
 
@@ -32,9 +34,17 @@ class CloudManager(QObject):
     # NORMAL METHODS (not @classmethod)
     # ---------------------------
     def set_prescan(self, file):
+ 
         with self.lock:
             if isinstance(file, str):
                 self.pre_cloud = load_ply(file)
+                import os
+                from ui.models.job_info import JobInfo
+                job_folder = os.path.dirname(file)
+                job_info = JobInfo.load(job_folder)
+                if job_info:
+                    self.target_thickness = job_info.parameters.get("target_thickness",THICKNESS_TARGET)/1000
+                    self.tolerance = job_info.parameters.get("tolerance",THICKNESS_TOLERANCE)/1000
             else:
                 self.pre_cloud = file
 
@@ -101,8 +111,8 @@ class CloudManager(QObject):
                     cloud_compared, distance = compute_heatmap_to_plane(
                         source=post_cloud, 
                         target=pre_cloud, 
-                        target_thickness=THICKNESS_TARGET, 
-                        tolerance_thickness=THICKNESS_TOLERANCE, 
+                        target_thickness=self.target_thickness, 
+                        tolerance_thickness=self.tolerance, 
                         k=6
                     )
 

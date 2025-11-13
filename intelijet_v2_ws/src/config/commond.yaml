@@ -26,7 +26,8 @@ ENCODER_JOINT_NAME: "scanner_deploy_retract"
 # ENCODER PARAMETER
 # Topic mà PCAN sẽ chuyển gói tin sau khi nhận từ mạng CAN.
 ENCODER01_CAN_MSG: "/encoder01/can_msg" 
-
+# This topic update encoder raw value after decoder CAN Frame
+ENCODER01_DATA:     "/encoder01/data"
 
 # SYSTEM MSG ID 
 # This defined to show messagers to User interface

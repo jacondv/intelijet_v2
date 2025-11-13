@@ -15,24 +15,25 @@ from PyQt5.QtWidgets import QMessageBox, QDialog
 
 from vtk_viewer import VTKViewer
 from ros_thread import RosThread
+#Import pages manager
 from jobnumber_page_manager import JobNumberPageManager
 from history_page_manager import HistoryPageManager
+from project_dlg_manager import ProjectManager 
+from setting_page_manager import SettingPageManager
 
 from data_binder import DataBinder
 from ui.update_data_utils import DataBinder, load_config_to_ui, load_ui_to_config   
-from ui.utils import o3d_to_vtk_polydata
 from ui.compare_cloud_worker import cloud_compare
 
 from shared.pps_command import PPSCommand
 
-from ui.setting_page_ui import Ui_setting_page
 from ui.intelijet_ui import Ui_MainWindow 
 
 from ui.tunnel_report.report_controler import ReportGenerator
 
 from shared.config_loader import CONFIG as cfg
 
-from project_dlg_manager import ProjectManager 
+
 
 
 
@@ -60,24 +61,14 @@ class App(QMainWindow):
         self.ui.tab_mainview.setCurrentIndex(0)
 
         # --- Tab Setting ---
-        self.setting_page_widget = QWidget()
-        self.setting_page_ui = Ui_setting_page()
-        self.setting_page_ui.setupUi(self.setting_page_widget)
-
-        self.setting_page_ui.btnUpdateHousingParam.released.connect(lambda: load_ui_to_config(self.ui.tab_setting))
-        self.setting_page_ui.btnCancelHousingParam.released.connect(lambda: load_config_to_ui(self.ui.tab_setting))
-
+        self.setting_page = SettingPageManager()
         if self.ui.tab_setting.layout() is None:
             self.ui.tab_setting.setLayout(QVBoxLayout())
-        
-        self.ui.tab_setting.layout().addWidget(self.setting_page_widget)
- 
+
+        self.ui.tab_setting.layout().addWidget(self.setting_page)
+
 
         # ------Tab JobSetting ---
-        # self.jobsetting_page = JobNumberPageManager(self.ui.tab_jobnumber)
-        # if self.ui.tab_jobnumber.layout() is None:
-        #     self.ui.tab_jobnumber.setLayout(QVBoxLayout())
-        # self.ui.tab_jobnumber.layout().addWidget(self.jobsetting_page)
         self.project_manager = ProjectManager()
         if self.ui.tab_jobnumber.layout() is None:
             self.ui.tab_jobnumber.setLayout(QVBoxLayout())
@@ -123,7 +114,7 @@ class App(QMainWindow):
         self.ui_data_update.connect(self.update_data)
         self.ui_send_cmd_signal.connect(self.ros_thread.send_command)
         cloud_compare.compare_done.connect(self.update_pointcloud_from_data)
-        cloud_compare.compare_done.connect(self.on_export_report)
+        # cloud_compare.compare_done.connect(self.on_export_report)
 
         # --- Control Buttons ---
         self.ui.btnPreScan.released.connect(lambda: self.ui_send_cmd_signal.emit(PPSCommand.START_PRESCAN.value))
@@ -134,9 +125,9 @@ class App(QMainWindow):
         self.ui.btnCloseScanner.released.connect(lambda: self.ui_send_cmd_signal.emit(PPSCommand.CLOSE_HOUSING.value))
         self.ui.btnShutdown.released.connect(self.on_shutdown)
 
-        self.ui.btnSelectJob.released.connect(self.on_select_job_clicked)
-        btn_ok.clicked.connect(self.accept_job)
-        btn_cancel.clicked.connect(self.accept_job_cancel)
+        # self.ui.btnSelectJob.released.connect(self.on_select_job_clicked)
+        # btn_ok.clicked.connect(self.accept_job)
+        # btn_cancel.clicked.connect(self.accept_job_cancel)
 
 
         # --- Status bar ---
@@ -160,31 +151,6 @@ class App(QMainWindow):
             orig_show()
 
         self.ui.cbbJobSelect.showPopup = new_show
-        
-        # --- Project and Job Manager ---
-        # self.project_manager = None
-        # self.open_project_manager()
-
-        # self.job_select_manage = None
-        # self.open_job_select_manager()
-
-
-    def on_select_job_clicked(self):
-        self.jobsetting_page_in_toolbox.load_jobs_from_disk()
-        if not self.jobsetting_page_in_toolbox.isVisible():
-            self.jobsetting_page_in_toolbox.setVisible(True)
-
-
-    def accept_job(self):
-        job_name = None
-        job_name = self.jobsetting_page_in_toolbox.get_selected_job()
-        self.ui.lblCurrentJob.setText(job_name)
-        if job_name:
-            self.jobsetting_page_in_toolbox.setVisible(False)
-
-
-    def accept_job_cancel(self):
-        self.jobsetting_page_in_toolbox.setVisible(False)
 
 
     # 1.--- Update commond data from ROS ---
@@ -194,6 +160,9 @@ class App(QMainWindow):
             self.ui.lblEncoder.setText(f"{data['encoder_value_in_deg']:.2f}")
         if "notification" in data:
             self.lblNotification.setText(data["notification"])
+        if "encoder_value_raw" in data:
+            self.lblEncoderRawValue.setText(data["encoder_value_raw"])
+        
 
     # 2.--- Update pointcloud from reatime signal ---
     def update_pointcloud(self, msg, topic_name):
@@ -222,17 +191,27 @@ class App(QMainWindow):
 
     # 4.--- Show report view dialog---
     def on_viewreport_dlg(self):
-        from reportselect_dlg_manager import reportselect_dlg
-        reportselect_dlg.exec_()
+        # from reportselect_dlg_manager import reportselect_dlg
+        # reportselect_dlg.exec_()
+
+        from report_view_dlg_manager import ReportViewManager
+        dlg = ReportViewManager()
+
+        parts = [p.strip() for p in self.ui.cbbJobSelect.currentText().split("/")]
+        project, job = (parts + [None]*2)[:2]  # Nếu thiếu phần, job = None
+        dlg.initialize(project,job)
+
+        if dlg.exec_() == QDialog.Rejected:
+            return
+
 
 
     # 5.--- Export report after compare done---
     def on_export_report(self, data, filename):
         try:
             from datetime import datetime
-            from ui.models import JobInfo
+            from ui.models.job_info import JobInfo
             
-
             report = ReportGenerator()
             job_folder = os.path.dirname(filename)
             project_name = os.path.basename(job_folder) 
@@ -282,26 +261,28 @@ class App(QMainWindow):
     # 6.--- Start compare 2 cloud selected for dialog---
     def on_compare(self):
 
-        # import subprocess
-        # subprocess.Popen(["evince", "/mnt/c/work/projects/intelijet_v2/data/Jobnumber1/Test_3m_v4#20251007_005243#report.pdf"])
+        from compare_dlg_manager import CompareManager
+        jobcompare_dlg = CompareManager()
+        # Initialize dialog with current selected project and job
+        parts = [p.strip() for p in self.ui.cbbJobSelect.currentText().split("/")]
+        project, job = (parts + [None]*2)[:2]  # Nếu thiếu phần, job = None
+        jobcompare_dlg.initialize(project,job)
 
-        from jobselect_dlg_manage import jobcompare_dlg
         if jobcompare_dlg.exec_() == QDialog.Accepted:
             data = jobcompare_dlg.get_result()
-            print("Data:", data)
-            pre = data['file1']
-            post = data['file2']
+            
+            # pre = data['file1']
+            # post = data['file2']
+            pre, post, *_ = data
             if pre is None or post is None:
                 return
-        else:
-            return
+                
+            cloud_compare.set_prescan(pre)
+            cloud_compare.set_postscan(post)
+            cloud_compare.align()
+            cloud_compare.compare() #--> output signal compare_done the cloud result.
 
-        
-        cloud_compare.set_prescan(pre)
-        cloud_compare.set_postscan(post)
-        cloud_compare.align()
-        cloud_compare.compare() #--> output signal compare_done the cloud result.
-
+      
 
     # 7.--- Close event handler ---
     def closeEvent(self, event):

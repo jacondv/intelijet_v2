@@ -122,6 +122,7 @@ class PPSMonitor(Monitor):
         pass        
 
 
+# Config with devices will be monitor
 DEVICE_CLASSES = {
     "lidar": LidarMonitor,
     "encoder": EncoderMonitor,
@@ -131,7 +132,19 @@ DEVICE_CLASSES = {
 
 
 class StatusReader:
+    _instance = None  # biến lưu instance duy nhất
+
+    def __new__(cls, *args, **kwargs):
+        if cls._instance is None:
+            cls._instance = super(StatusReader, cls).__new__(cls)
+        return cls._instance
+    
     def __init__(self, config_file="devices.yaml"):
+
+        if hasattr(self, "_initialized") and self._initialized:
+            return  # đã khởi tạo rồi, không làm gì nữa
+
+        self._initialized = True
         # tạo danh sách monitors từ file yaml
         cfg = load_config(config_file)
         self.monitors = []

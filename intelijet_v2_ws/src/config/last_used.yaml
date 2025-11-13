@@ -11,6 +11,7 @@ POST_SCAN_CLOUD_ALIGNED_TOPIC: /post_scan_cloud_aligned
 CLOUD_COMPARED_TOPIC: /cloud_compared
 ENCODER_JOINT_NAME: scanner_deploy_retract
 ENCODER01_CAN_MSG: /encoder01/can_msg
+ENCODER01_DATA: /encoder01/data
 NOTIFICATION: notification
 active_lidar: lms511
 blk360g2:
@@ -37,7 +38,7 @@ crop_box:
     z: 0.2
   max:
     x: 7.0
-    y: 5.0
+    y: 5
     z: 8.0
 housing_start_position: 12
 housing_end_position: 135
@@ -49,5 +50,12 @@ housing_close_speed_fast: 115
 housing_close_speed_medium: 110
 housing_close_speed_slow: 105
 thickness:
-  target: 60
+  target: 30
   tolerance: 10
+report:
+  sitename: Jacon Equipment (test only)
+  jobnumer: Jobnumber (test only)
+  target: 30
+  tolerance: 10
+  thickness_avg: 0
+  shotcrete_vol: 0

@@ -8,6 +8,7 @@
 
 
 from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt5.QtGui import QDoubleValidator,QIntValidator
 
 
 class Ui_setting_page(object):
@@ -240,7 +241,6 @@ class Ui_setting_page(object):
         self.label_7.setText(_translate("setting_page", "Housing open speed (Hz)"))
         self.btnUpdateHousingParam.setText(_translate("setting_page", "Update"))
         self.btnCancelHousingParam.setText(_translate("setting_page", "Cancel"))
-
 
 if __name__ == "__main__":
     import sys
