@@ -33,7 +33,7 @@ class EncoderProcessNode:
 
         encoder_value_raw = solver.convert_can_to_encoder_value(msg.data)
         msg_int = Int32()
-        msg_int.data = encoder_value_raw
+        msg_int.data = int(encoder_value_raw)
         self.pub_encoder_data.publish(msg_int)
 
 

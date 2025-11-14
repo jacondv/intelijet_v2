@@ -460,7 +460,7 @@ class ReportViewManager(QDialog, Ui_frm_MainForm):
         self.lstJobDetail.clear()
         for f in files:
             item = QListWidgetItem(self.lstJobDetail)
-            f_widget = FileItemWidget(f,job_path, view_mode='auto')
+            f_widget = FileItemWidget(f,job_path, view_mode='3')
             filepath = os.path.join(job_path, f)
             item.setSizeHint(f_widget.sizeHint())
             

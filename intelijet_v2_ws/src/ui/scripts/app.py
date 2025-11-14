@@ -44,6 +44,7 @@ CLOUD_COMPARED_TOPIC = cfg.CLOUD_COMPARED_TOPIC
 DATA_DIR = cfg.DATA_DIR
 PROJECT_DIR = os.path.join(BASE_DIR, DATA_DIR, "Projects")
 ACTIVE_JOB_FILE = os.path.join(PROJECT_DIR, "active_jobs.json")
+CURRENT_JOB_FILE = os.path.join(PROJECT_DIR, "current_job.json")
 
 
 class App(QMainWindow):
@@ -129,6 +130,17 @@ class App(QMainWindow):
         # btn_ok.clicked.connect(self.accept_job)
         # btn_cancel.clicked.connect(self.accept_job_cancel)
 
+        # --- Select Job to work process ---
+        self.load_active_jobs(self.ui.cbbJobSelect, ACTIVE_JOB_FILE)
+        self.load_current_job()
+        self.ui.cbbJobSelect.currentIndexChanged.connect(self.on_job_changed)
+        
+        orig_show = self.ui.cbbJobSelect.showPopup
+        def new_show():
+            self.load_active_jobs(self.ui.cbbJobSelect, ACTIVE_JOB_FILE)
+            orig_show()
+
+        # self.ui.cbbJobSelect.showPopup = new_show
 
         # --- Status bar ---
         self.lblNotification = QLabel("Ready")
@@ -145,12 +157,7 @@ class App(QMainWindow):
         # if polydata:
         #     self.vtk_viewer.update(polydata)
 
-        orig_show = self.ui.cbbJobSelect.showPopup
-        def new_show():
-            self.load_active_jobs(self.ui.cbbJobSelect, ACTIVE_JOB_FILE)
-            orig_show()
 
-        self.ui.cbbJobSelect.showPopup = new_show
 
 
     # 1.--- Update commond data from ROS ---
@@ -316,8 +323,8 @@ class App(QMainWindow):
             # jobs_root = self.jobsetting_page.jobs_root
             # job_number = self.ui.lblCurrentJob.text()
             
-            project_name = self.ui.cbbJobSelect.currentText().split(" / ")[0]
-            job_number = self.ui.cbbJobSelect.currentText().split(" / ")[1]
+            project_name = self.ui.cbbJobSelect.currentText().split("/")[0]
+            job_number = self.ui.cbbJobSelect.currentText().split("/")[1]
             jobs_root = os.path.join(PROJECT_DIR, project_name)
 
             # Chuẩn hóa tên topic
@@ -372,9 +379,73 @@ class App(QMainWindow):
 
         except Exception as e:
             print("Error occurred while saving Open3D pointcloud:", e)
+            print(f"Can not save file to {filepath}")
             return None
-        
+    
+    
+    #10. change current job
+    def on_job_changed(self, index):
+        import json
+        if index < 0:
+            return  # không chọn gì cả
 
+        value = self.ui.cbbJobSelect.itemText(index)
+
+        # Hiển thị message box xác nhận
+        reply = QMessageBox.question(
+            self,
+            "Confirm",
+            f"Do you want to select job: {value}?",
+            QMessageBox.Yes | QMessageBox.No,
+            QMessageBox.No
+        )
+
+        if reply == QMessageBox.Yes:
+            # Lưu giá trị vào file JSON
+            try:
+                with open(CURRENT_JOB_FILE, "w") as f:
+                    json.dump({"current_job": value}, f, indent=4)
+            except Exception as e:
+                QMessageBox.warning(self, "Error", f"Cannot save job: {e}")
+        else:
+            # Nếu user chọn No, quay lại giá trị cũ
+            try:
+                with open(CURRENT_JOB_FILE, "r") as f:
+                    data = json.load(f)
+                last_value = data.get("current_job", "")
+                idx = self.ui.cbbJobSelect.findText(last_value)
+                if idx >= 0:
+                    self.ui.cbbJobSelect.blockSignals(True)
+                    self.ui.cbbJobSelect.setCurrentIndex(idx)
+                    self.ui.cbbJobSelect.blockSignals(False)
+            except:
+                pass
+
+    def load_current_job(self):
+        import json
+        """Load giá trị hiện tại của job từ file hoặc gán giá trị đầu tiên."""
+        last_job = None
+        try:
+            with open(CURRENT_JOB_FILE, "r") as f:
+                data = json.load(f)
+                last_job = data.get("current_job", None)
+        except FileNotFoundError:
+            pass
+        except Exception as e:
+            print(f"Error loading {CURRENT_JOB_FILE}: {e}")
+
+        # Nếu có giá trị lưu trước đó và có trong combobox → chọn nó
+        if last_job:
+            idx = self.ui.cbbJobSelect.findText(last_job)
+            if idx >= 0:
+                self.ui.cbbJobSelect.setCurrentIndex(idx)
+                return
+
+        # Nếu không có hoặc giá trị cũ không hợp lệ → chọn giá trị đầu tiên
+        if self.ui.cbbJobSelect.count() > 0:
+            self.ui.cbbJobSelect.setCurrentIndex(0)
+            
+    #######################################################
     def load_active_jobs(self,comboBox, json_file="active_job.json"):
         import json
         comboBox.clear()  # xóa item cũ

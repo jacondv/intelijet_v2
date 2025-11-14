@@ -376,11 +376,14 @@ class ProjectManager(QWidget, Ui_frm_ProjectPage):
             return
 
         self.update_job_list()
-        self.select_job(self.lstJob.currentItem())  # reload detail
+        item = self.lstJob.findItems(self.current_job, QtCore.Qt.MatchExactly)[0]
+        self.select_job(item)  # reload detail
 
 
     def select_job(self, item: QListWidgetItem):
         """Hiển thị chi tiết job khi người dùng click chọn."""
+        if not item:
+            return
         name = item.text()
         self.current_job = name
         self.lblJobName.setText(name)

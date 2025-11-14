@@ -442,7 +442,7 @@ class TunnelProcessing:
         # --- Step 1: Downsample and estimate normals ---
         pcd_down = pcd_cropped.voxel_down_sample(voxel_size=0.05)
         pcd_down.estimate_normals(search_param=o3d.geometry.KDTreeSearchParamKNN(knn=30))
-        pcd_down.orient_normals_consistent_tangent_plane(30)
+        # pcd_down.orient_normals_consistent_tangent_plane(30)
 
         normals = np.asarray(pcd_down.normals)
         points = np.asarray(pcd_down.points)

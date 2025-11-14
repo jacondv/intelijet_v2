@@ -108,13 +108,33 @@ class FileItemWidget(QWidget):
         self.ui.lblRow2.setText(filename_info['name'])
         self.ui.lblRow3.setText(filename_info['datetime'])
         self.ui.btnOpen.clicked.connect(self.on_open_clicked)
+        
         if view_mode.lower() == 'label':
             self.show_only_label()
-
+        elif view_mode.lower()=='2':
+            self.show_only_checkbox()
+        elif  view_mode.lower()=='3':
+             self.show_only_button()
+        else:
+            self.show_default()
+            
+        
 
     def show_only_label(self):
         self.ui.btnOpen.hide()
+        self.ui.chkChooseCloud.hide()
+        
+    def show_only_checkbox(self):
+        self.ui.btnOpen.hide()
+        self.ui.chkChooseCloud.show()
+    
+    def show_only_button(self):
+        self.ui.btnOpen.show()
+        self.ui.chkChooseCloud.hide()
 
+    def show_default(self):
+        self.ui.btnOpen.show()
+        self.ui.chkChooseCloud.show()
 
     def parse_filename(self,filename: str):
         """
@@ -129,12 +149,12 @@ class FileItemWidget(QWidget):
                 import re
                 match = re.search(r"(\d+)$", name)
                 number = match.group(1) if match else ""
-                return f"PRESCAN ({number})"
+                return f"PRESCAN({number})"
             elif "post" in name_lower: 
                 import re
                 match = re.search(r"(\d+)$", name)
                 number = match.group(1) if match else ""
-                return f"POSTSCAN ({number})"           
+                return f"POSTSCAN({number})"           
             else:
                 return name  # giữ nguyên nếu không có "pre"
             
