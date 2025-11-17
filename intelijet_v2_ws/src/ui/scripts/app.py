@@ -172,8 +172,9 @@ class App(QMainWindow):
         if "notification" in data:
             self.lblNotification.setText(data["notification"])
         if "encoder_value_raw" in data:
-            self.lblEncoderRawValue.setText(data["encoder_value_raw"])
-            self.setting_page.txtEncodeValueRaw.setText(data["encoder_value_raw"])
+            value = str(data["encoder_value_raw"])
+            self.ui.lblEncoderRawValue.setText(value)
+            self.setting_page.txtEncodeValueRaw.setText(value)
         
 
     # 2.--- Update pointcloud from reatime signal ---

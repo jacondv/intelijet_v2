@@ -6,7 +6,7 @@ import re
 
 from datetime import datetime
 from PyQt5 import QtCore
-from PyQt5.QtWidgets import QWidget, QInputDialog, QMessageBox, QListWidgetItem
+from PyQt5.QtWidgets import QWidget, QInputDialog, QMessageBox, QListWidgetItem, QHBoxLayout, QPushButton, QVBoxLayout
 
 from ui.project_dlg_ui import Ui_frm_ProjectPage
 from shared.config_loader import CONFIG as cfg
@@ -20,6 +20,34 @@ ACTIVE_JOB_FILE = os.path.join(PROJECT_DIR, "active_jobs.json")
 
 
 from PyQt5.QtWidgets import QDialog, QFormLayout, QLineEdit, QSpinBox, QComboBox, QDialogButtonBox
+
+class NewProjectDlg(QDialog):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setWindowTitle("New Project")
+
+        layout = QVBoxLayout(self)
+
+        self.edit = QLineEdit(self)
+        self.edit.setPlaceholderText("Enter project name...")
+        self.edit.setMinimumHeight(50)  # dễ bấm trên tablet
+        self.edit.setFocus()            # bắt focus -> bật bàn phím
+        layout.addWidget(self.edit)
+
+        btn_ok = QPushButton("OK")
+        btn_cancel = QPushButton("Cancel")
+        btn_ok.clicked.connect(self.accept)
+        btn_cancel.clicked.connect(self.reject)
+
+        h = QHBoxLayout()
+        h.addWidget(btn_cancel)
+        h.addWidget(btn_ok)
+        layout.addLayout(h)
+
+
+    def get_text(self):
+        return self.edit.text()
+
 
 class JobInfoDialog(QDialog):
     """Dialog để nhập tất cả thông tin cho JobInfo"""
@@ -112,22 +140,25 @@ class ProjectManager(QWidget, Ui_frm_ProjectPage):
     # =========================
     def new_project(self):
         """Tạo mới project (thư mục con trong ROOT_DIR)."""
-        name, ok = QInputDialog.getText(self, "New Project", "Enter project name:")
-        if not ok or not name.strip():
-            return
 
-        name = name.strip()
+        dlg = NewProjectDlg(self)
+        if dlg.exec_() != QDialog.Accepted:
+            return
+        
+        name = dlg.get_text().strip()
+        if not name:
+            return
+        
         project_path = os.path.join(PROJECT_DIR, name)
-
         if os.path.exists(project_path):
-            QMessageBox.warning(self, "Exists", f"Project '{name}' already exists.")
-            return
-
+                QMessageBox.warning(self, "Exists", f"Project '{name}' already exists.")
+                return
         os.makedirs(project_path)
+
         self.projects[name] = {"jobs": [], "created": datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
         self.update_project_list()
 
-        # Chọn luôn project mới
+        # Alway select new Item
         items = self.lstProject.findItems(name, QtCore.Qt.MatchExactly)
         if items:
             self.lstProject.setCurrentItem(items[0])
