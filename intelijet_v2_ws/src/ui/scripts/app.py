@@ -7,7 +7,7 @@ import re
 import time
 
 import sys, subprocess
-from PyQt5.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QLabel, QWidget, QPushButton
+from PyQt5.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QLabel, QWidget, QPushButton, QComboBox
 from PyQt5.QtCore import pyqtSignal
 from PyQt5.QtWidgets import QMessageBox, QDialog
 
@@ -133,14 +133,18 @@ class App(QMainWindow):
         # --- Select Job to work process ---
         self.load_active_jobs(self.ui.cbbJobSelect, ACTIVE_JOB_FILE)
         self.load_current_job()
-        self.ui.cbbJobSelect.currentIndexChanged.connect(self.on_job_changed)
+        # self.ui.cbbJobSelect.currentIndexChanged.connect(self.on_job_changed)
+        self.ui.cbbJobSelect.activated.connect(self.on_job_changed)
+        self.current_job_index = self.ui.cbbJobSelect.currentIndex()
+        
         
         orig_show = self.ui.cbbJobSelect.showPopup
         def new_show():
             self.load_active_jobs(self.ui.cbbJobSelect, ACTIVE_JOB_FILE)
             orig_show()
 
-        # self.ui.cbbJobSelect.showPopup = new_show
+        self.ui.cbbJobSelect.showPopup = new_show
+        # self.ui.cbbJobSelect.mousePressEvent = self.on_combo_click
 
         # --- Status bar ---
         self.lblNotification = QLabel("Ready")
@@ -157,7 +161,7 @@ class App(QMainWindow):
         # if polydata:
         #     self.vtk_viewer.update(polydata)
 
-
+        self.setting_page.txtEncodeValueRaw.setText("NaN")
 
 
     # 1.--- Update commond data from ROS ---
@@ -169,6 +173,7 @@ class App(QMainWindow):
             self.lblNotification.setText(data["notification"])
         if "encoder_value_raw" in data:
             self.lblEncoderRawValue.setText(data["encoder_value_raw"])
+            self.setting_page.txtEncodeValueRaw.setText(data["encoder_value_raw"])
         
 
     # 2.--- Update pointcloud from reatime signal ---
@@ -384,10 +389,14 @@ class App(QMainWindow):
     
     
     #10. change current job
+
     def on_job_changed(self, index):
         import json
         if index < 0:
             return  # không chọn gì cả
+        
+        if index == self.current_job_index: # Chỉ hỏi khi item khác item hiện tại
+            return
 
         value = self.ui.cbbJobSelect.itemText(index)
 
@@ -405,6 +414,7 @@ class App(QMainWindow):
             try:
                 with open(CURRENT_JOB_FILE, "w") as f:
                     json.dump({"current_job": value}, f, indent=4)
+                self.current_job_index = self.ui.cbbJobSelect.currentIndex()
             except Exception as e:
                 QMessageBox.warning(self, "Error", f"Cannot save job: {e}")
         else:

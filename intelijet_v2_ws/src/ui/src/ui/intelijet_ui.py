@@ -16,50 +16,92 @@ class Ui_MainWindow(object):
         MainWindow.resize(1270, 870)
         MainWindow.setStyleSheet("\n"
 "/* ==================== PUSHBUTTON ==================== */\n"
+"\n"
 "QPushButton {\n"
-"    border-radius: 6px;\n"
-"    padding: 8px 16px;\n"
-"    font-size: 15px;\n"
-"    font-weight: bold;\n"
+"    background-color: #5C87C9;     /* xanh sáng hơn */\n"
+"    color: white;\n"
+"    border: 0px solid #3c6382;\n"
+"    padding: 6px 10px;\n"
+"    font-size: 14px;\n"
 "}\n"
+"\n"
 "QPushButton:hover {\n"
-"    background-color: #1976D2;\n"
+"    background-color: #3c6382;\n"
 "}\n"
+"\n"
 "QPushButton:pressed {\n"
-"    background-color: #0D47A1;\n"
+"    background-color: #3c6382;\n"
+"    border: 1px solid #355A8A;\n"
 "}\n"
 "\n"
 "\n"
 "/* --- Text editor (QLineEdit & QTextEdit) --- */\n"
+"/* Text box chung */\n"
 "QLineEdit, QTextEdit {\n"
-"    border: 1px solid #BDBDBD;\n"
-"    border-radius: 4px;\n"
-"    padding: 6px;\n"
+"    background-color: #FFFFFF;        /* nền trắng */\n"
+"    color: #2F4F6E;                  /* chữ xanh đậm */\n"
+"    border: 1px solid #B0C4DE;       /* viền nhẹ */\n"
+"    padding: 4px 8px;                /* khoảng cách chữ và viền */\n"
 "    font-size: 14px;\n"
-"    background: #FAFAFA;\n"
-"}\n"
-"QLineEdit:focus, QTextEdit:focus {\n"
-"    border: 1px solid #2196F3;\n"
-"    background: #FFFFFF;\n"
+"    font-weight: bold;\n"
 "}\n"
 "\n"
+"/* Khi focus */\n"
+"QLineEdit:focus, QTextEdit:focus {\n"
+"    border: 1px solid #5C87C9;       /* viền xanh khi focus */\n"
+"    background-color: #F9FBFF;        /* nền sáng hơn khi focus */\n"
+"}\n"
+"\n"
+"/* Khi hover (chuột vào) */\n"
+"QLineEdit:hover, QTextEdit:hover {\n"
+"    border: 1px solid #74A9D8;       /* viền hover nhẹ */\n"
+"}\n"
+"\n"
+"\n"
 "QComboBox {\n"
-"        background-color: #f5f5f5;\n"
-"        border: 1px solid #aaa;\n"
-"        border-radius: 6px;\n"
-"        padding: 6px 10px;\n"
-"        font-size: 14px;\n"
-"        color: #333;\n"
-"    }\n"
-"    QComboBox:hover {\n"
-"        border: 1px solid #0078d7;\n"
-"    }\n"
-"    QComboBox::drop-down {\n"
-"        subcontrol-origin: padding;\n"
-"        subcontrol-position: top right;\n"
-"        width: 25px;\n"
-"        \n"
-"    }\n"
+"    background-color: #FFFFFF;       /* nền sáng */\n"
+"    color: #2F4F6E;                 /* chữ xanh đậm */\n"
+"    border: 1px solid #B0C4DE;      /* viền nhẹ */\n"
+"    padding: 4px 8px;\n"
+"    font-size: 14px;\n"
+"    font-weight: bold;\n"
+"    selection-background-color: #D0E4F5; /* khi chọn item */\n"
+"}\n"
+"\n"
+"/* Drop-down list */\n"
+"QComboBox QAbstractItemView {\n"
+"    background-color: #FFFFFF;\n"
+"    color: #2F4F6E;\n"
+"    border: 1px solid #B0C4DE;\n"
+"    selection-background-color: #D0E4F5;\n"
+"}\n"
+"\n"
+"/* Hover khi trỏ vào QComboBox */\n"
+"QComboBox:hover {\n"
+"    border: 1px solid #5C87C9;\n"
+"}\n"
+"\n"
+"/* Khi mở drop-down */\n"
+"QComboBox:focus {\n"
+"    border: 1px solid #5C87C9;\n"
+"}\n"
+"QGroupBox {\n"
+"    border: 1px solid #B0C4DE;   /* viền nhẹ */\n"
+"    background-color: #FFFFFF;    /* nền trắng */\n"
+"    margin-top: 10px;\n"
+"    padding: 8px;\n"
+"    font-weight: bold;\n"
+"    font-size: 16px;\n"
+"}\n"
+"\n"
+"QGroupBox::title {\n"
+"    subcontrol-origin: margin;\n"
+"    left: 8px;                   /* khoảng cách từ viền trái */\n"
+"    padding: 0 4px;\n"
+"    color: #2F4F6E;              /* chữ xanh đậm */\n"
+"}\n"
+"\n"
+"\n"
 "\n"
 "/* ==================== SCROLLBAR ==================== */\n"
 "QScrollBar:vertical {\n"
@@ -146,6 +188,15 @@ class Ui_MainWindow(object):
 "    color: #dcdcdc;\n"
 "}\n"
 "\n"
+"QLabel {\n"
+"    background-color: #EAF2F8;   /* nền nhạt */\n"
+"    color: #2F4F6E;              /* chữ xanh công nghiệp */\n"
+"    border: 1px solid #B0C4DE;   /* viền nhẹ */\n"
+"    padding: 4px 8px;\n"
+"    font-size: 14px;\n"
+"    font-weight: bold;\n"
+"}\n"
+"\n"
 "#toolBox{\n"
 "    padding-top:30px;\n"
 "    color:white;\n"
@@ -230,8 +281,8 @@ class Ui_MainWindow(object):
 "")
         self.centralwidget = QtWidgets.QWidget(MainWindow)
         self.centralwidget.setObjectName("centralwidget")
-        self.verticalLayout_2 = QtWidgets.QVBoxLayout(self.centralwidget)
-        self.verticalLayout_2.setObjectName("verticalLayout_2")
+        self.gridLayout_2 = QtWidgets.QGridLayout(self.centralwidget)
+        self.gridLayout_2.setObjectName("gridLayout_2")
         self.centralFrame = QtWidgets.QWidget(self.centralwidget)
         self.centralFrame.setObjectName("centralFrame")
         self.horizontalLayout_2 = QtWidgets.QHBoxLayout(self.centralFrame)
@@ -246,6 +297,67 @@ class Ui_MainWindow(object):
         self.menu_main.setObjectName("menu_main")
         self.verticalLayout = QtWidgets.QVBoxLayout(self.menu_main)
         self.verticalLayout.setObjectName("verticalLayout")
+        self.widget_3 = QtWidgets.QWidget(self.menu_main)
+        self.widget_3.setObjectName("widget_3")
+        self.horizontalLayout_4 = QtWidgets.QHBoxLayout(self.widget_3)
+        self.horizontalLayout_4.setObjectName("horizontalLayout_4")
+        self.lblCurrentJob = QtWidgets.QLabel(self.widget_3)
+        self.lblCurrentJob.setObjectName("lblCurrentJob")
+        self.horizontalLayout_4.addWidget(self.lblCurrentJob)
+        self.cbbJobSelect = QtWidgets.QComboBox(self.widget_3)
+        self.cbbJobSelect.setMinimumSize(QtCore.QSize(200, 40))
+        self.cbbJobSelect.setStyleSheet("/* Toàn bộ ComboBox */\n"
+"QComboBox {\n"
+"    background-color: #FFFFFF;       /* nền trắng */\n"
+"    color: #2F4F6E;                  /* chữ xanh đậm */\n"
+"    border: 1px solid #B0C4DE;       /* viền nhẹ */\n"
+"    font-size: 14px;\n"
+"    font-weight: bold;\n"
+"    padding: 4px 8px;\n"
+"}\n"
+"\n"
+"/* Khi hover trên ComboBox */\n"
+"QComboBox:hover {\n"
+"    border: 1px solid #74A9D8;\n"
+"}\n"
+"\n"
+"/* Khi focus ComboBox */\n"
+"QComboBox:focus {\n"
+"    border: 1px solid #5C87C9;\n"
+"    background-color: #F9FBFF;\n"
+"}\n"
+"\n"
+"/* Drop-down list (Item view) */\n"
+"QComboBox QAbstractItemView {\n"
+"    background-color: #FFFFFF;\n"
+"    color: #2F4F6E;\n"
+"    border: 1px solid #B0C4DE;\n"
+"    selection-background-color: #D0E4F5;\n"
+"    font-size: 14px;\n"
+"    font-weight: bold;\n"
+"}\n"
+"\n"
+"/* Tăng chiều cao item */\n"
+"QComboBox QAbstractItemView::item {\n"
+"    height: 30px;                     /* chiều cao item */\n"
+"    padding: 6px 10px;\n"
+"}\n"
+"\n"
+"/* Khi hover item */\n"
+"QComboBox QAbstractItemView::item:hover {\n"
+"    background-color: #E4F0FA;\n"
+"}\n"
+"\n"
+"/* Khi chọn item */\n"
+"QComboBox QAbstractItemView::item:selected {\n"
+"    background-color: #D0E4F5;\n"
+"    color: #2F4F6E;\n"
+"}\n"
+"")
+        self.cbbJobSelect.setEditable(False)
+        self.cbbJobSelect.setObjectName("cbbJobSelect")
+        self.horizontalLayout_4.addWidget(self.cbbJobSelect)
+        self.verticalLayout.addWidget(self.widget_3)
         self.toolBox = QtWidgets.QToolBox(self.menu_main)
         self.toolBox.setStyleSheet("QComboBox::drop-down {\n"
 "    width: 40px;               /* rộng hơn để mũi tên lớn hơn */\n"
@@ -263,47 +375,56 @@ class Ui_MainWindow(object):
 "")
         self.toolBox.setObjectName("toolBox")
         self.tboxPage1 = QtWidgets.QWidget()
-        self.tboxPage1.setGeometry(QtCore.QRect(0, 0, 342, 601))
+        self.tboxPage1.setGeometry(QtCore.QRect(0, 0, 342, 541))
         self.tboxPage1.setObjectName("tboxPage1")
         self.verticalLayout_6 = QtWidgets.QVBoxLayout(self.tboxPage1)
         self.verticalLayout_6.setObjectName("verticalLayout_6")
-        self.widget_3 = QtWidgets.QWidget(self.tboxPage1)
-        self.widget_3.setObjectName("widget_3")
-        self.horizontalLayout_4 = QtWidgets.QHBoxLayout(self.widget_3)
-        self.horizontalLayout_4.setObjectName("horizontalLayout_4")
-        self.lblCurrentJob = QtWidgets.QLabel(self.widget_3)
-        self.lblCurrentJob.setObjectName("lblCurrentJob")
-        self.horizontalLayout_4.addWidget(self.lblCurrentJob)
-        self.cbbJobSelect = QtWidgets.QComboBox(self.widget_3)
-        self.cbbJobSelect.setMinimumSize(QtCore.QSize(200, 40))
-        self.cbbJobSelect.setStyleSheet("QComboBox::drop-down {\n"
-"    width: 40px;               /* rộng hơn để mũi tên lớn hơn */\n"
-"}\n"
-"\n"
-"QComboBox::down-arrow {\n"
-"    width: 18px;               /* mũi tên lớn */\n"
-"    height: 18px;\n"
-"}\n"
-"\n"
-"QComboBox QAbstractItemView {\n"
-"    background-color: rgb(60, 60, 60);  /* màu nền dropdown */\n"
-"    selection-background-color: rgb(100, 100, 100);\n"
-"}\n"
-"")
-        self.cbbJobSelect.setEditable(False)
-        self.cbbJobSelect.setObjectName("cbbJobSelect")
-        self.horizontalLayout_4.addWidget(self.cbbJobSelect)
-        self.verticalLayout_6.addWidget(self.widget_3)
         self.widget_4 = QtWidgets.QWidget(self.tboxPage1)
         self.widget_4.setObjectName("widget_4")
-        self.horizontalLayout_5 = QtWidgets.QHBoxLayout(self.widget_4)
-        self.horizontalLayout_5.setObjectName("horizontalLayout_5")
-        self.btnCompare2 = QtWidgets.QPushButton(self.widget_4)
-        self.btnCompare2.setObjectName("btnCompare2")
-        self.horizontalLayout_5.addWidget(self.btnCompare2)
+        self.verticalLayout_12 = QtWidgets.QVBoxLayout(self.widget_4)
+        self.verticalLayout_12.setObjectName("verticalLayout_12")
         self.btnViewReport = QtWidgets.QPushButton(self.widget_4)
+        self.btnViewReport.setMinimumSize(QtCore.QSize(120, 60))
+        self.btnViewReport.setStyleSheet("QPushButton {\n"
+"    background-color: #60a3bc;     /* xanh sáng hơn */\n"
+"    color: white;\n"
+"    border: 1px solid #60a3bc;\n"
+"    padding: 6px 10px;\n"
+"    font-size: 14px;\n"
+"}\n"
+"\n"
+"QPushButton:hover {\n"
+"    background-color: #74b5cd;     /* #60a3bc + sáng */\n"
+"    border: 1px solid #74b5cd;\n"
+"}\n"
+"\n"
+"QPushButton:pressed {\n"
+"    background-color: #4d8ea3;     /* #60a3bc - đậm */\n"
+"    border: 1px solid #4d8ea3;\n"
+"}")
         self.btnViewReport.setObjectName("btnViewReport")
-        self.horizontalLayout_5.addWidget(self.btnViewReport)
+        self.verticalLayout_12.addWidget(self.btnViewReport)
+        self.btnCompare2 = QtWidgets.QPushButton(self.widget_4)
+        self.btnCompare2.setMinimumSize(QtCore.QSize(120, 60))
+        self.btnCompare2.setStyleSheet("QPushButton {\n"
+"    background-color: #60a3bc;     /* xanh sáng hơn */\n"
+"    color: white;\n"
+"    border: 1px solid #60a3bc;\n"
+"    padding: 6px 10px;\n"
+"    font-size: 14px;\n"
+"}\n"
+"\n"
+"QPushButton:hover {\n"
+"    background-color: #74b5cd;     /* #60a3bc + sáng */\n"
+"    border: 1px solid #74b5cd;\n"
+"}\n"
+"\n"
+"QPushButton:pressed {\n"
+"    background-color: #4d8ea3;     /* #60a3bc - đậm */\n"
+"    border: 1px solid #4d8ea3;\n"
+"}")
+        self.btnCompare2.setObjectName("btnCompare2")
+        self.verticalLayout_12.addWidget(self.btnCompare2)
         self.verticalLayout_6.addWidget(self.widget_4)
         spacerItem = QtWidgets.QSpacerItem(20, 437, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding)
         self.verticalLayout_6.addItem(spacerItem)
@@ -311,7 +432,7 @@ class Ui_MainWindow(object):
         icon.addPixmap(QtGui.QPixmap(":/icon/icon/home-4-48 (2).ico"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.toolBox.addItem(self.tboxPage1, icon, "")
         self.tboxPage3 = QtWidgets.QWidget()
-        self.tboxPage3.setGeometry(QtCore.QRect(0, 0, 342, 601))
+        self.tboxPage3.setGeometry(QtCore.QRect(0, 0, 342, 541))
         self.tboxPage3.setObjectName("tboxPage3")
         self.widget_6 = QtWidgets.QWidget(self.tboxPage3)
         self.widget_6.setGeometry(QtCore.QRect(0, 10, 321, 601))
@@ -328,7 +449,7 @@ class Ui_MainWindow(object):
         self.verticalLayout_9.addWidget(self.widget_5)
         self.toolBox.addItem(self.tboxPage3, "")
         self.tboxPage2 = QtWidgets.QWidget()
-        self.tboxPage2.setGeometry(QtCore.QRect(0, 0, 342, 601))
+        self.tboxPage2.setGeometry(QtCore.QRect(0, 0, 342, 541))
         self.tboxPage2.setObjectName("tboxPage2")
         self.toolBox.addItem(self.tboxPage2, "")
         self.verticalLayout.addWidget(self.toolBox)
@@ -406,60 +527,90 @@ class Ui_MainWindow(object):
         self.verticalLayout_5.setObjectName("verticalLayout_5")
         self.widget = QtWidgets.QWidget(self.tab_system)
         self.widget.setObjectName("widget")
-        self.gridLayout_4 = QtWidgets.QGridLayout(self.widget)
-        self.gridLayout_4.setContentsMargins(0, 30, 0, 0)
-        self.gridLayout_4.setHorizontalSpacing(0)
-        self.gridLayout_4.setObjectName("gridLayout_4")
-        self.widget_2 = QtWidgets.QWidget(self.widget)
+        self.horizontalLayout_11 = QtWidgets.QHBoxLayout(self.widget)
+        self.horizontalLayout_11.setObjectName("horizontalLayout_11")
+        self.groupBox = QtWidgets.QGroupBox(self.widget)
+        self.groupBox.setObjectName("groupBox")
+        self.verticalLayout_10 = QtWidgets.QVBoxLayout(self.groupBox)
+        self.verticalLayout_10.setContentsMargins(0, -1, 100, -1)
+        self.verticalLayout_10.setObjectName("verticalLayout_10")
+        self.widget_2 = QtWidgets.QWidget(self.groupBox)
         self.widget_2.setMaximumSize(QtCore.QSize(500, 500))
         self.widget_2.setObjectName("widget_2")
-        self.gridLayout_2 = QtWidgets.QGridLayout(self.widget_2)
-        self.gridLayout_2.setObjectName("gridLayout_2")
-        self.lblLidarStatus = QtWidgets.QLabel(self.widget_2)
-        self.lblLidarStatus.setObjectName("lblLidarStatus")
-        self.gridLayout_2.addWidget(self.lblLidarStatus, 1, 2, 1, 1)
-        self.lblEncoderRawValue = QtWidgets.QLabel(self.widget_2)
-        self.lblEncoderRawValue.setObjectName("lblEncoderRawValue")
-        self.gridLayout_2.addWidget(self.lblEncoderRawValue, 5, 3, 1, 1)
-        self.label = QtWidgets.QLabel(self.widget_2)
-        self.label.setObjectName("label")
-        self.gridLayout_2.addWidget(self.label, 3, 1, 2, 2)
-        self.label_7 = QtWidgets.QLabel(self.widget_2)
+        self.verticalLayout_2 = QtWidgets.QVBoxLayout(self.widget_2)
+        self.verticalLayout_2.setContentsMargins(0, 30, 0, -1)
+        self.verticalLayout_2.setSpacing(0)
+        self.verticalLayout_2.setObjectName("verticalLayout_2")
+        self.widget_7 = QtWidgets.QWidget(self.widget_2)
+        self.widget_7.setObjectName("widget_7")
+        self.horizontalLayout_5 = QtWidgets.QHBoxLayout(self.widget_7)
+        self.horizontalLayout_5.setObjectName("horizontalLayout_5")
+        self.label_7 = QtWidgets.QLabel(self.widget_7)
         self.label_7.setObjectName("label_7")
-        self.gridLayout_2.addWidget(self.label_7, 0, 0, 1, 1)
-        self.lblEncoderStatus = QtWidgets.QLabel(self.widget_2)
-        self.lblEncoderStatus.setObjectName("lblEncoderStatus")
-        self.gridLayout_2.addWidget(self.lblEncoderStatus, 2, 2, 1, 1)
-        self.label_5 = QtWidgets.QLabel(self.widget_2)
-        self.label_5.setObjectName("label_5")
-        self.gridLayout_2.addWidget(self.label_5, 6, 0, 1, 2)
-        self.label_2 = QtWidgets.QLabel(self.widget_2)
-        self.label_2.setObjectName("label_2")
-        self.gridLayout_2.addWidget(self.label_2, 1, 0, 1, 1)
-        self.lblPCANStatus = QtWidgets.QLabel(self.widget_2)
-        self.lblPCANStatus.setObjectName("lblPCANStatus")
-        self.gridLayout_2.addWidget(self.lblPCANStatus, 6, 3, 1, 1)
-        self.label_4 = QtWidgets.QLabel(self.widget_2)
-        self.label_4.setObjectName("label_4")
-        self.gridLayout_2.addWidget(self.label_4, 5, 1, 1, 2)
-        self.lblPLCStatus = QtWidgets.QLabel(self.widget_2)
+        self.horizontalLayout_5.addWidget(self.label_7)
+        self.lblPLCStatus = QtWidgets.QLabel(self.widget_7)
         self.lblPLCStatus.setObjectName("lblPLCStatus")
-        self.gridLayout_2.addWidget(self.lblPLCStatus, 0, 2, 1, 1)
-        self.label_3 = QtWidgets.QLabel(self.widget_2)
+        self.horizontalLayout_5.addWidget(self.lblPLCStatus)
+        self.verticalLayout_2.addWidget(self.widget_7)
+        self.widget_12 = QtWidgets.QWidget(self.widget_2)
+        self.widget_12.setObjectName("widget_12")
+        self.horizontalLayout_10 = QtWidgets.QHBoxLayout(self.widget_12)
+        self.horizontalLayout_10.setObjectName("horizontalLayout_10")
+        self.label_5 = QtWidgets.QLabel(self.widget_12)
+        self.label_5.setObjectName("label_5")
+        self.horizontalLayout_10.addWidget(self.label_5)
+        self.lblPCANStatus = QtWidgets.QLabel(self.widget_12)
+        self.lblPCANStatus.setObjectName("lblPCANStatus")
+        self.horizontalLayout_10.addWidget(self.lblPCANStatus)
+        self.verticalLayout_2.addWidget(self.widget_12)
+        self.widget_8 = QtWidgets.QWidget(self.widget_2)
+        self.widget_8.setObjectName("widget_8")
+        self.horizontalLayout_6 = QtWidgets.QHBoxLayout(self.widget_8)
+        self.horizontalLayout_6.setObjectName("horizontalLayout_6")
+        self.label_2 = QtWidgets.QLabel(self.widget_8)
+        self.label_2.setObjectName("label_2")
+        self.horizontalLayout_6.addWidget(self.label_2)
+        self.lblLidarStatus = QtWidgets.QLabel(self.widget_8)
+        self.lblLidarStatus.setObjectName("lblLidarStatus")
+        self.horizontalLayout_6.addWidget(self.lblLidarStatus)
+        self.verticalLayout_2.addWidget(self.widget_8)
+        self.widget_9 = QtWidgets.QWidget(self.widget_2)
+        self.widget_9.setObjectName("widget_9")
+        self.horizontalLayout_7 = QtWidgets.QHBoxLayout(self.widget_9)
+        self.horizontalLayout_7.setObjectName("horizontalLayout_7")
+        self.label_3 = QtWidgets.QLabel(self.widget_9)
         self.label_3.setObjectName("label_3")
-        self.gridLayout_2.addWidget(self.label_3, 2, 0, 1, 2)
-        self.label_6 = QtWidgets.QLabel(self.widget_2)
-        self.label_6.setObjectName("label_6")
-        self.gridLayout_2.addWidget(self.label_6, 7, 0, 1, 2)
-        self.lblCameraStatus = QtWidgets.QLabel(self.widget_2)
-        self.lblCameraStatus.setObjectName("lblCameraStatus")
-        self.gridLayout_2.addWidget(self.lblCameraStatus, 7, 3, 1, 1)
-        self.lblEncoder = QtWidgets.QLabel(self.widget_2)
+        self.horizontalLayout_7.addWidget(self.label_3)
+        self.lblEncoderStatus = QtWidgets.QLabel(self.widget_9)
+        self.lblEncoderStatus.setObjectName("lblEncoderStatus")
+        self.horizontalLayout_7.addWidget(self.lblEncoderStatus)
+        self.verticalLayout_2.addWidget(self.widget_9)
+        self.widget_10 = QtWidgets.QWidget(self.widget_2)
+        self.widget_10.setObjectName("widget_10")
+        self.horizontalLayout_8 = QtWidgets.QHBoxLayout(self.widget_10)
+        self.horizontalLayout_8.setObjectName("horizontalLayout_8")
+        self.label = QtWidgets.QLabel(self.widget_10)
+        self.label.setObjectName("label")
+        self.horizontalLayout_8.addWidget(self.label)
+        self.lblEncoder = QtWidgets.QLabel(self.widget_10)
         self.lblEncoder.setObjectName("lblEncoder")
-        self.gridLayout_2.addWidget(self.lblEncoder, 3, 3, 1, 1)
-        self.gridLayout_4.addWidget(self.widget_2, 0, 0, 1, 1)
+        self.horizontalLayout_8.addWidget(self.lblEncoder)
+        self.verticalLayout_2.addWidget(self.widget_10)
+        self.widget_11 = QtWidgets.QWidget(self.widget_2)
+        self.widget_11.setObjectName("widget_11")
+        self.horizontalLayout_9 = QtWidgets.QHBoxLayout(self.widget_11)
+        self.horizontalLayout_9.setObjectName("horizontalLayout_9")
+        self.label_4 = QtWidgets.QLabel(self.widget_11)
+        self.label_4.setObjectName("label_4")
+        self.horizontalLayout_9.addWidget(self.label_4)
+        self.lblEncoderRawValue = QtWidgets.QLabel(self.widget_11)
+        self.lblEncoderRawValue.setObjectName("lblEncoderRawValue")
+        self.horizontalLayout_9.addWidget(self.lblEncoderRawValue)
+        self.verticalLayout_2.addWidget(self.widget_11)
+        self.verticalLayout_10.addWidget(self.widget_2)
         spacerItem4 = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding)
-        self.gridLayout_4.addItem(spacerItem4, 1, 0, 1, 1)
+        self.verticalLayout_10.addItem(spacerItem4)
+        self.horizontalLayout_11.addWidget(self.groupBox)
         self.verticalLayout_5.addWidget(self.widget)
         self.tab_mainview.addTab(self.tab_system, "")
         self.horizontalLayout_2.addWidget(self.tab_mainview)
@@ -510,7 +661,7 @@ class Ui_MainWindow(object):
         self.horizontalLayout_2.setStretch(0, 3)
         self.horizontalLayout_2.setStretch(2, 5)
         self.horizontalLayout_2.setStretch(3, 2)
-        self.verticalLayout_2.addWidget(self.centralFrame)
+        self.gridLayout_2.addWidget(self.centralFrame, 0, 0, 1, 1)
         MainWindow.setCentralWidget(self.centralwidget)
         self.statusbar = QtWidgets.QStatusBar(MainWindow)
         self.statusbar.setMinimumSize(QtCore.QSize(0, 35))
@@ -519,7 +670,7 @@ class Ui_MainWindow(object):
 
         self.retranslateUi(MainWindow)
         self.toolBox.layout().setSpacing(6)
-        self.tab_mainview.setCurrentIndex(1)
+        self.tab_mainview.setCurrentIndex(3)
         self.pushButton_4.clicked['bool'].connect(self.menu_main.setHidden)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
@@ -527,8 +678,8 @@ class Ui_MainWindow(object):
         _translate = QtCore.QCoreApplication.translate
         MainWindow.setWindowTitle(_translate("MainWindow", "Jacon Intelijet"))
         self.lblCurrentJob.setText(_translate("MainWindow", "Current Job:"))
-        self.btnCompare2.setText(_translate("MainWindow", "Compare"))
         self.btnViewReport.setText(_translate("MainWindow", "View Report"))
+        self.btnCompare2.setText(_translate("MainWindow", "Compare"))
         self.toolBox.setItemText(self.toolBox.indexOf(self.tboxPage1), _translate("MainWindow", "Jobs view"))
         self.toolBox.setItemText(self.toolBox.indexOf(self.tboxPage3), _translate("MainWindow", "Compare"))
         self.toolBox.setItemText(self.toolBox.indexOf(self.tboxPage2), _translate("MainWindow", "History"))
@@ -536,20 +687,19 @@ class Ui_MainWindow(object):
         self.tab_mainview.setTabText(self.tab_mainview.indexOf(self.tab_operator), _translate("MainWindow", "3D Viewer"))
         self.tab_mainview.setTabText(self.tab_mainview.indexOf(self.tab_setting), _translate("MainWindow", "Setting"))
         self.tab_mainview.setTabText(self.tab_mainview.indexOf(self.tab_jobnumber), _translate("MainWindow", "Job No."))
-        self.lblLidarStatus.setText(_translate("MainWindow", "--"))
-        self.lblEncoderRawValue.setText(_translate("MainWindow", "--"))
-        self.label.setText(_translate("MainWindow", "Encoder value (rad):"))
+        self.groupBox.setTitle(_translate("MainWindow", "Device Status"))
         self.label_7.setText(_translate("MainWindow", "PLC:"))
-        self.lblEncoderStatus.setText(_translate("MainWindow", "--"))
-        self.label_5.setText(_translate("MainWindow", "PCAN Gatway:"))
-        self.label_2.setText(_translate("MainWindow", "Lidar:"))
-        self.lblPCANStatus.setText(_translate("MainWindow", "--"))
-        self.label_4.setText(_translate("MainWindow", "Encoder value (raw):"))
         self.lblPLCStatus.setText(_translate("MainWindow", "--"))
+        self.label_5.setText(_translate("MainWindow", "PCAN Gatway:"))
+        self.lblPCANStatus.setText(_translate("MainWindow", "--"))
+        self.label_2.setText(_translate("MainWindow", "Lidar:"))
+        self.lblLidarStatus.setText(_translate("MainWindow", "--"))
         self.label_3.setText(_translate("MainWindow", "Encoder:"))
-        self.label_6.setText(_translate("MainWindow", "Camera:"))
-        self.lblCameraStatus.setText(_translate("MainWindow", "--"))
+        self.lblEncoderStatus.setText(_translate("MainWindow", "--"))
+        self.label.setText(_translate("MainWindow", "Encoder value (rad):"))
         self.lblEncoder.setText(_translate("MainWindow", "--"))
+        self.label_4.setText(_translate("MainWindow", "Encoder value (raw):"))
+        self.lblEncoderRawValue.setText(_translate("MainWindow", "--"))
         self.tab_mainview.setTabText(self.tab_mainview.indexOf(self.tab_system), _translate("MainWindow", "System"))
         self.btnPreScan.setText(_translate("MainWindow", "PRE-SCAN"))
         self.btnPostScan.setText(_translate("MainWindow", "POST-SCAN"))

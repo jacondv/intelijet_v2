@@ -1,7 +1,7 @@
 # setting_page_manager.py
 from PyQt5 import QtWidgets
 from PyQt5.QtGui import QDoubleValidator, QIntValidator
-from PyQt5.QtCore import Qt
+from PyQt5.QtWidgets import QMessageBox
 from ui.setting_page_ui import Ui_setting_page  # file ui bạn vừa đưa
 from ui.update_data_utils import *
 
@@ -78,6 +78,8 @@ class SettingPageManager(QtWidgets.QDialog, Ui_setting_page):
         self.btnUpdateHousingParam.clicked.connect(self.on_update)
         self.btnCancelHousingParam.clicked.connect(self.on_cancel)
 
+        self.btnSetClosedPosition.clicked.connect(self.set_encoder_at_zero_default) # Set current value of encoder
+
         load_config_to_ui(self)
 
     def check_value(self, widget, validator, min_val, max_val):
@@ -87,12 +89,45 @@ class SettingPageManager(QtWidgets.QDialog, Ui_setting_page):
             QtWidgets.QMessageBox.warning(self, "Error", f"Value from {min_val} to {max_val}")
             widget.setText(str(min_val if float(text or 0) < min_val else max_val))
 
+
     def on_update(self):
-        # --- Lấy giá trị từ các textbox ---
-        load_ui_to_config(self)
+        reply = QMessageBox.question(
+            self,
+            "Confirm Update",
+            "Are you sure you want to save these changes?",
+            QMessageBox.Yes | QMessageBox.No,
+            QMessageBox.No
+        )
+        if reply == QMessageBox.Yes:
+            # --- Get values from textboxes and save ---
+            load_ui_to_config(self)
+
     
     def on_cancel(self):
         load_config_to_ui(self)
+
+    def set_encoder_at_zero_default(self):
+        text = self.txtEncodeValueRaw.text().strip()
+        try:
+            int(text)
+            reply = QMessageBox.question(
+                self,
+                "Confirm Change",
+                f"Are you sure you want to set the encoder value to {text}?",
+                QMessageBox.Yes | QMessageBox.No,
+                QMessageBox.No
+            )
+            if reply == QMessageBox.Yes:
+                self.txtHousingClosedPosition.setText(text)
+                return True
+            else:
+                return False
+        except ValueError:
+            return False
+
+        
+        
+        
 
 # --- Test chạy ---
 if __name__ == "__main__":
