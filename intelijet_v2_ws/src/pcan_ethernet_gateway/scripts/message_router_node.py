@@ -18,6 +18,7 @@ class MessageRouter:
 
         # Publishers cho từng nhóm
         self.pub_encoder = rospy.Publisher(cfg.ENCODER01_CAN_MSG, Frame, queue_size=10)
+        self.pub_plc = rospy.Publisher(cfg.PLC_HEARTBEAT_MSG, Frame, queue_size=10)
         self.pub_other  = rospy.Publisher("/can/other", Frame, queue_size=10)
 
         rospy.loginfo("Message Router Node started")
@@ -28,6 +29,8 @@ class MessageRouter:
         # Phân loại dựa trên COB-ID
         if cob_id in COB_ID_MAPPING["encoder"]:
             self.pub_encoder.publish(msg)
+        elif cob_id in COB_ID_MAPPING["plc"]:
+            self.self.pub_plc.publish(msg)
         else:
             self.pub_other.publish(msg)
 

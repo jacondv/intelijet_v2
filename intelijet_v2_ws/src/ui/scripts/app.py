@@ -10,6 +10,7 @@ import sys, subprocess
 from PyQt5.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QLabel, QWidget, QPushButton, QComboBox
 from PyQt5.QtCore import pyqtSignal
 from PyQt5.QtWidgets import QMessageBox, QDialog
+from PyQt5.QtCore import QSettings
 
 
 
@@ -33,19 +34,16 @@ from ui.tunnel_report.report_controler import ReportGenerator
 
 from shared.config_loader import CONFIG as cfg
 
-
-
-
-
-
 BASE_DIR = cfg.BASE_DIR
 CLOUD_COMPARED_TOPIC = cfg.CLOUD_COMPARED_TOPIC
+POST_SCAN_CLOUD_TOPIC = cfg.POST_SCAN_CLOUD_TOPIC
 
 DATA_DIR = cfg.DATA_DIR
 PROJECT_DIR = os.path.join(BASE_DIR, DATA_DIR, "Projects")
 ACTIVE_JOB_FILE = os.path.join(PROJECT_DIR, "active_jobs.json")
 CURRENT_JOB_FILE = os.path.join(PROJECT_DIR, "current_job.json")
 
+settings = QSettings("JaconEquipment", "Intelijet")
 
 class App(QMainWindow):
 
@@ -94,7 +92,6 @@ class App(QMainWindow):
         if self.ui.tboxPage2.layout() is None:
             self.ui.tboxPage2.setLayout(QVBoxLayout())
         self.ui.tboxPage2.layout().insertWidget(1,self.history_page_in_toolbox)
-
         self.history_page_in_toolbox.polydataSignal.connect(lambda cloud: self.update_pointcloud_from_data(cloud, None))
 
         #Page 3: Compare page
@@ -112,10 +109,15 @@ class App(QMainWindow):
 
         # --- Signals ---
         self.cloud_received_signal.connect(self.update_pointcloud)
+        #Receive cloud and Send align, compare request to ROS if cloud come from postcloud topic
+        self.cloud_received_signal.connect(self.on_cloud_received)
+        #Receive cloud check cloud is come from /compared topic --> export report
+
+        # --- Signals ---
         self.ui_data_update.connect(self.update_data)
         self.ui_send_cmd_signal.connect(self.ros_thread.send_command)
         cloud_compare.compare_done.connect(self.update_pointcloud_from_data)
-        # cloud_compare.compare_done.connect(self.on_export_report)
+        cloud_compare.compare_done2.connect(self.on_export_report)
 
         # --- Control Buttons ---
         self.ui.btnPreScan.released.connect(lambda: self.ui_send_cmd_signal.emit(PPSCommand.START_PRESCAN.value))
@@ -163,8 +165,59 @@ class App(QMainWindow):
 
         self.setting_page.txtEncodeValueRaw.setText("NaN")
 
+        #Load ui state
+        self.load_ui_state()
 
-    # 1.--- Update commond data from ROS ---
+
+    # Setting parameter
+    def save_ui_state(self):
+        settings.setValue("cbbAutoCompare_index", self.ui.cbbAutoCompare.currentIndex())
+
+    def load_ui_state(self):
+        index = settings.value("cbbAutoCompare_index", 0, type=int)
+        self.ui.cbbAutoCompare.setCurrentIndex(index)
+
+    # 1.0--- Update commond data from ROS ---
+    def on_cloud_received(self, msg, topic_name):
+        from pps.data_converter import CloudConverter
+        cloudconverter = CloudConverter()
+        o3d_cloud = cloudconverter.pointcloud2_to_o3d_tensor(msg)
+
+        # Show pointcloud
+        polydata = cloudconverter.o3d_to_vtk_polydata(o3d_cloud)
+        self.vtk_viewer.update(polydata)
+
+        # Save cloud to file ply
+        if polydata:
+            self.save_job(o3d_cloud, topic_name)
+
+        # Emit align command to ROS
+        if topic_name in POST_SCAN_CLOUD_TOPIC:
+            self.ui_send_cmd_signal.emit(PPSCommand.START_COMPARE.value)
+
+        # Export Report
+        if topic_name in CLOUD_COMPARED_TOPIC:
+            if self.ui.cbbAutoCompare.currentIndex()==1: 
+                # 1 is manual, 0 is auto compare
+                return
+            try:
+                currnet_job = self.load_current_job(text_only=True)
+                project_name = currnet_job.split("/")[0]
+                job_number = currnet_job.split("/")[1]
+                jobs_folder = os.path.join(PROJECT_DIR, project_name,job_number)
+                # Chuẩn hóa tên topic
+                safe_topic = re.sub(r'[^a-zA-Z0-9_-]', '', topic_name)
+                index = sum(safe_topic in f for f in os.listdir(jobs_folder) if f.endswith('.pdf')) +  1
+                # Timestamp hiện tại
+                timestamp_str = time.strftime("%Y%m%d_%H%M%S", time.localtime())
+                filename = os.path.join(jobs_folder, f"{job_number}#{timestamp_str}#{safe_topic}_{index:02d}.pdf")
+                self.on_export_report(o3d_cloud,filename)
+
+            except Exception as e:
+                # in toàn bộ thông tin lỗi
+                print(f"[Error] at on_cloud_received Export Report : {e}")
+
+    # 1.1--- Update commond data from ROS ---
     def update_data(self, data):
         self.data_binder.update_ui_from_status(data)
         if "encoder_value_in_deg" in data:
@@ -175,9 +228,34 @@ class App(QMainWindow):
             value = str(data["encoder_value_raw"])
             self.ui.lblEncoderRawValue.setText(value)
             self.setting_page.txtEncodeValueRaw.setText(value)
-        
 
-    # 2.--- Update pointcloud from reatime signal ---
+        if "encoder" in data:
+            status = data['encoder']['device_state']
+            self.ui.lblEncoderStatus.setText(status)
+        else:
+            self.ui.lblEncoderStatus.setText("unknown".upper())
+    
+
+        if 'lidar' in data:
+            status = data['lidar']['device_state']
+            self.ui.lblLidarStatus.setText(status)
+        else:
+            self.ui.lblLidarStatus.setText("unknown".upper())
+
+        if 'pcan' in data:
+            status = data['pcan']['device_state']
+            self.ui.lblPCANStatus.setText(status)
+        else:
+            self.ui.lblPCANStatus.setText("unknown".upper())
+ 
+        if 'plc' in data:
+            status = data['plc']['device_state']
+            self.ui.lblPLCStatus.setText(status)
+        else:
+            self.ui.lblPLCStatus.setText("unknown".upper())
+               
+
+    # 1.2--- Update pointcloud from reatime signal ---
     def update_pointcloud(self, msg, topic_name):
 
         from pps.data_converter import CloudConverter
@@ -185,6 +263,8 @@ class App(QMainWindow):
     
         # o3d_cloud = convert_pointcloud2_to_o3d_v2(msg)
         o3d_cloud = cloudconverter.pointcloud2_to_o3d_tensor(msg)
+
+
         polydata = cloudconverter.o3d_to_vtk_polydata(o3d_cloud)
 
         self.vtk_viewer.update(polydata)
@@ -192,7 +272,7 @@ class App(QMainWindow):
             self.save_job(o3d_cloud, topic_name)
 
     # 3.--- Update pointcloud from available data---
-    def update_pointcloud_from_data(self, data, filename):
+    def update_pointcloud_from_data(self, data, filename=None):
         from pps.data_converter import CloudConverter
         cloudconverter = CloudConverter()
 
@@ -246,7 +326,7 @@ class App(QMainWindow):
                 report.set_info(
                     site_name = project_name,
                     job_name= job_name,
-                    applied_thickness = job_info.parameters.get("target_thickness", 30),
+                    applied_thickness = job_info.parameters.get("target_thickness", 10),
                     tolerance = job_info.parameters.get("tolerance", 10),
                     operator = "Unknown"
                 )
@@ -254,7 +334,7 @@ class App(QMainWindow):
                 report.set_info(
                     site_name = "Unknown",
                     job_name= job_name,
-                    applied_thickness = 30,
+                    applied_thickness = 40,
                     tolerance = 10,
                     operator = "Unknown"
                 )
@@ -280,6 +360,8 @@ class App(QMainWindow):
         parts = [p.strip() for p in self.ui.cbbJobSelect.currentText().split("/")]
         project, job = (parts + [None]*2)[:2]  # Nếu thiếu phần, job = None
         jobcompare_dlg.initialize(project,job)
+        filename = ""
+        jobcompare_dlg.polydataSignal.connect(self.update_pointcloud_from_data)
 
         if jobcompare_dlg.exec_() == QDialog.Accepted:
             data = jobcompare_dlg.get_result()
@@ -289,7 +371,8 @@ class App(QMainWindow):
             pre, post, *_ = data
             if pre is None or post is None:
                 return
-                
+            
+            
             cloud_compare.set_prescan(pre)
             cloud_compare.set_postscan(post)
             cloud_compare.align()
@@ -310,6 +393,7 @@ class App(QMainWindow):
         msg = QMessageBox()
         msg.setWindowTitle("Confirmation")
         msg.setText("Are you sure you want to quit?")
+        self.save_ui_state()
         msg.setStandardButtons(QMessageBox.Yes | QMessageBox.No)
         msg.setDefaultButton(QMessageBox.No)
         msg.setWindowModality(True)
@@ -432,7 +516,7 @@ class App(QMainWindow):
             except:
                 pass
 
-    def load_current_job(self):
+    def load_current_job(self, text_only=False):
         import json
         """Load giá trị hiện tại của job từ file hoặc gán giá trị đầu tiên."""
         last_job = None
@@ -446,6 +530,9 @@ class App(QMainWindow):
             print(f"Error loading {CURRENT_JOB_FILE}: {e}")
 
         # Nếu có giá trị lưu trước đó và có trong combobox → chọn nó
+        if text_only:
+            return last_job
+        
         if last_job:
             idx = self.ui.cbbJobSelect.findText(last_job)
             if idx >= 0:
@@ -455,6 +542,8 @@ class App(QMainWindow):
         # Nếu không có hoặc giá trị cũ không hợp lệ → chọn giá trị đầu tiên
         if self.ui.cbbJobSelect.count() > 0:
             self.ui.cbbJobSelect.setCurrentIndex(0)
+        
+        return last_job
             
     #######################################################
     def load_active_jobs(self,comboBox, json_file="active_job.json"):
@@ -471,7 +560,6 @@ class App(QMainWindow):
             comboBox.addItem(display_text, job)  # lưu dict job vào data
 
 if __name__ == "__main__":
-
     app = QApplication(sys.argv)
     viewer = App()
     sys.exit(app.exec_())

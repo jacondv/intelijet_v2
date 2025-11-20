@@ -4,7 +4,6 @@ from scipy.spatial import ConvexHull
 from matplotlib.path import Path
 from scipy.spatial import cKDTree
 
-
 class TunnelProcessing:
     """
     Class for processing 3D tunnel point clouds:
@@ -282,6 +281,7 @@ class TunnelProcessing:
         return pcd_new
 
 
+
     def fill_null_distances(self,pcd_tensor, k=4, eps=1e-8, null_value=-1):
         """
         Điền các khoảng cách = -1 bằng weighted average của k-lân cận hợp lệ (vectorized version).
@@ -428,6 +428,7 @@ class TunnelProcessing:
             Centroid of ground points.
         """
         import open3d as o3d
+
         # --- Step 0: Crop point cloud if crop_box provided ---
         crop_box = o3d.geometry.AxisAlignedBoundingBox(min_bound, max_bound)
 
@@ -565,7 +566,6 @@ class TunnelProcessing:
 
 
     def run_processing_pipeline(self):
-
         FRONT_BOX = [(0, -5.0, -0.5), 
                      (3.5, 5.0, 8.0)]
         BACK_BOX = [(4.0, -5.0, 0.0), 
@@ -620,13 +620,14 @@ class TunnelProcessing:
                         )
         
 
-        def safe_bound_value(center, idx, offset, default):
+        def safe_bound_value(center, idx, offset, default_center):
             if center is None:
-                return default
+                return default_center
             try:
                 return center[idx] + offset
             except:
-                return default
+                return default_center
+            
         # minbound = [2.1, right_center[1]-0.3, ground_center[2]+0.3]
         # maxbound = [back_center[0]-0.2, left_center[1]+0.3, 6.2]
         minbound = [
@@ -634,6 +635,7 @@ class TunnelProcessing:
             safe_bound_value(right_center, 1, -0.3, -5.0),   # fallback khi right_center None
             safe_bound_value(ground_center, 2, +0.3, 0.0)
         ]
+
 
         maxbound = [
             safe_bound_value(back_center, 0, -0.3, 10.0),
@@ -655,7 +657,7 @@ class TunnelProcessing:
 
         cloud_combine  = self.combine_pointcloud_list(slice_upsample)
         cloud_combine = self.fill_null_distances(cloud_combine)
-        cloud_combine = cloudconverter.voxel_down_sample(cloud_combine,voxel_size=min_gap)
+        cloud_combine = cloudconverter.voxel_down_sample_spatial(cloud_combine,voxel_size=min_gap)
         return cloud_combine
 
 

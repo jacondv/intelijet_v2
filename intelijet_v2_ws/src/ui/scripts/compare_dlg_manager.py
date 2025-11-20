@@ -7,6 +7,7 @@ import re
 from datetime import datetime
 from PyQt5 import QtCore
 from PyQt5.QtWidgets import QWidget, QInputDialog, QMessageBox, QListWidgetItem,QCheckBox,QLabel, QListWidget
+from PyQt5.QtCore import pyqtSignal
 
 from ui.compare_dlg_ui import Ui_frm_MainForm
 from shared.config_loader import CONFIG as cfg
@@ -74,6 +75,7 @@ class JobInfoDialog(QDialog):
 
 
 class CompareManager(QDialog, Ui_frm_MainForm):
+    polydataSignal = pyqtSignal(object)
     def __init__(self):
         super().__init__()
         self.setupUi(self)
@@ -101,6 +103,8 @@ class CompareManager(QDialog, Ui_frm_MainForm):
         # ===== CONNECT BUTTONS ======
         self.btnOk.clicked.connect(self.get_compare_files)
         self.btnCancel.clicked.connect(self.reject)
+        self.btnDeleteItem.released.connect(self.delete_item)
+        self.btnOpenItem.released.connect(self.on_file_opened)
 
         # self.update_project_list()
 
@@ -108,6 +112,8 @@ class CompareManager(QDialog, Ui_frm_MainForm):
     #      PROJECT SECTION
     # =========================
     def get_result(self):
+        # Đưa phần tử chứa 'pre' lên đầu
+        self.selected_files.sort(key=lambda x: 0 if "pre" in x.lower() else 1)
         return self.selected_files
 
     def initialize(self, current_project=None, current_job=None):
@@ -223,7 +229,7 @@ class CompareManager(QDialog, Ui_frm_MainForm):
             
             self.lstJobDetail.addItem(item)
             self.lstJobDetail.setItemWidget(item, f_widget)
-            f_widget.openSignal.connect(lambda filepath=filepath: self.on_file_opened(filepath))
+            # f_widget.openSignal.connect(lambda filepath=filepath: self.on_file_opened(filepath))
 
 
     def update_job_list(self):
@@ -249,6 +255,41 @@ class CompareManager(QDialog, Ui_frm_MainForm):
             for item in sorted(self.projects[self.current_project]["jobs"]):
                 if text in item.lower():
                     self.lstJob.addItem(item)
+
+
+    def delete_item(self):
+        current_item = self.lstJobDetail.currentItem()
+        if current_item is None:
+            QMessageBox.warning(self, "Warning", "No files selected to delete.")
+            return
+        widget = self.lstJobDetail.itemWidget(current_item)
+        if not widget:
+            QMessageBox.warning(self, "Warning", "Không tìm thấy widget của item.")
+            return
+        filename = widget.filename
+        reply = QMessageBox.question(
+            self,
+            "Confirm",
+            f"Are you sure you want to delete the file:\n{filename} ?",
+            QMessageBox.Yes | QMessageBox.No
+            )
+        if reply != QMessageBox.Yes:
+            return
+        
+        filepath = os.path.join(PROJECT_DIR, self.current_project, self.current_job, filename)
+        try:
+            if os.path.exists(filepath):
+                os.remove(filepath)
+            else:
+                QMessageBox.warning(self, "Warning", "File does not exist on disk.")
+        except Exception as e:
+            QMessageBox.critical(self, "Error", f"Error while deleting file:\n{str(e)}")
+            return    
+
+        row = self.lstJobDetail.row(current_item)
+        self.lstJobDetail.takeItem(row)   
+        
+
     # =========================
     #     ACTIVE JOB SECTION
     # =========================
@@ -276,6 +317,20 @@ class CompareManager(QDialog, Ui_frm_MainForm):
         print("Checked files for comparison:", checked_filenames)
         self.accept()
         
+    def on_file_opened(self):
+        from pps.data_converter import cloudconverter
 
-            
-
+        current_item = self.lstJobDetail.currentItem()
+        if current_item is None:
+            QMessageBox.warning(self, "Warning", "No files selected to delete.")
+            return
+        widget = self.lstJobDetail.itemWidget(current_item)
+        if not widget:
+            QMessageBox.warning(self, "Warning", "Không tìm thấy widget của item.")
+            return
+        filename = widget.filename       
+        filepath = os.path.join(PROJECT_DIR, self.current_project, self.current_job, filename)
+                # polydata = load_ply_as_polydata(filepath,0.02)
+        o3d_cloud = cloudconverter.load_ply(filepath)
+        if o3d_cloud is not None:
+            self.polydataSignal.emit(o3d_cloud)

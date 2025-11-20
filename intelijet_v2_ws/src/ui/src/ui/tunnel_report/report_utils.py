@@ -60,7 +60,11 @@ class PLYProcessor:
     def avg_thickness(self):
         if self.distances is None or len(self.distances) == 0:
             return 0
-        return np.average(self.distances)
+        
+        min_val = max((self.target_thickness-2*self.tolerance), 2)
+        valid_dist = self.distances.copy()
+        valid_values = valid_dist[np.abs(valid_dist) >= min_val]
+        return np.average(valid_values)
     
 
     def volume(self):
@@ -68,9 +72,10 @@ class PLYProcessor:
             return 0
         
         # min_val = self.target_thickness - self.tolerance
-        min_val = self.tolerance
-        valid_dist =  self.distances
-        valid_dist[np.abs(valid_dist) > min_val] = 0.0
+        min_val = max((self.target_thickness-2*self.tolerance), 2)
+        
+        valid_dist = self.distances.copy()
+        valid_dist[np.abs(valid_dist) < min_val] = 0.0
         # valid_dist = np.clip(valid_dist, 0, None)
         valid_dist = valid_dist / 1000.0 # convert to meter
         vol = np.sum(valid_dist * (0.02*0.02)) # volumn in m3

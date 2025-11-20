@@ -13,8 +13,8 @@ THICKNESS_TOLERANCE = cfg.thickness.tolerance  # Allowable tolerance in meter of
 
 class CloudManager(QObject):
     _instance = None  # Singleton instance
-    compare_done = pyqtSignal(object,str)   # object = kết quả point cloud hoặc polydata
-    
+    compare_done = pyqtSignal(object,str)   # object = result is poitcloud before upsample 
+    compare_done2 = pyqtSignal(object,str) # Object is pointcloud after upsample, it is prepare for export report
     def __new__(cls, ui=None):
         if cls._instance is None:
             cls._instance = super().__new__(cls)
@@ -24,7 +24,8 @@ class CloudManager(QObject):
             cls._instance.post_cloud = None
             cls._instance.thread = None
             cls._instance.is_running = False
-            cls._instance.filename = "None"
+            cls._instance.pre_filename = "None"
+            cls._instance.post_filename = "None"
             cls.target_thickness = THICKNESS_TARGET
             cls.tolerance = THICKNESS_TOLERANCE
         return cls._instance
@@ -38,6 +39,7 @@ class CloudManager(QObject):
         with self.lock:
             if isinstance(file, str):
                 self.pre_cloud = load_ply(file)
+                self.pre_filename = file
                 import os
                 from ui.models.job_info import JobInfo
                 job_folder = os.path.dirname(file)
@@ -46,15 +48,17 @@ class CloudManager(QObject):
                     self.target_thickness = job_info.parameters.get("target_thickness",THICKNESS_TARGET)/1000
                     self.tolerance = job_info.parameters.get("tolerance",THICKNESS_TOLERANCE)/1000
             else:
+                self.pre_filename = "None"
                 self.pre_cloud = file
 
 
     def set_postscan(self, file):
         with self.lock:
             if isinstance(file, str):
-                self.filename = file
+                self.post_filename = file
                 self.post_cloud = load_ply(file)
             else:
+                self.post_filename="None"
                 self.post_cloud = file
 
 
@@ -106,8 +110,7 @@ class CloudManager(QObject):
                     tunnel = TunnelProcessing(self.post_cloud)
                     post_cloud = tunnel.run_processing_pipeline()
 
-
-                    print(f"[CloudManager] Comparing clouds {self.filename}")
+                    print(f"[CloudManager] Comparing clouds {self.post_filename} vs {self.pre_filename}")
                     cloud_compared, distance = compute_heatmap_to_plane(
                         source=post_cloud, 
                         target=pre_cloud, 
@@ -115,13 +118,15 @@ class CloudManager(QObject):
                         tolerance_thickness=self.tolerance, 
                         k=6
                     )
+                    # cloud_compare is in tensor format
 
                     # tunnel = TunnelProcessing()
                     # cloud_compared = tunnel.run_upsample(cloud_compared, axis='x', min_gap=0.02,max_gap=0.5)
                     # cloud_compared = smooth_cloud(cloud_compared, k=8, m=2, threshold=20.0)
                     # cloud_compared = assign_colors(cloud_compared, highlight_range=[20,40])
-                    
-                    self.compare_done.emit(cloud_compared, self.filename)
+                    cloud_compared_upsample = tunnel.run_upsample(cloud_compared)
+                    self.compare_done.emit(cloud_compared_upsample, self.post_filename)
+                    self.compare_done2.emit(cloud_compared_upsample, self.post_filename)
 
                     # from ui.tunnel_report.report_data_model import ReportHeader
                     # header = ReportHeader(
@@ -144,5 +149,4 @@ class CloudManager(QObject):
         self.thread.start()
 
 cloud_compare = CloudManager()
-
 

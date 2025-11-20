@@ -30,6 +30,7 @@ class RosThread(threading.Thread):
         self.data_store = {}
 
     def run(self):
+        # Run when thread .start() called
         rospy.init_node("gui_node", anonymous=True, disable_signals=True)
         self.cmd_pub = rospy.Publisher(HMI_CMD_TOPIC, Int32, queue_size=1)
         self.device_status_reader = StatusReader() # Autoload device config from devices.yaml
@@ -85,7 +86,6 @@ class RosThread(threading.Thread):
         if data is not None:
             name = data.get("name")
             self.data_store[name] = data.get("message")
-
 
 
     def emit_ui_data_update(self, msg):

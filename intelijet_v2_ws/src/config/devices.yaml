@@ -3,22 +3,32 @@
 # The node will publish the status of each device on the device_name/status topic
 devices:
   - name: lidar
+    type: LidarMonitor
     topic: /cloud
     msg_type: sensor_msgs/PointCloud2
     timeout: 3.0
     mode: continuous
   - name: encoder
+    type: EncoderMonitor
     topic: /encoder01/can_msg
     msg_type: can_msgs/Frame
     timeout: 3.0
     mode: continuous
   - name: pcan
+    type: PCANMonitor
     topic: /pcan_received_messanges
     msg_type: can_msgs/Frame
     timeout: 3.0
     mode: continuous
   - name: pps
+    type: PPSMonitor
     topic: /pps/state
     msg_type: std_msgs/String
+    timeout: 3.0
+    mode: continuous
+  - name: plc
+    topic: /plc/heatbeat
+    type: PLCMonitor
+    msg_type: can_msgs/Frame
     timeout: 3.0
     mode: continuous

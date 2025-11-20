@@ -114,6 +114,17 @@ class PCANMonitor(Monitor):
         else:
             self.update_status(DeviceStatus.CONNECTED)
 
+class PLCMonitor(Monitor):
+    def handle_message(self, msg):
+        self.last_msg_time = rospy.Time.now()
+
+    def check_status(self, event):
+        now = rospy.Time.now()
+        if self.last_msg_time is None or (now - self.last_msg_time).to_sec() > self.timeout:
+            self.update_status(DeviceStatus.DISCONNECTED)
+        else:
+            self.update_status(DeviceStatus.CONNECTED)
+
 class PPSMonitor(Monitor):
     def handle_message(self, msg):
         self.update_status(dev_state=msg.data)
@@ -123,13 +134,20 @@ class PPSMonitor(Monitor):
 
 
 # Config with devices will be monitor
-DEVICE_CLASSES = {
-    "lidar": LidarMonitor,
-    "encoder": EncoderMonitor,
-    "pcan": PCANMonitor,
-    "pps": PPSMonitor
-}
+# DEVICE_CLASSES = {
+#     "lidar": LidarMonitor,
+#     "encoder": EncoderMonitor,
+#     "pcan": PCANMonitor,
+#     "pps": PPSMonitor,
+#     "plc":PLCMonitor
+# }
 
+def get_monitor_class(class_name):
+    try:
+        return eval(class_name)  # vì các class đã được định nghĩa trong file
+    except NameError:
+        rospy.logwarn(f"Monitor class [{class_name}] not found, fallback to Monitor")
+        return Monitor
 
 class StatusReader:
     _instance = None  # biến lưu instance duy nhất
@@ -151,8 +169,17 @@ class StatusReader:
         devices = cfg.devices if hasattr(cfg, "devices") else []
         # self.monitors = [DeviceMonitor(dev) for dev in devices]
 
+        # for dev in devices:
+        #     cls = DEVICE_CLASSES.get(dev.name.lower())
+        #     if cls is None:
+        #         rospy.logwarn(f"No monitor class for device [{dev.name}], skipping")
+        #         continue
+        #     rospy.loginfo(f"Start monitor [{dev.name}]")
+        #     self.monitors.append(cls(dev))
+
         for dev in devices:
-            cls = DEVICE_CLASSES.get(dev.name, Monitor)
+            cls = get_monitor_class(dev.type)
+            rospy.loginfo(f"Start monitor [{dev.name}]")
             self.monitors.append(cls(dev))
 
     def get_status(self):

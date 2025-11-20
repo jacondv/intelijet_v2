@@ -13,6 +13,7 @@ ENCODER_JOINT_NAME: scanner_deploy_retract
 ENCODER01_CAN_MSG: /encoder01/can_msg
 ENCODER01_DATA: /encoder01/data
 NOTIFICATION: notification
+PLC_HEARTBEAT_MSG: /plc/heatbeat
 active_lidar: lms511
 blk360g2:
   pointcloud_topic: /blk360g2/pointcloud
@@ -38,7 +39,7 @@ crop_box:
     z: 0.2
   max:
     x: 7.0
-    y: 5
+    y: 5.0
     z: 8.0
 housing_start_position: 12
 housing_end_position: 135
