@@ -132,6 +132,10 @@ class ReportViewManager(QDialog, Ui_frm_MainForm):
         self.btnDeleteJob.hide()
         self.btnOk.hide()
         self.btnOpenItem.hide()
+
+        self.chkShowPostScan.hide()
+        self.chkShowPreScan.hide()
+        self.chkShowCompared.hide()
         # ========================
 
         self.current_project = current_project

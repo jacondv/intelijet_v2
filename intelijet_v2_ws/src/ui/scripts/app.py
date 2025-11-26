@@ -108,7 +108,7 @@ class App(QMainWindow):
         self.ros_thread.start()
 
         # --- Signals ---
-        self.cloud_received_signal.connect(self.update_pointcloud)
+        # self.cloud_received_signal.connect(self.update_pointcloud)
         #Receive cloud and Send align, compare request to ROS if cloud come from postcloud topic
         self.cloud_received_signal.connect(self.on_cloud_received)
         #Receive cloud check cloud is come from /compared topic --> export report
@@ -257,21 +257,21 @@ class App(QMainWindow):
             self.ui.lblPLCStatus.setText("unknown".upper())
                
 
-    # 1.2--- Update pointcloud from reatime signal ---
-    def update_pointcloud(self, msg, topic_name):
+    # # 1.2--- Update pointcloud from reatime signal ---
+    # def update_pointcloud(self, msg, topic_name):
 
-        from pps.data_converter import CloudConverter
-        cloudconverter = CloudConverter()
+    #     from pps.data_converter import CloudConverter
+    #     cloudconverter = CloudConverter()
     
-        # o3d_cloud = convert_pointcloud2_to_o3d_v2(msg)
-        o3d_cloud = cloudconverter.pointcloud2_to_o3d_tensor(msg)
+    #     # o3d_cloud = convert_pointcloud2_to_o3d_v2(msg)
+    #     o3d_cloud = cloudconverter.pointcloud2_to_o3d_tensor(msg)
 
 
-        polydata = cloudconverter.o3d_to_vtk_polydata(o3d_cloud)
+    #     polydata = cloudconverter.o3d_to_vtk_polydata(o3d_cloud)
 
-        self.vtk_viewer.update(polydata)
-        if polydata:
-            self.save_job(o3d_cloud, topic_name)
+    #     self.vtk_viewer.update(polydata)
+    #     if polydata:
+    #         self.save_job(o3d_cloud, topic_name)
 
     # 3.--- Update pointcloud from available data---
     def update_pointcloud_from_data(self, data, filename=None):

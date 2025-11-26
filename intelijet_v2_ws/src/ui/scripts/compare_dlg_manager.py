@@ -101,13 +101,17 @@ class CompareManager(QDialog, Ui_frm_MainForm):
         self.txtSearchJob.textChanged.connect(self.filter_jobs)
         self.lstProject.itemClicked.connect(self.select_project)
         self.lstJob.itemClicked.connect(self.select_job)
+
+        self.chkShowPostScan.stateChanged.connect(lambda: self.load_job_detail_list(ascending=True))
+        self.chkShowPreScan.stateChanged.connect(lambda: self.load_job_detail_list(ascending=True))
+        self.chkShowCompared.stateChanged.connect(lambda: self.load_job_detail_list(ascending=True))
         # ===== CONNECT BUTTONS ======
         self.btnOk.clicked.connect(self.get_compare_files)
         self.btnCancel.clicked.connect(self.reject)
         self.btnDeleteItem.released.connect(self.delete_item)
         self.btnOpenItem.released.connect(self.on_file_opened)
-        self.btnAsc.released.connect(lambda: self.job_detail_show(ascending=True))
-        self.btnDesc.released.connect(lambda: self.job_detail_show(ascending=False))
+        self.btnAsc.released.connect(lambda: self.load_job_detail_list(ascending=True))
+        self.btnDesc.released.connect(lambda: self.load_job_detail_list(ascending=False))
         # self.update_project_list()
 
     # =========================
@@ -215,7 +219,7 @@ class CompareManager(QDialog, Ui_frm_MainForm):
 
         # Hiển thị lên lstJobDetail
 
-        self.job_detail_show(ascending=True)
+        self.load_job_detail_list(ascending=True)
 
 
     def update_job_list(self):
@@ -277,7 +281,7 @@ class CompareManager(QDialog, Ui_frm_MainForm):
         
 
     #Sort lstJobDetail 
-    def job_detail_show(self,ascending=True):
+    def load_job_detail_list(self,ascending=True):
         # self.lstJobDetail.sortItems(QtCore.Qt.AscendingOrder if ascending else QtCore.Qt.DescendingOrder)
                 # Hiển thị lên lstJobDetail
         checked_filenames = []
@@ -294,6 +298,18 @@ class CompareManager(QDialog, Ui_frm_MainForm):
             QMessageBox.critical(self, "Error", f"Error while retrieving files:\n{str(e)}")
             return
         
+        # filter selct showing files post/pre/compared clouds files
+        filter_list = []
+        if self.chkShowPostScan.isChecked():
+            filter_list.append("pre")
+        if self.chkShowPreScan.isChecked():
+            filter_list.append("post")
+        if self.chkShowCompared.isChecked():
+            filter_list.append("compared")
+
+        if filter_list:
+            files = self.filter_job_detail(files, filter_list)
+
         if not ascending:
             files.reverse()
         
@@ -305,10 +321,33 @@ class CompareManager(QDialog, Ui_frm_MainForm):
             item.setSizeHint(f_widget.sizeHint())
             if f in checked_filenames:
                 f_widget.ui.chkChooseCloud.setChecked(True)
-                
+
             self.lstJobDetail.addItem(item)
             self.lstJobDetail.setItemWidget(item, f_widget)
        
+    #Filter lstJobDetail
+    def filter_job_detail(self, origin_list, filter_list):
+        """
+        Lọc origin_list, chỉ giữ các phần tử **không chứa** bất kỳ cụm từ nào trong filter_list.
+
+        Args:
+            origin_list (list of str): danh sách gốc cần lọc
+            filter_list (list of str): các cụm từ cần loại bỏ
+            text_filter_list (list of str, optional): danh sách chứa các text khác (nếu muốn)
+
+        Returns:
+            list of str: danh sách đã lọc
+        """
+        filtered = []
+        for item in origin_list:
+            # Chuyển item sang lowercase để so sánh không phân biệt hoa thường
+            item_lower = item.lower()
+
+            # Kiểm tra nếu item chứa bất kỳ từ nào trong filter_list
+            if any(f.lower() in item_lower for f in filter_list):
+                filtered.append(item)
+                    
+        return filtered
 
     # =========================
     #     ACTIVE JOB SECTION

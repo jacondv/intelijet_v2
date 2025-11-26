@@ -144,17 +144,18 @@ class FileItemWidget(QWidget):
 
         def format_name(name: str) -> str:
             name_lower = name.lower()
+            import re
+            match = re.search(r"(\d+)$", name)
             if "pre" in name_lower:
                 # tách số cuối
-                import re
-                match = re.search(r"(\d+)$", name)
                 number = match.group(1) if match else ""
                 return f"PRESCAN({number})"
             elif "post" in name_lower: 
-                import re
-                match = re.search(r"(\d+)$", name)
                 number = match.group(1) if match else ""
-                return f"POSTSCAN({number})"           
+                return f"POSTSCAN({number})"     
+            elif "compare" in name_lower: 
+                number = match.group(1) if match else ""
+                return f"COMPARE({number})"         
             else:
                 return name  # giữ nguyên nếu không có "pre"
             
