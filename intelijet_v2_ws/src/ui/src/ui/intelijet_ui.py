@@ -13,7 +13,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
-        # MainWindow.resize(1270, 870)
+        MainWindow.resize(1270, 870)
         MainWindow.setStyleSheet("\n"
 "/* ==================== PUSHBUTTON ==================== */\n"
 "\n"
@@ -642,6 +642,20 @@ class Ui_MainWindow(object):
         self.cbbAutoCompare.addItem("")
         self.horizontalLayout_12.addWidget(self.cbbAutoCompare)
         self.verticalLayout_13.addWidget(self.widget_13)
+        self.widget_15 = QtWidgets.QWidget(self.groupBox_2)
+        self.widget_15.setObjectName("widget_15")
+        self.horizontalLayout_13 = QtWidgets.QHBoxLayout(self.widget_15)
+        self.horizontalLayout_13.setObjectName("horizontalLayout_13")
+        self.label_9 = QtWidgets.QLabel(self.widget_15)
+        self.label_9.setObjectName("label_9")
+        self.horizontalLayout_13.addWidget(self.label_9)
+        self.cbbAutoReport = QtWidgets.QComboBox(self.widget_15)
+        self.cbbAutoReport.setMaxVisibleItems(2)
+        self.cbbAutoReport.setObjectName("cbbAutoReport")
+        self.cbbAutoReport.addItem("")
+        self.cbbAutoReport.addItem("")
+        self.horizontalLayout_13.addWidget(self.cbbAutoReport)
+        self.verticalLayout_13.addWidget(self.widget_15)
         spacerItem5 = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding)
         self.verticalLayout_13.addItem(spacerItem5)
         self.verticalLayout_2.addWidget(self.groupBox_2)
@@ -712,6 +726,7 @@ class Ui_MainWindow(object):
         self.tab_mainview.setCurrentIndex(3)
         self.cbbAutoAlign.setCurrentIndex(0)
         self.cbbAutoCompare.setCurrentIndex(0)
+        self.cbbAutoReport.setCurrentIndex(0)
         self.pushButton_4.clicked['bool'].connect(self.menu_main.setHidden)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
@@ -748,6 +763,9 @@ class Ui_MainWindow(object):
         self.label_6.setText(_translate("MainWindow", "Auto Compare"))
         self.cbbAutoCompare.setItemText(0, _translate("MainWindow", "On"))
         self.cbbAutoCompare.setItemText(1, _translate("MainWindow", "Off"))
+        self.label_9.setText(_translate("MainWindow", "Auto Export Report"))
+        self.cbbAutoReport.setItemText(0, _translate("MainWindow", "On"))
+        self.cbbAutoReport.setItemText(1, _translate("MainWindow", "Off"))
         self.tab_mainview.setTabText(self.tab_mainview.indexOf(self.tab_system), _translate("MainWindow", "System"))
         self.btnPreScan.setText(_translate("MainWindow", "PRE-SCAN"))
         self.btnPostScan.setText(_translate("MainWindow", "POST-SCAN"))

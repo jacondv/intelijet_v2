@@ -111,13 +111,13 @@ class App(QMainWindow):
         # self.cloud_received_signal.connect(self.update_pointcloud)
         #Receive cloud and Send align, compare request to ROS if cloud come from postcloud topic
         self.cloud_received_signal.connect(self.on_cloud_received)
-        #Receive cloud check cloud is come from /compared topic --> export report
 
+        #Receive cloud check cloud is come from /compared topic --> export report
         # --- Signals ---
         self.ui_data_update.connect(self.update_data)
         self.ui_send_cmd_signal.connect(self.ros_thread.send_command)
         cloud_compare.compare_done.connect(self.update_pointcloud_from_data)
-        cloud_compare.compare_done2.connect(self.on_export_report)
+        cloud_compare.compare_done2.connect(self.on_manual_export_report)
 
         # --- Control Buttons ---
         self.ui.btnPreScan.released.connect(lambda: self.ui_send_cmd_signal.emit(PPSCommand.START_PRESCAN.value))
@@ -199,9 +199,9 @@ class App(QMainWindow):
 
         # Export Report
         if topic_name in CLOUD_COMPARED_TOPIC:
-            if self.ui.cbbAutoCompare.currentIndex()==1: 
-                # 1 is manual, 0 is auto compare
-                return
+            if self.ui.cbbAutoCompare.currentIndex()==1 or self.ui.cbbAutoReport.currentIndex()==1:
+                return # only export report when auto compare is on nad auto report is on. (1 is OFF)
+
             try:
                 currnet_job = self.load_current_job(text_only=True)
                 project_name = currnet_job.split("/")[0]
@@ -213,7 +213,8 @@ class App(QMainWindow):
                 # Timestamp hiện tại
                 timestamp_str = time.strftime("%Y%m%d_%H%M%S", time.localtime())
                 filename = os.path.join(jobs_folder, f"{job_number}#{timestamp_str}#{safe_topic}_{index:02d}.pdf")
-                self.on_export_report(o3d_cloud,filename)
+                
+                self.export_report(o3d_cloud,filename)
 
             except Exception as e:
                 # in toàn bộ thông tin lỗi
@@ -301,8 +302,14 @@ class App(QMainWindow):
 
 
 
-    # 5.--- Export report after compare done---
-    def on_export_report(self, data, filename):
+    #5.0 -- Manual export report handler---
+    def on_manual_export_report(self, data,filename):
+        if self.ui.cbbAutoReport.currentIndex() == 1:
+            return # Auto report is off.
+        self.export_report(data, filename)
+
+    # 5.1--- Export report after compare done---
+    def export_report(self, data, filename):
         try:
             from datetime import datetime
             from ui.models.job_info import JobInfo
@@ -377,7 +384,8 @@ class App(QMainWindow):
             
             cloud_compare.set_prescan(pre)
             cloud_compare.set_postscan(post)
-            cloud_compare.align()
+            if self.ui.cbbAutoAlign.currentIndex() == 0:
+                cloud_compare.align()
             cloud_compare.compare() #--> output signal compare_done the cloud result.
 
       
