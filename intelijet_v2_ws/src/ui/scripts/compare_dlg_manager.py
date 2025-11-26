@@ -214,9 +214,7 @@ class CompareManager(QDialog, Ui_frm_MainForm):
 
         try:
             job_path = os.path.join(PROJECT_DIR, self.current_project, self.current_job)
-            files = [
-                f for f in os.listdir(job_path) if f.lower().endswith(".ply")
-            ]
+            files = sorted([f for f in os.listdir(job_path) if f.lower().endswith(".ply")])
         except Exception as e:
             return
         

@@ -204,7 +204,7 @@ class ProjectManager(QWidget, Ui_frm_ProjectPage):
         activate_jobs = self.load_active_jobs(data_only=True)
         for job in activate_jobs:
             if job["project"] == name:
-                QMessageBox.warning(self, "Active Job", "Cannot delete a project with active jobs. Please remove its jobs from active jobs first.")
+                QMessageBox.warning(self, "Active Job", "Cannot delete a project with active jobs. Please remove its jobs from [Active Work Orders].")
                 return
             
         if QMessageBox.question(self, "Confirm", f"Delete project '{name}' and all its jobs?") != QMessageBox.Yes:

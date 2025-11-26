@@ -451,9 +451,7 @@ class ReportViewManager(QDialog, Ui_frm_MainForm):
 
         try:
             job_path = os.path.join(PROJECT_DIR, self.current_project, self.current_job)
-            files = [
-                f for f in os.listdir(job_path) if f.lower().endswith(".pdf")
-            ]
+            files = sorted([f for f in os.listdir(job_path) if f.lower().endswith(".pdf")])
         except Exception as e:
             return
         
