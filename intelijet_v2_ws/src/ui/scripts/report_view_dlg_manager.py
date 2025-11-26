@@ -77,6 +77,7 @@ class ReportViewManager(QDialog, Ui_frm_MainForm):
     def __init__(self):
         super().__init__()
         self.setupUi(self)
+        self.resize(1300, 800)
         self.setWindowTitle("Report View Manager")
 
         os.makedirs(PROJECT_DIR, exist_ok=True)
@@ -106,6 +107,8 @@ class ReportViewManager(QDialog, Ui_frm_MainForm):
 
         # ===== CONNECT BUTTONS ======
         self.btnCancel.clicked.connect(self.reject)
+        self.btnAsc.released.connect(lambda: self.job_detail_show(ascending=True))
+        self.btnDesc.released.connect(lambda: self.job_detail_show(ascending=False))
         
     # =========================
     #      PROJECT SECTION
@@ -126,6 +129,8 @@ class ReportViewManager(QDialog, Ui_frm_MainForm):
         self.btnEditJob.hide()
         self.btnDeleteJob.hide()
         self.btnOk.hide()
+        self.btnOpenItem.hide()
+        # ========================
 
         self.current_project = current_project
         self.current_job = current_job
@@ -448,12 +453,23 @@ class ReportViewManager(QDialog, Ui_frm_MainForm):
                 self.lstJobInfo.addItem(f"    • {key}: {value}")
 
         # Hiển thị lên lstJobDetail
+        self.job_detail_show(ascending=True)
+
+
+    #Sort lstJobDetail 
+    def job_detail_show(self,ascending=True):
+        # self.lstJobDetail.sortItems(QtCore.Qt.AscendingOrder if ascending else QtCore.Qt.DescendingOrder)
+                # Hiển thị lên lstJobDetail
 
         try:
             job_path = os.path.join(PROJECT_DIR, self.current_project, self.current_job)
             files = sorted([f for f in os.listdir(job_path) if f.lower().endswith(".pdf")])
         except Exception as e:
+            QMessageBox.critical(self, "Error", f"Error while retrieving files:\n{str(e)}")
             return
+        
+        if not ascending:
+            files.reverse()
         
         self.lstJobDetail.clear()
         for f in files:
@@ -465,8 +481,6 @@ class ReportViewManager(QDialog, Ui_frm_MainForm):
             self.lstJobDetail.addItem(item)
             self.lstJobDetail.setItemWidget(item, f_widget)
             f_widget.openSignal.connect(lambda filepath=filepath: self.on_file_opened(filepath))
-
-
 
     # =========================
     #      LOAD / UPDATE
@@ -516,6 +530,9 @@ class ReportViewManager(QDialog, Ui_frm_MainForm):
             for item in sorted(self.projects[self.current_project]["jobs"]):
                 if text in item.lower():
                     self.lstJob.addItem(item)
+
+
+
     # =========================
     #     OPEN FILE SECTION
     # =========================

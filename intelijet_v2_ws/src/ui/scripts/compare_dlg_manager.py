@@ -215,22 +215,7 @@ class CompareManager(QDialog, Ui_frm_MainForm):
 
         # Hiển thị lên lstJobDetail
 
-        try:
-            job_path = os.path.join(PROJECT_DIR, self.current_project, self.current_job)
-            files = sorted([f for f in os.listdir(job_path) if f.lower().endswith(".ply")])
-        except Exception as e:
-            return
-        
-        self.lstJobDetail.clear()
-        for f in files:
-            item = QListWidgetItem(self.lstJobDetail)
-            f_widget = FileItemWidget(f,job_path, view_mode='2')
-            filepath = os.path.join(job_path, f)
-            item.setSizeHint(f_widget.sizeHint())
-            
-            self.lstJobDetail.addItem(item)
-            self.lstJobDetail.setItemWidget(item, f_widget)
-            # f_widget.openSignal.connect(lambda filepath=filepath: self.on_file_opened(filepath))
+        self.job_detail_show(ascending=True)
 
 
     def update_job_list(self):
@@ -300,6 +285,7 @@ class CompareManager(QDialog, Ui_frm_MainForm):
             job_path = os.path.join(PROJECT_DIR, self.current_project, self.current_job)
             files = sorted([f for f in os.listdir(job_path) if f.lower().endswith(".ply")])
         except Exception as e:
+            QMessageBox.critical(self, "Error", f"Error while retrieving files:\n{str(e)}")
             return
         
         if not ascending:
