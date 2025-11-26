@@ -25,6 +25,7 @@ class SickScanController(GenericScanController):
         super().__init__(status_callback=status_callback)
 
     def run_workflow(self, publisher=None) -> PointCloud2:
+        #This function run the workflow of scanning process and return cloud data
         topic_name = publisher.name if publisher else "Unknown"
         log_status(name=cfg.NOTIFICATION,
                    message=f"[INFO] Starting {'Pre-Scan' if topic_name==cfg.PRE_SCAN_TOPIC else 'Post-Scan'}")
@@ -64,6 +65,9 @@ class SickScanController(GenericScanController):
                     self.status_callback(DeviceStatus.POSTSCAN_ERROR)
 
             return point_cloud  # vẫn trả về cloud nếu có
+        
+        if self.status_callback:
+            self.status_callback(DeviceStatus.IDLE)
 
         return point_cloud
 
@@ -77,7 +81,7 @@ class SickScanController(GenericScanController):
         # speed, target, timeout (giây)
         speeds_targets = [
             ('fast', cfg.housing_start_position, 10.0),
-            ('medium', 30.0, 60.0),
+            ('medium', cfg.housing_start_position+1, 10.0),
             ('slow', cfg.housing_end_position, 180.0)
         ]
 
@@ -94,8 +98,8 @@ class SickScanController(GenericScanController):
     def _close_housing_sequence(self):
         """Close housing gradually back to start position with step-specific speed and timeout"""
         # speed, target, timeout (giây)
-        speeds_targets = [('fast', cfg.housing_end_position+30.0, 35.0), 
-                          ('medium', 30.0, 35.0),
+        speeds_targets = [('fast', cfg.housing_start_position+50.0, 35.0), 
+                          ('medium', cfg.housing_start_position+30, 35.0),
                           ('slow', cfg.housing_start_position-5.0, 3.0)]
 
         for speed, target, timeout in speeds_targets:
@@ -112,7 +116,6 @@ class SickScanController(GenericScanController):
         # rospy.sleep(2)
         self.housing.stop()
         return True
-
 
 
 
