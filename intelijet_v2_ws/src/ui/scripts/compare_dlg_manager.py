@@ -79,6 +79,7 @@ class CompareManager(QDialog, Ui_frm_MainForm):
     def __init__(self):
         super().__init__()
         self.setupUi(self)
+        self.resize(1300, 800)
         self.setWindowTitle("Compare Cloud Manager")
         os.makedirs(PROJECT_DIR, exist_ok=True)
 
@@ -105,7 +106,8 @@ class CompareManager(QDialog, Ui_frm_MainForm):
         self.btnCancel.clicked.connect(self.reject)
         self.btnDeleteItem.released.connect(self.delete_item)
         self.btnOpenItem.released.connect(self.on_file_opened)
-
+        self.btnAsc.released.connect(lambda: self.job_detail_show(ascending=True))
+        self.btnDesc.released.connect(lambda: self.job_detail_show(ascending=False))
         # self.update_project_list()
 
     # =========================
@@ -176,6 +178,7 @@ class CompareManager(QDialog, Ui_frm_MainForm):
         self.current_project = name
         self.lblProjectName.setText(name)
         self.update_job_list()
+        self.lstJobDetail.clear()
 
 
     def select_job(self, item: QListWidgetItem):
@@ -287,6 +290,31 @@ class CompareManager(QDialog, Ui_frm_MainForm):
         row = self.lstJobDetail.row(current_item)
         self.lstJobDetail.takeItem(row)   
         
+
+    #Sort lstJobDetail 
+    def job_detail_show(self,ascending=True):
+        # self.lstJobDetail.sortItems(QtCore.Qt.AscendingOrder if ascending else QtCore.Qt.DescendingOrder)
+                # Hiển thị lên lstJobDetail
+
+        try:
+            job_path = os.path.join(PROJECT_DIR, self.current_project, self.current_job)
+            files = sorted([f for f in os.listdir(job_path) if f.lower().endswith(".ply")])
+        except Exception as e:
+            return
+        
+        if not ascending:
+            files.reverse()
+        
+        self.lstJobDetail.clear()
+        for f in files:
+            item = QListWidgetItem(self.lstJobDetail)
+            f_widget = FileItemWidget(f,job_path, view_mode='2')
+            filepath = os.path.join(job_path, f)
+            item.setSizeHint(f_widget.sizeHint())
+            
+            self.lstJobDetail.addItem(item)
+            self.lstJobDetail.setItemWidget(item, f_widget)
+       
 
     # =========================
     #     ACTIVE JOB SECTION
