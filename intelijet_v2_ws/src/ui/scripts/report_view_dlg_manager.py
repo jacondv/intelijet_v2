@@ -93,19 +93,21 @@ class ReportViewManager(QDialog, Ui_frm_MainForm):
             self.initialize()
 
         # ====== CONNECT SIGNALS ======
+        self.lstProject.itemClicked.connect(self.select_project)
+        self.txtSearchProject.textChanged.connect(self.filter_projects)
+
+        self.lstJob.itemClicked.connect(self.select_job)
+        self.txtSearchJob.textChanged.connect(self.filter_jobs)
+        # ===== CONNECT BUTTONS ======
         self.btnNewProject.clicked.connect(self.new_project)
         self.btnRenameProject.clicked.connect(self.rename_project)
         self.btnDeleteProject.clicked.connect(self.delete_project)
-        self.lstProject.itemClicked.connect(self.select_project)
-        self.txtSearchProject.textChanged.connect(self.filter_projects)
 
         self.btnNewJob.clicked.connect(self.new_job)
         self.btnEditJob.clicked.connect(self.edit_job)
         self.btnDeleteJob.clicked.connect(self.delete_job)
-        self.lstJob.itemClicked.connect(self.select_job)
-        self.txtSearchJob.textChanged.connect(self.filter_jobs)
 
-        # ===== CONNECT BUTTONS ======
+        self.btnDeleteItem.released.connect(self.delete_item)
         self.btnCancel.clicked.connect(self.reject)
         self.btnAsc.released.connect(lambda: self.job_detail_show(ascending=True))
         self.btnDesc.released.connect(lambda: self.job_detail_show(ascending=False))
@@ -244,7 +246,8 @@ class ReportViewManager(QDialog, Ui_frm_MainForm):
         self.current_project = name
         self.lblProjectName.setText(name)
         self.update_job_list()
-
+        self.lstJobDetail.clear()
+        self.lblJobName.setText("")
     # =========================
     #         JOB SECTION
     # =========================
@@ -531,7 +534,40 @@ class ReportViewManager(QDialog, Ui_frm_MainForm):
                 if text in item.lower():
                     self.lstJob.addItem(item)
 
+    # =========================
+    #     DELETE FILE SECTION
+    # =========================
+    def delete_item(self):
+        current_item = self.lstJobDetail.currentItem()
+        if current_item is None:
+            QMessageBox.warning(self, "Warning", "No files selected to delete.")
+            return
+        widget = self.lstJobDetail.itemWidget(current_item)
+        if not widget:
+            QMessageBox.warning(self, "Warning", "Widget for the item was not found.")
+            return
+        filename = widget.filename
+        reply = QMessageBox.question(
+            self,
+            "Confirm",
+            f"Are you sure you want to delete the file:\n{filename} ?",
+            QMessageBox.Yes | QMessageBox.No
+            )
+        if reply != QMessageBox.Yes:
+            return
+        
+        filepath = os.path.join(PROJECT_DIR, self.current_project, self.current_job, filename)
+        try:
+            if os.path.exists(filepath):
+                os.remove(filepath)
+            else:
+                QMessageBox.warning(self, "Warning", "File does not exist on disk.")
+        except Exception as e:
+            QMessageBox.critical(self, "Error", f"Error while deleting file:\n{str(e)}")
+            return    
 
+        row = self.lstJobDetail.row(current_item)
+        self.lstJobDetail.takeItem(row)   
 
     # =========================
     #     OPEN FILE SECTION

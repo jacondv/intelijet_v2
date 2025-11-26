@@ -250,7 +250,7 @@ class CompareManager(QDialog, Ui_frm_MainForm):
             return
         widget = self.lstJobDetail.itemWidget(current_item)
         if not widget:
-            QMessageBox.warning(self, "Warning", "Không tìm thấy widget của item.")
+            QMessageBox.warning(self, "Warning", "Widget for the item was not found.")
             return
         filename = widget.filename
         reply = QMessageBox.question(
@@ -280,6 +280,12 @@ class CompareManager(QDialog, Ui_frm_MainForm):
     def job_detail_show(self,ascending=True):
         # self.lstJobDetail.sortItems(QtCore.Qt.AscendingOrder if ascending else QtCore.Qt.DescendingOrder)
                 # Hiển thị lên lstJobDetail
+        checked_filenames = []
+        for i in range(self.lstJobDetail.count()):
+            item = self.lstJobDetail.item(i)
+            widget = self.lstJobDetail.itemWidget(item)  # đây là FileItemWidget
+            if widget and widget.ui.chkChooseCloud.isChecked():  # lấy checkbox trực tiếp
+                checked_filenames.append(widget.filename)       # lấy filename trực tiếp
 
         try:
             job_path = os.path.join(PROJECT_DIR, self.current_project, self.current_job)
@@ -297,7 +303,9 @@ class CompareManager(QDialog, Ui_frm_MainForm):
             f_widget = FileItemWidget(f,job_path, view_mode='2')
             filepath = os.path.join(job_path, f)
             item.setSizeHint(f_widget.sizeHint())
-            
+            if f in checked_filenames:
+                f_widget.ui.chkChooseCloud.setChecked(True)
+                
             self.lstJobDetail.addItem(item)
             self.lstJobDetail.setItemWidget(item, f_widget)
        
@@ -334,11 +342,11 @@ class CompareManager(QDialog, Ui_frm_MainForm):
 
         current_item = self.lstJobDetail.currentItem()
         if current_item is None:
-            QMessageBox.warning(self, "Warning", "No files selected to delete.")
+            QMessageBox.warning(self, "Warning", "No files selected to open.")
             return
         widget = self.lstJobDetail.itemWidget(current_item)
         if not widget:
-            QMessageBox.warning(self, "Warning", "Không tìm thấy widget của item.")
+            QMessageBox.warning(self, "Warning", "Widget for the item was not found.")
             return
         filename = widget.filename       
         filepath = os.path.join(PROJECT_DIR, self.current_project, self.current_job, filename)
