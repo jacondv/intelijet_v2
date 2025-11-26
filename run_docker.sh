@@ -11,7 +11,7 @@ sudo xrandr --output DSI-1 --rotate right
 CONTAINER_NAME=intelijet
 IMAGE_NAME=jacondv/jacon-pps-noetic
 
-QT_ENV="export QT_AUTO_SCREEN_SCALE_FACTOR=1; export QT_SCREEN_SCALE_FACTORS=1; export QT_SCALE_FACTOR=1.25;"
+# QT_ENV="export QT_AUTO_SCREEN_SCALE_FACTOR=0; export QT_SCREEN_SCALE_FACTORS=1.25; export QT_SCALE_FACTOR=1.25;"
 
 
 run_container() {

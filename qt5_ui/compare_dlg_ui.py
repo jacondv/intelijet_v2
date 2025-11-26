@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'project_dlg.ui'
+# Form implementation generated from reading ui file 'compare_dlg.ui'
 #
 # Created by: PyQt5 UI code generator 5.14.1
 #
@@ -10,77 +10,158 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
 
 
-class Ui_frm_ProjectPage(object):
-    def setupUi(self, frm_ProjectPage):
-        frm_ProjectPage.setObjectName("frm_ProjectPage")
-        frm_ProjectPage.resize(1057, 727)
-        frm_ProjectPage.setStyleSheet("QFrame #frame,\n"
-"QFrame #frame_2,\n"
-"QFrame #frame_3,\n"
-"{\n"
-"    border: 1px solid #ddd;\n"
+class Ui_frm_MainForm(object):
+    def setupUi(self, frm_MainForm):
+        frm_MainForm.setObjectName("frm_MainForm")
+        frm_MainForm.setWindowModality(QtCore.Qt.WindowModal)
+        frm_MainForm.resize(1200, 800)
+        frm_MainForm.setStyleSheet("\n"
+"QPushButton {\n"
+"    background-color: #5C87C9;     /* xanh sáng hơn */\n"
+"    color: white;\n"
+"    border: 0px solid #3c6382;\n"
+"    padding: 6px 10px;\n"
+"    font-size: 14px;\n"
+"}\n"
+"\n"
+"QPushButton:hover {\n"
+"    background-color: #3c6382;\n"
+"}\n"
+"\n"
+"QPushButton:pressed {\n"
+"    background-color: #3c6382;\n"
+"    border: 1px solid #355A8A;\n"
+"}\n"
+"\n"
+"\n"
+"/* --- Text editor (QLineEdit & QTextEdit) --- */\n"
+"/* Text box chung */\n"
+"QLineEdit, QTextEdit {\n"
+"    background-color: #FFFFFF;        /* nền trắng */\n"
+"    color: #2F4F6E;                  /* chữ xanh đậm */\n"
+"    border: 1px solid #B0C4DE;       /* viền nhẹ */\n"
+"    padding: 4px 8px;                /* khoảng cách chữ và viền */\n"
+"    font-size: 14px;\n"
+"    font-weight: bold;\n"
+"}\n"
+"\n"
+"/* Khi focus */\n"
+"QLineEdit:focus, QTextEdit:focus {\n"
+"    border: 1px solid #5C87C9;       /* viền xanh khi focus */\n"
+"    background-color: #F9FBFF;        /* nền sáng hơn khi focus */\n"
+"}\n"
+"\n"
+"/* Khi hover (chuột vào) */\n"
+"QLineEdit:hover, QTextEdit:hover {\n"
+"    border: 1px solid #74A9D8;       /* viền hover nhẹ */\n"
+"}\n"
+"\n"
+"\n"
+"QComboBox {\n"
+"    background-color: #FFFFFF;       /* nền sáng */\n"
+"    color: #2F4F6E;                 /* chữ xanh đậm */\n"
+"    border: 1px solid #B0C4DE;      /* viền nhẹ */\n"
+"    padding: 4px 8px;\n"
+"    font-size: 14px;\n"
+"    font-weight: bold;\n"
+"    selection-background-color: #D0E4F5; /* khi chọn item */\n"
+"}\n"
+"\n"
+"/* Drop-down list */\n"
+"QComboBox QAbstractItemView {\n"
+"    background-color: #FFFFFF;\n"
+"    color: #2F4F6E;\n"
+"    border: 1px solid #B0C4DE;\n"
+"    selection-background-color: #D0E4F5;\n"
+"}\n"
+"\n"
+"/* Hover khi trỏ vào QComboBox */\n"
+"QComboBox:hover {\n"
+"    border: 1px solid #5C87C9;\n"
+"}\n"
+"\n"
+"/* Khi mở drop-down */\n"
+"QComboBox:focus {\n"
+"    border: 1px solid #5C87C9;\n"
+"}\n"
+"QGroupBox {\n"
+"    border: 1px solid #B0C4DE;   /* viền nhẹ */\n"
+"    background-color: #FFFFFF;    /* nền trắng */\n"
+"    margin-top: 10px;\n"
+"    padding: 8px;\n"
+"    font-weight: bold;\n"
+"    font-size: 16px;\n"
+"}\n"
+"\n"
+"QGroupBox::title {\n"
+"    subcontrol-origin: margin;\n"
+"    left: 8px;                   /* khoảng cách từ viền trái */\n"
+"    padding: 0 4px;\n"
+"    color: #2F4F6E;              /* chữ xanh đậm */\n"
+"}\n"
+"\n"
+"\n"
+"\n"
+"/* ==================== SCROLLBAR ==================== */\n"
+"QScrollBar:vertical {\n"
+"    width: 12px;\n"
+"    background: #f0f0f0;\n"
+"    margin: 0;\n"
+"    border-radius: 0px;\n"
+"}\n"
+"QScrollBar::handle:vertical {\n"
+"    background: #b0b0b0;\n"
+"    min-height: 20px;\n"
+"    border-radius: 0px;\n"
+"}\n"
+"QScrollBar::handle:vertical:hover {\n"
+"    background: #909090;\n"
+"}\n"
+"QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {\n"
+"    height: 0;\n"
 "}")
-        self.verticalLayout_7 = QtWidgets.QVBoxLayout(frm_ProjectPage)
+        self.verticalLayout_7 = QtWidgets.QVBoxLayout(frm_MainForm)
         self.verticalLayout_7.setContentsMargins(0, 0, 0, 0)
         self.verticalLayout_7.setSpacing(0)
         self.verticalLayout_7.setObjectName("verticalLayout_7")
-        self.ftm_ProjectManager = QtWidgets.QWidget(frm_ProjectPage)
-        self.ftm_ProjectManager.setStyleSheet("QListWidget {\n"
-"    background: #ffffff;\n"
-"    border: 1px solid #cccccc;\n"
-"    font-family: \"Segoe UI\", \"Roboto\", sans-serif;\n"
+        self.ftm_ProjectManager = QtWidgets.QWidget(frm_MainForm)
+        self.ftm_ProjectManager.setStyleSheet("/* Toàn bộ list widget */\n"
+"QListWidget {\n"
+"    background-color: #FFFFFF;      /* nền trắng */\n"
+"    color: #2F4F6E;                /* chữ xanh đậm */\n"
+"    border: 1px solid #B0C4DE;     /* viền nhẹ */\n"
 "    font-size: 14px;\n"
-"    color: #222;\n"
-"    outline: none;\n"
-"    padding: 0px;\n"
+"    font-weight: bold;\n"
+"    padding: 2px;\n"
 "}\n"
 "\n"
+"/* Khi hover trên widget */\n"
+"QListWidget:hover {\n"
+"    border: 1px solid #74A9D8;\n"
+"}\n"
+"\n"
+"/* Khi focus widget */\n"
+"QListWidget:focus {\n"
+"    border: 1px solid #5C87C9;\n"
+"    background-color: #F9FBFF;\n"
+"}\n"
+"\n"
+"/* Item trong list */\n"
 "QListWidget::item {\n"
-"    background: #ffffff;\n"
-"    border: none;\n"
-"    padding: 10px 12px;      /* tăng chiều cao item */\n"
-"    margin: 0;\n"
+"    padding: 6px 10px;             /* khoảng cách chữ trong item */\n"
+"    height: 30px;                  /* tăng chiều cao item */\n"
 "}\n"
 "\n"
+"/* Item được chọn */\n"
 "QListWidget::item:selected {\n"
-"    background: #e6f0ff;\n"
-"    color: #003366;\n"
+"    background-color: #D0E4F5;      /* màu chọn */\n"
+"    color: #2F4F6E;\n"
 "}\n"
 "\n"
+"/* Item hover */\n"
 "QListWidget::item:hover {\n"
-"    background: #f5f9ff;\n"
+"    background-color: #E4F0FA;      /* màu hover */\n"
 "}\n"
-"\n"
-"/* ---- Scrollbar ---- */\n"
-"QScrollBar:vertical {\n"
-"    border: none;\n"
-"    background: #f0f0f0;\n"
-"    width: 18px;              /* to hơn mặc định */\n"
-"    margin: 0px;\n"
-"}\n"
-"\n"
-"QScrollBar::handle:vertical {\n"
-"    background: #c0c0c0;\n"
-"    min-height: 30px;\n"
-"    border-radius: 6px;\n"
-"}\n"
-"\n"
-"QScrollBar::handle:vertical:hover {\n"
-"    background: #a6a6a6;\n"
-"}\n"
-"\n"
-"QScrollBar::add-line:vertical,\n"
-"QScrollBar::sub-line:vertical {\n"
-"    height: 0px;              /* bỏ nút mũi tên */\n"
-"}\n"
-"\n"
-"QScrollBar::add-page:vertical,\n"
-"QScrollBar::sub-page:vertical {\n"
-"    background: none;\n"
-"}\n"
-"\n"
-"\n"
-"\n"
 "")
         self.ftm_ProjectManager.setObjectName("ftm_ProjectManager")
         self.verticalLayout_6 = QtWidgets.QVBoxLayout(self.ftm_ProjectManager)
@@ -90,16 +171,16 @@ class Ui_frm_ProjectPage(object):
         self.widget_7 = QtWidgets.QWidget(self.ftm_ProjectManager)
         self.widget_7.setObjectName("widget_7")
         self.horizontalLayout_5 = QtWidgets.QHBoxLayout(self.widget_7)
-        self.horizontalLayout_5.setContentsMargins(-1, -1, -1, 20)
         self.horizontalLayout_5.setObjectName("horizontalLayout_5")
         self.groupBox = QtWidgets.QGroupBox(self.widget_7)
         font = QtGui.QFont()
+        font.setPointSize(-1)
         font.setBold(True)
         font.setWeight(75)
         self.groupBox.setFont(font)
         self.groupBox.setObjectName("groupBox")
         self.verticalLayout = QtWidgets.QVBoxLayout(self.groupBox)
-        self.verticalLayout.setContentsMargins(0, -1, 0, 0)
+        self.verticalLayout.setContentsMargins(0, 0, 0, 0)
         self.verticalLayout.setObjectName("verticalLayout")
         self.widget_2 = QtWidgets.QWidget(self.groupBox)
         self.widget_2.setObjectName("widget_2")
@@ -117,7 +198,7 @@ class Ui_frm_ProjectPage(object):
         self.widget_3 = QtWidgets.QWidget(self.groupBox)
         self.widget_3.setObjectName("widget_3")
         self.verticalLayout_5 = QtWidgets.QVBoxLayout(self.widget_3)
-        self.verticalLayout_5.setContentsMargins(-1, 0, -1, 0)
+        self.verticalLayout_5.setContentsMargins(-1, 6, -1, 0)
         self.verticalLayout_5.setObjectName("verticalLayout_5")
         self.widget_5 = QtWidgets.QWidget(self.widget_3)
         self.widget_5.setStyleSheet("background-color: rgb(255, 255, 255);\n"
@@ -142,7 +223,9 @@ class Ui_frm_ProjectPage(object):
         self.txtSearchProject = QtWidgets.QLineEdit(self.widget_5)
         self.txtSearchProject.setMinimumSize(QtCore.QSize(150, 40))
         font = QtGui.QFont()
-        font.setPointSize(15)
+        font.setPointSize(-1)
+        font.setBold(True)
+        font.setWeight(75)
         self.txtSearchProject.setFont(font)
         self.txtSearchProject.setStyleSheet("border: none;")
         self.txtSearchProject.setClearButtonEnabled(True)
@@ -183,18 +266,18 @@ class Ui_frm_ProjectPage(object):
         self.verticalLayout_5.addWidget(self.widget_4)
         self.verticalLayout.addWidget(self.widget_3)
         self.lstProject = QtWidgets.QListWidget(self.groupBox)
-        self.lstProject.setStyleSheet("border: none;")
         self.lstProject.setObjectName("lstProject")
         self.verticalLayout.addWidget(self.lstProject)
         self.horizontalLayout_5.addWidget(self.groupBox)
         self.groupBox_2 = QtWidgets.QGroupBox(self.widget_7)
         font = QtGui.QFont()
+        font.setPointSize(-1)
         font.setBold(True)
         font.setWeight(75)
         self.groupBox_2.setFont(font)
         self.groupBox_2.setObjectName("groupBox_2")
         self.verticalLayout_2 = QtWidgets.QVBoxLayout(self.groupBox_2)
-        self.verticalLayout_2.setContentsMargins(0, -1, 0, 0)
+        self.verticalLayout_2.setContentsMargins(0, 0, 0, 0)
         self.verticalLayout_2.setObjectName("verticalLayout_2")
         self.widget_12 = QtWidgets.QWidget(self.groupBox_2)
         self.widget_12.setObjectName("widget_12")
@@ -241,7 +324,9 @@ class Ui_frm_ProjectPage(object):
         self.txtSearchJob = QtWidgets.QLineEdit(self.widget_6)
         self.txtSearchJob.setMinimumSize(QtCore.QSize(150, 40))
         font = QtGui.QFont()
-        font.setPointSize(15)
+        font.setPointSize(-1)
+        font.setBold(True)
+        font.setWeight(75)
         self.txtSearchJob.setFont(font)
         self.txtSearchJob.setStyleSheet("border: none;")
         self.txtSearchJob.setClearButtonEnabled(True)
@@ -290,117 +375,104 @@ class Ui_frm_ProjectPage(object):
         self.horizontalLayout_9.addItem(spacerItem1)
         self.verticalLayout_4.addWidget(self.widget_10)
         self.verticalLayout_2.addWidget(self.widget_8)
+        self.lstJobInfo = QtWidgets.QListWidget(self.groupBox_2)
+        self.lstJobInfo.setMaximumSize(QtCore.QSize(16777215, 200))
+        self.lstJobInfo.setObjectName("lstJobInfo")
+        self.verticalLayout_2.addWidget(self.lstJobInfo)
         self.lstJob = QtWidgets.QListWidget(self.groupBox_2)
-        self.lstJob.setStyleSheet("border: none;")
         self.lstJob.setObjectName("lstJob")
         self.verticalLayout_2.addWidget(self.lstJob)
         self.horizontalLayout_5.addWidget(self.groupBox_2)
         self.groupBox_3 = QtWidgets.QGroupBox(self.widget_7)
         font = QtGui.QFont()
+        font.setPointSize(-1)
         font.setBold(True)
         font.setWeight(75)
         self.groupBox_3.setFont(font)
         self.groupBox_3.setObjectName("groupBox_3")
-        self.verticalLayout_9 = QtWidgets.QVBoxLayout(self.groupBox_3)
-        self.verticalLayout_9.setContentsMargins(0, 20, 0, 0)
-        self.verticalLayout_9.setSpacing(9)
-        self.verticalLayout_9.setObjectName("verticalLayout_9")
+        self.verticalLayout_3 = QtWidgets.QVBoxLayout(self.groupBox_3)
+        self.verticalLayout_3.setObjectName("verticalLayout_3")
         self.widget_11 = QtWidgets.QWidget(self.groupBox_3)
-        self.widget_11.setMaximumSize(QtCore.QSize(16777215, 320))
         self.widget_11.setObjectName("widget_11")
-        self.verticalLayout_8 = QtWidgets.QVBoxLayout(self.widget_11)
-        self.verticalLayout_8.setContentsMargins(0, 0, 0, 0)
-        self.verticalLayout_8.setObjectName("verticalLayout_8")
-        self.lstJobDetail = QtWidgets.QListWidget(self.widget_11)
-        self.lstJobDetail.setStyleSheet("border: none;")
-        self.lstJobDetail.setObjectName("lstJobDetail")
-        self.verticalLayout_8.addWidget(self.lstJobDetail)
-        self.widget_14 = QtWidgets.QWidget(self.widget_11)
-        self.widget_14.setObjectName("widget_14")
-        self.horizontalLayout_10 = QtWidgets.QHBoxLayout(self.widget_14)
-        self.horizontalLayout_10.setContentsMargins(0, 0, 0, 0)
-        self.horizontalLayout_10.setObjectName("horizontalLayout_10")
-        self.btnAdd = QtWidgets.QPushButton(self.widget_14)
-        self.btnAdd.setMinimumSize(QtCore.QSize(0, 40))
-        self.btnAdd.setMaximumSize(QtCore.QSize(150, 40))
-        font = QtGui.QFont()
-        font.setPointSize(12)
-        self.btnAdd.setFont(font)
+        self.verticalLayout_9 = QtWidgets.QVBoxLayout(self.widget_11)
+        self.verticalLayout_9.setContentsMargins(-1, 0, -1, 0)
+        self.verticalLayout_9.setObjectName("verticalLayout_9")
+        self.widget_18 = QtWidgets.QWidget(self.widget_11)
+        self.widget_18.setObjectName("widget_18")
+        self.horizontalLayout_15 = QtWidgets.QHBoxLayout(self.widget_18)
+        self.horizontalLayout_15.setContentsMargins(-1, 0, -1, 0)
+        self.horizontalLayout_15.setObjectName("horizontalLayout_15")
+        self.btnOpenItem = QtWidgets.QPushButton(self.widget_18)
+        self.btnOpenItem.setMinimumSize(QtCore.QSize(40, 40))
+        self.btnOpenItem.setMaximumSize(QtCore.QSize(40, 40))
         icon6 = QtGui.QIcon()
-        icon6.addPixmap(QtGui.QPixmap(":/icon/icon/check.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-        self.btnAdd.setIcon(icon6)
-        self.btnAdd.setObjectName("btnAdd")
-        self.horizontalLayout_10.addWidget(self.btnAdd)
-        self.btnRemove = QtWidgets.QPushButton(self.widget_14)
-        self.btnRemove.setMinimumSize(QtCore.QSize(0, 40))
-        self.btnRemove.setMaximumSize(QtCore.QSize(150, 40))
-        font = QtGui.QFont()
-        font.setPointSize(12)
-        self.btnRemove.setFont(font)
-        icon7 = QtGui.QIcon()
-        icon7.addPixmap(QtGui.QPixmap(":/icon/icon/multiplication.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-        self.btnRemove.setIcon(icon7)
-        self.btnRemove.setObjectName("btnRemove")
-        self.horizontalLayout_10.addWidget(self.btnRemove)
+        icon6.addPixmap(QtGui.QPixmap(":/icon/icon/visual.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.btnOpenItem.setIcon(icon6)
+        self.btnOpenItem.setIconSize(QtCore.QSize(32, 32))
+        self.btnOpenItem.setObjectName("btnOpenItem")
+        self.horizontalLayout_15.addWidget(self.btnOpenItem)
+        self.btnDeleteItem = QtWidgets.QPushButton(self.widget_18)
+        self.btnDeleteItem.setMinimumSize(QtCore.QSize(40, 40))
+        self.btnDeleteItem.setMaximumSize(QtCore.QSize(40, 40))
+        self.btnDeleteItem.setIcon(icon3)
+        self.btnDeleteItem.setIconSize(QtCore.QSize(32, 32))
+        self.btnDeleteItem.setObjectName("btnDeleteItem")
+        self.horizontalLayout_15.addWidget(self.btnDeleteItem)
         spacerItem2 = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
-        self.horizontalLayout_10.addItem(spacerItem2)
-        self.verticalLayout_8.addWidget(self.widget_14)
-        self.verticalLayout_9.addWidget(self.widget_11)
+        self.horizontalLayout_15.addItem(spacerItem2)
+        self.verticalLayout_9.addWidget(self.widget_18)
+        self.verticalLayout_3.addWidget(self.widget_11)
+        self.lstJobDetail = QtWidgets.QListWidget(self.groupBox_3)
+        self.lstJobDetail.setObjectName("lstJobDetail")
+        self.verticalLayout_3.addWidget(self.lstJobDetail)
         self.widget = QtWidgets.QWidget(self.groupBox_3)
         self.widget.setObjectName("widget")
-        self.verticalLayout_3 = QtWidgets.QVBoxLayout(self.widget)
-        self.verticalLayout_3.setContentsMargins(0, 0, 0, 0)
-        self.verticalLayout_3.setObjectName("verticalLayout_3")
-        self.label_6 = QtWidgets.QLabel(self.widget)
-        font = QtGui.QFont()
-        font.setBold(True)
-        font.setWeight(75)
-        self.label_6.setFont(font)
-        self.label_6.setStyleSheet("padding-left:10px;")
-        self.label_6.setObjectName("label_6")
-        self.verticalLayout_3.addWidget(self.label_6)
-        self.lstJobActive = QtWidgets.QListWidget(self.widget)
-        self.lstJobActive.setStyleSheet("border: none;")
-        self.lstJobActive.setObjectName("lstJobActive")
-        self.verticalLayout_3.addWidget(self.lstJobActive)
-        self.verticalLayout_9.addWidget(self.widget)
-        self.verticalLayout_9.setStretch(0, 2)
-        self.verticalLayout_9.setStretch(1, 3)
+        self.horizontalLayout_7 = QtWidgets.QHBoxLayout(self.widget)
+        self.horizontalLayout_7.setObjectName("horizontalLayout_7")
+        spacerItem3 = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
+        self.horizontalLayout_7.addItem(spacerItem3)
+        self.btnOk = QtWidgets.QPushButton(self.widget)
+        self.btnOk.setMinimumSize(QtCore.QSize(0, 30))
+        self.btnOk.setObjectName("btnOk")
+        self.horizontalLayout_7.addWidget(self.btnOk)
+        self.btnCancel = QtWidgets.QPushButton(self.widget)
+        self.btnCancel.setMinimumSize(QtCore.QSize(0, 30))
+        self.btnCancel.setObjectName("btnCancel")
+        self.horizontalLayout_7.addWidget(self.btnCancel)
+        self.verticalLayout_3.addWidget(self.widget)
         self.horizontalLayout_5.addWidget(self.groupBox_3)
-        self.horizontalLayout_5.setStretch(0, 1)
-        self.horizontalLayout_5.setStretch(1, 1)
-        self.horizontalLayout_5.setStretch(2, 2)
+        self.horizontalLayout_5.setStretch(0, 2)
+        self.horizontalLayout_5.setStretch(1, 2)
+        self.horizontalLayout_5.setStretch(2, 3)
         self.verticalLayout_6.addWidget(self.widget_7)
         self.verticalLayout_7.addWidget(self.ftm_ProjectManager)
 
-        self.retranslateUi(frm_ProjectPage)
-        QtCore.QMetaObject.connectSlotsByName(frm_ProjectPage)
+        self.retranslateUi(frm_MainForm)
+        QtCore.QMetaObject.connectSlotsByName(frm_MainForm)
 
-    def retranslateUi(self, frm_ProjectPage):
+    def retranslateUi(self, frm_MainForm):
         _translate = QtCore.QCoreApplication.translate
-        frm_ProjectPage.setWindowTitle(_translate("frm_ProjectPage", "Form"))
-        self.groupBox.setTitle(_translate("frm_ProjectPage", "Project"))
-        self.lblProjectName.setText(_translate("frm_ProjectPage", "#CurrnetProject"))
-        self.txtSearchProject.setPlaceholderText(_translate("frm_ProjectPage", "Search"))
-        self.groupBox_2.setTitle(_translate("frm_ProjectPage", "Job Number"))
-        self.lblJobName.setText(_translate("frm_ProjectPage", "#CurrnetJob"))
-        self.txtSearchJob.setPlaceholderText(_translate("frm_ProjectPage", "Search"))
-        self.cbbFilterJob.setItemText(0, _translate("frm_ProjectPage", "All"))
-        self.cbbFilterJob.setItemText(1, _translate("frm_ProjectPage", "Pending"))
-        self.cbbFilterJob.setItemText(2, _translate("frm_ProjectPage", "Activate"))
-        self.cbbFilterJob.setItemText(3, _translate("frm_ProjectPage", "Finish"))
-        self.groupBox_3.setTitle(_translate("frm_ProjectPage", "Work Order"))
-        self.btnAdd.setText(_translate("frm_ProjectPage", "Schedule"))
-        self.btnRemove.setText(_translate("frm_ProjectPage", "Unschedule"))
-        self.label_6.setText(_translate("frm_ProjectPage", "Active Work Orders"))
+        self.groupBox.setTitle(_translate("frm_MainForm", "Project"))
+        self.lblProjectName.setText(_translate("frm_MainForm", "#CurrnetProject"))
+        self.txtSearchProject.setPlaceholderText(_translate("frm_MainForm", "Search"))
+        self.groupBox_2.setTitle(_translate("frm_MainForm", "Job Number"))
+        self.lblJobName.setText(_translate("frm_MainForm", "#CurrnetJob"))
+        self.txtSearchJob.setPlaceholderText(_translate("frm_MainForm", "Search"))
+        self.cbbFilterJob.setItemText(0, _translate("frm_MainForm", "All"))
+        self.cbbFilterJob.setItemText(1, _translate("frm_MainForm", "Pending"))
+        self.cbbFilterJob.setItemText(2, _translate("frm_MainForm", "Activate"))
+        self.cbbFilterJob.setItemText(3, _translate("frm_MainForm", "Finish"))
+        self.groupBox_3.setTitle(_translate("frm_MainForm", "Job Detail"))
+        self.btnOk.setText(_translate("frm_MainForm", "Compare"))
+        self.btnCancel.setText(_translate("frm_MainForm", "Close"))
 import resource_rc
 
 
 if __name__ == "__main__":
     import sys
     app = QtWidgets.QApplication(sys.argv)
-    frm_ProjectPage = QtWidgets.QWidget()
-    ui = Ui_frm_ProjectPage()
-    ui.setupUi(frm_ProjectPage)
-    frm_ProjectPage.show()
+    frm_MainForm = QtWidgets.QWidget()
+    ui = Ui_frm_MainForm()
+    ui.setupUi(frm_MainForm)
+    frm_MainForm.show()
     sys.exit(app.exec_())

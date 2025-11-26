@@ -193,7 +193,9 @@ class App(QMainWindow):
 
         # Emit align command to ROS
         if topic_name in POST_SCAN_CLOUD_TOPIC:
-            self.ui_send_cmd_signal.emit(PPSCommand.START_COMPARE.value)
+            if self.ui.cbbAutoCompare.currentIndex()==0: 
+                self.ui_send_cmd_signal.emit(PPSCommand.START_COMPARE.value)
+            
 
         # Export Report
         if topic_name in CLOUD_COMPARED_TOPIC:

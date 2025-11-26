@@ -1,24 +1,123 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>frm_ProjectPage</class>
- <widget class="QWidget" name="frm_ProjectPage">
+ <class>frm_MainForm</class>
+ <widget class="QWidget" name="frm_MainForm">
+  <property name="windowModality">
+   <enum>Qt::WindowModal</enum>
+  </property>
   <property name="geometry">
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1057</width>
-    <height>727</height>
+    <width>1200</width>
+    <height>800</height>
    </rect>
   </property>
-  <property name="windowTitle">
-   <string>Form</string>
-  </property>
   <property name="styleSheet">
-   <string notr="true">QFrame #frame,
-QFrame #frame_2,
-QFrame #frame_3,
-{
-    border: 1px solid #ddd;
+   <string notr="true">
+QPushButton {
+    background-color: #5C87C9;     /* xanh sáng hơn */
+    color: white;
+    border: 0px solid #3c6382;
+    padding: 6px 10px;
+    font-size: 14px;
+}
+
+QPushButton:hover {
+    background-color: #3c6382;
+}
+
+QPushButton:pressed {
+    background-color: #3c6382;
+    border: 1px solid #355A8A;
+}
+
+
+/* --- Text editor (QLineEdit &amp; QTextEdit) --- */
+/* Text box chung */
+QLineEdit, QTextEdit {
+    background-color: #FFFFFF;        /* nền trắng */
+    color: #2F4F6E;                  /* chữ xanh đậm */
+    border: 1px solid #B0C4DE;       /* viền nhẹ */
+    padding: 4px 8px;                /* khoảng cách chữ và viền */
+    font-size: 14px;
+    font-weight: bold;
+}
+
+/* Khi focus */
+QLineEdit:focus, QTextEdit:focus {
+    border: 1px solid #5C87C9;       /* viền xanh khi focus */
+    background-color: #F9FBFF;        /* nền sáng hơn khi focus */
+}
+
+/* Khi hover (chuột vào) */
+QLineEdit:hover, QTextEdit:hover {
+    border: 1px solid #74A9D8;       /* viền hover nhẹ */
+}
+
+
+QComboBox {
+    background-color: #FFFFFF;       /* nền sáng */
+    color: #2F4F6E;                 /* chữ xanh đậm */
+    border: 1px solid #B0C4DE;      /* viền nhẹ */
+    padding: 4px 8px;
+    font-size: 14px;
+    font-weight: bold;
+    selection-background-color: #D0E4F5; /* khi chọn item */
+}
+
+/* Drop-down list */
+QComboBox QAbstractItemView {
+    background-color: #FFFFFF;
+    color: #2F4F6E;
+    border: 1px solid #B0C4DE;
+    selection-background-color: #D0E4F5;
+}
+
+/* Hover khi trỏ vào QComboBox */
+QComboBox:hover {
+    border: 1px solid #5C87C9;
+}
+
+/* Khi mở drop-down */
+QComboBox:focus {
+    border: 1px solid #5C87C9;
+}
+QGroupBox {
+    border: 1px solid #B0C4DE;   /* viền nhẹ */
+    background-color: #FFFFFF;    /* nền trắng */
+    margin-top: 10px;
+    padding: 8px;
+    font-weight: bold;
+    font-size: 16px;
+}
+
+QGroupBox::title {
+    subcontrol-origin: margin;
+    left: 8px;                   /* khoảng cách từ viền trái */
+    padding: 0 4px;
+    color: #2F4F6E;              /* chữ xanh đậm */
+}
+
+
+
+/* ==================== SCROLLBAR ==================== */
+QScrollBar:vertical {
+    width: 12px;
+    background: #f0f0f0;
+    margin: 0;
+    border-radius: 0px;
+}
+QScrollBar::handle:vertical {
+    background: #b0b0b0;
+    min-height: 20px;
+    border-radius: 0px;
+}
+QScrollBar::handle:vertical:hover {
+    background: #909090;
+}
+QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
+    height: 0;
 }</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout_7">
@@ -40,62 +139,43 @@ QFrame #frame_3,
    <item>
     <widget class="QWidget" name="ftm_ProjectManager" native="true">
      <property name="styleSheet">
-      <string notr="true">QListWidget {
-    background: #ffffff;
-    border: 1px solid #cccccc;
-    font-family: &quot;Segoe UI&quot;, &quot;Roboto&quot;, sans-serif;
+      <string notr="true">/* Toàn bộ list widget */
+QListWidget {
+    background-color: #FFFFFF;      /* nền trắng */
+    color: #2F4F6E;                /* chữ xanh đậm */
+    border: 1px solid #B0C4DE;     /* viền nhẹ */
     font-size: 14px;
-    color: #222;
-    outline: none;
-    padding: 0px;
+    font-weight: bold;
+    padding: 2px;
 }
 
+/* Khi hover trên widget */
+QListWidget:hover {
+    border: 1px solid #74A9D8;
+}
+
+/* Khi focus widget */
+QListWidget:focus {
+    border: 1px solid #5C87C9;
+    background-color: #F9FBFF;
+}
+
+/* Item trong list */
 QListWidget::item {
-    background: #ffffff;
-    border: none;
-    padding: 10px 12px;      /* tăng chiều cao item */
-    margin: 0;
+    padding: 6px 10px;             /* khoảng cách chữ trong item */
+    height: 30px;                  /* tăng chiều cao item */
 }
 
+/* Item được chọn */
 QListWidget::item:selected {
-    background: #e6f0ff;
-    color: #003366;
+    background-color: #D0E4F5;      /* màu chọn */
+    color: #2F4F6E;
 }
 
+/* Item hover */
 QListWidget::item:hover {
-    background: #f5f9ff;
+    background-color: #E4F0FA;      /* màu hover */
 }
-
-/* ---- Scrollbar ---- */
-QScrollBar:vertical {
-    border: none;
-    background: #f0f0f0;
-    width: 18px;              /* to hơn mặc định */
-    margin: 0px;
-}
-
-QScrollBar::handle:vertical {
-    background: #c0c0c0;
-    min-height: 30px;
-    border-radius: 6px;
-}
-
-QScrollBar::handle:vertical:hover {
-    background: #a6a6a6;
-}
-
-QScrollBar::add-line:vertical,
-QScrollBar::sub-line:vertical {
-    height: 0px;              /* bỏ nút mũi tên */
-}
-
-QScrollBar::add-page:vertical,
-QScrollBar::sub-page:vertical {
-    background: none;
-}
-
-
-
 </string>
      </property>
      <layout class="QVBoxLayout" name="verticalLayout_6">
@@ -117,13 +197,11 @@ QScrollBar::sub-page:vertical {
       <item>
        <widget class="QWidget" name="widget_7" native="true">
         <layout class="QHBoxLayout" name="horizontalLayout_5" stretch="2,2,3">
-         <property name="bottomMargin">
-          <number>20</number>
-         </property>
          <item>
           <widget class="QGroupBox" name="groupBox">
            <property name="font">
             <font>
+             <pointsize>-1</pointsize>
              <weight>75</weight>
              <bold>true</bold>
             </font>
@@ -133,6 +211,9 @@ QScrollBar::sub-page:vertical {
            </property>
            <layout class="QVBoxLayout" name="verticalLayout">
             <property name="leftMargin">
+             <number>0</number>
+            </property>
+            <property name="topMargin">
              <number>0</number>
             </property>
             <property name="rightMargin">
@@ -167,7 +248,7 @@ QScrollBar::sub-page:vertical {
              <widget class="QWidget" name="widget_3" native="true">
               <layout class="QVBoxLayout" name="verticalLayout_5">
                <property name="topMargin">
-                <number>0</number>
+                <number>6</number>
                </property>
                <property name="bottomMargin">
                 <number>0</number>
@@ -232,7 +313,9 @@ border-radius: 20px; </string>
                     </property>
                     <property name="font">
                      <font>
-                      <pointsize>15</pointsize>
+                      <pointsize>-1</pointsize>
+                      <weight>75</weight>
+                      <bold>true</bold>
                      </font>
                     </property>
                     <property name="styleSheet">
@@ -344,11 +427,7 @@ border-radius: 20px; </string>
              </widget>
             </item>
             <item>
-             <widget class="QListWidget" name="lstProject">
-              <property name="styleSheet">
-               <string notr="true">border: none;</string>
-              </property>
-             </widget>
+             <widget class="QListWidget" name="lstProject"/>
             </item>
            </layout>
           </widget>
@@ -357,6 +436,7 @@ border-radius: 20px; </string>
           <widget class="QGroupBox" name="groupBox_2">
            <property name="font">
             <font>
+             <pointsize>-1</pointsize>
              <weight>75</weight>
              <bold>true</bold>
             </font>
@@ -366,6 +446,9 @@ border-radius: 20px; </string>
            </property>
            <layout class="QVBoxLayout" name="verticalLayout_2">
             <property name="leftMargin">
+             <number>0</number>
+            </property>
+            <property name="topMargin">
              <number>0</number>
             </property>
             <property name="rightMargin">
@@ -477,7 +560,9 @@ border-radius: 20px; </string>
                     </property>
                     <property name="font">
                      <font>
-                      <pointsize>15</pointsize>
+                      <pointsize>-1</pointsize>
+                      <weight>75</weight>
+                      <bold>true</bold>
                      </font>
                     </property>
                     <property name="styleSheet">
@@ -631,11 +716,17 @@ border-radius: 20px; </string>
              </widget>
             </item>
             <item>
-             <widget class="QListWidget" name="lstJob">
-              <property name="styleSheet">
-               <string notr="true">border: none;</string>
+             <widget class="QListWidget" name="lstJobInfo">
+              <property name="maximumSize">
+               <size>
+                <width>16777215</width>
+                <height>200</height>
+               </size>
               </property>
              </widget>
+            </item>
+            <item>
+             <widget class="QListWidget" name="lstJob"/>
             </item>
            </layout>
           </widget>
@@ -644,130 +735,87 @@ border-radius: 20px; </string>
           <widget class="QGroupBox" name="groupBox_3">
            <property name="font">
             <font>
+             <pointsize>-1</pointsize>
              <weight>75</weight>
              <bold>true</bold>
             </font>
            </property>
            <property name="title">
-            <string>Work Order</string>
+            <string>Job Detail</string>
            </property>
-           <layout class="QVBoxLayout" name="verticalLayout_9" stretch="2,3">
-            <property name="spacing">
-             <number>9</number>
-            </property>
-            <property name="leftMargin">
-             <number>0</number>
-            </property>
-            <property name="topMargin">
-             <number>20</number>
-            </property>
-            <property name="rightMargin">
-             <number>0</number>
-            </property>
-            <property name="bottomMargin">
-             <number>0</number>
-            </property>
+           <layout class="QVBoxLayout" name="verticalLayout_3">
             <item>
              <widget class="QWidget" name="widget_11" native="true">
-              <property name="maximumSize">
-               <size>
-                <width>16777215</width>
-                <height>320</height>
-               </size>
-              </property>
-              <layout class="QVBoxLayout" name="verticalLayout_8">
-               <property name="leftMargin">
-                <number>0</number>
-               </property>
+              <layout class="QVBoxLayout" name="verticalLayout_9">
                <property name="topMargin">
-                <number>0</number>
-               </property>
-               <property name="rightMargin">
                 <number>0</number>
                </property>
                <property name="bottomMargin">
                 <number>0</number>
                </property>
                <item>
-                <widget class="QListWidget" name="lstJobDetail">
-                 <property name="styleSheet">
-                  <string notr="true">border: none;</string>
-                 </property>
-                </widget>
-               </item>
-               <item>
-                <widget class="QWidget" name="widget_14" native="true">
-                 <layout class="QHBoxLayout" name="horizontalLayout_10">
-                  <property name="leftMargin">
-                   <number>0</number>
-                  </property>
+                <widget class="QWidget" name="widget_18" native="true">
+                 <layout class="QHBoxLayout" name="horizontalLayout_15">
                   <property name="topMargin">
-                   <number>0</number>
-                  </property>
-                  <property name="rightMargin">
                    <number>0</number>
                   </property>
                   <property name="bottomMargin">
                    <number>0</number>
                   </property>
                   <item>
-                   <widget class="QPushButton" name="btnAdd">
+                   <widget class="QPushButton" name="btnOpenItem">
                     <property name="minimumSize">
                      <size>
-                      <width>0</width>
+                      <width>40</width>
                       <height>40</height>
                      </size>
                     </property>
                     <property name="maximumSize">
                      <size>
-                      <width>150</width>
+                      <width>40</width>
                       <height>40</height>
                      </size>
                     </property>
-                    <property name="font">
-                     <font>
-                      <pointsize>12</pointsize>
-                     </font>
-                    </property>
-                    <property name="text">
-                     <string>Schedule</string>
-                    </property>
                     <property name="icon">
                      <iconset resource="resource.qrc">
-                      <normaloff>:/icon/icon/check.png</normaloff>:/icon/icon/check.png</iconset>
+                      <normaloff>:/icon/icon/visual.png</normaloff>:/icon/icon/visual.png</iconset>
+                    </property>
+                    <property name="iconSize">
+                     <size>
+                      <width>32</width>
+                      <height>32</height>
+                     </size>
                     </property>
                    </widget>
                   </item>
                   <item>
-                   <widget class="QPushButton" name="btnRemove">
+                   <widget class="QPushButton" name="btnDeleteItem">
                     <property name="minimumSize">
                      <size>
-                      <width>0</width>
+                      <width>40</width>
                       <height>40</height>
                      </size>
                     </property>
                     <property name="maximumSize">
                      <size>
-                      <width>150</width>
+                      <width>40</width>
                       <height>40</height>
                      </size>
                     </property>
-                    <property name="font">
-                     <font>
-                      <pointsize>12</pointsize>
-                     </font>
-                    </property>
-                    <property name="text">
-                     <string>Unschedule</string>
-                    </property>
                     <property name="icon">
                      <iconset resource="resource.qrc">
-                      <normaloff>:/icon/icon/multiplication.png</normaloff>:/icon/icon/multiplication.png</iconset>
+                      <normaloff>:/icon/icon/delete.png</normaloff>:/icon/icon/delete.png</iconset>
+                    </property>
+                    <property name="iconSize">
+                     <size>
+                      <width>32</width>
+                      <height>32</height>
+                     </size>
                     </property>
                    </widget>
                   </item>
                   <item>
-                   <spacer name="horizontalSpacer_3">
+                   <spacer name="horizontalSpacer_5">
                     <property name="orientation">
                      <enum>Qt::Horizontal</enum>
                     </property>
@@ -786,40 +834,47 @@ border-radius: 20px; </string>
              </widget>
             </item>
             <item>
+             <widget class="QListWidget" name="lstJobDetail"/>
+            </item>
+            <item>
              <widget class="QWidget" name="widget" native="true">
-              <layout class="QVBoxLayout" name="verticalLayout_3">
-               <property name="leftMargin">
-                <number>0</number>
-               </property>
-               <property name="topMargin">
-                <number>0</number>
-               </property>
-               <property name="rightMargin">
-                <number>0</number>
-               </property>
-               <property name="bottomMargin">
-                <number>0</number>
-               </property>
+              <layout class="QHBoxLayout" name="horizontalLayout_7">
                <item>
-                <widget class="QLabel" name="label_6">
-                 <property name="font">
-                  <font>
-                   <weight>75</weight>
-                   <bold>true</bold>
-                  </font>
+                <spacer name="horizontalSpacer_3">
+                 <property name="orientation">
+                  <enum>Qt::Horizontal</enum>
                  </property>
-                 <property name="styleSheet">
-                  <string notr="true">padding-left:10px;</string>
+                 <property name="sizeHint" stdset="0">
+                  <size>
+                   <width>40</width>
+                   <height>20</height>
+                  </size>
+                 </property>
+                </spacer>
+               </item>
+               <item>
+                <widget class="QPushButton" name="btnOk">
+                 <property name="minimumSize">
+                  <size>
+                   <width>0</width>
+                   <height>30</height>
+                  </size>
                  </property>
                  <property name="text">
-                  <string>Active Work Orders</string>
+                  <string>Compare</string>
                  </property>
                 </widget>
                </item>
                <item>
-                <widget class="QListWidget" name="lstJobActive">
-                 <property name="styleSheet">
-                  <string notr="true">border: none;</string>
+                <widget class="QPushButton" name="btnCancel">
+                 <property name="minimumSize">
+                  <size>
+                   <width>0</width>
+                   <height>30</height>
+                  </size>
+                 </property>
+                 <property name="text">
+                  <string>Close</string>
                  </property>
                 </widget>
                </item>

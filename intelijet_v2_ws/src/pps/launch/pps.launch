@@ -29,11 +29,11 @@
 
 	<!--Interlacing process for sickscan LMS511 when it operates in interlaced mode-->
 	<!-- <node pkg="pps" name="sickscan_interlate_process_node" type="sickscan_interlate_process_node.py" /> -->
+	<!-- <node pkg="pps" name="sickscan_interlate_process_node2" type="sickscan_interlate_process_node2.py" /> -->
 
 	<!-- Laser assembler Service-->
 	<node pkg="laser_assembler" type="point_cloud2_assembler" name="assembler_node" output="screen">
 		<param name="frame_id" value="LMS_511_scan_plane"/>
-
 		<!-- <remap from="/cloud" to="/cloud_interlaced"/> -->
 		<param name="fixed_frame" type="string" value="base_link" />
 		<param name="max_clouds" type="int" value="6000" />
@@ -41,9 +41,7 @@
 		<param name="downsample_factor" type="int" value="1" />
   	</node>
 
-
 	<!-- RVIZ <node pkg="rviz" type="rviz" name="rviz" args="-d $(find pps)/launch/rviz/scanner.rviz"/>-->
-	
 
 
 	<!-- CANNER HOUSING Load URDF -->
@@ -65,9 +63,7 @@
 		pkg="rosbag"
 		type="record"
 		output="screen"
-		args="-O /root/intelijet_v2/data/bag_250818.bag /cloud /joint_states" />
- -->
-
+		args="-O /root/intelijet_v2/data/bag_20251124.bag /cloud /scan /joint_states" /> -->
 
 
 </launch>
