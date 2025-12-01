@@ -43,7 +43,7 @@ class CloudProcessorNode:
         rospy.spin()
 
     def process_cloud(self, msg: PointCloud2, rgb=[255,255,255]) -> PointCloud2:
-
+        from pps.data_converter import cloudconverter
         # Chuyển sang numpy
         cloud = ros_numpy.point_cloud2.pointcloud2_to_xyz_array(msg, remove_nans=True)
         cloud_o3d = o3d.geometry.PointCloud()
@@ -51,15 +51,15 @@ class CloudProcessorNode:
 
         # aabb = o3d.geometry.AxisAlignedBoundingBox(min_bound, max_bound)
         # cloud_cropped = cloud_o3d.crop(aabb)
-
-        result = crop_pointcloud_by_box(pcd=cloud_o3d, box_type='aabb', 
+        cloud_o3d = cloud_o3d.remove_non_finite_points()
+        
+        cloud_o3d = crop_pointcloud_by_box(pcd=cloud_o3d, box_type='aabb', 
                                         min_bound=[cfg.crop_box.min.x, cfg.crop_box.min.y, cfg.crop_box.min.z], 
                                         max_bound=[cfg.crop_box.max.x, cfg.crop_box.max.y, cfg.crop_box.max.z])
         
-        
-        tunnel = TunnelProcessing(result)
+        cloud_o3d = cloud_o3d.voxel_down_sample_spatial(voxel_size=0.015)
+        tunnel = TunnelProcessing(cloud_o3d)
         result = tunnel.run_processing_pipeline()
-
         return convert_open3d_to_pointcloud2(result, frame_id=msg.header.frame_id,rgb=rgb)
 
 

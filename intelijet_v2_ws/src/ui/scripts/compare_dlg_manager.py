@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+import sys
+import time
 import os
 import shutil
 import json
@@ -6,8 +8,10 @@ import re
 
 from datetime import datetime
 from PyQt5 import QtCore
-from PyQt5.QtWidgets import QWidget, QInputDialog, QMessageBox, QListWidgetItem,QCheckBox,QLabel, QListWidget
-from PyQt5.QtCore import pyqtSignal
+from PyQt5.QtWidgets import QMessageBox, QListWidgetItem,QScroller, QScrollerProperties, QApplication, QListWidget, QAbstractItemView
+from PyQt5.QtCore import pyqtSignal, Qt, QEvent, QTimer, QPointF, QObject
+
+
 
 from ui.compare_dlg_ui import Ui_frm_MainForm
 from shared.config_loader import CONFIG as cfg
@@ -393,3 +397,5 @@ class CompareManager(QDialog, Ui_frm_MainForm):
         o3d_cloud = cloudconverter.load_ply(filepath)
         if o3d_cloud is not None:
             self.polydataSignal.emit(o3d_cloud)
+
+

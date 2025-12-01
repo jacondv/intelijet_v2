@@ -566,14 +566,16 @@ class TunnelProcessing:
 
 
     def run_processing_pipeline(self):
+
+   
         FRONT_BOX = [(0, -5.0, -0.5), 
                      (3.5, 5.0, 8.0)]
         BACK_BOX = [(4.0, -5.0, 0.0), 
                     (11.0, 5.0, 8.0)]
         LEFT_BOX = [(2.5, 0.0, -0.5), 
-                    (11.0, 5.0, 8.0)]
+                    (8.0, 5.0, 8.0)]
         RIGHT_BOX = [(2.5, -5.0, -0.5), 
-                    (11.0, 0.0, 8.0)]
+                    (8.0, 0.0, 8.0)]
         BOTTOM_BOX = [(2.5, -5.0, -1.5), 
                       (11.0, 5.0, 1.5)]
         TOP_BOX = [(2.5, -5.0, 4.0), 
@@ -644,6 +646,7 @@ class TunnelProcessing:
         ]
         print(minbound, maxbound)
         cloud = self.crop(pcd=self.pcd, min_bound=minbound, max_bound=maxbound, normal=self.ground_plane_normal)
+
         return cloud
 
 

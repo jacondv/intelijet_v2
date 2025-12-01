@@ -413,67 +413,68 @@ class CloudConverter:
         
                 
     @staticmethod
-    def voxel_down_sample_spatial(pcd_tensor, voxel_size):
-        """
-        Downsample Open3D Tensor PointCloud bằng voxel grid, sau đó loại bỏ các điểm quá gần nhau theo min_dist.
-        Giữ colors và distances trung bình, kết hợp KDTree lọc khoảng cách tối thiểu.
-        
-        Args:
-            pcd_tensor: o3d.t.geometry.PointCloud
-            voxel_size: float, kích thước voxel
-            min_dist: float, khoảng cách tối thiểu giữa các điểm trong cloud
-        
-        Returns:
-            o3d.t.geometry.PointCloud: point cloud đã downsample
-        """
+    def voxel_down_sample_spatial(pcd, voxel_size):
+
         import open3d as o3d
         from scipy.spatial import cKDTree
 
-        device = pcd_tensor.device
-        min_dist = 0.9*voxel_size
-        # --- 1. Chuyển tensor sang numpy ---
-        points = pcd_tensor.point.positions.cpu().numpy().reshape(-1,3).astype(np.float64)
+        """
+        Downsample PointCloud bằng voxel grid, loại bỏ các điểm quá gần nhau theo min_dist.
+        Giữ trung bình tất cả các field có trong point cloud.
 
-        colors = None
-        if "colors" in pcd_tensor.point:
-            colors = pcd_tensor.point.colors.cpu().numpy().reshape(-1,3).astype(np.float64)
+        Args:
+            pcd: o3d.geometry.PointCloud hoặc o3d.t.geometry.PointCloud
+            voxel_size: float, kích thước voxel
 
-        distances = None
-        if "distances" in pcd_tensor.point:
-            distances = pcd_tensor.point["distances"].cpu().numpy()
-            if distances.ndim == 1:
-                distances = distances.reshape(-1,1)
+        Returns:
+            PointCloud đã downsample (giữ dạng tensor nếu input là tensor)
+        """
+        is_tensor = isinstance(pcd, o3d.t.geometry.PointCloud)
+        device = pcd.device if is_tensor else None
+
+        # --- 1. Lấy tất cả các field ---
+        data_dict = {}
+        if is_tensor:
+            fields = list(pcd.point)  # tất cả các field tensor
+            for f in fields:
+                data_dict[f] = pcd.point[f].cpu().numpy()
+        else:
+            # positions luôn có
+            data_dict["positions"] = np.asarray(pcd.points)
+            # colors
+            if pcd.has_colors():
+                data_dict["colors"] = np.asarray(pcd.colors)
+            # normals
+            if pcd.has_normals():
+                data_dict["normals"] = np.asarray(pcd.normals)
+            # các field khác nếu có thể tự xác định từ file PLY sẽ cần chuyển sang tensor trước
+
+        points = data_dict["positions"].reshape(-1,3).astype(np.float64)
+        min_dist = 0.9 * voxel_size
 
         # --- 2. Tạo voxel index ---
         voxel_idx = np.floor(points / voxel_size).astype(np.int64)
-
-        # --- 3. Lấy unique voxel và mapping point->voxel ---
         keys, inverse = np.unique(voxel_idx, axis=0, return_inverse=True)
         num_voxels = keys.shape[0]
 
-        # --- 4. Tính trung bình positions vectorized ---
+        # --- 3. Downsample positions ---
         sum_points = np.zeros((num_voxels,3), dtype=np.float64)
         count = np.zeros((num_voxels,1), dtype=np.int64)
         np.add.at(sum_points, inverse, points)
         np.add.at(count, inverse, 1)
         down_points = sum_points / count
 
-        # --- 5. Tính trung bình colors vectorized ---
-        down_colors = None
-        if colors is not None:
-            sum_colors = np.zeros((num_voxels,3), dtype=np.float64)
-            np.add.at(sum_colors, inverse, colors)
-            down_colors = sum_colors / count
+        # --- 4. Downsample các field khác ---
+        down_fields = {}
+        for f, arr in data_dict.items():
+            if f == "positions":
+                continue
+            arr = arr.reshape(len(points), -1)
+            sum_arr = np.zeros((num_voxels, arr.shape[1]), dtype=np.float64)
+            np.add.at(sum_arr, inverse, arr)
+            down_fields[f] = sum_arr / count
 
-        # --- 6. Tính trung bình distances vectorized ---
-        down_distances = None
-        if distances is not None:
-            dist_dim = distances.shape[1]
-            sum_dist = np.zeros((num_voxels, dist_dim), dtype=np.float64)
-            np.add.at(sum_dist, inverse, distances)
-            down_distances = sum_dist / count
-
-        # --- 7. Lọc các điểm gần nhau bằng KDTree ---
+        # --- 5. Lọc các điểm gần nhau bằng KDTree ---
         tree = cKDTree(down_points)
         mask = np.ones(len(down_points), dtype=bool)
         selected = []
@@ -486,18 +487,111 @@ class CloudConverter:
 
         selected = np.array(selected, dtype=np.int64)
         final_points = down_points[selected]
-        final_colors = down_colors[selected] if down_colors is not None else None
-        final_distances = down_distances[selected] if down_distances is not None else None
+        final_fields = {f: arr[selected] for f, arr in down_fields.items()}
 
-        # --- 8. Tạo lại Tensor point cloud ---
-        new_pcd = o3d.t.geometry.PointCloud()
-        new_pcd.point.positions = o3d.core.Tensor(final_points, device=device)
-        if final_colors is not None:
-            new_pcd.point.colors = o3d.core.Tensor(final_colors, device=device)
-        if final_distances is not None:
-            new_pcd.point["distances"] = o3d.core.Tensor(final_distances, device=device)
+        # --- 6. Tạo PointCloud output ---
+        if is_tensor:
+            new_pcd = o3d.t.geometry.PointCloud()
+            new_pcd.point.positions = o3d.core.Tensor(final_points, device=device)
+            for f, arr in final_fields.items():
+                new_pcd.point[f] = o3d.core.Tensor(arr, device=device)
+        else:
+            new_pcd = o3d.geometry.PointCloud()
+            new_pcd.points = o3d.utility.Vector3dVector(final_points)
+            # cố gắng lưu colors và normals nếu có
+            if "colors" in final_fields:
+                new_pcd.colors = o3d.utility.Vector3dVector(final_fields["colors"])
+            if "normals" in final_fields:
+                new_pcd.normals = o3d.utility.Vector3dVector(final_fields["normals"])
+            # các field khác không hỗ trợ trên PointCloud thường
 
         return new_pcd
+
+    # def voxel_down_sample_spatial(pcd_tensor, voxel_size):
+    #     """
+    #     Downsample Open3D Tensor PointCloud bằng voxel grid, sau đó loại bỏ các điểm quá gần nhau theo min_dist.
+    #     Giữ colors và distances trung bình, kết hợp KDTree lọc khoảng cách tối thiểu.
+        
+    #     Args:
+    #         pcd_tensor: o3d.t.geometry.PointCloud
+    #         voxel_size: float, kích thước voxel
+    #         min_dist: float, khoảng cách tối thiểu giữa các điểm trong cloud
+        
+    #     Returns:
+    #         o3d.t.geometry.PointCloud: point cloud đã downsample
+    #     """
+    #     import open3d as o3d
+    #     from scipy.spatial import cKDTree
+
+    #     device = pcd_tensor.device
+    #     min_dist = 0.9*voxel_size
+    #     # --- 1. Chuyển tensor sang numpy ---
+    #     points = pcd_tensor.point.positions.cpu().numpy().reshape(-1,3).astype(np.float64)
+
+    #     colors = None
+    #     if "colors" in pcd_tensor.point:
+    #         colors = pcd_tensor.point.colors.cpu().numpy().reshape(-1,3).astype(np.float64)
+
+    #     distances = None
+    #     if "distances" in pcd_tensor.point:
+    #         distances = pcd_tensor.point["distances"].cpu().numpy()
+    #         if distances.ndim == 1:
+    #             distances = distances.reshape(-1,1)
+
+    #     # --- 2. Tạo voxel index ---
+    #     voxel_idx = np.floor(points / voxel_size).astype(np.int64)
+
+    #     # --- 3. Lấy unique voxel và mapping point->voxel ---
+    #     keys, inverse = np.unique(voxel_idx, axis=0, return_inverse=True)
+    #     num_voxels = keys.shape[0]
+
+    #     # --- 4. Tính trung bình positions vectorized ---
+    #     sum_points = np.zeros((num_voxels,3), dtype=np.float64)
+    #     count = np.zeros((num_voxels,1), dtype=np.int64)
+    #     np.add.at(sum_points, inverse, points)
+    #     np.add.at(count, inverse, 1)
+    #     down_points = sum_points / count
+
+    #     # --- 5. Tính trung bình colors vectorized ---
+    #     down_colors = None
+    #     if colors is not None:
+    #         sum_colors = np.zeros((num_voxels,3), dtype=np.float64)
+    #         np.add.at(sum_colors, inverse, colors)
+    #         down_colors = sum_colors / count
+
+    #     # --- 6. Tính trung bình distances vectorized ---
+    #     down_distances = None
+    #     if distances is not None:
+    #         dist_dim = distances.shape[1]
+    #         sum_dist = np.zeros((num_voxels, dist_dim), dtype=np.float64)
+    #         np.add.at(sum_dist, inverse, distances)
+    #         down_distances = sum_dist / count
+
+    #     # --- 7. Lọc các điểm gần nhau bằng KDTree ---
+    #     tree = cKDTree(down_points)
+    #     mask = np.ones(len(down_points), dtype=bool)
+    #     selected = []
+
+    #     for i, p in enumerate(down_points):
+    #         if mask[i]:
+    #             selected.append(i)
+    #             idxs = tree.query_ball_point(p, min_dist)
+    #             mask[idxs] = False
+
+    #     selected = np.array(selected, dtype=np.int64)
+    #     final_points = down_points[selected]
+    #     final_colors = down_colors[selected] if down_colors is not None else None
+    #     final_distances = down_distances[selected] if down_distances is not None else None
+
+    #     # --- 8. Tạo lại Tensor point cloud ---
+    #     new_pcd = o3d.t.geometry.PointCloud()
+    #     new_pcd.point.positions = o3d.core.Tensor(final_points, device=device)
+    #     if final_colors is not None:
+    #         new_pcd.point.colors = o3d.core.Tensor(final_colors, device=device)
+    #     if final_distances is not None:
+    #         new_pcd.point["distances"] = o3d.core.Tensor(final_distances, device=device)
+
+    #     return new_pcd
 
 # ------------------------------------------------------------------------------
 
