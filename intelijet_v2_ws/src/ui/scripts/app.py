@@ -342,7 +342,9 @@ class App(QMainWindow):
                     job_name= job_name,
                     applied_thickness = job_info.parameters.get("target_thickness", 10),
                     tolerance = job_info.parameters.get("tolerance", 10),
-                    operator = "Unknown"
+                    operator = "Unknown",
+                    date = dt.strftime("%d/%m/%Y") if dt else None,
+                    time = tt.strftime("%H:%M:%S") if tt else None
                 )
             else:
                 report.set_info(
@@ -350,7 +352,10 @@ class App(QMainWindow):
                     job_name= job_name,
                     applied_thickness = 40,
                     tolerance = 10,
-                    operator = "Unknown"
+                    operator = "Unknown",
+                    date = dt.strftime("%d/%m/%Y") if dt else None,
+                    time = tt.strftime("%H:%M:%S") if tt else None
+                    
                 )
             
             if filename.lower().endswith(".ply"):

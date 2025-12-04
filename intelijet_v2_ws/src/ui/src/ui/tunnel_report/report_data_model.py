@@ -120,7 +120,8 @@ class ReportData:
             "time": self.time,
             "shotcrete_volume": self.shotcrete_volume,
             "tunnel_view_uri": self.tunnel_view,
-            "thickness_chart_uri": self.thickness_chart
+            "thickness_chart_uri": self.thickness_chart,
+            "create_date": datetime.now().strftime("%Y-%m-%d %H:%M")
         }
         return data
 

@@ -29,7 +29,6 @@ class ReportGenerator:
         self.create_date = datetime.now().strftime("%d/%m/%Y")
         self.operator=operator
 
-
     def get_info(self) -> dict:
         return {
             "site_name": self.site_name,
@@ -38,7 +37,8 @@ class ReportGenerator:
             "tolerance": self.tolerance,
             "date": self.date,
             "time": self.time,
-            "create_date": self.create_date
+            "create_date": self.create_date,
+            self.operator:"Unknown"
         }
 
 
@@ -98,8 +98,7 @@ class ReportGenerator:
             tunnel_view=tunnel_view_img,
             thickness_chart=thickness_chart_img,
             date=date,
-            time=time,
-            create_date=self.create_date
+            time=time
         )
     
         self.create_pdf(report_data=data.to_json(), output_path=output_path, debug_html=False)
