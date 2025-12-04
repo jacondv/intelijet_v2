@@ -51,17 +51,22 @@ class CloudProcessorNode:
 
         # aabb = o3d.geometry.AxisAlignedBoundingBox(min_bound, max_bound)
         # cloud_cropped = cloud_o3d.crop(aabb)
+
+        # Remove non finite points
         cloud_o3d = cloud_o3d.remove_non_finite_points()
-        
+        # Crop by box 
         cloud_o3d = crop_pointcloud_by_box(pcd=cloud_o3d, box_type='aabb', 
                                         min_bound=[cfg.crop_box.min.x, cfg.crop_box.min.y, cfg.crop_box.min.z], 
                                         max_bound=[cfg.crop_box.max.x, cfg.crop_box.max.y, cfg.crop_box.max.z])
         
-        cloud_o3d = cloud_o3d.voxel_down_sample_spatial(voxel_size=0.015)
+        #Downsample
+        cloud_o3d = cloud_o3d.vocel_down_sample(voxel_size=0.015)
+        cloud_o3d = cloudconverter.voxel_down_sample_spatial(voxel_size=0.015)
+        # Auto crop boundary
         tunnel = TunnelProcessing(cloud_o3d)
         result = tunnel.run_processing_pipeline()
+        # Cloud after process
         return convert_open3d_to_pointcloud2(result, frame_id=msg.header.frame_id,rgb=rgb)
-
 
     def callback_pres(self, msg):
         rospy.loginfo("Received /pre_scan_0")

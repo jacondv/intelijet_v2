@@ -80,11 +80,7 @@ class CloudComparer:
         # Thực hiện xử lý màu hóa theo khoảng cách
         result, dists = compute_heatmap_to_plane(post, pres, k=6, 
                                                  target_thickness=self.target_thickness, 
-                                                 tolerance_thickness=self.tolerance_thickness)
-
-        # tunnel = TunnelProcessing()
-        # result = tunnel.run_upsample(result, axis='x', min_gap=0.02,max_gap=0.5)
-        
+                                                 tolerance_thickness=self.tolerance_thickness)       
         return result
     
     
