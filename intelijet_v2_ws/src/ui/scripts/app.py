@@ -2,6 +2,7 @@
 import os
 #allow create file with full permission
 os.umask(0)
+from pathlib import Path
 
 import re
 import time
@@ -34,6 +35,7 @@ from ui.tunnel_report.report_controler import ReportGenerator
 
 from shared.config_loader import CONFIG as cfg
 
+
 BASE_DIR = cfg.BASE_DIR
 CLOUD_COMPARED_TOPIC = cfg.CLOUD_COMPARED_TOPIC
 POST_SCAN_CLOUD_TOPIC = cfg.POST_SCAN_CLOUD_TOPIC
@@ -57,6 +59,7 @@ class App(QMainWindow):
         # --- UI chính ---
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
+
         self.ui.tab_mainview.setCurrentIndex(0)
 
         # --- Tab Setting ---
@@ -158,7 +161,7 @@ class App(QMainWindow):
         load_config_to_ui(self.ui.tab_setting)
 
         # --- Show main window ---
-        self.showMaximized()
+        # self.showMaximized()
         # polydata = self.__load_sample()
         # if polydata:
         #     self.vtk_viewer.update(polydata)
@@ -167,7 +170,6 @@ class App(QMainWindow):
 
         #Load ui state
         self.load_ui_state()
-
 
     # Setting parameter
     def save_ui_state(self):
@@ -303,9 +305,10 @@ class App(QMainWindow):
 
 
     #5.0 -- Manual export report handler---
-    def on_manual_export_report(self, data,filename):
-        if self.ui.cbbAutoReport.currentIndex() == 1:
+    def on_manual_export_report(self, data, filename):
+        if self.ui.cbbAutoReport.currentText().lower() == 'off':
             return # Auto report is off.
+
         self.export_report(data, filename)
 
     # 5.1--- Export report after compare done---
@@ -316,9 +319,11 @@ class App(QMainWindow):
             
             report = ReportGenerator()
             job_folder = os.path.dirname(filename)
-            project_name = os.path.basename(job_folder) 
+            project_name = os.path.basename(os.path.dirname(job_folder)) 
+            
             basename = os.path.basename(filename)
             basename_parts = basename.split("#")
+
             job_name = basename_parts[0] if len(basename_parts) > 0 else "Unknown"    
             
             try:
@@ -347,7 +352,7 @@ class App(QMainWindow):
                     tolerance = 10,
                     operator = "Unknown"
                 )
-
+            
             if filename.lower().endswith(".ply"):
                 filename = filename.replace(".ply",".pdf")
                 
@@ -381,10 +386,9 @@ class App(QMainWindow):
             if pre is None or post is None:
                 return
             
-            
             cloud_compare.set_prescan(pre)
             cloud_compare.set_postscan(post)
-            if self.ui.cbbAutoAlign.currentIndex() == 0:
+            if self.ui.cbbAutoAlign.currentText().lower() == "on":
                 cloud_compare.align()
             cloud_compare.compare() #--> output signal compare_done the cloud result.
 
@@ -570,7 +574,18 @@ class App(QMainWindow):
             comboBox.addItem(display_text, job)  # lưu dict job vào data
 
 if __name__ == "__main__":
+    # from keyboard_full_manager import FullKeyboard
+    # from PyQt5.QtWidgets import QLineEdit, QTextEdit, QPlainTextEdit
+
+    
+
     app = QApplication(sys.argv)
+    # Load style QSS tại đây
+    # with open("app.qss") as f:
+    #     app.setStyleSheet(f.read())
+
+
     viewer = App()
+    viewer.showMaximized()
     sys.exit(app.exec_())
 

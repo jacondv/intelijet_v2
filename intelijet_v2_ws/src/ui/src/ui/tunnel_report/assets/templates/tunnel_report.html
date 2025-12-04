@@ -126,7 +126,7 @@
             <td>{{ data.applied_thickness }} (mm) ±{{ data.tolerance }} mm</td>
         </tr>
         <tr>
-            <th>Jobname</th>
+            <th>Job name</th>
             <td>{{ data.job_name }}</td>
             <th>Average Thickness</th>
             <td>{{ data.avg_thickness }} (mm)</td>
@@ -162,12 +162,26 @@
     </div>
 
     <!-- FOOTER -->
-    <div class="footer">
-        <div class="signature">
-            <div class="signature-line">Authorized Signature</div>
-        </div>
-        <div style="margin-top: 60px; text-align: right;">
-            Date: {{ date }}
+    <div class="footer" style="margin-top: 80px;">
+        <div style="display: flex; justify-content: space-between; align-items: flex-end;">
+
+            <!-- LEFT: Signature block -->
+            <div style="width: 45%;">
+                <div style="border-top: 1px solid #000; height: 60px; margin-bottom: 5px;"></div>
+                <div style="font-size: 14px; text-align: left;">
+                    Authorized Signature
+                </div>
+
+                <div style="margin-top: 10px; border-top: 1px dashed #777; width: 70%; padding-top: 3px;">
+                    <span style="font-size: 13px; color: #333;">Printed Name</span>
+                </div>
+            </div>
+
+            <!-- RIGHT: Date -->
+            <div style="text-align: right; font-size: 14px;">
+                Date: {{ create_date }}
+            </div>
+
         </div>
     </div>
 

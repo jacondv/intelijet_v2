@@ -16,6 +16,7 @@ class ReportGenerator:
         self.tolerance=10
         self.date = datetime.now().strftime("%d/%m/%Y")
         self.time = datetime.now().strftime("%H:%M:%S")
+        self.create_date = datetime.now().strftime("%d/%m/%Y")
 
 
     def set_info(self, site_name="Unknown", job_name="Unknown",operator="Unknown",date=None, time=None,applied_thickness=30,tolerance=10):
@@ -25,6 +26,7 @@ class ReportGenerator:
         self.tolerance=tolerance
         self.date = date or self.date
         self.time = time or self.time
+        self.create_date = datetime.now().strftime("%d/%m/%Y")
         self.operator=operator
 
 
@@ -35,7 +37,8 @@ class ReportGenerator:
             "applied_thickness": self.applied_thickness,
             "tolerance": self.tolerance,
             "date": self.date,
-            "time": self.time
+            "time": self.time,
+            "create_date": self.create_date
         }
 
 
@@ -95,7 +98,8 @@ class ReportGenerator:
             tunnel_view=tunnel_view_img,
             thickness_chart=thickness_chart_img,
             date=date,
-            time=time
+            time=time,
+            create_date=self.create_date
         )
     
         self.create_pdf(report_data=data.to_json(), output_path=output_path, debug_html=False)
