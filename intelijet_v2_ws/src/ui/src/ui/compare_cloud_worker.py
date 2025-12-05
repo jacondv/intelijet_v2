@@ -61,6 +61,23 @@ class CloudManager(QObject):
                 self.post_filename="None"
                 self.post_cloud = file
 
+    def auto_crop(self):
+        # Crop, remove ground side and back side wall
+        def __auto_crop(cloud_o3d):
+            #Downsample
+            cloud_o3d = cloud_o3d.vocel_down_sample(voxel_size=0.015)
+            cloud_o3d = cloudconverter.voxel_down_sample_spatial(voxel_size=0.015)
+            # Auto crop boundary
+            tunnel = TunnelProcessing(cloud_o3d)
+            result = tunnel.run_processing_pipeline()
+            return result
+
+        with self.lock:
+            if self.pre_cloud is not None:
+                self.pre_cloud = __auto_crop(self.pre_cloud)
+            if self.post_cloud is not None:
+                self.post_cloud = __auto_crop(self.post_cloud)
+
 
     def align(self):
         from pps.cloud_processing.align_manager import PointCloudAlignerManager
@@ -125,7 +142,7 @@ class CloudManager(QObject):
                     # cloud_compared = smooth_cloud(cloud_compared, k=8, m=2, threshold=20.0)
                     # cloud_compared = assign_colors(cloud_compared, highlight_range=[20,40])
                     cloud_compared_upsample = tunnel.run_upsample(cloud_compared)
-                    self.compare_done.emit(cloud_compared_upsample, self.post_filename)
+                    self.compare_done.emit(cloud_compared, self.post_filename)
                     self.compare_done2.emit(cloud_compared_upsample, self.post_filename)
 
                     # from ui.tunnel_report.report_data_model import ReportHeader

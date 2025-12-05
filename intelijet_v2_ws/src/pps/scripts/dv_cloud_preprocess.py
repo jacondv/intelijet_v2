@@ -48,7 +48,6 @@ class CloudProcessorNode:
         cloud = ros_numpy.point_cloud2.pointcloud2_to_xyz_array(msg, remove_nans=True)
         cloud_o3d = o3d.geometry.PointCloud()
         cloud_o3d.points = o3d.utility.Vector3dVector(cloud)
-
         # aabb = o3d.geometry.AxisAlignedBoundingBox(min_bound, max_bound)
         # cloud_cropped = cloud_o3d.crop(aabb)
 
@@ -60,8 +59,8 @@ class CloudProcessorNode:
                                         max_bound=[cfg.crop_box.max.x, cfg.crop_box.max.y, cfg.crop_box.max.z])
         
         #Downsample
-        cloud_o3d = cloud_o3d.vocel_down_sample(voxel_size=0.015)
-        cloud_o3d = cloudconverter.voxel_down_sample_spatial(voxel_size=0.015)
+        
+        cloud_o3d = cloudconverter.voxel_down_sample_spatial(cloud_o3d, voxel_size=0.015)
         # Auto crop boundary
         tunnel = TunnelProcessing(cloud_o3d)
         result = tunnel.run_processing_pipeline()
