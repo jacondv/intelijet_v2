@@ -589,33 +589,13 @@ class App(QMainWindow):
             comboBox.addItem(display_text, job)  # lưu dict job vào data
 
 if __name__ == "__main__":
-    # from keyboard_full_manager import FullKeyboard
-    # from PyQt5.QtWidgets import QLineEdit, QTextEdit, QPlainTextEdit
-
-    
 
     app = QApplication(sys.argv)
     # Load style QSS tại đây
-    # with open("app.qss") as f:
-    #     app.setStyleSheet(f.read())
-    app.setStyleSheet("""
-        QMessageBox {
-            font-size: 24px;
-            min-width: 500px;
-        }
-        QMessageBox QLabel {
-            font-size: 24px;
-            min-height: 40px;
-        }
-        QMessageBox QPushButton {
-            font-size: 20px;
-            padding: 10px 20px;
-            min-height: 45px;
-            min-width: 120px;
-        }
-    """)
+    
+    with open(f"{BASE_DIR}/intelijet_v2_ws/src/ui/src/ui/app.qss") as f:
+        app.setStyleSheet(f.read())
 
     viewer = App()
     viewer.showMaximized()
     sys.exit(app.exec_())
-

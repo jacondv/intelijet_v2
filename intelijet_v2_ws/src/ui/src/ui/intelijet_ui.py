@@ -121,6 +121,12 @@ class Ui_MainWindow(object):
 "    border: 1px solid #B0C4DE;\n"
 "    selection-background-color: #D0E4F5;\n"
 "}\n"
+"QComboBox QAbstractItemView::item {\n"
+"    min-height: 60px;\n"
+"    padding-top: 6px;\n"
+"    padding-bottom: 6px;\n"
+"}\n"
+"\n"
 "\n"
 "/* Hover khi trỏ vào QComboBox */\n"
 "QComboBox:hover {\n"
@@ -366,20 +372,29 @@ class Ui_MainWindow(object):
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.cbbJobSelect.sizePolicy().hasHeightForWidth())
         self.cbbJobSelect.setSizePolicy(sizePolicy)
-        self.cbbJobSelect.setMinimumSize(QtCore.QSize(0, 60))
+        self.cbbJobSelect.setMinimumSize(QtCore.QSize(0, 0))
         self.cbbJobSelect.setStyleSheet("QComboBox {\n"
 "    border: 1px solid #60a3bc;\n"
 "    padding: 6px 10px;\n"
 "    font-size: 24px;\n"
-"}")
+"}\n"
+"QComboBox QAbstractItemView::item {\n"
+"    min-height: 60px;\n"
+"    padding-top: 6px;\n"
+"    padding-bottom: 6px;\n"
+"}\n"
+"")
         self.cbbJobSelect.setEditable(False)
         self.cbbJobSelect.setObjectName("cbbJobSelect")
+        self.cbbJobSelect.addItem("")
+        self.cbbJobSelect.addItem("")
+        self.cbbJobSelect.addItem("")
         self.verticalLayout_8.addWidget(self.cbbJobSelect)
         self.verticalLayout.addWidget(self.widget_3)
         self.toolBox = QtWidgets.QToolBox(self.menu_main)
         self.toolBox.setObjectName("toolBox")
         self.tboxPage1 = QtWidgets.QWidget()
-        self.tboxPage1.setGeometry(QtCore.QRect(0, 0, 382, 564))
+        self.tboxPage1.setGeometry(QtCore.QRect(0, 0, 382, 579))
         self.tboxPage1.setObjectName("tboxPage1")
         self.verticalLayout_6 = QtWidgets.QVBoxLayout(self.tboxPage1)
         self.verticalLayout_6.setObjectName("verticalLayout_6")
@@ -436,7 +451,7 @@ class Ui_MainWindow(object):
         icon.addPixmap(QtGui.QPixmap(":/icon/icon/home-4-48 (2).ico"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.toolBox.addItem(self.tboxPage1, icon, "")
         self.tboxPage2 = QtWidgets.QWidget()
-        self.tboxPage2.setGeometry(QtCore.QRect(0, 0, 382, 564))
+        self.tboxPage2.setGeometry(QtCore.QRect(0, 0, 382, 579))
         self.tboxPage2.setObjectName("tboxPage2")
         self.toolBox.addItem(self.tboxPage2, "")
         self.verticalLayout.addWidget(self.toolBox)
@@ -808,6 +823,9 @@ class Ui_MainWindow(object):
         _translate = QtCore.QCoreApplication.translate
         MainWindow.setWindowTitle(_translate("MainWindow", "Jacon Intelijet"))
         self.lblCurrentJob.setText(_translate("MainWindow", "Current Job"))
+        self.cbbJobSelect.setItemText(0, _translate("MainWindow", "New Item"))
+        self.cbbJobSelect.setItemText(1, _translate("MainWindow", "New Item"))
+        self.cbbJobSelect.setItemText(2, _translate("MainWindow", "New Item"))
         self.btnViewReport.setText(_translate("MainWindow", "View Report"))
         self.btnCompare2.setText(_translate("MainWindow", "Compare"))
         self.toolBox.setItemText(self.toolBox.indexOf(self.tboxPage1), _translate("MainWindow", "Compare && Reports"))
