@@ -6,7 +6,6 @@ import os
 from datetime import datetime
 
 
-
 class JobItemWidget(QWidget, Ui_Form):
     job_renamed = pyqtSignal(str, str, object)
     job_deleted = pyqtSignal(str)
@@ -171,7 +170,7 @@ class FileItemWidget(QWidget):
         try:
             dt = datetime.strptime(datetime_raw, "%Y%m%d_%H%M%S")
             datetime_str = dt.strftime("%d/%m/%Y %H:%M:%S")
-            datetime_str = f"Scan time: {datetime_str}"
+            datetime_str = f"{datetime_str}"
         except ValueError:
             datetime_str = datetime_raw  # nếu lỗi định dạng, giữ nguyên
 

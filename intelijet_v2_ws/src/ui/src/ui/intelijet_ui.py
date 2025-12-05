@@ -13,7 +13,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
-        MainWindow.resize(1020, 870)
+        MainWindow.resize(1303, 926)
         MainWindow.setStyleSheet("\n"
 "/* ==================== PUSHBUTTON ==================== */\n"
 "\n"
@@ -21,8 +21,9 @@ class Ui_MainWindow(object):
 "    background-color: #5C87C9;     /* xanh sáng hơn */\n"
 "    color: white;\n"
 "    border: 0px solid #3c6382;\n"
+"    border-radius: 15px;\n"
 "    padding: 6px 10px;\n"
-"    font-size: 14px;\n"
+"    font-size: 20px;\n"
 "}\n"
 "\n"
 "QPushButton:hover {\n"
@@ -42,7 +43,7 @@ class Ui_MainWindow(object):
 "    color: #2F4F6E;                  /* chữ xanh đậm */\n"
 "    border: 1px solid #B0C4DE;       /* viền nhẹ */\n"
 "    padding: 4px 8px;                /* khoảng cách chữ và viền */\n"
-"    font-size: 14px;\n"
+"    font-size: 24px;\n"
 "    font-weight: bold;\n"
 "}\n"
 "\n"
@@ -62,7 +63,7 @@ class Ui_MainWindow(object):
 "QCheckBox {\n"
 "    spacing: 8px;             /* khoảng cách giữa ô và text */\n"
 "    color: #2F4F6E;           /* chữ giống TextEdit */\n"
-"    font-size: 14px;\n"
+"    font-size: 24px;\n"
 "    font-weight: bold;\n"
 "}\n"
 "\n"
@@ -102,13 +103,12 @@ class Ui_MainWindow(object):
 "}\n"
 "\n"
 "\n"
-"\n"
 "QComboBox {\n"
 "    background-color: #FFFFFF;       /* nền sáng */\n"
 "    color: #2F4F6E;                 /* chữ xanh đậm */\n"
 "    border: 1px solid #B0C4DE;      /* viền nhẹ */\n"
 "    padding: 4px 8px;\n"
-"    font-size: 14px;\n"
+"    font-size: 24px;\n"
 "    font-weight: bold;\n"
 "    selection-background-color: #D0E4F5; /* khi chọn item */\n"
 "}\n"
@@ -131,32 +131,13 @@ class Ui_MainWindow(object):
 "    border: 1px solid #5C87C9;\n"
 "}\n"
 "\n"
-"/* --- Checkbox --- */\n"
-"\n"
-"/* trạng thái bình thường */\n"
-"QCheckBox {\n"
-"    color: #2F4F6E;\n"
-"    font-size: 14px;\n"
-"    font-weight: bold;\n"
-"    padding: 4px 8px;\n"
-"}\n"
-"\n"
-"QCheckBox::indicator {\n"
-"    width: 18px;\n"
-"    height: 18px;\n"
-"    border: 1px solid #B0C4DE;\n"
-"    border-radius: 4px;\n"
-"    margin: 0;\n"
-"}\n"
-"\n"
-"\n"
 "QGroupBox {\n"
 "    border: 1px solid #B0C4DE;   /* viền nhẹ */\n"
 "    background-color: #FFFFFF;    /* nền trắng */\n"
 "    margin-top: 10px;\n"
 "    padding: 8px;\n"
 "    font-weight: bold;\n"
-"    font-size: 16px;\n"
+"    font-size: 24px;\n"
 "}\n"
 "\n"
 "QGroupBox::title {\n"
@@ -170,7 +151,7 @@ class Ui_MainWindow(object):
 "\n"
 "/* ==================== SCROLLBAR ==================== */\n"
 "QScrollBar:vertical {\n"
-"    width: 12px;\n"
+"    width: 30px;\n"
 "    background: #f0f0f0;\n"
 "    margin: 0;\n"
 "    border-radius: 0px;\n"
@@ -189,7 +170,7 @@ class Ui_MainWindow(object):
 "\n"
 "*{\n"
 "border: none;\n"
-"font-size: 17px;\n"
+"font-size: 24px;\n"
 "}\n"
 "#statusbar {\n"
 "    background-color: #185F63;\n"
@@ -224,7 +205,7 @@ class Ui_MainWindow(object):
 "    border: none;\n"
 "    padding: 40px 0px 40px 0px;\n"
 "    \n"
-"    font-size:18px;\n"
+"    font-size:24px;\n"
 "    font-weight: bold;\n"
 "    background-color: qlineargradient(spread:pad, x1:0, y1:0, x2:1, y2:0, stop:0 #F8D40F, stop:1 #FFF9C4);\n"
 "\n"
@@ -238,7 +219,7 @@ class Ui_MainWindow(object):
 "\n"
 "/* Hiệu ứng hover / nhấn */\n"
 "#control_panel QPushButton:hover {\n"
-"    font-size: 18px;\n"
+"    font-size: 25px;\n"
 "    color: #00aa7f;\n"
 "    padding: 36px 5px 36px 0px;\n"
 "\n"
@@ -253,12 +234,17 @@ class Ui_MainWindow(object):
 "    color: #dcdcdc;\n"
 "}\n"
 "\n"
+"#control_panel QLabel {\n"
+"    background-color: rgba(0, 0, 0, 0);\n"
+"    border: none;\n"
+"}\n"
+"\n"
 "QLabel {\n"
 "    background-color: #EAF2F8;   /* nền nhạt */\n"
 "    color: #2F4F6E;              /* chữ xanh công nghiệp */\n"
 "    border: 1px solid #B0C4DE;   /* viền nhẹ */\n"
 "    padding: 4px 8px;\n"
-"    font-size: 14px;\n"
+"    font-size: 24px;\n"
 "    font-weight: bold;\n"
 "}\n"
 "\n"
@@ -311,7 +297,7 @@ class Ui_MainWindow(object):
 "\n"
 "QTabBar::tab {\n"
 "    height: 110px;     \n"
-"    width: 20px;\n"
+"    width: 30px;\n"
 "    margin: 0;\n"
 "    color: #ddd;\n"
 "\n"
@@ -320,12 +306,13 @@ class Ui_MainWindow(object):
 "    padding-top: 30px;\n"
 "    padding-left: 10px;\n"
 "    padding-right: 8px;\n"
-"    min-height: 100px;\n"
+"    min-height: 150px;\n"
+"    max-height: 200px;\n"
 "\n"
 "}\n"
 "\n"
 "QTabBar::tab:selected {\n"
-"    font-size: 18px;\n"
+"    font-size: 25x;\n"
 "    font-weight: bold;\n"
 "    color: #ee0;\n"
 "    border-left: 4px solid #FFEB3B;\n"
@@ -356,7 +343,8 @@ class Ui_MainWindow(object):
         self.horizontalLayout_2.setSpacing(0)
         self.horizontalLayout_2.setObjectName("horizontalLayout_2")
         self.menu_main = QtWidgets.QWidget(self.centralFrame)
-        self.menu_main.setMinimumSize(QtCore.QSize(200, 0))
+        self.menu_main.setMinimumSize(QtCore.QSize(400, 0))
+        self.menu_main.setMaximumSize(QtCore.QSize(400, 16777215))
         font = QtGui.QFont()
         font.setPointSize(-1)
         self.menu_main.setFont(font)
@@ -365,12 +353,13 @@ class Ui_MainWindow(object):
         self.verticalLayout.setObjectName("verticalLayout")
         self.widget_3 = QtWidgets.QWidget(self.menu_main)
         self.widget_3.setObjectName("widget_3")
-        self.horizontalLayout_4 = QtWidgets.QHBoxLayout(self.widget_3)
-        self.horizontalLayout_4.setObjectName("horizontalLayout_4")
+        self.verticalLayout_8 = QtWidgets.QVBoxLayout(self.widget_3)
+        self.verticalLayout_8.setObjectName("verticalLayout_8")
         self.lblCurrentJob = QtWidgets.QLabel(self.widget_3)
         self.lblCurrentJob.setMinimumSize(QtCore.QSize(0, 40))
+        self.lblCurrentJob.setStyleSheet("font-weight: normal;")
         self.lblCurrentJob.setObjectName("lblCurrentJob")
-        self.horizontalLayout_4.addWidget(self.lblCurrentJob)
+        self.verticalLayout_8.addWidget(self.lblCurrentJob)
         self.cbbJobSelect = QtWidgets.QComboBox(self.widget_3)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
         sizePolicy.setHorizontalStretch(0)
@@ -383,8 +372,7 @@ class Ui_MainWindow(object):
 "    background-color: #FFFFFF;       /* nền trắng */\n"
 "    color: #2F4F6E;                  /* chữ xanh đậm */\n"
 "    border: 1px solid #B0C4DE;       /* viền nhẹ */\n"
-"    font-size: 14px;\n"
-"    font-weight: bold;\n"
+"    font-weight: normal;\n"
 "    padding: 4px 8px;\n"
 "}\n"
 "\n"
@@ -405,7 +393,6 @@ class Ui_MainWindow(object):
 "    color: #2F4F6E;\n"
 "    border: 1px solid #B0C4DE;\n"
 "    selection-background-color: #D0E4F5;\n"
-"    font-size: 14px;\n"
 "    font-weight: bold;\n"
 "}\n"
 "\n"
@@ -428,8 +415,7 @@ class Ui_MainWindow(object):
 "")
         self.cbbJobSelect.setEditable(False)
         self.cbbJobSelect.setObjectName("cbbJobSelect")
-        self.horizontalLayout_4.addWidget(self.cbbJobSelect)
-        self.horizontalLayout_4.setStretch(1, 1)
+        self.verticalLayout_8.addWidget(self.cbbJobSelect)
         self.verticalLayout.addWidget(self.widget_3)
         self.toolBox = QtWidgets.QToolBox(self.menu_main)
         self.toolBox.setStyleSheet("QComboBox::drop-down {\n"
@@ -448,7 +434,7 @@ class Ui_MainWindow(object):
 "")
         self.toolBox.setObjectName("toolBox")
         self.tboxPage1 = QtWidgets.QWidget()
-        self.tboxPage1.setGeometry(QtCore.QRect(0, 0, 310, 581))
+        self.tboxPage1.setGeometry(QtCore.QRect(0, 0, 382, 577))
         self.tboxPage1.setObjectName("tboxPage1")
         self.verticalLayout_6 = QtWidgets.QVBoxLayout(self.tboxPage1)
         self.verticalLayout_6.setObjectName("verticalLayout_6")
@@ -457,13 +443,13 @@ class Ui_MainWindow(object):
         self.verticalLayout_12 = QtWidgets.QVBoxLayout(self.widget_4)
         self.verticalLayout_12.setObjectName("verticalLayout_12")
         self.btnViewReport = QtWidgets.QPushButton(self.widget_4)
-        self.btnViewReport.setMinimumSize(QtCore.QSize(120, 60))
+        self.btnViewReport.setMinimumSize(QtCore.QSize(120, 80))
         self.btnViewReport.setStyleSheet("QPushButton {\n"
 "    background-color: #60a3bc;     /* xanh sáng hơn */\n"
 "    color: white;\n"
 "    border: 1px solid #60a3bc;\n"
 "    padding: 6px 10px;\n"
-"    font-size: 14px;\n"
+"    font-size: 24px;\n"
 "}\n"
 "\n"
 "QPushButton:hover {\n"
@@ -478,13 +464,13 @@ class Ui_MainWindow(object):
         self.btnViewReport.setObjectName("btnViewReport")
         self.verticalLayout_12.addWidget(self.btnViewReport)
         self.btnCompare2 = QtWidgets.QPushButton(self.widget_4)
-        self.btnCompare2.setMinimumSize(QtCore.QSize(120, 60))
+        self.btnCompare2.setMinimumSize(QtCore.QSize(120, 80))
         self.btnCompare2.setStyleSheet("QPushButton {\n"
 "    background-color: #60a3bc;     /* xanh sáng hơn */\n"
 "    color: white;\n"
 "    border: 1px solid #60a3bc;\n"
 "    padding: 6px 10px;\n"
-"    font-size: 14px;\n"
+"    font-size: 24px;\n"
 "}\n"
 "\n"
 "QPushButton:hover {\n"
@@ -505,26 +491,34 @@ class Ui_MainWindow(object):
         icon.addPixmap(QtGui.QPixmap(":/icon/icon/home-4-48 (2).ico"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.toolBox.addItem(self.tboxPage1, icon, "")
         self.tboxPage2 = QtWidgets.QWidget()
-        self.tboxPage2.setGeometry(QtCore.QRect(0, 0, 310, 581))
+        self.tboxPage2.setGeometry(QtCore.QRect(0, 0, 382, 576))
         self.tboxPage2.setObjectName("tboxPage2")
         self.toolBox.addItem(self.tboxPage2, "")
         self.verticalLayout.addWidget(self.toolBox)
         self.exit_widget = QtWidgets.QWidget(self.menu_main)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Fixed)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.exit_widget.sizePolicy().hasHeightForWidth())
+        self.exit_widget.setSizePolicy(sizePolicy)
         self.exit_widget.setObjectName("exit_widget")
         self.horizontalLayout_3 = QtWidgets.QHBoxLayout(self.exit_widget)
+        self.horizontalLayout_3.setContentsMargins(0, 0, 0, 0)
         self.horizontalLayout_3.setObjectName("horizontalLayout_3")
         self.btnShutdown = QtWidgets.QPushButton(self.exit_widget)
-        self.btnShutdown.setMinimumSize(QtCore.QSize(0, 0))
+        self.btnShutdown.setMinimumSize(QtCore.QSize(0, 60))
+        self.btnShutdown.setMaximumSize(QtCore.QSize(16777215, 60))
         icon1 = QtGui.QIcon()
         icon1.addPixmap(QtGui.QPixmap(":/icon/icon/power-button.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.btnShutdown.setIcon(icon1)
-        self.btnShutdown.setIconSize(QtCore.QSize(32, 32))
+        self.btnShutdown.setIconSize(QtCore.QSize(60, 60))
         self.btnShutdown.setCheckable(False)
         self.btnShutdown.setObjectName("btnShutdown")
         self.horizontalLayout_3.addWidget(self.btnShutdown)
         self.verticalLayout.addWidget(self.exit_widget)
         self.horizontalLayout_2.addWidget(self.menu_main)
         self.menu_small = QtWidgets.QWidget(self.centralFrame)
+        self.menu_small.setMaximumSize(QtCore.QSize(50, 16777215))
         self.menu_small.setObjectName("menu_small")
         self.verticalLayout_3 = QtWidgets.QVBoxLayout(self.menu_small)
         self.verticalLayout_3.setContentsMargins(0, -1, -1, -1)
@@ -532,8 +526,8 @@ class Ui_MainWindow(object):
         spacerItem1 = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding)
         self.verticalLayout_3.addItem(spacerItem1)
         self.pushButton_4 = QtWidgets.QPushButton(self.menu_small)
-        self.pushButton_4.setMinimumSize(QtCore.QSize(25, 100))
-        self.pushButton_4.setMaximumSize(QtCore.QSize(25, 16777215))
+        self.pushButton_4.setMinimumSize(QtCore.QSize(30, 100))
+        self.pushButton_4.setMaximumSize(QtCore.QSize(30, 16777215))
         self.pushButton_4.setStyleSheet("background-color: #FFF9C4;\n"
 "border-radius:12px;")
         self.pushButton_4.setText("")
@@ -549,6 +543,11 @@ class Ui_MainWindow(object):
         self.horizontalLayout_2.addWidget(self.menu_small)
         self.tab_mainview = QtWidgets.QTabWidget(self.centralFrame)
         self.tab_mainview.setEnabled(True)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Preferred)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.tab_mainview.sizePolicy().hasHeightForWidth())
+        self.tab_mainview.setSizePolicy(sizePolicy)
         self.tab_mainview.setTabPosition(QtWidgets.QTabWidget.West)
         self.tab_mainview.setUsesScrollButtons(False)
         self.tab_mainview.setObjectName("tab_mainview")
@@ -570,14 +569,14 @@ class Ui_MainWindow(object):
         self.horizontalLayout.addWidget(self.tab_cloud_view)
         self.horizontalLayout.setStretch(0, 10)
         self.tab_mainview.addTab(self.tab_operator, "")
+        self.tab_jobnumber = QtWidgets.QWidget()
+        self.tab_jobnumber.setObjectName("tab_jobnumber")
+        self.tab_mainview.addTab(self.tab_jobnumber, "")
         self.tab_setting = QtWidgets.QWidget()
         self.tab_setting.setObjectName("tab_setting")
         self.gridLayout = QtWidgets.QGridLayout(self.tab_setting)
         self.gridLayout.setObjectName("gridLayout")
         self.tab_mainview.addTab(self.tab_setting, "")
-        self.tab_jobnumber = QtWidgets.QWidget()
-        self.tab_jobnumber.setObjectName("tab_jobnumber")
-        self.tab_mainview.addTab(self.tab_jobnumber, "")
         self.tab_system = QtWidgets.QWidget()
         self.tab_system.setObjectName("tab_system")
         self.verticalLayout_5 = QtWidgets.QVBoxLayout(self.tab_system)
@@ -588,8 +587,8 @@ class Ui_MainWindow(object):
         self.verticalLayout_2.setObjectName("verticalLayout_2")
         self.groupBox = QtWidgets.QGroupBox(self.widget)
         self.groupBox.setObjectName("groupBox")
-        self.verticalLayout_10 = QtWidgets.QVBoxLayout(self.groupBox)
-        self.verticalLayout_10.setObjectName("verticalLayout_10")
+        self.horizontalLayout_15 = QtWidgets.QHBoxLayout(self.groupBox)
+        self.horizontalLayout_15.setObjectName("horizontalLayout_15")
         self.widget_2 = QtWidgets.QWidget(self.groupBox)
         self.widget_2.setMaximumSize(QtCore.QSize(500, 500))
         self.widget_2.setObjectName("widget_2")
@@ -663,13 +662,19 @@ class Ui_MainWindow(object):
         self.verticalLayout_11.addWidget(self.widget_11)
         spacerItem3 = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding)
         self.verticalLayout_11.addItem(spacerItem3)
-        self.verticalLayout_10.addWidget(self.widget_2)
+        self.horizontalLayout_15.addWidget(self.widget_2)
+        spacerItem4 = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
+        self.horizontalLayout_15.addItem(spacerItem4)
         self.verticalLayout_2.addWidget(self.groupBox)
         self.groupBox_2 = QtWidgets.QGroupBox(self.widget)
         self.groupBox_2.setObjectName("groupBox_2")
-        self.verticalLayout_13 = QtWidgets.QVBoxLayout(self.groupBox_2)
-        self.verticalLayout_13.setObjectName("verticalLayout_13")
-        self.widget_14 = QtWidgets.QWidget(self.groupBox_2)
+        self.horizontalLayout_14 = QtWidgets.QHBoxLayout(self.groupBox_2)
+        self.horizontalLayout_14.setObjectName("horizontalLayout_14")
+        self.widget_5 = QtWidgets.QWidget(self.groupBox_2)
+        self.widget_5.setObjectName("widget_5")
+        self.verticalLayout_4 = QtWidgets.QVBoxLayout(self.widget_5)
+        self.verticalLayout_4.setObjectName("verticalLayout_4")
+        self.widget_14 = QtWidgets.QWidget(self.widget_5)
         self.widget_14.setObjectName("widget_14")
         self.horizontalLayout_11 = QtWidgets.QHBoxLayout(self.widget_14)
         self.horizontalLayout_11.setObjectName("horizontalLayout_11")
@@ -682,8 +687,8 @@ class Ui_MainWindow(object):
         self.cbbAutoAlign.addItem("")
         self.cbbAutoAlign.addItem("")
         self.horizontalLayout_11.addWidget(self.cbbAutoAlign)
-        self.verticalLayout_13.addWidget(self.widget_14)
-        self.widget_13 = QtWidgets.QWidget(self.groupBox_2)
+        self.verticalLayout_4.addWidget(self.widget_14)
+        self.widget_13 = QtWidgets.QWidget(self.widget_5)
         self.widget_13.setObjectName("widget_13")
         self.horizontalLayout_12 = QtWidgets.QHBoxLayout(self.widget_13)
         self.horizontalLayout_12.setObjectName("horizontalLayout_12")
@@ -696,8 +701,8 @@ class Ui_MainWindow(object):
         self.cbbAutoCompare.addItem("")
         self.cbbAutoCompare.addItem("")
         self.horizontalLayout_12.addWidget(self.cbbAutoCompare)
-        self.verticalLayout_13.addWidget(self.widget_13)
-        self.widget_15 = QtWidgets.QWidget(self.groupBox_2)
+        self.verticalLayout_4.addWidget(self.widget_13)
+        self.widget_15 = QtWidgets.QWidget(self.widget_5)
         self.widget_15.setObjectName("widget_15")
         self.horizontalLayout_13 = QtWidgets.QHBoxLayout(self.widget_15)
         self.horizontalLayout_13.setObjectName("horizontalLayout_13")
@@ -710,22 +715,26 @@ class Ui_MainWindow(object):
         self.cbbAutoReport.addItem("")
         self.cbbAutoReport.addItem("")
         self.horizontalLayout_13.addWidget(self.cbbAutoReport)
-        self.verticalLayout_13.addWidget(self.widget_15)
-        spacerItem4 = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding)
-        self.verticalLayout_13.addItem(spacerItem4)
-        self.verticalLayout_2.addWidget(self.groupBox_2)
+        self.verticalLayout_4.addWidget(self.widget_15)
         spacerItem5 = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding)
-        self.verticalLayout_2.addItem(spacerItem5)
+        self.verticalLayout_4.addItem(spacerItem5)
+        self.horizontalLayout_14.addWidget(self.widget_5)
+        spacerItem6 = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
+        self.horizontalLayout_14.addItem(spacerItem6)
+        self.verticalLayout_2.addWidget(self.groupBox_2)
+        spacerItem7 = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding)
+        self.verticalLayout_2.addItem(spacerItem7)
         self.verticalLayout_5.addWidget(self.widget)
         self.tab_mainview.addTab(self.tab_system, "")
         self.horizontalLayout_2.addWidget(self.tab_mainview)
         self.control_panel = QtWidgets.QWidget(self.centralFrame)
-        self.control_panel.setMinimumSize(QtCore.QSize(200, 0))
+        self.control_panel.setMinimumSize(QtCore.QSize(220, 0))
+        self.control_panel.setMaximumSize(QtCore.QSize(220, 16777215))
         self.control_panel.setObjectName("control_panel")
         self.verticalLayout_14 = QtWidgets.QVBoxLayout(self.control_panel)
         self.verticalLayout_14.setObjectName("verticalLayout_14")
-        spacerItem6 = QtWidgets.QSpacerItem(20, 20, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Fixed)
-        self.verticalLayout_14.addItem(spacerItem6)
+        spacerItem8 = QtWidgets.QSpacerItem(20, 20, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Fixed)
+        self.verticalLayout_14.addItem(spacerItem8)
         self.lblLogo = QtWidgets.QLabel(self.control_panel)
         self.lblLogo.setMaximumSize(QtCore.QSize(180, 65))
         self.lblLogo.setText("")
@@ -734,8 +743,8 @@ class Ui_MainWindow(object):
         self.lblLogo.setAlignment(QtCore.Qt.AlignHCenter|QtCore.Qt.AlignTop)
         self.lblLogo.setObjectName("lblLogo")
         self.verticalLayout_14.addWidget(self.lblLogo)
-        spacerItem7 = QtWidgets.QSpacerItem(20, 20, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Fixed)
-        self.verticalLayout_14.addItem(spacerItem7)
+        spacerItem9 = QtWidgets.QSpacerItem(20, 20, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Fixed)
+        self.verticalLayout_14.addItem(spacerItem9)
         self.btnPreScan = QtWidgets.QPushButton(self.control_panel)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding)
         sizePolicy.setHorizontalStretch(0)
@@ -787,11 +796,13 @@ class Ui_MainWindow(object):
         self.btnCloseScanner.setSizePolicy(sizePolicy)
         self.btnCloseScanner.setObjectName("btnCloseScanner")
         self.verticalLayout_14.addWidget(self.btnCloseScanner)
-        spacerItem8 = QtWidgets.QSpacerItem(0, 0, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding)
-        self.verticalLayout_14.addItem(spacerItem8)
+        spacerItem10 = QtWidgets.QSpacerItem(0, 0, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding)
+        self.verticalLayout_14.addItem(spacerItem10)
         self.horizontalLayout_2.addWidget(self.control_panel)
         self.horizontalLayout_2.setStretch(0, 3)
+        self.horizontalLayout_2.setStretch(1, 1)
         self.horizontalLayout_2.setStretch(2, 4)
+        self.horizontalLayout_2.setStretch(3, 3)
         self.gridLayout_2.addWidget(self.centralFrame, 0, 0, 1, 1)
         MainWindow.setCentralWidget(self.centralwidget)
         self.statusbar = QtWidgets.QStatusBar(MainWindow)
@@ -811,15 +822,15 @@ class Ui_MainWindow(object):
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
         MainWindow.setWindowTitle(_translate("MainWindow", "Jacon Intelijet"))
-        self.lblCurrentJob.setText(_translate("MainWindow", "Current Job:"))
+        self.lblCurrentJob.setText(_translate("MainWindow", "Current Job"))
         self.btnViewReport.setText(_translate("MainWindow", "View Report"))
         self.btnCompare2.setText(_translate("MainWindow", "Compare"))
         self.toolBox.setItemText(self.toolBox.indexOf(self.tboxPage1), _translate("MainWindow", "Compare && Reports"))
         self.toolBox.setItemText(self.toolBox.indexOf(self.tboxPage2), _translate("MainWindow", "History"))
         self.btnShutdown.setText(_translate("MainWindow", "Exit"))
-        self.tab_mainview.setTabText(self.tab_mainview.indexOf(self.tab_operator), _translate("MainWindow", "3D Viewer"))
-        self.tab_mainview.setTabText(self.tab_mainview.indexOf(self.tab_setting), _translate("MainWindow", "Setting"))
-        self.tab_mainview.setTabText(self.tab_mainview.indexOf(self.tab_jobnumber), _translate("MainWindow", "Job No."))
+        self.tab_mainview.setTabText(self.tab_mainview.indexOf(self.tab_operator), _translate("MainWindow", "3D VIEW"))
+        self.tab_mainview.setTabText(self.tab_mainview.indexOf(self.tab_jobnumber), _translate("MainWindow", "JOB No."))
+        self.tab_mainview.setTabText(self.tab_mainview.indexOf(self.tab_setting), _translate("MainWindow", "SETTING"))
         self.groupBox.setTitle(_translate("MainWindow", "Device Status"))
         self.label_7.setText(_translate("MainWindow", "PLC:"))
         self.lblPLCStatus.setText(_translate("MainWindow", "--"))
@@ -843,13 +854,15 @@ class Ui_MainWindow(object):
         self.label_9.setText(_translate("MainWindow", "Auto Export Report"))
         self.cbbAutoReport.setItemText(0, _translate("MainWindow", "On"))
         self.cbbAutoReport.setItemText(1, _translate("MainWindow", "Off"))
-        self.tab_mainview.setTabText(self.tab_mainview.indexOf(self.tab_system), _translate("MainWindow", "System"))
+        self.tab_mainview.setTabText(self.tab_mainview.indexOf(self.tab_system), _translate("MainWindow", "SYSTEM"))
         self.btnPreScan.setText(_translate("MainWindow", "PRE-SCAN"))
         self.btnPostScan.setText(_translate("MainWindow", "POST-SCAN"))
-        self.btnCompare.setText(_translate("MainWindow", "Compare"))
+        self.btnCompare.setText(_translate("MainWindow", "COMPARE"))
         self.btnCancel.setText(_translate("MainWindow", "CANCEL JOB"))
-        self.btnOpenScanner.setText(_translate("MainWindow", "OPEN HOUSING"))
-        self.btnCloseScanner.setText(_translate("MainWindow", "CLOSE HOUSING"))
+        self.btnOpenScanner.setText(_translate("MainWindow", "OPEN\n"
+"HOUSING"))
+        self.btnCloseScanner.setText(_translate("MainWindow", "CLOSE\n"
+"HOUSING"))
 from ui import resource_rc
 
 

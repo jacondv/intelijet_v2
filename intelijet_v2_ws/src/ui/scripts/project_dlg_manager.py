@@ -6,12 +6,18 @@ import re
 
 from datetime import datetime
 from PyQt5 import QtCore
-from PyQt5.QtWidgets import QWidget, QInputDialog, QMessageBox, QListWidgetItem, QHBoxLayout, QPushButton, QVBoxLayout
+from PyQt5.QtCore import QEvent
+
+from PyQt5.QtWidgets import QWidget, QInputDialog, QMessageBox, QListWidgetItem, QHBoxLayout, QPushButton, QVBoxLayout,QTextEdit, QLineEdit, QPlainTextEdit
 
 from ui.project_dlg_ui import Ui_frm_ProjectPage
 from shared.config_loader import CONFIG as cfg
 
 from ui.models.job_info import JobInfo
+# from keyboard_full_manager import FullKeyboard
+
+
+
 
 BASE_DIR = cfg.BASE_DIR
 DATA_DIR = cfg.DATA_DIR
@@ -43,6 +49,7 @@ class NewProjectDlg(QDialog):
         h.addWidget(btn_cancel)
         h.addWidget(btn_ok)
         layout.addLayout(h)
+
 
 
     def get_text(self):
@@ -135,13 +142,30 @@ class ProjectManager(QWidget, Ui_frm_ProjectPage):
         self.update_project_list()
         self.load_active_jobs()
 
+        # self.keyboard=FullKeyboard.get_instance()
+        # for edit in self.findChildren(QWidget):
+        #     edit.focusInEvent = lambda ev, w=edit: self.keyboard.attach(w)
+        
+        # self.installEventFilter(self)
+
+    # def eventFilter(self, obj, event):
+    #     if event.type() == QEvent.WindowActivate:
+    #         self.keyboard.hide()
+    #         focused_widget = self.focusWidget()
+    #         if focused_widget and isinstance(focused_widget, (QLineEdit, QTextEdit, QPlainTextEdit)):
+    #             focused_widget.clearFocus()
+    #             self.keyboard._current_widget = None
+    #     return super().eventFilter(obj, event)
+
+
     # =========================
     #      PROJECT SECTION
     # =========================
     def new_project(self):
         """Tạo mới project (thư mục con trong ROOT_DIR)."""
-
+        from PyQt5.QtCore import QTimer
         dlg = NewProjectDlg(self)
+
         if dlg.exec_() != QDialog.Accepted:
             return
         

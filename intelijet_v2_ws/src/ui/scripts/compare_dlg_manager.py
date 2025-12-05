@@ -304,9 +304,9 @@ class CompareManager(QDialog, Ui_frm_MainForm):
         
         # filter selct showing files post/pre/compared clouds files
         filter_list = []
-        if self.chkShowPostScan.isChecked():
-            filter_list.append("pre")
         if self.chkShowPreScan.isChecked():
+            filter_list.append("pre")
+        if self.chkShowPostScan.isChecked():
             filter_list.append("post")
         if self.chkShowCompared.isChecked():
             filter_list.append("compared")

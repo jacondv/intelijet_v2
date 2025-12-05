@@ -224,6 +224,7 @@ class App(QMainWindow):
 
     # 1.1--- Update commond data from ROS ---
     def update_data(self, data):
+
         self.data_binder.update_ui_from_status(data)
         if "encoder_value_in_deg" in data:
             self.ui.lblEncoder.setText(f"{data['encoder_value_in_deg']:.2f}")
@@ -234,13 +235,13 @@ class App(QMainWindow):
             self.ui.lblEncoderRawValue.setText(value)
             self.setting_page.txtEncodeValueRaw.setText(value)
 
+        data = data['devices']
         if "encoder" in data:
             status = data['encoder']['device_state']
             self.ui.lblEncoderStatus.setText(status)
         else:
             self.ui.lblEncoderStatus.setText("unknown".upper())
     
-
         if 'lidar' in data:
             status = data['lidar']['device_state']
             self.ui.lblLidarStatus.setText(status)
@@ -259,7 +260,7 @@ class App(QMainWindow):
         else:
             self.ui.lblPLCStatus.setText("unknown".upper())
                
-
+               
     # # 1.2--- Update pointcloud from reatime signal ---
     # def update_pointcloud(self, msg, topic_name):
 
