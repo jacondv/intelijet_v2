@@ -146,16 +146,6 @@ class Ui_frm_MainForm(object):
 "}\n"
 "\n"
 "\n"
-"\n"
-"\n"
-"/* Định kiểu cho mỗi item trong List */\n"
-"QListWidget::item {\n"
-"    padding: 5px;             /* Khoảng đệm bên trong item */\n"
-"    border-bottom: 1px solid #eeeeee; /* Đường kẻ mờ phân chia các item */\n"
-"    min-height: 60px;\n"
-"}\n"
-"\n"
-"\n"
 "/* ==================== SCROLLBAR ==================== */\n"
 "QScrollBar:vertical {\n"
 "    width: 30px;\n"
@@ -181,7 +171,8 @@ class Ui_frm_MainForm(object):
         self.verticalLayout_7.setSpacing(0)
         self.verticalLayout_7.setObjectName("verticalLayout_7")
         self.ftm_ProjectManager = QtWidgets.QWidget(frm_MainForm)
-        self.ftm_ProjectManager.setStyleSheet("/* Toàn bộ list widget */\n"
+        self.ftm_ProjectManager.setStyleSheet("\n"
+"/* Toàn bộ list widget */\n"
 "QListWidget {\n"
 "    background-color: #FFFFFF;      /* nền trắng */\n"
 "    color: #2F4F6E;                /* chữ xanh đậm */\n"
@@ -202,11 +193,13 @@ class Ui_frm_MainForm(object):
 "    background-color: #F9FBFF;\n"
 "}\n"
 "\n"
-"/* Item trong list */\n"
+"/* Định kiểu cho mỗi item trong List */\n"
 "QListWidget::item {\n"
-"    padding: 6px 10px;             /* khoảng cách chữ trong item */\n"
-"    height: 30px;                  /* tăng chiều cao item */\n"
+"    padding: 5px;             /* Khoảng đệm bên trong item */\n"
+"    border-bottom: 1px solid #eeeeee; /* Đường kẻ mờ phân chia các item */\n"
+"    min-height: 60px;\n"
 "}\n"
+"\n"
 "\n"
 "/* Item được chọn */\n"
 "QListWidget::item:selected {\n"
@@ -229,7 +222,6 @@ class Ui_frm_MainForm(object):
         self.horizontalLayout_5 = QtWidgets.QHBoxLayout(self.widget_7)
         self.horizontalLayout_5.setObjectName("horizontalLayout_5")
         self.groupBox = QtWidgets.QGroupBox(self.widget_7)
-        self.groupBox.setMaximumSize(QtCore.QSize(300, 16777215))
         font = QtGui.QFont()
         font.setPointSize(-1)
         font.setBold(True)
@@ -253,11 +245,6 @@ class Ui_frm_MainForm(object):
         self.horizontalLayout.addWidget(self.lblProjectName)
         self.verticalLayout.addWidget(self.widget_2)
         self.widget_3 = QtWidgets.QWidget(self.groupBox)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Fixed)
-        sizePolicy.setHorizontalStretch(0)
-        sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.widget_3.sizePolicy().hasHeightForWidth())
-        self.widget_3.setSizePolicy(sizePolicy)
         self.widget_3.setObjectName("widget_3")
         self.verticalLayout_5 = QtWidgets.QVBoxLayout(self.widget_3)
         self.verticalLayout_5.setObjectName("verticalLayout_5")
@@ -294,20 +281,20 @@ class Ui_frm_MainForm(object):
         self.txtSearchProject.setObjectName("txtSearchProject")
         self.horizontalLayout_3.addWidget(self.txtSearchProject)
         self.verticalLayout_5.addWidget(self.widget_5)
-        self.widget_4 = QtWidgets.QWidget(self.widget_3)
+        self.menu1 = QtWidgets.QWidget(self.widget_3)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.widget_4.sizePolicy().hasHeightForWidth())
-        self.widget_4.setSizePolicy(sizePolicy)
-        self.widget_4.setMinimumSize(QtCore.QSize(0, 70))
-        self.widget_4.setMaximumSize(QtCore.QSize(16777215, 70))
-        self.widget_4.setObjectName("widget_4")
-        self.horizontalLayout_2 = QtWidgets.QHBoxLayout(self.widget_4)
+        sizePolicy.setHeightForWidth(self.menu1.sizePolicy().hasHeightForWidth())
+        self.menu1.setSizePolicy(sizePolicy)
+        self.menu1.setMinimumSize(QtCore.QSize(0, 70))
+        self.menu1.setMaximumSize(QtCore.QSize(16777215, 70))
+        self.menu1.setObjectName("menu1")
+        self.horizontalLayout_2 = QtWidgets.QHBoxLayout(self.menu1)
         self.horizontalLayout_2.setContentsMargins(6, 0, 6, 0)
         self.horizontalLayout_2.setSpacing(10)
         self.horizontalLayout_2.setObjectName("horizontalLayout_2")
-        self.btnNewProject = QtWidgets.QPushButton(self.widget_4)
+        self.btnNewProject = QtWidgets.QPushButton(self.menu1)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
@@ -321,7 +308,7 @@ class Ui_frm_MainForm(object):
         self.btnNewProject.setIconSize(QtCore.QSize(40, 40))
         self.btnNewProject.setObjectName("btnNewProject")
         self.horizontalLayout_2.addWidget(self.btnNewProject)
-        self.btnRenameProject = QtWidgets.QPushButton(self.widget_4)
+        self.btnRenameProject = QtWidgets.QPushButton(self.menu1)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
@@ -335,7 +322,7 @@ class Ui_frm_MainForm(object):
         self.btnRenameProject.setIconSize(QtCore.QSize(40, 40))
         self.btnRenameProject.setObjectName("btnRenameProject")
         self.horizontalLayout_2.addWidget(self.btnRenameProject)
-        self.btnDeleteProject = QtWidgets.QPushButton(self.widget_4)
+        self.btnDeleteProject = QtWidgets.QPushButton(self.menu1)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
@@ -351,24 +338,13 @@ class Ui_frm_MainForm(object):
         self.horizontalLayout_2.addWidget(self.btnDeleteProject)
         spacerItem = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
         self.horizontalLayout_2.addItem(spacerItem)
-        self.verticalLayout_5.addWidget(self.widget_4)
+        self.verticalLayout_5.addWidget(self.menu1)
         self.verticalLayout.addWidget(self.widget_3)
         self.lstProject = QtWidgets.QListWidget(self.groupBox)
         self.lstProject.setObjectName("lstProject")
-        item = QtWidgets.QListWidgetItem()
-        self.lstProject.addItem(item)
-        item = QtWidgets.QListWidgetItem()
-        self.lstProject.addItem(item)
-        item = QtWidgets.QListWidgetItem()
-        self.lstProject.addItem(item)
-        item = QtWidgets.QListWidgetItem()
-        self.lstProject.addItem(item)
-        item = QtWidgets.QListWidgetItem()
-        self.lstProject.addItem(item)
         self.verticalLayout.addWidget(self.lstProject)
         self.horizontalLayout_5.addWidget(self.groupBox)
         self.groupBox_2 = QtWidgets.QGroupBox(self.widget_7)
-        self.groupBox_2.setMaximumSize(QtCore.QSize(300, 16777215))
         font = QtGui.QFont()
         font.setPointSize(-1)
         font.setBold(True)
@@ -392,11 +368,6 @@ class Ui_frm_MainForm(object):
         self.horizontalLayout_6.addWidget(self.lblJobName)
         self.verticalLayout_2.addWidget(self.widget_12)
         self.widget_8 = QtWidgets.QWidget(self.groupBox_2)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Fixed)
-        sizePolicy.setHorizontalStretch(0)
-        sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.widget_8.sizePolicy().hasHeightForWidth())
-        self.widget_8.setSizePolicy(sizePolicy)
         self.widget_8.setObjectName("widget_8")
         self.verticalLayout_4 = QtWidgets.QVBoxLayout(self.widget_8)
         self.verticalLayout_4.setObjectName("verticalLayout_4")
@@ -431,20 +402,20 @@ class Ui_frm_MainForm(object):
         self.txtSearchJob.setObjectName("txtSearchJob")
         self.horizontalLayout_4.addWidget(self.txtSearchJob)
         self.verticalLayout_4.addWidget(self.widget_6)
-        self.widget_10 = QtWidgets.QWidget(self.widget_8)
+        self.menu2 = QtWidgets.QWidget(self.widget_8)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.widget_10.sizePolicy().hasHeightForWidth())
-        self.widget_10.setSizePolicy(sizePolicy)
-        self.widget_10.setMinimumSize(QtCore.QSize(0, 70))
-        self.widget_10.setMaximumSize(QtCore.QSize(16777215, 70))
-        self.widget_10.setObjectName("widget_10")
-        self.horizontalLayout_9 = QtWidgets.QHBoxLayout(self.widget_10)
+        sizePolicy.setHeightForWidth(self.menu2.sizePolicy().hasHeightForWidth())
+        self.menu2.setSizePolicy(sizePolicy)
+        self.menu2.setMinimumSize(QtCore.QSize(0, 70))
+        self.menu2.setMaximumSize(QtCore.QSize(16777215, 70))
+        self.menu2.setObjectName("menu2")
+        self.horizontalLayout_9 = QtWidgets.QHBoxLayout(self.menu2)
         self.horizontalLayout_9.setContentsMargins(-1, 0, -1, 0)
         self.horizontalLayout_9.setSpacing(10)
         self.horizontalLayout_9.setObjectName("horizontalLayout_9")
-        self.btnNewJob = QtWidgets.QPushButton(self.widget_10)
+        self.btnNewJob = QtWidgets.QPushButton(self.menu2)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
@@ -458,7 +429,7 @@ class Ui_frm_MainForm(object):
         self.btnNewJob.setIconSize(QtCore.QSize(32, 32))
         self.btnNewJob.setObjectName("btnNewJob")
         self.horizontalLayout_9.addWidget(self.btnNewJob)
-        self.btnEditJob = QtWidgets.QPushButton(self.widget_10)
+        self.btnEditJob = QtWidgets.QPushButton(self.menu2)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
@@ -472,7 +443,7 @@ class Ui_frm_MainForm(object):
         self.btnEditJob.setIconSize(QtCore.QSize(32, 32))
         self.btnEditJob.setObjectName("btnEditJob")
         self.horizontalLayout_9.addWidget(self.btnEditJob)
-        self.btnDeleteJob = QtWidgets.QPushButton(self.widget_10)
+        self.btnDeleteJob = QtWidgets.QPushButton(self.menu2)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
@@ -486,14 +457,31 @@ class Ui_frm_MainForm(object):
         self.horizontalLayout_9.addWidget(self.btnDeleteJob)
         spacerItem1 = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
         self.horizontalLayout_9.addItem(spacerItem1)
-        self.verticalLayout_4.addWidget(self.widget_10)
+        self.verticalLayout_4.addWidget(self.menu2)
         self.verticalLayout_2.addWidget(self.widget_8)
         self.lstJobInfo = QtWidgets.QListWidget(self.groupBox_2)
-        self.lstJobInfo.setMaximumSize(QtCore.QSize(16777215, 200))
+        self.lstJobInfo.setMaximumSize(QtCore.QSize(16777215, 250))
+        self.lstJobInfo.setStyleSheet("/* Item trong list */\n"
+"QListWidget::item {\n"
+"    min-height: 30px;                  /* tăng chiều cao item */\n"
+"  border-bottom: none; /* Đường kẻ mờ phân chia các item */\n"
+"}")
         self.lstJobInfo.setObjectName("lstJobInfo")
+        item = QtWidgets.QListWidgetItem()
+        self.lstJobInfo.addItem(item)
+        item = QtWidgets.QListWidgetItem()
+        self.lstJobInfo.addItem(item)
+        item = QtWidgets.QListWidgetItem()
+        self.lstJobInfo.addItem(item)
         self.verticalLayout_2.addWidget(self.lstJobInfo)
         self.lstJob = QtWidgets.QListWidget(self.groupBox_2)
         self.lstJob.setObjectName("lstJob")
+        item = QtWidgets.QListWidgetItem()
+        self.lstJob.addItem(item)
+        item = QtWidgets.QListWidgetItem()
+        self.lstJob.addItem(item)
+        item = QtWidgets.QListWidgetItem()
+        self.lstJob.addItem(item)
         self.verticalLayout_2.addWidget(self.lstJob)
         self.horizontalLayout_5.addWidget(self.groupBox_2)
         self.groupBox_3 = QtWidgets.QGroupBox(self.widget_7)
@@ -656,9 +644,9 @@ class Ui_frm_MainForm(object):
         self.horizontalLayout_7.addWidget(self.btnCancel)
         self.verticalLayout_3.addWidget(self.widget)
         self.horizontalLayout_5.addWidget(self.groupBox_3)
-        self.horizontalLayout_5.setStretch(0, 1)
-        self.horizontalLayout_5.setStretch(1, 1)
-        self.horizontalLayout_5.setStretch(2, 2)
+        self.horizontalLayout_5.setStretch(0, 2)
+        self.horizontalLayout_5.setStretch(1, 2)
+        self.horizontalLayout_5.setStretch(2, 3)
         self.verticalLayout_6.addWidget(self.widget_7)
         self.verticalLayout_7.addWidget(self.ftm_ProjectManager)
 
@@ -670,22 +658,27 @@ class Ui_frm_MainForm(object):
         self.groupBox.setTitle(_translate("frm_MainForm", "Project"))
         self.lblProjectName.setText(_translate("frm_MainForm", "#CurrnetProject"))
         self.txtSearchProject.setPlaceholderText(_translate("frm_MainForm", "Search"))
-        __sortingEnabled = self.lstProject.isSortingEnabled()
-        self.lstProject.setSortingEnabled(False)
-        item = self.lstProject.item(0)
-        item.setText(_translate("frm_MainForm", "New Item"))
-        item = self.lstProject.item(1)
-        item.setText(_translate("frm_MainForm", "New Item"))
-        item = self.lstProject.item(2)
-        item.setText(_translate("frm_MainForm", "New Item"))
-        item = self.lstProject.item(3)
-        item.setText(_translate("frm_MainForm", "New Item"))
-        item = self.lstProject.item(4)
-        item.setText(_translate("frm_MainForm", "New Item"))
-        self.lstProject.setSortingEnabled(__sortingEnabled)
         self.groupBox_2.setTitle(_translate("frm_MainForm", "Job Number"))
         self.lblJobName.setText(_translate("frm_MainForm", "#CurrnetJob"))
         self.txtSearchJob.setPlaceholderText(_translate("frm_MainForm", "Search"))
+        __sortingEnabled = self.lstJobInfo.isSortingEnabled()
+        self.lstJobInfo.setSortingEnabled(False)
+        item = self.lstJobInfo.item(0)
+        item.setText(_translate("frm_MainForm", "New Item"))
+        item = self.lstJobInfo.item(1)
+        item.setText(_translate("frm_MainForm", "New Item"))
+        item = self.lstJobInfo.item(2)
+        item.setText(_translate("frm_MainForm", "New Item"))
+        self.lstJobInfo.setSortingEnabled(__sortingEnabled)
+        __sortingEnabled = self.lstJob.isSortingEnabled()
+        self.lstJob.setSortingEnabled(False)
+        item = self.lstJob.item(0)
+        item.setText(_translate("frm_MainForm", "New Item"))
+        item = self.lstJob.item(1)
+        item.setText(_translate("frm_MainForm", "New Item"))
+        item = self.lstJob.item(2)
+        item.setText(_translate("frm_MainForm", "New Item"))
+        self.lstJob.setSortingEnabled(__sortingEnabled)
         self.groupBox_3.setTitle(_translate("frm_MainForm", "Job Detail"))
         self.chkShowPreScan.setText(_translate("frm_MainForm", "PreScan"))
         self.chkShowPostScan.setText(_translate("frm_MainForm", "PostScan"))

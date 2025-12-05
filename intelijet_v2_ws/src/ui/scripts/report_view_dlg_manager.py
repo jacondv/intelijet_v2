@@ -124,6 +124,8 @@ class ReportViewManager(QDialog, Ui_frm_MainForm):
         """Khởi tạo lại dialog về trạng thái ban đầu."""
         self._initialized = True
         # ==  Hide some objects ==
+        self.menu1.hide()
+        self.menu2.hide()
         self.btnNewProject.hide()
         self.btnRenameProject.hide()
         self.btnDeleteProject.hide()
@@ -132,7 +134,6 @@ class ReportViewManager(QDialog, Ui_frm_MainForm):
         self.btnDeleteJob.hide()
         self.btnOk.hide()
         self.btnOpenItem.hide()
-
         self.chkShowPostScan.hide()
         self.chkShowPreScan.hide()
         self.chkShowCompared.hide()
