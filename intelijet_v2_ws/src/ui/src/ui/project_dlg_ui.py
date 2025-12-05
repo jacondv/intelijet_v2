@@ -13,15 +13,16 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 class Ui_frm_ProjectPage(object):
     def setupUi(self, frm_ProjectPage):
         frm_ProjectPage.setObjectName("frm_ProjectPage")
-        frm_ProjectPage.resize(1067, 799)
-        frm_ProjectPage.setStyleSheet("\n"
+        frm_ProjectPage.resize(1073, 748)
+        frm_ProjectPage.setStyleSheet("* {\n"
+"font-size:24px;\n"
+"}\n"
 "QPushButton {\n"
 "    background-color: #5C87C9;     /* xanh sáng hơn */\n"
 "    color: white;\n"
 "    border: 0px solid #3c6382;\n"
 "    border-radius: 15px;\n"
 "    padding: 6px 10px;\n"
-"    font-size: 20px;\n"
 "}\n"
 "\n"
 "QPushButton:hover {\n"
@@ -41,7 +42,6 @@ class Ui_frm_ProjectPage(object):
 "    color: #2F4F6E;                  /* chữ xanh đậm */\n"
 "    border: 1px solid #B0C4DE;       /* viền nhẹ */\n"
 "    padding: 4px 8px;                /* khoảng cách chữ và viền */\n"
-"    font-size: 14px;\n"
 "    font-weight: bold;\n"
 "}\n"
 "\n"
@@ -62,7 +62,6 @@ class Ui_frm_ProjectPage(object):
 "    color: #2F4F6E;                 /* chữ xanh đậm */\n"
 "    border: 1px solid #B0C4DE;      /* viền nhẹ */\n"
 "    padding: 4px 8px;\n"
-"    font-size: 14px;\n"
 "    font-weight: bold;\n"
 "    selection-background-color: #D0E4F5; /* khi chọn item */\n"
 "}\n"
@@ -90,7 +89,6 @@ class Ui_frm_ProjectPage(object):
 "    margin-top: 10px;\n"
 "    padding: 8px;\n"
 "    font-weight: bold;\n"
-"    font-size: 16px;\n"
 "}\n"
 "\n"
 "QGroupBox::title {\n"
@@ -105,7 +103,6 @@ class Ui_frm_ProjectPage(object):
 "QCheckBox {\n"
 "    spacing: 8px;             /* khoảng cách giữa ô và text */\n"
 "    color: #2F4F6E;           /* chữ giống TextEdit */\n"
-"    font-size: 20px;\n"
 "    font-weight: bold;\n"
 "}\n"
 "\n"
@@ -180,12 +177,13 @@ class Ui_frm_ProjectPage(object):
         self.verticalLayout_7.setSpacing(0)
         self.verticalLayout_7.setObjectName("verticalLayout_7")
         self.ftm_ProjectManager = QtWidgets.QWidget(frm_ProjectPage)
-        self.ftm_ProjectManager.setStyleSheet("/* Toàn bộ list widget */\n"
+        self.ftm_ProjectManager.setStyleSheet("\n"
+"/* Toàn bộ list widget */\n"
 "QListWidget {\n"
 "    background-color: #FFFFFF;      /* nền trắng */\n"
 "    color: #2F4F6E;                /* chữ xanh đậm */\n"
 "    border: 1px solid #B0C4DE;     /* viền nhẹ */\n"
-"    font-size: 14px;\n"
+"    font-size: 24px;\n"
 "    font-weight: bold;\n"
 "    padding: 2px;\n"
 "}\n"
@@ -201,11 +199,13 @@ class Ui_frm_ProjectPage(object):
 "    background-color: #F9FBFF;\n"
 "}\n"
 "\n"
-"/* Item trong list */\n"
+"/* Định kiểu cho mỗi item trong List */\n"
 "QListWidget::item {\n"
-"    padding: 6px 10px;             /* khoảng cách chữ trong item */\n"
-"    height: 30px;                  /* tăng chiều cao item */\n"
+"    padding: 5px;             /* Khoảng đệm bên trong item */\n"
+"    border-bottom: 1px solid #eeeeee; /* Đường kẻ mờ phân chia các item */\n"
+"    min-height: 70px;\n"
 "}\n"
+"\n"
 "\n"
 "/* Item được chọn */\n"
 "QListWidget::item:selected {\n"
@@ -245,6 +245,7 @@ class Ui_frm_ProjectPage(object):
         self.horizontalLayout.setObjectName("horizontalLayout")
         self.lblProjectName = QtWidgets.QLabel(self.widget_2)
         font = QtGui.QFont()
+        font.setPointSize(-1)
         font.setBold(True)
         font.setWeight(75)
         self.lblProjectName.setFont(font)
@@ -346,6 +347,7 @@ class Ui_frm_ProjectPage(object):
         self.horizontalLayout_6.setObjectName("horizontalLayout_6")
         self.lblJobName = QtWidgets.QLabel(self.widget_12)
         font = QtGui.QFont()
+        font.setPointSize(-1)
         font.setBold(True)
         font.setWeight(75)
         self.lblJobName.setFont(font)
@@ -464,12 +466,20 @@ class Ui_frm_ProjectPage(object):
         self.verticalLayout_8.setContentsMargins(0, 0, 0, 0)
         self.verticalLayout_8.setObjectName("verticalLayout_8")
         self.lstJobDetail = QtWidgets.QListWidget(self.widget_11)
-        self.lstJobDetail.setStyleSheet("QListWidget::item {\n"
-"    padding: 5px;             /* Khoảng đệm bên trong item */\n"
-"    border-bottom: none; /* Đường kẻ mờ phân chia các item */\n"
-"    min-height: 30px;\n"
+        self.lstJobDetail.setStyleSheet("/* Item trong list */\n"
+"QListWidget::item {\n"
+"    min-height: 30px;                  /* tăng chiều cao item */\n"
+"  border-bottom: none; /* Đường kẻ mờ phân chia các item */\n"
 "}\n"
-"")
+"/* Toàn bộ list widget */\n"
+"QListWidget {\n"
+"    background-color: #FFFFFF;      /* nền trắng */\n"
+"    color: #2F4F6E;                /* chữ xanh đậm */\n"
+"    border: 1px solid #B0C4DE;     /* viền nhẹ */\n"
+"    font-size: 18px;\n"
+"    font-weight: bold;\n"
+"    padding: 2px;\n"
+"}")
         self.lstJobDetail.setObjectName("lstJobDetail")
         self.verticalLayout_8.addWidget(self.lstJobDetail)
         self.verticalLayout_9.addWidget(self.widget_11)
@@ -489,6 +499,7 @@ class Ui_frm_ProjectPage(object):
         sizePolicy.setHeightForWidth(self.label_6.sizePolicy().hasHeightForWidth())
         self.label_6.setSizePolicy(sizePolicy)
         font = QtGui.QFont()
+        font.setPointSize(-1)
         font.setBold(True)
         font.setWeight(75)
         self.label_6.setFont(font)

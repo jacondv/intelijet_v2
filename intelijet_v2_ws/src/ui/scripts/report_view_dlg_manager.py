@@ -77,7 +77,7 @@ class ReportViewManager(QDialog, Ui_frm_MainForm):
     def __init__(self):
         super().__init__()
         self.setupUi(self)
-        self.resize(1300, 800)
+        self.resize(1500, 1000)
         self.setWindowTitle("Report View Manager")
 
         os.makedirs(PROJECT_DIR, exist_ok=True)

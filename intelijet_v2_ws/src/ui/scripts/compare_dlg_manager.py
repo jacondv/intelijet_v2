@@ -83,7 +83,7 @@ class CompareManager(QDialog, Ui_frm_MainForm):
     def __init__(self):
         super().__init__()
         self.setupUi(self)
-        self.resize(1300, 800)
+        self.resize(1500, 1000)
         self.setWindowTitle("Compare Cloud Manager")
         os.makedirs(PROJECT_DIR, exist_ok=True)
 
@@ -130,6 +130,8 @@ class CompareManager(QDialog, Ui_frm_MainForm):
         """Khởi tạo lại dialog về trạng thái ban đầu."""
         self._initialized = True
         # ==  Hide some objects ==
+        self.menu1.hide()
+        self.menu2.hide()
         self.btnNewProject.hide()
         self.btnRenameProject.hide()
         self.btnDeleteProject.hide()

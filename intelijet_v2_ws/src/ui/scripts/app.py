@@ -134,6 +134,7 @@ class App(QMainWindow):
         # self.ui.btnSelectJob.released.connect(self.on_select_job_clicked)
         # btn_ok.clicked.connect(self.accept_job)
         # btn_cancel.clicked.connect(self.accept_job_cancel)
+        self.ui.btnFullScreen.released.connect(self.toggle_max)
 
         # --- Select Job to work process ---
         self.load_active_jobs(self.ui.cbbJobSelect, ACTIVE_JOB_FILE)
@@ -221,6 +222,14 @@ class App(QMainWindow):
             except Exception as e:
                 # in toàn bộ thông tin lỗi
                 print(f"[Error] at on_cloud_received Export Report : {e}")
+
+    def toggle_max(self):
+        if not self.isFullScreen():
+            self.showFullScreen()
+            self.ui.btnFullScreen.setText("Exit Full Screen")   # đổi text khi full
+        else:
+            self.showMaximized()
+            self.ui.btnFullScreen.setText("Full Screen")
 
     # 1.1--- Update commond data from ROS ---
     def update_data(self, data):
@@ -589,7 +598,22 @@ if __name__ == "__main__":
     # Load style QSS tại đây
     # with open("app.qss") as f:
     #     app.setStyleSheet(f.read())
-
+    app.setStyleSheet("""
+        QMessageBox {
+            font-size: 24px;
+            min-width: 500px;
+        }
+        QMessageBox QLabel {
+            font-size: 24px;
+            min-height: 40px;
+        }
+        QMessageBox QPushButton {
+            font-size: 20px;
+            padding: 10px 20px;
+            min-height: 45px;
+            min-width: 120px;
+        }
+    """)
 
     viewer = App()
     viewer.showMaximized()

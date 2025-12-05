@@ -14,15 +14,16 @@ class Ui_frm_MainForm(object):
     def setupUi(self, frm_MainForm):
         frm_MainForm.setObjectName("frm_MainForm")
         frm_MainForm.setWindowModality(QtCore.Qt.WindowModal)
-        frm_MainForm.resize(1069, 794)
-        frm_MainForm.setStyleSheet("\n"
+        frm_MainForm.resize(1277, 822)
+        frm_MainForm.setStyleSheet("* {\n"
+"    font-size: 24px;\n"
+"}\n"
 "QPushButton {\n"
 "    background-color: #5C87C9;     /* xanh sáng hơn */\n"
 "    color: white;\n"
 "    border: 0px solid #3c6382;\n"
 "    border-radius: 15px;\n"
 "    padding: 6px 10px;\n"
-"    font-size: 20px;\n"
 "}\n"
 "\n"
 "QPushButton:hover {\n"
@@ -42,7 +43,6 @@ class Ui_frm_MainForm(object):
 "    color: #2F4F6E;                  /* chữ xanh đậm */\n"
 "    border: 1px solid #B0C4DE;       /* viền nhẹ */\n"
 "    padding: 4px 8px;                /* khoảng cách chữ và viền */\n"
-"    font-size: 14px;\n"
 "    font-weight: bold;\n"
 "}\n"
 "\n"
@@ -63,7 +63,6 @@ class Ui_frm_MainForm(object):
 "    color: #2F4F6E;                 /* chữ xanh đậm */\n"
 "    border: 1px solid #B0C4DE;      /* viền nhẹ */\n"
 "    padding: 4px 8px;\n"
-"    font-size: 14px;\n"
 "    font-weight: bold;\n"
 "    selection-background-color: #D0E4F5; /* khi chọn item */\n"
 "}\n"
@@ -91,7 +90,6 @@ class Ui_frm_MainForm(object):
 "    margin-top: 10px;\n"
 "    padding: 8px;\n"
 "    font-weight: bold;\n"
-"    font-size: 16px;\n"
 "}\n"
 "\n"
 "QGroupBox::title {\n"
@@ -106,7 +104,6 @@ class Ui_frm_MainForm(object):
 "QCheckBox {\n"
 "    spacing: 8px;             /* khoảng cách giữa ô và text */\n"
 "    color: #2F4F6E;           /* chữ giống TextEdit */\n"
-"    font-size: 20px;\n"
 "    font-weight: bold;\n"
 "}\n"
 "\n"
@@ -145,6 +142,11 @@ class Ui_frm_MainForm(object):
 "    color: #A0A0A0;\n"
 "}\n"
 "\n"
+"QLabel {\n"
+"    color: #2F4F6E;           /* chữ giống TextEdit */\n"
+"    font-weight: bold;\n"
+"}\n"
+"\n"
 "\n"
 "/* ==================== SCROLLBAR ==================== */\n"
 "QScrollBar:vertical {\n"
@@ -177,7 +179,7 @@ class Ui_frm_MainForm(object):
 "    background-color: #FFFFFF;      /* nền trắng */\n"
 "    color: #2F4F6E;                /* chữ xanh đậm */\n"
 "    border: 1px solid #B0C4DE;     /* viền nhẹ */\n"
-"    font-size: 14px;\n"
+"    font-size: 24px;\n"
 "    font-weight: bold;\n"
 "    padding: 2px;\n"
 "}\n"
@@ -197,7 +199,7 @@ class Ui_frm_MainForm(object):
 "QListWidget::item {\n"
 "    padding: 5px;             /* Khoảng đệm bên trong item */\n"
 "    border-bottom: 1px solid #eeeeee; /* Đường kẻ mờ phân chia các item */\n"
-"    min-height: 60px;\n"
+"    min-height: 70px;\n"
 "}\n"
 "\n"
 "\n"
@@ -220,6 +222,7 @@ class Ui_frm_MainForm(object):
         self.widget_7 = QtWidgets.QWidget(self.ftm_ProjectManager)
         self.widget_7.setObjectName("widget_7")
         self.horizontalLayout_5 = QtWidgets.QHBoxLayout(self.widget_7)
+        self.horizontalLayout_5.setContentsMargins(0, -1, 0, 0)
         self.horizontalLayout_5.setObjectName("horizontalLayout_5")
         self.groupBox = QtWidgets.QGroupBox(self.widget_7)
         font = QtGui.QFont()
@@ -234,10 +237,11 @@ class Ui_frm_MainForm(object):
         self.widget_2 = QtWidgets.QWidget(self.groupBox)
         self.widget_2.setObjectName("widget_2")
         self.horizontalLayout = QtWidgets.QHBoxLayout(self.widget_2)
-        self.horizontalLayout.setContentsMargins(-1, 20, -1, -1)
+        self.horizontalLayout.setContentsMargins(-1, 30, -1, -1)
         self.horizontalLayout.setObjectName("horizontalLayout")
         self.lblProjectName = QtWidgets.QLabel(self.widget_2)
         font = QtGui.QFont()
+        font.setPointSize(-1)
         font.setBold(True)
         font.setWeight(75)
         self.lblProjectName.setFont(font)
@@ -249,8 +253,8 @@ class Ui_frm_MainForm(object):
         self.verticalLayout_5 = QtWidgets.QVBoxLayout(self.widget_3)
         self.verticalLayout_5.setObjectName("verticalLayout_5")
         self.widget_5 = QtWidgets.QWidget(self.widget_3)
-        self.widget_5.setMinimumSize(QtCore.QSize(0, 40))
-        self.widget_5.setMaximumSize(QtCore.QSize(16777215, 40))
+        self.widget_5.setMinimumSize(QtCore.QSize(0, 50))
+        self.widget_5.setMaximumSize(QtCore.QSize(16777215, 50))
         self.widget_5.setStyleSheet("background-color: rgb(255, 255, 255);\n"
 "border: 1px solid rgb(200, 200, 200);\n"
 "border-radius: 20px; ")
@@ -292,7 +296,7 @@ class Ui_frm_MainForm(object):
         self.menu1.setObjectName("menu1")
         self.horizontalLayout_2 = QtWidgets.QHBoxLayout(self.menu1)
         self.horizontalLayout_2.setContentsMargins(6, 0, 6, 0)
-        self.horizontalLayout_2.setSpacing(10)
+        self.horizontalLayout_2.setSpacing(15)
         self.horizontalLayout_2.setObjectName("horizontalLayout_2")
         self.btnNewProject = QtWidgets.QPushButton(self.menu1)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
@@ -357,10 +361,11 @@ class Ui_frm_MainForm(object):
         self.widget_12 = QtWidgets.QWidget(self.groupBox_2)
         self.widget_12.setObjectName("widget_12")
         self.horizontalLayout_6 = QtWidgets.QHBoxLayout(self.widget_12)
-        self.horizontalLayout_6.setContentsMargins(-1, 20, -1, -1)
+        self.horizontalLayout_6.setContentsMargins(-1, 30, -1, -1)
         self.horizontalLayout_6.setObjectName("horizontalLayout_6")
         self.lblJobName = QtWidgets.QLabel(self.widget_12)
         font = QtGui.QFont()
+        font.setPointSize(-1)
         font.setBold(True)
         font.setWeight(75)
         self.lblJobName.setFont(font)
@@ -372,8 +377,8 @@ class Ui_frm_MainForm(object):
         self.verticalLayout_4 = QtWidgets.QVBoxLayout(self.widget_8)
         self.verticalLayout_4.setObjectName("verticalLayout_4")
         self.widget_6 = QtWidgets.QWidget(self.widget_8)
-        self.widget_6.setMinimumSize(QtCore.QSize(0, 40))
-        self.widget_6.setMaximumSize(QtCore.QSize(16777215, 40))
+        self.widget_6.setMinimumSize(QtCore.QSize(0, 50))
+        self.widget_6.setMaximumSize(QtCore.QSize(16777215, 50))
         self.widget_6.setStyleSheet("background-color: rgb(255, 255, 255);\n"
 "border: 1px solid rgb(200, 200, 200);\n"
 "border-radius: 20px; ")
@@ -413,7 +418,7 @@ class Ui_frm_MainForm(object):
         self.menu2.setObjectName("menu2")
         self.horizontalLayout_9 = QtWidgets.QHBoxLayout(self.menu2)
         self.horizontalLayout_9.setContentsMargins(-1, 0, -1, 0)
-        self.horizontalLayout_9.setSpacing(10)
+        self.horizontalLayout_9.setSpacing(15)
         self.horizontalLayout_9.setObjectName("horizontalLayout_9")
         self.btnNewJob = QtWidgets.QPushButton(self.menu2)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
@@ -465,6 +470,15 @@ class Ui_frm_MainForm(object):
 "QListWidget::item {\n"
 "    min-height: 30px;                  /* tăng chiều cao item */\n"
 "  border-bottom: none; /* Đường kẻ mờ phân chia các item */\n"
+"}\n"
+"/* Toàn bộ list widget */\n"
+"QListWidget {\n"
+"    background-color: #FFFFFF;      /* nền trắng */\n"
+"    color: #2F4F6E;                /* chữ xanh đậm */\n"
+"    border: 1px solid #B0C4DE;     /* viền nhẹ */\n"
+"    font-size: 18px;\n"
+"    font-weight: bold;\n"
+"    padding: 2px;\n"
 "}")
         self.lstJobInfo.setObjectName("lstJobInfo")
         item = QtWidgets.QListWidgetItem()
@@ -496,7 +510,8 @@ class Ui_frm_MainForm(object):
         self.widget_11 = QtWidgets.QWidget(self.groupBox_3)
         self.widget_11.setObjectName("widget_11")
         self.verticalLayout_8 = QtWidgets.QVBoxLayout(self.widget_11)
-        self.verticalLayout_8.setSpacing(12)
+        self.verticalLayout_8.setContentsMargins(-1, 30, -1, -1)
+        self.verticalLayout_8.setSpacing(15)
         self.verticalLayout_8.setObjectName("verticalLayout_8")
         self.widget_18 = QtWidgets.QWidget(self.widget_11)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
@@ -509,7 +524,7 @@ class Ui_frm_MainForm(object):
         self.widget_18.setObjectName("widget_18")
         self.horizontalLayout_10 = QtWidgets.QHBoxLayout(self.widget_18)
         self.horizontalLayout_10.setContentsMargins(-1, 0, -1, 0)
-        self.horizontalLayout_10.setSpacing(10)
+        self.horizontalLayout_10.setSpacing(15)
         self.horizontalLayout_10.setObjectName("horizontalLayout_10")
         self.btnAsc = QtWidgets.QPushButton(self.widget_18)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
@@ -630,7 +645,7 @@ class Ui_frm_MainForm(object):
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.btnOk.sizePolicy().hasHeightForWidth())
         self.btnOk.setSizePolicy(sizePolicy)
-        self.btnOk.setMinimumSize(QtCore.QSize(100, 45))
+        self.btnOk.setMinimumSize(QtCore.QSize(200, 45))
         self.btnOk.setObjectName("btnOk")
         self.horizontalLayout_7.addWidget(self.btnOk)
         self.btnCancel = QtWidgets.QPushButton(self.widget)
@@ -639,7 +654,7 @@ class Ui_frm_MainForm(object):
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.btnCancel.sizePolicy().hasHeightForWidth())
         self.btnCancel.setSizePolicy(sizePolicy)
-        self.btnCancel.setMinimumSize(QtCore.QSize(100, 45))
+        self.btnCancel.setMinimumSize(QtCore.QSize(200, 45))
         self.btnCancel.setObjectName("btnCancel")
         self.horizontalLayout_7.addWidget(self.btnCancel)
         self.verticalLayout_3.addWidget(self.widget)

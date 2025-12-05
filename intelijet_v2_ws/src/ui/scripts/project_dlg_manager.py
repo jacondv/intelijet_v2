@@ -61,8 +61,24 @@ class JobInfoDialog(QDialog):
     def __init__(self, parent=None, default_name=""):
         super().__init__(parent)
         self.setWindowTitle("New Job Info")
-        self.resize(300, 200)
-
+        self.resize(600, 400)
+        # ===== Set FONT 24px cho toàn dialog =====
+        self.setStyleSheet("""
+            QLineEdit, QComboBox, QSpinBox, QTextEdit {
+                font-size: 24px;
+                min-height: 60px;
+                min-width: 120px;
+            }
+            QLabel {
+                font-size: 24px;
+            }
+            QDialogButtonBox QPushButton {
+                font-size: 24px;
+                min-height: 60px;
+                min-width: 120px;
+                padding: 10px;
+            }
+        """)
         # ===== Set font chung =====
 
         self.name_edit = QLineEdit(default_name)
