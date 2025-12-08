@@ -16,7 +16,7 @@ class Ui_frm_MainForm(object):
         frm_MainForm.setWindowModality(QtCore.Qt.WindowModal)
         frm_MainForm.resize(1277, 822)
         frm_MainForm.setStyleSheet("* {\n"
-"    font-size: 24px;\n"
+"    font-size: 18pt;\n"
 "}\n"
 "QPushButton {\n"
 "    background-color: #5C87C9;     /* xanh sáng hơn */\n"
@@ -226,7 +226,7 @@ class Ui_frm_MainForm(object):
         self.horizontalLayout_5.setObjectName("horizontalLayout_5")
         self.groupBox = QtWidgets.QGroupBox(self.widget_7)
         font = QtGui.QFont()
-        font.setPointSize(-1)
+        font.setPointSize(18)
         font.setBold(True)
         font.setWeight(75)
         self.groupBox.setFont(font)
@@ -241,7 +241,7 @@ class Ui_frm_MainForm(object):
         self.horizontalLayout.setObjectName("horizontalLayout")
         self.lblProjectName = QtWidgets.QLabel(self.widget_2)
         font = QtGui.QFont()
-        font.setPointSize(-1)
+        font.setPointSize(18)
         font.setBold(True)
         font.setWeight(75)
         self.lblProjectName.setFont(font)
@@ -276,7 +276,7 @@ class Ui_frm_MainForm(object):
         self.horizontalLayout_3.addWidget(self.btnSearchProject)
         self.txtSearchProject = QtWidgets.QLineEdit(self.widget_5)
         font = QtGui.QFont()
-        font.setPointSize(-1)
+        font.setPointSize(18)
         font.setBold(True)
         font.setWeight(75)
         self.txtSearchProject.setFont(font)
@@ -350,7 +350,7 @@ class Ui_frm_MainForm(object):
         self.horizontalLayout_5.addWidget(self.groupBox)
         self.groupBox_2 = QtWidgets.QGroupBox(self.widget_7)
         font = QtGui.QFont()
-        font.setPointSize(-1)
+        font.setPointSize(18)
         font.setBold(True)
         font.setWeight(75)
         self.groupBox_2.setFont(font)
@@ -365,7 +365,7 @@ class Ui_frm_MainForm(object):
         self.horizontalLayout_6.setObjectName("horizontalLayout_6")
         self.lblJobName = QtWidgets.QLabel(self.widget_12)
         font = QtGui.QFont()
-        font.setPointSize(-1)
+        font.setPointSize(18)
         font.setBold(True)
         font.setWeight(75)
         self.lblJobName.setFont(font)
@@ -398,7 +398,7 @@ class Ui_frm_MainForm(object):
         self.horizontalLayout_4.addWidget(self.btnSearchProject_2)
         self.txtSearchJob = QtWidgets.QLineEdit(self.widget_6)
         font = QtGui.QFont()
-        font.setPointSize(-1)
+        font.setPointSize(18)
         font.setBold(True)
         font.setWeight(75)
         self.txtSearchJob.setFont(font)
@@ -500,7 +500,7 @@ class Ui_frm_MainForm(object):
         self.horizontalLayout_5.addWidget(self.groupBox_2)
         self.groupBox_3 = QtWidgets.QGroupBox(self.widget_7)
         font = QtGui.QFont()
-        font.setPointSize(-1)
+        font.setPointSize(18)
         font.setBold(True)
         font.setWeight(75)
         self.groupBox_3.setFont(font)

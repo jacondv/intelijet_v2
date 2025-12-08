@@ -597,5 +597,5 @@ if __name__ == "__main__":
         app.setStyleSheet(f.read())
 
     viewer = App()
-    viewer.showMaximized()
+    viewer.showFullScreen()
     sys.exit(app.exec_())

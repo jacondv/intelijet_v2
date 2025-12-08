@@ -23,7 +23,7 @@ class Ui_MainWindow(object):
 "    border: 0px solid #3c6382;\n"
 "    border-radius: 15px;\n"
 "    padding: 6px 10px;\n"
-"    font-size: 20px;\n"
+"    font-size: 15pt;\n"
 "}\n"
 "\n"
 "QPushButton:hover {\n"
@@ -44,7 +44,7 @@ class Ui_MainWindow(object):
 "    color: #2F4F6E;                  /* chữ xanh đậm */\n"
 "    border: 1px solid #B0C4DE;       /* viền nhẹ */\n"
 "    padding: 4px 8px;                /* khoảng cách chữ và viền */\n"
-"    font-size: 24px;\n"
+"    font-size: 18pt;\n"
 "    font-weight: bold;\n"
 "}\n"
 "\n"
@@ -64,7 +64,7 @@ class Ui_MainWindow(object):
 "QCheckBox {\n"
 "    spacing: 8px;             /* khoảng cách giữa ô và text */\n"
 "    color: #2F4F6E;           /* chữ giống TextEdit */\n"
-"    font-size: 24px;\n"
+"    font-size: 18pt;\n"
 "    font-weight: bold;\n"
 "}\n"
 "\n"
@@ -109,7 +109,7 @@ class Ui_MainWindow(object):
 "    color: #2F4F6E;                 /* chữ xanh đậm */\n"
 "    border: 1px solid #B0C4DE;      /* viền nhẹ */\n"
 "    padding: 4px 8px;\n"
-"    font-size: 24px;\n"
+"    font-size: 18pt;\n"
 "    font-weight: bold;\n"
 "    selection-background-color: #D0E4F5; /* khi chọn item */\n"
 "}\n"
@@ -144,7 +144,7 @@ class Ui_MainWindow(object):
 "    margin-top: 10px;\n"
 "    padding: 8px;\n"
 "    font-weight: bold;\n"
-"    font-size: 24px;\n"
+"    font-size: 18pt;\n"
 "}\n"
 "\n"
 "QGroupBox::title {\n"
@@ -177,7 +177,7 @@ class Ui_MainWindow(object):
 "\n"
 "*{\n"
 "border: none;\n"
-"font-size: 24px;\n"
+"font-size: 18pt\n"
 "}\n"
 "#statusbar {\n"
 "    background-color: #185F63;\n"
@@ -212,7 +212,7 @@ class Ui_MainWindow(object):
 "    border: none;\n"
 "    padding: 40px 0px 40px 0px;\n"
 "    \n"
-"    font-size:24px;\n"
+"    font-size:18pt;\n"
 "    font-weight: bold;\n"
 "    background-color: qlineargradient(spread:pad, x1:0, y1:0, x2:1, y2:0, stop:0 #F8D40F, stop:1 #FFF9C4);\n"
 "\n"
@@ -226,7 +226,7 @@ class Ui_MainWindow(object):
 "\n"
 "/* Hiệu ứng hover / nhấn */\n"
 "#control_panel QPushButton:hover {\n"
-"    font-size: 25px;\n"
+"    font-size: 18pt;\n"
 "    color: #00aa7f;\n"
 "    padding: 36px 5px 36px 0px;\n"
 "\n"
@@ -251,7 +251,7 @@ class Ui_MainWindow(object):
 "    color: #2F4F6E;              /* chữ xanh công nghiệp */\n"
 "    border: 1px solid #B0C4DE;   /* viền nhẹ */\n"
 "    padding: 4px 8px;\n"
-"    font-size: 24px;\n"
+"    font-size: 18pt;\n"
 "    font-weight: bold;\n"
 "}\n"
 "\n"
@@ -353,7 +353,7 @@ class Ui_MainWindow(object):
         self.menu_main.setMinimumSize(QtCore.QSize(400, 0))
         self.menu_main.setMaximumSize(QtCore.QSize(400, 16777215))
         font = QtGui.QFont()
-        font.setPointSize(-1)
+        font.setPointSize(18)
         self.menu_main.setFont(font)
         self.menu_main.setObjectName("menu_main")
         self.verticalLayout = QtWidgets.QVBoxLayout(self.menu_main)
@@ -376,7 +376,7 @@ class Ui_MainWindow(object):
         self.cbbJobSelect.setStyleSheet("QComboBox {\n"
 "    border: 1px solid #60a3bc;\n"
 "    padding: 6px 10px;\n"
-"    font-size: 24px;\n"
+"    font-size: 18pt;\n"
 "}\n"
 "QComboBox QAbstractItemView::item {\n"
 "    min-height: 60px;\n"

@@ -13,9 +13,9 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 class Ui_frm_ProjectPage(object):
     def setupUi(self, frm_ProjectPage):
         frm_ProjectPage.setObjectName("frm_ProjectPage")
-        frm_ProjectPage.resize(1073, 748)
+        frm_ProjectPage.resize(1133, 748)
         frm_ProjectPage.setStyleSheet("* {\n"
-"font-size:24px;\n"
+"font-size:18pt;\n"
 "}\n"
 "QPushButton {\n"
 "    background-color: #5C87C9;     /* xanh sáng hơn */\n"
@@ -89,6 +89,7 @@ class Ui_frm_ProjectPage(object):
 "    margin-top: 10px;\n"
 "    padding: 8px;\n"
 "    font-weight: bold;\n"
+"\n"
 "}\n"
 "\n"
 "QGroupBox::title {\n"
@@ -230,7 +231,7 @@ class Ui_frm_ProjectPage(object):
         self.horizontalLayout_5.setObjectName("horizontalLayout_5")
         self.groupBox = QtWidgets.QGroupBox(self.widget_7)
         font = QtGui.QFont()
-        font.setPointSize(-1)
+        font.setPointSize(18)
         font.setBold(True)
         font.setWeight(75)
         self.groupBox.setFont(font)
@@ -245,7 +246,7 @@ class Ui_frm_ProjectPage(object):
         self.horizontalLayout.setObjectName("horizontalLayout")
         self.lblProjectName = QtWidgets.QLabel(self.widget_2)
         font = QtGui.QFont()
-        font.setPointSize(-1)
+        font.setPointSize(18)
         font.setBold(True)
         font.setWeight(75)
         self.lblProjectName.setFont(font)
@@ -280,7 +281,7 @@ class Ui_frm_ProjectPage(object):
         self.txtSearchProject = QtWidgets.QLineEdit(self.widget_5)
         self.txtSearchProject.setMinimumSize(QtCore.QSize(150, 40))
         font = QtGui.QFont()
-        font.setPointSize(-1)
+        font.setPointSize(18)
         font.setBold(True)
         font.setWeight(75)
         self.txtSearchProject.setFont(font)
@@ -332,7 +333,7 @@ class Ui_frm_ProjectPage(object):
         self.horizontalLayout_5.addWidget(self.groupBox)
         self.groupBox_2 = QtWidgets.QGroupBox(self.widget_7)
         font = QtGui.QFont()
-        font.setPointSize(-1)
+        font.setPointSize(18)
         font.setBold(True)
         font.setWeight(75)
         self.groupBox_2.setFont(font)
@@ -347,7 +348,7 @@ class Ui_frm_ProjectPage(object):
         self.horizontalLayout_6.setObjectName("horizontalLayout_6")
         self.lblJobName = QtWidgets.QLabel(self.widget_12)
         font = QtGui.QFont()
-        font.setPointSize(-1)
+        font.setPointSize(18)
         font.setBold(True)
         font.setWeight(75)
         self.lblJobName.setFont(font)
@@ -385,11 +386,6 @@ class Ui_frm_ProjectPage(object):
         self.horizontalLayout_4.addWidget(self.btnSearchProject_2)
         self.txtSearchJob = QtWidgets.QLineEdit(self.widget_6)
         self.txtSearchJob.setMinimumSize(QtCore.QSize(150, 40))
-        font = QtGui.QFont()
-        font.setPointSize(-1)
-        font.setBold(True)
-        font.setWeight(75)
-        self.txtSearchJob.setFont(font)
         self.txtSearchJob.setStyleSheet("border: none;")
         self.txtSearchJob.setClearButtonEnabled(True)
         self.txtSearchJob.setObjectName("txtSearchJob")
@@ -450,7 +446,7 @@ class Ui_frm_ProjectPage(object):
         self.horizontalLayout_5.addWidget(self.groupBox_2)
         self.groupBox_3 = QtWidgets.QGroupBox(self.widget_7)
         font = QtGui.QFont()
-        font.setPointSize(-1)
+        font.setPointSize(18)
         font.setBold(True)
         font.setWeight(75)
         self.groupBox_3.setFont(font)
@@ -499,7 +495,7 @@ class Ui_frm_ProjectPage(object):
         sizePolicy.setHeightForWidth(self.label_6.sizePolicy().hasHeightForWidth())
         self.label_6.setSizePolicy(sizePolicy)
         font = QtGui.QFont()
-        font.setPointSize(-1)
+        font.setPointSize(18)
         font.setBold(True)
         font.setWeight(75)
         self.label_6.setFont(font)
@@ -520,7 +516,7 @@ class Ui_frm_ProjectPage(object):
         self.btnAdd = QtWidgets.QPushButton(self.widget_13)
         self.btnAdd.setMinimumSize(QtCore.QSize(0, 60))
         font = QtGui.QFont()
-        font.setPointSize(-1)
+        font.setPointSize(18)
         self.btnAdd.setFont(font)
         icon6 = QtGui.QIcon()
         icon6.addPixmap(QtGui.QPixmap(":/icon/icon/check.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
@@ -530,7 +526,7 @@ class Ui_frm_ProjectPage(object):
         self.btnRemove = QtWidgets.QPushButton(self.widget_13)
         self.btnRemove.setMinimumSize(QtCore.QSize(0, 60))
         font = QtGui.QFont()
-        font.setPointSize(-1)
+        font.setPointSize(18)
         self.btnRemove.setFont(font)
         icon7 = QtGui.QIcon()
         icon7.addPixmap(QtGui.QPixmap(":/icon/icon/multiplication.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
