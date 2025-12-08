@@ -337,6 +337,67 @@ class CloudConverter:
     # ------------------------------------------------------------------------------
 
     @staticmethod
+    def crop_cloud_by_hull(target, source):
+        """
+        Trả về source chỉ giữ các điểm nằm trong convex hull của target.
+        Hỗ trợ cả legacy PointCloud và tensor PointCloud, bảo toàn tất cả field.
+        """
+        import numpy as np
+        import open3d as o3d
+        from scipy.spatial import Delaunay
+        # --- Lấy points numpy từ target ---
+        if isinstance(target, o3d.geometry.PointCloud):
+            points_target = np.asarray(target.points)
+        elif isinstance(target, o3d.t.geometry.PointCloud):
+            points_target = target.point["positions"].to(o3d.core.Dtype.Float32).numpy()
+
+        else:
+            raise TypeError("target must be o3d.geometry.PointCloud or o3d.t.geometry.PointCloud")
+
+        # --- Lấy points numpy từ source ---
+        if isinstance(source, o3d.geometry.PointCloud):
+            points_source = np.asarray(source.points)
+        elif isinstance(source, o3d.t.geometry.PointCloud):
+            points_source = source.point["positions"].to(o3d.core.Dtype.Float32).numpy()
+
+        else:
+            raise TypeError("source must be o3d.geometry.PointCloud or o3d.t.geometry.PointCloud")
+
+        # --- Tạo Delaunay hull ---
+        hull = Delaunay(points_target)
+
+        # --- Kiểm tra điểm nằm trong hull ---
+        mask_inside = hull.find_simplex(points_source) >= 0
+        cropped_points = points_source[mask_inside]
+
+        # --- Tạo cloud mới cùng loại với source ---
+        if isinstance(source, o3d.geometry.PointCloud):
+            cropped_cloud = o3d.geometry.PointCloud()
+            cropped_cloud.points = o3d.utility.Vector3dVector(cropped_points)
+
+            # Tự động detect các field khác và crop
+            for attr in ["colors", "normals"]:
+                if hasattr(source, attr):
+                    data = np.asarray(getattr(source, attr))
+                    # Chỉ crop nếu field có cùng số điểm với points
+                    if data.shape[0] == points_source.shape[0]:
+                        setattr(cropped_cloud, attr, o3d.utility.Vector3dVector(data[mask_inside]))
+            return cropped_cloud
+
+        else:  # o3d.t.geometry.PointCloud
+            device = source.device
+            dtype = source.point['positions'].dtype
+            cropped_cloud = o3d.t.geometry.PointCloud(device=device)
+            cropped_cloud.point["positions"] = o3d.core.Tensor(cropped_points, dtype=dtype, device=device)
+
+            # Bảo toàn tất cả point_attr khác
+            for attr in source.point:
+                if attr == "positions":
+                    continue
+                cropped_cloud.point[attr] = source.point[attr][mask_inside]
+            return cropped_cloud
+
+    @staticmethod
     def voxel_down_sample(pcd_tensor, voxel_size):
         """
         Downsample Open3D Tensor PointCloud bằng voxel grid.
