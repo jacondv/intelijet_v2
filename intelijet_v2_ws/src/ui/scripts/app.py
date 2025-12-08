@@ -429,15 +429,6 @@ class App(QMainWindow):
     def closeEvent(self, event):
         # subprocess.call(["/mnt/c/work/projects/intelijet_v2/shutdown.sh"])
         subprocess.call(["rosnode", "kill", "-a"])
-
-        import time
-        # chờ node chết
-        for _ in range(10):
-            nodes = subprocess.check_output(["rosnode", "list"]).decode().splitlines()
-            if len(nodes) == 0:
-                break
-            time.sleep(0.5)
-
         subprocess.call("pkill -f ros", shell=True)
         subprocess.call(["rosclean", "purge", "-y"])
         event.accept()  
