@@ -6,7 +6,7 @@ cfg = CONFIG
 # Mapping COB-ID → topic
 COB_ID_MAPPING = {
     "encoder": [0x285],  
-    "plc": [0x200, 0x201, 0x210]   
+    "plc": [0x7f]   
 }
 
 class MessageRouter:
@@ -30,7 +30,7 @@ class MessageRouter:
         if cob_id in COB_ID_MAPPING["encoder"]:
             self.pub_encoder.publish(msg)
         elif cob_id in COB_ID_MAPPING["plc"]:
-            self.self.pub_plc.publish(msg)
+            self.pub_plc.publish(msg)
         else:
             self.pub_other.publish(msg)
 
