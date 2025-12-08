@@ -69,7 +69,7 @@ class Ui_frmFileItemDetail(object):
         self.btnOpen.setMinimumSize(QtCore.QSize(40, 40))
         self.btnOpen.setMaximumSize(QtCore.QSize(40, 40))
         icon = QtGui.QIcon()
-        icon.addPixmap(QtGui.QPixmap(":/icon/icon/visual.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        icon.addPixmap(QtGui.QPixmap(":/icon/icon/view.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.btnOpen.setIcon(icon)
         self.btnOpen.setIconSize(QtCore.QSize(30, 30))
         self.btnOpen.setObjectName("btnOpen")

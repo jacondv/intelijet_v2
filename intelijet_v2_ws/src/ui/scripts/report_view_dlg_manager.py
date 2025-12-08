@@ -582,6 +582,6 @@ class ReportViewManager(QDialog, Ui_frm_MainForm):
         import subprocess
         print(filepath)
         if os.path.exists(filepath):
-            subprocess.Popen(["xdg-open", filepath])
+            subprocess.Popen(["okular", filepath])
         else:
             print(f"File not found: {filepath}")
