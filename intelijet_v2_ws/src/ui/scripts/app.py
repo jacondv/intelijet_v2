@@ -96,7 +96,7 @@ class App(QMainWindow):
             self.ui.tboxPage2.setLayout(QVBoxLayout())
         self.ui.tboxPage2.layout().insertWidget(1,self.history_page_in_toolbox)
         self.history_page_in_toolbox.polydataSignal.connect(lambda cloud: self.update_pointcloud_from_data(cloud, None))
-
+        self.ui.toolBox.currentChanged.connect(self.on_toolbox_changed)
         #Page 3: Compare page
         self.ui.btnCompare2.released.connect(self.on_compare)
         self.ui.btnViewReport.released.connect(self.on_viewreport_dlg)
@@ -179,6 +179,22 @@ class App(QMainWindow):
     def load_ui_state(self):
         index = settings.value("cbbAutoCompare_index", 0, type=int)
         self.ui.cbbAutoCompare.setCurrentIndex(index)
+
+    # Reload data for history page when toolbox page 2 is activated
+    def on_toolbox_changed(self, index):
+        page = self.ui.toolBox.widget(index)
+
+        if page is self.ui.tboxPage2:
+            self.history_page_in_toolbox.load_jobs()
+            parts = [p.strip() for p in self.ui.cbbJobSelect.currentText().split("/")]
+            project, job = (parts + [None]*2)[:2] 
+            if job:
+                #Show file on detail view
+                job_folder = os.path.join(PROJECT_DIR, project, job)
+                self.history_page_in_toolbox.on_item_selected(None, job_folder)
+                #Select current job in history view
+                self.history_page_in_toolbox.select_job(job)
+
 
     # 1.0--- Update commond data from ROS ---
     def on_cloud_received(self, msg, topic_name):

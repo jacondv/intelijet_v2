@@ -9,29 +9,36 @@ from ui.utils import load_ply_as_polydata
 from shared.config_loader import CONFIG as cfg
 
 BASE_DIR = cfg.BASE_DIR
-# BASE_DIR = "/mnt/c/work/projects/intelijet_v2"
+DATA_DIR = cfg.DATA_DIR
+PROJECT_DIR = os.path.join(BASE_DIR, DATA_DIR, "Projects")
+ACTIVE_JOB_FILE = os.path.join(PROJECT_DIR, "active_jobs.json")
 
 class HistoryPageManager(QWidget):
     polydataSignal = pyqtSignal(object)
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.jobs_root = os.path.join(BASE_DIR, "data")
         # Load UI đã thiết kế
         self.ui = Ui_frmHistoryView()
         self.ui.setupUi(self)
-        self.load_jobs_from_disk()
+        self.load_jobs()
         self.ui.lstJobDetail.setHorizontalScrollBarPolicy(Qt.ScrollBarAsNeeded)
         self.ui.lstJobDetail.setHorizontalScrollMode(QAbstractItemView.ScrollPerPixel)
 
-
     def setup_job_signals(self, job_widget, item, job_path):
         job_widget.clickedSignal.connect(lambda: self.on_item_selected(item, job_path))
-       
 
-    def load_jobs_from_disk(self):
+    def load_jobs(self):
+        import json
         self.ui.lstJobs.clear()
-        for job_name in os.listdir(self.jobs_root):
-            job_path = os.path.join(self.jobs_root, job_name)
+        json_file = ACTIVE_JOB_FILE
+        if not os.path.exists(json_file):
+            return
+        with open(json_file, "r") as f:
+            jobs = json.load(f)
+
+        for job in jobs:
+            job_name = job.get("job")
+            job_path = job.get("path")
             if os.path.isdir(job_path):
                 item = QListWidgetItem(self.ui.lstJobs)
                 job_widget = JobItemWidget(job_name)
@@ -41,22 +48,38 @@ class HistoryPageManager(QWidget):
                 self.ui.lstJobs.setItemWidget(item, job_widget)
                 self.setup_job_signals(job_widget, item, job_path)
 
+    def select_job(self, job_name: str):
+        for i in range(self.ui.lstJobs.count()):
+            item = self.ui.lstJobs.item(i)
+            widget = self.ui.lstJobs.itemWidget(item)
+
+            if not widget:
+                continue
+
+            # Giả sử JobItemWidget có QLabel tên lblJobName
+            
+            if widget.txtJobname.text().lower() == job_name.lower():
+                self.ui.lstJobs.setCurrentItem(item)
+                # nếu muốn scroll tới item
+                self.ui.lstJobs.scrollToItem(item)
+
+                return True
+
+        return False
 
     def on_item_selected(self, item, job_path):
         self.ui.lstJobs.setCurrentItem(item)
         self.ui.lstJobDetail.clear()        
         
         try:
-            files = [
-                f for f in os.listdir(job_path) if f.endswith(".ply")
-            ]
+            files = sorted([f for f in os.listdir(job_path) if f.lower().endswith(".ply")],reverse=True)
         except Exception as e:
             return
         
         # Hiển thị lên lstJobDetail
         for f in files:
             item = QListWidgetItem(self.ui.lstJobDetail)
-            f_widget = FileItemWidget(f,job_path)
+            f_widget = FileItemWidget(f,job_path,view_mode='3')
             filepath = os.path.join(job_path, f)
             item.setSizeHint(f_widget.sizeHint())
             
