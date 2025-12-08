@@ -337,7 +337,7 @@ class CloudConverter:
     # ------------------------------------------------------------------------------
 
     @staticmethod
-    def crop_cloud_by_hull(target, source):
+    def crop_cloud_by_hull(hull_cloud, cloud_to_crop):
         """
         Trả về source chỉ giữ các điểm nằm trong convex hull của target.
         Hỗ trợ cả legacy PointCloud và tensor PointCloud, bảo toàn tất cả field.
@@ -346,19 +346,20 @@ class CloudConverter:
         import open3d as o3d
         from scipy.spatial import Delaunay
         # --- Lấy points numpy từ target ---
-        if isinstance(target, o3d.geometry.PointCloud):
-            points_target = np.asarray(target.points)
-        elif isinstance(target, o3d.t.geometry.PointCloud):
-            points_target = target.point["positions"].to(o3d.core.Dtype.Float32).numpy()
+        hull_cloud = hull_cloud.voxel_down_sample(voxel_size=0.05)
+        if isinstance(hull_cloud, o3d.geometry.PointCloud):
+            points_target = np.asarray(hull_cloud.points)
+        elif isinstance(hull_cloud, o3d.t.geometry.PointCloud):
+            points_target = hull_cloud.point["positions"].to(o3d.core.Dtype.Float32).numpy()
 
         else:
-            raise TypeError("target must be o3d.geometry.PointCloud or o3d.t.geometry.PointCloud")
+            raise TypeError("hull_cloud must be o3d.geometry.PointCloud or o3d.t.geometry.PointCloud")
 
         # --- Lấy points numpy từ source ---
-        if isinstance(source, o3d.geometry.PointCloud):
-            points_source = np.asarray(source.points)
-        elif isinstance(source, o3d.t.geometry.PointCloud):
-            points_source = source.point["positions"].to(o3d.core.Dtype.Float32).numpy()
+        if isinstance(cloud_to_crop, o3d.geometry.PointCloud):
+            points_source = np.asarray(cloud_to_crop.points)
+        elif isinstance(cloud_to_crop, o3d.t.geometry.PointCloud):
+            points_source = cloud_to_crop.point["positions"].to(o3d.core.Dtype.Float32).numpy()
 
         else:
             raise TypeError("source must be o3d.geometry.PointCloud or o3d.t.geometry.PointCloud")
@@ -371,30 +372,30 @@ class CloudConverter:
         cropped_points = points_source[mask_inside]
 
         # --- Tạo cloud mới cùng loại với source ---
-        if isinstance(source, o3d.geometry.PointCloud):
+        if isinstance(cloud_to_crop, o3d.geometry.PointCloud):
             cropped_cloud = o3d.geometry.PointCloud()
             cropped_cloud.points = o3d.utility.Vector3dVector(cropped_points)
 
             # Tự động detect các field khác và crop
             for attr in ["colors", "normals"]:
-                if hasattr(source, attr):
-                    data = np.asarray(getattr(source, attr))
+                if hasattr(cloud_to_crop, attr):
+                    data = np.asarray(getattr(cloud_to_crop, attr))
                     # Chỉ crop nếu field có cùng số điểm với points
                     if data.shape[0] == points_source.shape[0]:
                         setattr(cropped_cloud, attr, o3d.utility.Vector3dVector(data[mask_inside]))
             return cropped_cloud
 
         else:  # o3d.t.geometry.PointCloud
-            device = source.device
-            dtype = source.point['positions'].dtype
+            device = cloud_to_crop.device
+            dtype = cloud_to_crop.point['positions'].dtype
             cropped_cloud = o3d.t.geometry.PointCloud(device=device)
             cropped_cloud.point["positions"] = o3d.core.Tensor(cropped_points, dtype=dtype, device=device)
 
             # Bảo toàn tất cả point_attr khác
-            for attr in source.point:
+            for attr in cloud_to_crop.point:
                 if attr == "positions":
                     continue
-                cropped_cloud.point[attr] = source.point[attr][mask_inside]
+                cropped_cloud.point[attr] = cloud_to_crop.point[attr][mask_inside]
             return cropped_cloud
 
     @staticmethod
