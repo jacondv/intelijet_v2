@@ -40,10 +40,18 @@ BASE_DIR = cfg.BASE_DIR
 CLOUD_COMPARED_TOPIC = cfg.CLOUD_COMPARED_TOPIC
 POST_SCAN_CLOUD_TOPIC = cfg.POST_SCAN_CLOUD_TOPIC
 
+CURRENT_JOB_FILE_NAME = "current_job.json"
+ACTIVE_JOB_FILE_NAME = "active_jobs.json"
+PROJECT_FOLDER_NAME = "Projects"
+JOBINFO_FILE_NAME = "job_info.json"
+
 DATA_DIR = cfg.DATA_DIR
-PROJECT_DIR = os.path.join(BASE_DIR, DATA_DIR, "Projects")
-ACTIVE_JOB_FILE = os.path.join(PROJECT_DIR, "active_jobs.json")
-CURRENT_JOB_FILE = os.path.join(PROJECT_DIR, "current_job.json")
+PROJECT_DIR = os.path.join(BASE_DIR, DATA_DIR, PROJECT_FOLDER_NAME)
+ACTIVE_JOB_FILE = os.path.join(PROJECT_DIR, ACTIVE_JOB_FILE_NAME)
+CURRENT_JOB_FILE = os.path.join(PROJECT_DIR, CURRENT_JOB_FILE_NAME)
+
+THICKNESS_DEFAULT = cfg.thickness.target  # Target thickness in meter -> convert mm to m
+TOLERANCE_DEFAULT = cfg.thickness.tolerance  # Allowable tolerance in meter of thickness
 
 settings = QSettings("JaconEquipment", "Intelijet")
 
@@ -199,10 +207,27 @@ class App(QMainWindow):
     # 1.0--- Update commond data from ROS ---
     def on_cloud_received(self, msg, topic_name):
         from pps.data_converter import CloudConverter
+        from pps.helper import assign_colors
+
+        
         cloudconverter = CloudConverter()
         o3d_cloud = cloudconverter.pointcloud2_to_o3d_tensor(msg)
 
         # Show pointcloud
+        if topic_name in CLOUD_COMPARED_TOPIC:
+            #TODO
+            try:
+                from ui.models.job_info import JobInfo
+                currnent_job = self.load_current_job(text_only=True)
+                current_job_info_path = os.path.join(PROJECT_DIR, currnent_job, JOBINFO_FILE_NAME)
+                job_info = JobInfo.load(current_job_info_path)
+                target_thickness =  job_info.parameters.get("target_thickness", THICKNESS_DEFAULT) # Unit is mm
+                tolerance = job_info.parameters.get("tolerance", TOLERANCE_DEFAULT) # Unit is mm
+                o3d_cloud = assign_colors(o3d_cloud, target_thickness, tolerance)
+            except Exception as e:
+                print(f"[Error] at on_cloud_received() to re-assign color : {e}")
+                pass
+
         polydata = cloudconverter.o3d_to_vtk_polydata(o3d_cloud)
         self.vtk_viewer.update(polydata)
 

@@ -128,6 +128,9 @@ class CloudManager(QObject):
                     post_cloud = tunnel.run_processing_pipeline()
 
                     print(f"[CloudManager] Comparing clouds {self.post_filename} vs {self.pre_filename}")
+
+                    post_cloud = cloudconverter.crop_cloud_by_hull(pre_cloud,post_cloud)
+
                     cloud_compared, distance = compute_heatmap_to_plane(
                         source=post_cloud, 
                         target=pre_cloud, 
@@ -136,11 +139,11 @@ class CloudManager(QObject):
                         k=6
                     )
                     # cloud_compare is in tensor format
-
                     # tunnel = TunnelProcessing()
                     # cloud_compared = tunnel.run_upsample(cloud_compared, axis='x', min_gap=0.02,max_gap=0.5)
                     # cloud_compared = smooth_cloud(cloud_compared, k=8, m=2, threshold=20.0)
                     # cloud_compared = assign_colors(cloud_compared, highlight_range=[20,40])
+
                     cloud_compared_upsample = tunnel.run_upsample(cloud_compared)
                     self.compare_done.emit(cloud_compared, self.post_filename)
                     self.compare_done2.emit(cloud_compared_upsample, self.post_filename)

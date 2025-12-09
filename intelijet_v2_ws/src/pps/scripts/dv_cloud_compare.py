@@ -86,7 +86,6 @@ class CloudComparer:
         return result
     
     
-
 def main():
     rospy.init_node("dv_cloud_compare", anonymous=False)
     rospy.loginfo("Cloud comparison node started.")
