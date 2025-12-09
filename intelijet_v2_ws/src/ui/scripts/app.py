@@ -198,6 +198,7 @@ class App(QMainWindow):
     # 1.0--- Update commond data from ROS ---
     def on_cloud_received(self, msg, topic_name):
         from pps.data_converter import CloudConverter
+        from pps.tunnel_processing import TunnelProcessing
         from pps.helper import assign_colors
 
         
@@ -206,11 +207,14 @@ class App(QMainWindow):
 
         # Show pointcloud
         if topic_name in CLOUD_COMPARED_TOPIC:
-            #TODO
             try:
                 from ui.models.job_info import JobInfo
-                currnent_job = self.load_current_job(text_only=True)
-                current_job_info_path = os.path.join(PROJECT_DIR, currnent_job, JOBINFO_FILE_NAME)
+                current_job = self.load_current_job(text_only=True)
+                project_name = current_job.split("/")[0]
+                job_number = current_job.split("/")[1]
+                jobs_folder = os.path.join(PROJECT_DIR, project_name,job_number)
+
+                current_job_info_path = os.path.join(jobs_folder, JOBINFO_FILE_NAME)
                 job_info = JobInfo.load(current_job_info_path)
                 target_thickness =  job_info.parameters.get("target_thickness", THICKNESS_DEFAULT) # Unit is mm
                 tolerance = job_info.parameters.get("tolerance", TOLERANCE_DEFAULT) # Unit is mm
@@ -226,6 +230,7 @@ class App(QMainWindow):
         if polydata:
             self.save_job(o3d_cloud, topic_name)
 
+
         # Emit align command to ROS
         if topic_name in POST_SCAN_CLOUD_TOPIC:
             if self.ui.cbbAutoCompare.currentIndex()==0: 
@@ -238,9 +243,9 @@ class App(QMainWindow):
                 return # only export report when auto compare is on nad auto report is on. (1 is OFF)
 
             try:
-                currnet_job = self.load_current_job(text_only=True)
-                project_name = currnet_job.split("/")[0]
-                job_number = currnet_job.split("/")[1]
+                current_job = self.load_current_job(text_only=True)
+                project_name = current_job.split("/")[0]
+                job_number = current_job.split("/")[1]
                 jobs_folder = os.path.join(PROJECT_DIR, project_name,job_number)
                 # Chuẩn hóa tên topic
                 safe_topic = re.sub(r'[^a-zA-Z0-9_-]', '', topic_name)
@@ -249,7 +254,9 @@ class App(QMainWindow):
                 timestamp_str = time.strftime("%Y%m%d_%H%M%S", time.localtime())
                 filename = os.path.join(jobs_folder, f"{job_number}#{timestamp_str}#{safe_topic}_{index:02d}.pdf")
                 
-                self.export_report(o3d_cloud,filename)
+                tunnel = TunnelProcessing(o3d_cloud)
+                cloud_compared_upsample = tunnel.run_upsample(o3d_cloud)
+                self.export_report(cloud_compared_upsample,filename)
 
             except Exception as e:
                 # in toàn bộ thông tin lỗi

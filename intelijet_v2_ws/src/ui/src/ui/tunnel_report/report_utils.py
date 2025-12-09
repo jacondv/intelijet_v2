@@ -61,7 +61,7 @@ class PLYProcessor:
         if self.distances is None or self.distances.size == 0:
             return None
 
-        min_thickness_mm = max(self.target_thickness - 3 * self.tolerance, 20.0)
+        min_thickness_mm = max(self.target_thickness - 3 * self.tolerance, 20)
 
         abs_dist = np.abs(self.distances)
         mask_valid = (abs_dist >= min_thickness_mm)
@@ -72,7 +72,10 @@ class PLYProcessor:
         if valid_ratio < MIN_VALID_RATIO:
             return 0
 
+        print(f"valid_ratio is {valid_ratio}")
         average_thickness = np.mean(self.distances[mask_valid])
+        print(f"average_thickness is {average_thickness}mm")
+
         return average_thickness
             
 
@@ -85,7 +88,7 @@ class PLYProcessor:
             return None  # hoặc 0.0 nếu pipeline bắt buộc number
 
         # minimum valid thickness (mm)
-        min_thickness_mm = min(self.target_thickness - 3 * self.tolerance,20)
+        min_thickness_mm = max(self.target_thickness - 3 * self.tolerance,20)
 
         # mask valid distances
         abs_dist = np.abs(self.distances)
@@ -102,6 +105,9 @@ class PLYProcessor:
 
         cell_area = 0.02 * 0.02  # m² per point
         volume_m3 = np.sum(valid_dist_m) * cell_area
+
+        print(f"valid_ratio is {valid_ratio}")
+        print(f"volume_m3 is {volume_m3}m3")
 
         return volume_m3
     
