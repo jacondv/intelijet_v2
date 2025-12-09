@@ -15,6 +15,9 @@ from pps.cloud_processing.base_aligner import CloudAligner
 from pps.cloud_processing.icp_aligner import ICPConfig
 from pps.cloud_processing.align_manager import PointCloudAlignerManager
 from pps.image_processing.keypoint_processing import KeypointCloudAlignManager
+from shared import log_status
+from shared.config_loader import CONFIG as cfg
+
 # from cloud_processing.ransac_aligner import RANSACAligner
 
 # Cloud topics
@@ -95,7 +98,6 @@ class CloudAlignNode:
     def __try_align(self):
         timeout = 0
         start_time = rospy.Time.now().to_sec()
-
         while self.__keypoint_manager.process_status !=2:
              rospy.sleep(0.1)
              if rospy.Time.now().to_sec() - start_time > timeout:
@@ -177,10 +179,14 @@ class CloudAlignNode:
             return TriggerResponse(success=False, message="Alignment disabled.")
         
         try:
-            rospy.loginfo("Starting cloud alignment...")
+            log_status(name=CONFIG.NOTIFICATION, message="[INFO] Start Alignment...")
             aligned = self.__try_align()
+
             self.pub.publish(convert_open3d_to_pointcloud2(aligned))
+
+            log_status(name=CONFIG.NOTIFICATION, message="[INFO] Alignment completed.")
             return TriggerResponse(success=True, message="Alignment completed and published.")
+        
         except Exception as e:
             rospy.logerr(f"[Align Error] {e}")
             return TriggerResponse(success=False, message=str(e))
