@@ -11,7 +11,6 @@ from pps.tunnel_processing import TunnelProcessing
 cloudconverter = CloudConverter()
 
 from shared.config_loader import CONFIG as cfg
-from shared import log_status
 
 CLOUD_COMPARED  = cfg.CLOUD_COMPARED_TOPIC
 PRE_SCAN_CLOUD  = cfg.PRE_SCAN_CLOUD_TOPIC
@@ -79,13 +78,11 @@ class CloudComparer:
 
     def compare(self, pres, post):
         # Trước khi so sánh, đảm bảo cả hai cloud đã được căn chỉnh va cắt bớt theo hull
-        log_status(name=cfg.NOTIFICATION, message="[INFO] Starting comparison...")
         post = cloudconverter.crop_cloud_by_hull(pres, post)
         # Thực hiện xử lý màu hóa theo khoảng cách
         result, dists = compute_heatmap_to_plane(post, pres, k=6, 
                                                  target_thickness=self.target_thickness, 
                                                  tolerance_thickness=self.tolerance_thickness)     
-        log_status(name=cfg.NOTIFICATION, message="[INFO] Comparison completed.")  
         return result
     
 
