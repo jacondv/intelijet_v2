@@ -58,28 +58,52 @@ class PLYProcessor:
     
 
     def avg_thickness(self):
-        if self.distances is None or len(self.distances) == 0:
+        if self.distances is None or self.distances.size == 0:
+            return None
+
+        min_thickness_mm = max(self.target_thickness - 3 * self.tolerance, 20.0)
+
+        abs_dist = np.abs(self.distances)
+        mask_valid = (abs_dist >= min_thickness_mm)
+
+        valid_ratio = np.mean(mask_valid) * 100  # %
+
+        MIN_VALID_RATIO = 1.0  # % – chỉnh theo yêu cầu kỹ thuật
+        if valid_ratio < MIN_VALID_RATIO:
             return 0
-        
-        min_val = max((self.target_thickness-2*self.tolerance), 2)
-        valid_dist = self.distances.copy()
-        valid_values = valid_dist[np.abs(valid_dist) >= min_val]
-        return np.average(valid_values)
-    
+
+        average_thickness = np.mean(self.distances[mask_valid])
+        return average_thickness
+            
 
     def volume(self):
-        if self.distances is None or len(self.distances) == 0:
-            return 0
-        
-        # min_val = self.target_thickness - self.tolerance
-        min_val = max((self.target_thickness-2*self.tolerance), 2)
-        
-        valid_dist = self.distances.copy()
-        valid_dist[np.abs(valid_dist) < min_val] = 0.0
-        # valid_dist = np.clip(valid_dist, 0, None)
-        valid_dist = valid_dist / 1000.0 # convert to meter
-        vol = np.sum(valid_dist * (0.02*0.02)) # volumn in m3
-        return vol
+        """
+        Estimate sprayed volume (m³) from distance map.
+        Distances are in mm.
+        """
+        if self.distances is None or self.distances.size == 0:
+            return None  # hoặc 0.0 nếu pipeline bắt buộc number
+
+        # minimum valid thickness (mm)
+        min_thickness_mm = min(self.target_thickness - 3 * self.tolerance,20)
+
+        # mask valid distances
+        abs_dist = np.abs(self.distances)
+        mask_valid = (abs_dist >= min_thickness_mm)
+        valid_ratio = np.mean(mask_valid) * 100
+
+        MIN_VALID_RATIO = 1.0  # % – chỉnh theo yêu cầu kỹ thuật
+        if valid_ratio < MIN_VALID_RATIO:
+            return 0  # không đủ dữ liệu để ước tính
+
+        # keep only valid distances
+        valid_dist_m = np.zeros_like(self.distances, dtype=float)
+        valid_dist_m[mask_valid] = self.distances[mask_valid] / 1000.0  # mm → m
+
+        cell_area = 0.02 * 0.02  # m² per point
+        volume_m3 = np.sum(valid_dist_m) * cell_area
+
+        return volume_m3
     
     
     def __plot_distance_distribution(self,distances, bins, save_path=None):

@@ -139,9 +139,6 @@ class App(QMainWindow):
         self.ui.btnCloseScanner.released.connect(lambda: self.ui_send_cmd_signal.emit(PPSCommand.CLOSE_HOUSING.value))
         self.ui.btnShutdown.released.connect(self.on_shutdown)
 
-        # self.ui.btnSelectJob.released.connect(self.on_select_job_clicked)
-        # btn_ok.clicked.connect(self.accept_job)
-        # btn_cancel.clicked.connect(self.accept_job_cancel)
         self.ui.btnFullScreen.released.connect(self.toggle_max)
 
         # --- Select Job to work process ---
@@ -168,12 +165,6 @@ class App(QMainWindow):
         # --- Data binder ---
         self.data_binder = DataBinder(self.ui.centralFrame)
         load_config_to_ui(self.ui.tab_setting)
-
-        # --- Show main window ---
-        # self.showMaximized()
-        # polydata = self.__load_sample()
-        # if polydata:
-        #     self.vtk_viewer.update(polydata)
 
         self.setting_page.txtEncodeValueRaw.setText("NaN")
 
@@ -430,7 +421,6 @@ class App(QMainWindow):
         parts = [p.strip() for p in self.ui.cbbJobSelect.currentText().split("/")]
         project, job = (parts + [None]*2)[:2]  # Nếu thiếu phần, job = None
         jobcompare_dlg.initialize(project,job)
-        filename = ""
         jobcompare_dlg.polydataSignal.connect(self.update_pointcloud_from_data)
 
         if jobcompare_dlg.exec_() == QDialog.Accepted:
