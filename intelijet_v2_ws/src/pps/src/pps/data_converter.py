@@ -291,10 +291,20 @@ class CloudConverter:
     @staticmethod
     def load_ply(filepath):
         """
-        Load PLY file dưới dạng o3d.t.geometry.PointCloud (tensor)
+        Load PLY file -> o3d.t.geometry.PointCloud
+        Raise RuntimeError nếu lỗi
         """
-        import open3d as o3d
-        pcd = o3d.t.io.read_point_cloud(filepath)  # trả về tensor PointCloud
+        if not os.path.exists(filepath):
+            raise FileNotFoundError(f"File not found: {filepath}")
+
+        try:
+            pcd = o3d.t.io.read_point_cloud(filepath)
+        except Exception as e:
+            raise RuntimeError(f"Open3D read failed: {e}")
+
+        if pcd.is_empty():
+            raise RuntimeError("Loaded point cloud is empty")
+
         return pcd
 
     # ------------------------------------------------------------------------------
