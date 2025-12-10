@@ -123,9 +123,7 @@ class App(QMainWindow):
         # self.cloud_received_signal.connect(self.update_pointcloud)
         #Receive cloud and Send align, compare request to ROS if cloud come from postcloud topic
         self.cloud_received_signal.connect(self.on_cloud_received)
-
         #Receive cloud check cloud is come from /compared topic --> export report
-        # --- Signals ---
         self.ui_data_update.connect(self.update_data)
         self.ui_send_cmd_signal.connect(self.ros_thread.send_command)
         cloud_compare.compare_done.connect(self.update_pointcloud_from_data)
@@ -507,33 +505,31 @@ class App(QMainWindow):
 
         try:
             filepath = _generate_filename(topic_name, ext="ply")
-            fname = os.path.basename(filepath)
             cloudconverter.o3d_to_ply(o3d_cloud, filepath) #save cloud to ply file.
 
             #Save job information to json file, it provides information for later visualization and report generation
+            # fname = os.path.basename(filepath)
+            # job_number = fname.split("#")[0] if "#" in filepath else "--"
 
-            job_number = fname.split("#")[0] if "#" in filepath else "--"
+            # header = ReportHeader(
+            #         site_name = "Jacon Equipment",
+            #         job_name= job_number,
+            #         applied_thickness = 30,
+            #         tolerance = 10,
+            #         operator = "Jacon"
+            # )
+            # # header.save(path=filepath.replace(".ply", ".json"))
 
-            header = ReportHeader(
-                    site_name = "Jacon Equipment",
-                    job_name= job_number,
-                    applied_thickness = 30,
-                    tolerance = 10,
-                    operator = "Danh Vo"
-            )
-
-            header.save(path=filepath.replace(".ply", ".json"))
-
-            if topic_name in CLOUD_COMPARED_TOPIC:
-                from ui.tunnel_report.report_controler import ReportGenerator
-                report = ReportGenerator()
-                report.set_info(
-                    site_name = header.site_name,
-                    job_name= header.job_name,
-                    applied_thickness = header.applied_thickness,
-                    tolerance = header.tolerance
-                )
-                report.export(o3d_cloud,output_path=filepath.replace(".ply", ".pdf"))
+            # if topic_name in CLOUD_COMPARED_TOPIC:
+            #     from ui.tunnel_report.report_controler import ReportGenerator
+            #     report = ReportGenerator()
+            #     report.set_info(
+            #         site_name = header.site_name,
+            #         job_name= header.job_name,
+            #         applied_thickness = header.applied_thickness,
+            #         tolerance = header.tolerance
+            #     )
+            #     report.export(o3d_cloud,output_path=filepath.replace(".ply", ".pdf"))
 
         except Exception as e:
             print("Error occurred while saving Open3D pointcloud:", e)
@@ -542,7 +538,6 @@ class App(QMainWindow):
     
     
     #10. change current job
-
     def on_job_changed(self, index):
         import json
         if index < 0:

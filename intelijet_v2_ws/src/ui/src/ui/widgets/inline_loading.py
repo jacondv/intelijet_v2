@@ -15,13 +15,14 @@ class InlineLoading:
         self.movie = None
 
     def show(self):
+        # Note van bi loi repaint
         self.overlay = QWidget(self.parent_widget)
         self.overlay.setAttribute(Qt.WA_TransparentForMouseEvents, True)
         self.overlay.setAttribute(Qt.WA_NoSystemBackground, True)
         # self.overlay.setAttribute(Qt.WA_TranslucentBackground, True)
         self.overlay.setGeometry(self.parent_widget.rect())
         self.overlay.show()
-
+        
         label = QLabel(self.overlay)
         label.setAlignment(Qt.AlignCenter)
         label.setFixedSize(self.spinner_size, self.spinner_size)
