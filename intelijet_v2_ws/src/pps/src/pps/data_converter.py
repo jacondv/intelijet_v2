@@ -4,7 +4,7 @@
 cloud_converter.py
 Module hỗ trợ chuyển đổi giữa ROS PointCloud2 và Open3D (legacy & tensor).
 """
-
+import os
 import numpy as np
 import ros_numpy
 from sensor_msgs.msg import PointCloud2
@@ -294,6 +294,7 @@ class CloudConverter:
         Load PLY file -> o3d.t.geometry.PointCloud
         Raise RuntimeError nếu lỗi
         """
+        import open3d as o3d
         if not os.path.exists(filepath):
             raise FileNotFoundError(f"File not found: {filepath}")
 
