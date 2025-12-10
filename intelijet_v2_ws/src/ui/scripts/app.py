@@ -14,7 +14,6 @@ from PyQt5.QtWidgets import QMessageBox, QDialog
 from PyQt5.QtCore import QSettings
 
 
-
 from vtk_viewer import VTKViewer
 from ros_thread import RosThread
 #Import pages manager
@@ -34,7 +33,7 @@ from ui.intelijet_ui import Ui_MainWindow
 from ui.tunnel_report.report_controler import ReportGenerator
 
 from shared.config_loader import CONFIG as cfg
-
+from ui.widgets.inline_loading import InlineLoading
 
 BASE_DIR = cfg.BASE_DIR
 CLOUD_COMPARED_TOPIC = cfg.CLOUD_COMPARED_TOPIC
@@ -77,7 +76,6 @@ class App(QMainWindow):
 
         self.ui.tab_setting.layout().addWidget(self.setting_page)
 
-
         # ------Tab JobSetting ---
         self.project_manager = ProjectManager()
         if self.ui.tab_jobnumber.layout() is None:
@@ -108,10 +106,13 @@ class App(QMainWindow):
         #Page 3: Compare page
         self.ui.btnCompare2.released.connect(self.on_compare)
         self.ui.btnViewReport.released.connect(self.on_viewreport_dlg)
+        
 
         # --- VTK Viewer ---
         self.vtk_viewer = VTKViewer(self.ui.cloudFrame)
 
+        #TODO
+        
         # --- ROS Thread ---
         self.ros_thread = RosThread(self.cloud_received_signal,
                                     self.ui_send_cmd_signal,
@@ -340,7 +341,6 @@ class App(QMainWindow):
     def on_viewreport_dlg(self):
         # from reportselect_dlg_manager import reportselect_dlg
         # reportselect_dlg.exec_()
-
         from report_view_dlg_manager import ReportViewManager
         dlg = ReportViewManager()
 
