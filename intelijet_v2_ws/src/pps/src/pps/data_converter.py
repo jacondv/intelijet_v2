@@ -289,7 +289,7 @@ class CloudConverter:
     # ------------------------------------------------------------------------------
 
     @staticmethod
-    def load_ply(filepath):
+    def load_ply(filepath, as_legacy=False):
         """
         Load PLY file -> o3d.t.geometry.PointCloud
         Raise RuntimeError nếu lỗi
@@ -305,7 +305,9 @@ class CloudConverter:
 
         if pcd.is_empty():
             raise RuntimeError("Loaded point cloud is empty")
-
+        if as_legacy:
+            pcd = pcd.to_legacy()
+        
         return pcd
 
     # ------------------------------------------------------------------------------

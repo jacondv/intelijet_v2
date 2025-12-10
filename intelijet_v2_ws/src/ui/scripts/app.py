@@ -409,7 +409,7 @@ class App(QMainWindow):
                 filename = filename.replace(".ply",".pdf")
                 
             else:
-                timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+                timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
                 filename = f"Test_report#{timestamp}.pdf"
                 filename = f"{BASE_DIR}/data/reports/{filename}"
                 
@@ -431,20 +431,44 @@ class App(QMainWindow):
         if jobcompare_dlg.exec_() == QDialog.Accepted:
             data = jobcompare_dlg.get_result()
             
-            # pre = data['file1']
-            # post = data['file2']
             pre, post, *_ = data
             if pre is None or post is None:
                 return
-            
-            cloud_compare.set_prescan(pre)
-            cloud_compare.set_postscan(post)
-            if self.ui.cbbAutoAlign.currentText().lower() == "on":
-                cloud_compare.align()
-            cloud_compare.compare() #--> output signal compare_done the cloud result.
+             
+            # cloud_compare.set_prescan(pre)
+            # cloud_compare.set_postscan(post)
+            # if self.ui.cbbAutoAlign.currentText().lower() == "on":
+            #     cloud_compare.align()
+            # cloud_compare.compare() #--> output signal compare_done the cloud result.
 
-      
+            # ✅ chạy trong main thread → OK
+            from ui.compare_cloud_worker import CompareWorker
+            # ✅ tạo worker, TRUYỀN PATH
+            self.worker = CompareWorker(
+                prescan_path=pre,
+                postscan_path=post,
+                do_pre_process=True,
+                do_align=True,
+                do_post_process=True
+            )
 
+            # ✅ connect signal
+            self.worker.progress.connect(self.on_compare_process)
+            self.worker.finished.connect(self.on_compare_done)
+
+            # ✅ start thread
+            self.worker.start()
+
+    def on_compare_process(self, progress, stage):
+        print(f"COMPARE: {progress} %")
+
+    def on_compare_done(self, success, job_id):
+        if success:
+            print("COMPARE DONE ",job_id)
+        else:
+            print("COMPARE FAILED ", job_id)
+
+                    
     # 7.--- Close event handler ---
     def closeEvent(self, event):
         # subprocess.call(["/mnt/c/work/projects/intelijet_v2/shutdown.sh"])

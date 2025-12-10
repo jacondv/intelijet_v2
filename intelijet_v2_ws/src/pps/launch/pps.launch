@@ -65,6 +65,7 @@
 		output="screen"
 		args="-O /root/intelijet_v2/data/bag_20251124.bag /cloud /scan /joint_states" /> -->
 
+    <node pkg="pps" type="compare_cloud_action_server.py" name="compare_cloud_action_server" output="screen" />
 
 </launch>
 
