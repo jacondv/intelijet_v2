@@ -71,6 +71,7 @@ add_action_files(
   FILES 
     PreScan.action
     StartScan.action
+    CompareCloud.action
 )
 
 ## Generate added messages and services with any dependencies listed here
@@ -113,7 +114,7 @@ generate_messages(
 catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES pps
- CATKIN_DEPENDS pcl_ros roscpp rospy sensor_msgs std_msgs actionlib actionlib_msgs
+  CATKIN_DEPENDS  pcl_ros roscpp rospy sensor_msgs std_msgs actionlib actionlib_msgs
 #  DEPENDS system_lib
 )
 

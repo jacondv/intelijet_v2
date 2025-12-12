@@ -14,7 +14,7 @@ from PyQt5.QtWidgets import QMessageBox, QDialog
 from PyQt5.QtCore import QSettings
 
 
-from vtk_viewer import VTKViewer
+from vtk_viewer_v2 import VTKViewer
 from ros_thread import RosThread
 #Import pages manager
 from jobnumber_page_manager import JobNumberPageManager
@@ -214,6 +214,7 @@ class App(QMainWindow):
                 jobs_folder = os.path.join(PROJECT_DIR, project_name,job_number)
 
                 current_job_info_path = os.path.join(jobs_folder, JOBINFO_FILE_NAME)
+                
                 job_info = JobInfo.load(current_job_info_path)
                 target_thickness =  job_info.parameters.get("target_thickness", THICKNESS_DEFAULT) # Unit is mm
                 tolerance = job_info.parameters.get("tolerance", TOLERANCE_DEFAULT) # Unit is mm
