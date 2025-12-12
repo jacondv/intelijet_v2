@@ -1,0 +1,16 @@
+# ===== Goal =====
+string prescan_path
+string postscan_path
+bool do_pre_process
+bool do_align
+bool do_post_process
+
+---
+# ===== Result =====
+bool success
+string job_id
+
+---
+# ===== Feedback =====
+float32 progress
+string stage
