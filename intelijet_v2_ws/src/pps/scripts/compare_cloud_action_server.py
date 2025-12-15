@@ -2,12 +2,15 @@
 import rospy
 import actionlib
 import uuid
+import numpy as np
 
 from pps.data_converter import cloudconverter
 from pps.tunnel_processing import TunnelProcessing
 from pps.helper import compute_heatmap_to_plane
 from shared.config_loader import CONFIG as cfg
 from pps.cloud_processing.utils_align import align_cloud
+from pps.image_processing.keypoint_processing_v2 import KeypointCloudAlignManager
+
 
 from sensor_msgs.msg import PointCloud2
 from pps.msg import (
@@ -65,8 +68,33 @@ class CompareCloudServer:
                 pre_tunnel = TunnelProcessing(pre_cloud)
                 pre_cloud = pre_tunnel.run_processing_pipeline()
 
-                post_tunnel = TunnelProcessing(pre_cloud)
-                pre_cloud = post_tunnel.run_processing_pipeline()
+                post_tunnel = TunnelProcessing(post_cloud)
+                post_cloud = post_tunnel.run_processing_pipeline()
+
+                #---- extract keypoint by image
+
+                pre_image, intrinsic1, extrinsic1 = cloudconverter.cloud_to_image(pre_cloud)
+                post_image, intrinsic2, extrinsic2 = cloudconverter.cloud_to_image(post_cloud)
+
+                self.keypoint_manager = KeypointCloudAlignManager(camera_intrinsics=intrinsic1,
+                                                    lidar_to_cam_extrinsic=extrinsic1,
+                                                    dist_coeffs=np.zeros(5),
+                                                    feature_method="SIFT",
+                                                    pixel_radius=5,
+                                                    cloud_radius=0.5,
+                                                    match_ratio=0.5)
+                
+                self.keypoint_manager.set_cloud1(pre_cloud)
+                self.keypoint_manager.set_cloud2(post_cloud)
+
+                self.keypoint_manager.set_image1(pre_image)
+                self.keypoint_manager.set_image2(post_image)
+
+                if self.keypoint_manager.is_ready():    
+                    # cloud1_target, cloud2_source, T = self.__keypoint_manager.get_result()
+                    _, source_patch, T = self.keypoint_manager.get_result()
+                else:
+                    source_patch = None
 
                 self.server.publish_feedback(feedback)
 
@@ -77,7 +105,13 @@ class CompareCloudServer:
                 self.server.publish_feedback(feedback)
 
                 # TODO: align cloud
-                post_cloud = align_cloud(pre_cloud=pre_cloud, post_cloud=post_cloud)
+                if source_patch:
+                    cloudconverter.o3d_to_ply(source_patch,'source_patch.ply')
+                    T = align_cloud(pre_cloud=pre_cloud, post_cloud=source_patch,return_transform_only=True)
+                    post_cloud.transform(T)
+                    
+                else:
+                    post_cloud = align_cloud(pre_cloud=pre_cloud, post_cloud=post_cloud)
 
                 
             # ===== POST PROCESS =====

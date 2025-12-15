@@ -12,13 +12,19 @@ DEFAULT_ICP_CONFIG = ICPConfig(
 )
 
 global_aligner = PointCloudAlignerManager(strategy="icp", config=DEFAULT_ICP_CONFIG)
-def align_cloud(post_cloud, pre_cloud):
+def align_cloud(post_cloud, pre_cloud, return_transform_only=False):
     """
     Wrapper: convert tensor -> legacy, align, trả về post_cloud đã transform
+    source is post_cloud
+    target is pre_cloud
     """
     post = cloudconverter.tensor_to_o3d_legacy(post_cloud)
     pre = cloudconverter.tensor_to_o3d_legacy(pre_cloud)
     global_aligner.align(post, pre)
     T = global_aligner.get_transformation_matrix()
+    
+    if return_transform_only:
+        return T
+    
     post.transform(T)
     return post

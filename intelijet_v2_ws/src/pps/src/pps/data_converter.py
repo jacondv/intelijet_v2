@@ -582,91 +582,94 @@ class CloudConverter:
 
         return new_pcd
 
-    # def voxel_down_sample_spatial(pcd_tensor, voxel_size):
-    #     """
-    #     Downsample Open3D Tensor PointCloud bằng voxel grid, sau đó loại bỏ các điểm quá gần nhau theo min_dist.
-    #     Giữ colors và distances trung bình, kết hợp KDTree lọc khoảng cách tối thiểu.
-        
-    #     Args:
-    #         pcd_tensor: o3d.t.geometry.PointCloud
-    #         voxel_size: float, kích thước voxel
-    #         min_dist: float, khoảng cách tối thiểu giữa các điểm trong cloud
-        
-    #     Returns:
-    #         o3d.t.geometry.PointCloud: point cloud đã downsample
-    #     """
-    #     import open3d as o3d
-    #     from scipy.spatial import cKDTree
 
-    #     device = pcd_tensor.device
-    #     min_dist = 0.9*voxel_size
-    #     # --- 1. Chuyển tensor sang numpy ---
-    #     points = pcd_tensor.point.positions.cpu().numpy().reshape(-1,3).astype(np.float64)
+    @staticmethod
+    def cloud_to_image(pcd,
+                            filename=None,
+                            width=800,
+                            height=800,
+                            rot_x=0,
+                            rot_y=0,
+                            rot_z=0):
+        """
+        Render point cloud to an image and save to file (workaround Open3D 0.19 PNG issue)
+        Rotation values are in degrees.
+        Returns True nếu lưu thành công, False nếu có lỗi.
+        """
+        import open3d as o3d
+        import copy
+        import cv2
 
-    #     colors = None
-    #     if "colors" in pcd_tensor.point:
-    #         colors = pcd_tensor.point.colors.cpu().numpy().reshape(-1,3).astype(np.float64)
+        try:
+            # ---- copy cloud và gán màu ----
+            pcd = copy.deepcopy(pcd)
 
-    #     distances = None
-    #     if "distances" in pcd_tensor.point:
-    #         distances = pcd_tensor.point["distances"].cpu().numpy()
-    #         if distances.ndim == 1:
-    #             distances = distances.reshape(-1,1)
+            if isinstance(pcd, o3d.t.geometry.PointCloud):
+                pcd = pcd.to_legacy()
 
-    #     # --- 2. Tạo voxel index ---
-    #     voxel_idx = np.floor(points / voxel_size).astype(np.int64)
+            # ---- tính normal nếu chưa có ----
+            if not pcd.has_normals():
+                pcd.estimate_normals(search_param=o3d.geometry.KDTreeSearchParamKNN(knn=30))
 
-    #     # --- 3. Lấy unique voxel và mapping point->voxel ---
-    #     keys, inverse = np.unique(voxel_idx, axis=0, return_inverse=True)
-    #     num_voxels = keys.shape[0]
+            pcd.paint_uniform_color([0.7, 0.7, 0.7])
 
-    #     # --- 4. Tính trung bình positions vectorized ---
-    #     sum_points = np.zeros((num_voxels,3), dtype=np.float64)
-    #     count = np.zeros((num_voxels,1), dtype=np.int64)
-    #     np.add.at(sum_points, inverse, points)
-    #     np.add.at(count, inverse, 1)
-    #     down_points = sum_points / count
+            # ---- rotation ----
+            Rx = pcd.get_rotation_matrix_from_xyz(np.radians([rot_x, 0, 0]))
+            Ry = pcd.get_rotation_matrix_from_xyz(np.radians([0, rot_y, 0]))
+            Rz = pcd.get_rotation_matrix_from_xyz(np.radians([0, 0, rot_z]))
+            pcd.rotate(Rz @ Ry @ Rx, center=pcd.get_center())
 
-    #     # --- 5. Tính trung bình colors vectorized ---
-    #     down_colors = None
-    #     if colors is not None:
-    #         sum_colors = np.zeros((num_voxels,3), dtype=np.float64)
-    #         np.add.at(sum_colors, inverse, colors)
-    #         down_colors = sum_colors / count
+            # ---- Visualizer headless ----
+            vis = o3d.visualization.Visualizer()
+            vis.create_window(visible=False, width=width, height=height)
+            vis.add_geometry(pcd)
 
-    #     # --- 6. Tính trung bình distances vectorized ---
-    #     down_distances = None
-    #     if distances is not None:
-    #         dist_dim = distances.shape[1]
-    #         sum_dist = np.zeros((num_voxels, dist_dim), dtype=np.float64)
-    #         np.add.at(sum_dist, inverse, distances)
-    #         down_distances = sum_dist / count
+            opt = vis.get_render_option()
+            opt.background_color = np.array([0, 0, 0])
+            opt.point_size = 2.0
+            opt.light_on = True
 
-    #     # --- 7. Lọc các điểm gần nhau bằng KDTree ---
-    #     tree = cKDTree(down_points)
-    #     mask = np.ones(len(down_points), dtype=bool)
-    #     selected = []
+            # ----- Camera param ---------
+            ctr = vis.get_view_control()
+            param = ctr.convert_to_pinhole_camera_parameters()
+            intrinsic = param.intrinsic
+            extrinsic = param.extrinsic
 
-    #     for i, p in enumerate(down_points):
-    #         if mask[i]:
-    #             selected.append(i)
-    #             idxs = tree.query_ball_point(p, min_dist)
-    #             mask[idxs] = False
+            vis.poll_events()
+            vis.update_renderer()
 
-    #     selected = np.array(selected, dtype=np.int64)
-    #     final_points = down_points[selected]
-    #     final_colors = down_colors[selected] if down_colors is not None else None
-    #     final_distances = down_distances[selected] if down_distances is not None else None
+            # ---- capture float buffer và convert sang uint8 ----
+            img = np.asarray(vis.capture_screen_float_buffer(do_render=True))
+            img = (img * 255).astype(np.uint8)
+            img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
 
-    #     # --- 8. Tạo lại Tensor point cloud ---
-    #     new_pcd = o3d.t.geometry.PointCloud()
-    #     new_pcd.point.positions = o3d.core.Tensor(final_points, device=device)
-    #     if final_colors is not None:
-    #         new_pcd.point.colors = o3d.core.Tensor(final_colors, device=device)
-    #     if final_distances is not None:
-    #         new_pcd.point["distances"] = o3d.core.Tensor(final_distances, device=device)
+            # ---- tạo thư mục nếu chưa tồn tại ----
+            # os.makedirs(os.path.dirname(filename), exist_ok=True)
 
-    #     return new_pcd
+            # ---- lưu ảnh ----
+            if filename:
+                cv2.imwrite(filename, img)
+
+            vis.destroy_window()
+            return img, intrinsic, extrinsic
+
+        except Exception as e:
+            print(f"[cloud_to_image] Failed to render or save image: {e}")
+            return None
+
+
+# if __name__ == "__main__":
+#     import open3d as o3d
+#     import numpy as np
+#     import cv2
+
+#     pcd_file = "pcd2.ply"
+#     pcd = o3d.io.read_point_cloud(pcd_file)
+#     pcd.estimate_normals(search_param=o3d.geometry.KDTreeSearchParamKNN(knn=30))
+#     pcd.normalize_normals()
+
+#     render_cloud_to_image(pcd, rot_x=-90, rot_y=90, rot_z=0)
+
 
 # ------------------------------------------------------------------------------
 
