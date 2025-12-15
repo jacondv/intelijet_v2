@@ -14,7 +14,7 @@ from PyQt5.QtWidgets import QMessageBox, QDialog
 from PyQt5.QtCore import QSettings
 
 
-from vtk_viewer_v2 import VTKViewer
+from vtk_viewer import VTKViewer
 from ros_thread import RosThread
 #Import pages manager
 from jobnumber_page_manager import JobNumberPageManager

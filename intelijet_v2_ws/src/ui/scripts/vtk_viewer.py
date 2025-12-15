@@ -1,40 +1,73 @@
 # vtk_viewer.py
 import vtk
 from vtk.qt.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
-from PyQt5.QtWidgets import QWidget
+from PyQt5.QtWidgets import QWidget, QVBoxLayout, QPushButton
+
+# Subclass QVTKRenderWindowInteractor để bắt resize
+class QVTKWidget(QVTKRenderWindowInteractor):
+    def __init__(self, parent=None, on_resize=None):
+        super().__init__(parent)
+        self._on_resize = on_resize
+
+    def resizeEvent(self, event):
+        super().resizeEvent(event)
+        if self._on_resize:
+            self._on_resize()
 
 class VTKViewer:
     def __init__(self, parent_widget: QWidget):
         self.parent_widget = parent_widget
         self.renderer = vtk.vtkRenderer()
         self.current_actor = None
+        self.box_widget = None
+        self.initial_camera_state = None
 
-        self.vtkWidget = QVTKRenderWindowInteractor(parent_widget)
+        # ----- VTK widget -----
+        self.vtkWidget = QVTKWidget(parent_widget, on_resize=self._update_overlay_button)
         layout = parent_widget.layout()
         if layout is None:
-            from PyQt5.QtWidgets import QVBoxLayout
             layout = QVBoxLayout(parent_widget)
             parent_widget.setLayout(layout)
         layout.addWidget(self.vtkWidget)
 
         self.vtkWidget.GetRenderWindow().AddRenderer(self.renderer)
+        self.iren = self.vtkWidget.GetRenderWindow().GetInteractor()
 
-        # --- Đặt camera ngay lúc khởi tạo ---
+        # ----- Camera -----
         cam = self.renderer.GetActiveCamera()
-        cam.SetPosition(-1, 0, 0)        # camera phía trước gốc (X vào màn hình)
-        cam.SetFocalPoint(0, 0, 0)       # nhìn vào gốc
-        cam.SetViewUp(0, 0, 1)        # hướng up
+        cam.SetPosition(-1, 0, 0)
+        cam.SetFocalPoint(0, 0, 0)
+        cam.SetViewUp(0, 0, 1)
         self.renderer.ResetCameraClippingRange()
 
-        iren = self.vtkWidget.GetRenderWindow().GetInteractor()
-        self.style = vtk.vtkInteractorStyleTrackballCamera()
-        iren.SetInteractorStyle(self.style)
+        # Trackball camera
+        style = vtk.vtkInteractorStyleTrackballCamera()
+        self.iren.SetInteractorStyle(style)
 
-        # Axes
+        # ---- Zoom center button (overlay) ----
+        self.btn_zoom_center = QPushButton("⤢", self.vtkWidget)
+        self.btn_zoom_center.setToolTip("Zoom to initial view")
+        self.btn_zoom_center.setFixedSize(100, 100)
+        self.btn_zoom_center.setStyleSheet("""
+            QPushButton {
+                background: rgba(40, 40, 40, 180);
+                border: 1px solid white;       /* viền trắng */
+                color: white;
+                border-radius: 32px;
+                font-size: 24pt;
+            }
+            QPushButton:hover {
+                background: rgba(70, 70, 70, 200);
+            }
+        """)
+        self.btn_zoom_center.clicked.connect(self.restore_initial_view)
+        self.btn_zoom_center.raise_()
+        self._update_overlay_button()  # vị trí lúc đầu
+
+        # ----- Axes orientation -----
         axes = vtk.vtkAxesActor()
         axes.SetTotalLength(1.0, 1.0, 1.0)
         axes.AxisLabelsOn()
-        axes.SetCylinderRadius(0.05)
 
         self.orientation_widget = vtk.vtkOrientationMarkerWidget()
         self.orientation_widget.SetOrientationMarker(axes)
@@ -46,11 +79,85 @@ class VTKViewer:
         self.vtkWidget.Initialize()
         self.vtkWidget.Start()
 
-    def update(self, polydata):
-        import vtk
+    # ------------------ Camera ------------------
+    def _save_camera_state(self):
+        cam = self.renderer.GetActiveCamera()
+        self.initial_camera_state = {
+            "position": cam.GetPosition(),
+            "focal_point": cam.GetFocalPoint(),
+            "view_up": cam.GetViewUp(),
+            "view_angle": cam.GetViewAngle(),
+            "parallel_scale": cam.GetParallelScale(),
+        }
 
+        # Box / Actor transform
+        if self.current_actor:
+            t = vtk.vtkTransform()
+            if self.current_actor.GetUserTransform():
+                t.DeepCopy(self.current_actor.GetUserTransform())
+            else:
+                t.Identity()
+            self.initial_actor_transform = vtk.vtkTransform()
+            self.initial_actor_transform.DeepCopy(t)
+
+    def restore_initial_view(self):
+        if not self.initial_camera_state:
+            return
+        cam = self.renderer.GetActiveCamera()
+        s = self.initial_camera_state
+        cam.SetPosition(*s["position"])
+        cam.SetFocalPoint(*s["focal_point"])
+        cam.SetViewUp(*s["view_up"])
+        cam.SetViewAngle(s["view_angle"])
+        cam.SetParallelScale(s["parallel_scale"])
+        self.renderer.ResetCameraClippingRange()
+
+            # ---- Actor / Box transform ----
+        if self.current_actor and hasattr(self, "initial_actor_transform"):
+            self.current_actor.SetUserTransform(self.initial_actor_transform)
+            # Cập nhật box widget
+            if self.box_widget:
+                self.box_widget.PlaceWidget()
+
+        self.vtkWidget.GetRenderWindow().Render()
+
+    def _update_overlay_button(self):
+        margin = 10
+        x = self.vtkWidget.width() - self.btn_zoom_center.width() - margin
+        y = self.vtkWidget.height() - self.btn_zoom_center.height() - margin
+        self.btn_zoom_center.move(x, y)
+
+    # ------------------ Box Widget ------------------
+    def _enable_box_widget(self):
+        if self.box_widget:
+            self.box_widget.Off()
+            self.box_widget = None
+
+        box = vtk.vtkBoxWidget()
+        box.SetInteractor(self.iren)
+        box.SetPlaceFactor(3)
+        box.SetProp3D(self.current_actor)
+        box.PlaceWidget()
+        box.ScalingEnabledOff()
+        box.GetOutlineProperty().SetOpacity(0)
+        box.OutlineCursorWiresOff()
+        box.GetHandleProperty().SetPointSize(1)
+
+
+        def on_interact(caller, event):
+            t = vtk.vtkTransform()
+            box.GetTransform(t)
+            self.current_actor.SetUserTransform(t)
+            self.vtkWidget.GetRenderWindow().Render()
+
+        box.AddObserver("InteractionEvent", on_interact)
+        box.On()
+        self.box_widget = box
+
+    # ------------------ Update cloud ------------------
+    def update(self, polydata):
         if not polydata:
-            return None
+            return
 
         vertex_filter = vtk.vtkVertexGlyphFilter()
         vertex_filter.SetInputData(polydata)
@@ -69,4 +176,10 @@ class VTKViewer:
         self.current_actor = actor
         self.renderer.AddActor(actor)
         self.renderer.ResetCamera()
+
+        # 🔐 lưu camera LẦN ĐẦU
+        if self.initial_camera_state is None:
+            self._save_camera_state()
+
         self.vtkWidget.GetRenderWindow().Render()
+        self._enable_box_widget()
