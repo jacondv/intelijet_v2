@@ -45,7 +45,7 @@ class VTKViewer:
         self.iren.SetInteractorStyle(style)
 
         # ---- Zoom center button (overlay) ----
-        self.btn_zoom_center = QPushButton("⤢", self.vtkWidget)
+        self.btn_zoom_center = QPushButton("⤢", self.parent_widget)
         self.btn_zoom_center.setToolTip("Zoom to initial view")
         self.btn_zoom_center.setFixedSize(100, 100)
         self.btn_zoom_center.setStyleSheet("""
@@ -78,6 +78,7 @@ class VTKViewer:
 
         self.vtkWidget.Initialize()
         self.vtkWidget.Start()
+
 
     # ------------------ Camera ------------------
     def _save_camera_state(self):
@@ -121,11 +122,13 @@ class VTKViewer:
 
         self.vtkWidget.GetRenderWindow().Render()
 
+
     def _update_overlay_button(self):
         margin = 10
         x = self.vtkWidget.width() - self.btn_zoom_center.width() - margin
         y = self.vtkWidget.height() - self.btn_zoom_center.height() - margin
         self.btn_zoom_center.move(x, y)
+        # self.btn_zoom_center.raise_()
 
     # ------------------ Box Widget ------------------
     def _enable_box_widget(self):
@@ -177,7 +180,7 @@ class VTKViewer:
         self.renderer.AddActor(actor)
         self.renderer.ResetCamera()
 
-        # 🔐 lưu camera LẦN ĐẦU
+        # lưu camera LẦN ĐẦU
         if self.initial_camera_state is None:
             self._save_camera_state()
 
