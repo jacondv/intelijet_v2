@@ -106,7 +106,8 @@ class CompareCloudServer:
 
                 # TODO: align cloud
                 if source_patch:
-                    cloudconverter.o3d_to_ply(source_patch,'source_patch.ply')
+                    cloudconverter.o3d_to_ply(source_patch,'/root/inteliject_v2/source_patch.ply')
+                    print('Save source_patch.ply to /root/inteliject_v2')
                     T = align_cloud(pre_cloud=pre_cloud, post_cloud=source_patch,return_transform_only=True)
                     post_cloud.transform(T)
                     
