@@ -160,7 +160,7 @@ class KeypointMatcher:
 
         return good_matches_all
 
-    def match_keypoints_by_proximity(kp1, des1, kp2, des2, ratio_test=0.75, n_best=2, max_pixel_dist=50):
+    def match_keypoints_by_proximity(self,kp1, des1, kp2, des2, ratio_test=0.75, n_best=2, max_pixel_dist=50):
         """
         Match keypoints between two sets, ưu tiên các keypoints gần nhau về không gian pixel
         và có descriptor giống nhau.
@@ -175,26 +175,31 @@ class KeypointMatcher:
         import numpy as np
 
         matcher = cv2.BFMatcher(cv2.NORM_L2)  # Hoặc NORM_HAMMING nếu SIFT/ORB
-        raw_matches = matcher.knnMatch(des1, des2, k=2)
+        # raw_matches = matcher.knnMatch(des1, des2, k=2)
 
+        raw_matches = matcher.match(des1, des2)
+
+        # 4. Sắp xếp theo distance
+        raw_matches = sorted(raw_matches, key=lambda x: x.distance)
+
+
+        # 5. Lọc theo khoảng cách pixel
+        pixel_thresh = max_pixel_dist  # ngưỡng pixel (tùy chỉnh)
         good_matches = []
+        for m in raw_matches:
+            pt1 = np.array(kp1[m.queryIdx].pt)
+            pt2 = np.array(kp2[m.trainIdx].pt)
+            dist = np.linalg.norm(pt1 - pt2)
+            if dist < pixel_thresh:
+                good_matches.append(m)
 
-        for i, match in enumerate(raw_matches):
-            if len(match) < 2:
-                continue
-            m, n = match
-            # Lowe's ratio test
-            if m.distance < ratio_test * n.distance:
-                pt1 = np.array(kp1[m.queryIdx].pt)
-                pt2 = np.array(kp2[m.trainIdx].pt)
-                # Kiểm tra khoảng cách pixel
-                if np.linalg.norm(pt1 - pt2) <= max_pixel_dist:
-                    good_matches.append(m)
+        print("Matches after pixel filter:", len(good_matches))
 
-        # Sắp xếp theo distance và giữ n_best
-        good_matches = sorted(good_matches, key=lambda m: m.distance)[:n_best]
+        # 6. Chọn n_best match tốt nhất
 
-        return good_matches
+        best_matches = good_matches[:n_best]
+
+        return best_matches
 
 
     def draw_good_matches(self,img1, kp1, img2, kp2, good_matches, max_matches=5000):
@@ -554,7 +559,7 @@ class KeypointCloudAlignManager:
         self.__good_matched = self.matcher.match_keypoints_by_proximity(kp1 = self.kp1, des1=self.desc1, 
                                 kp2=self.kp2, des2=self.desc2, 
                                 ratio_test=self.match_ratio,
-                                n_best=5,
+                                n_best=1000,
                                 max_pixel_dist=50
                             )
         good_matches = self.__good_matched  
@@ -924,75 +929,3 @@ def crop(pcd, xlim, ylim, zlim):
         cropped_pcd.colors = o3d.utility.Vector3dVector(colors[mask])
     
     return cropped_pcd
-
-
-if __name__ == "__main__":
-    import json
-    import matplotlib.pyplot as plt
-    from scipy.spatial.transform import Rotation as R
-
-    #IPC Param
-    ICP_THRESHOLDS = [1.0, 0.1, 0.05]      # coarse → fine
-    ICP_MAX_ITERS = [30, 40, 50]           # coarse → fine
-    ICP_ALIGN_AREA = None                  # hoặc [[xmin, xmax], [ymin, ymax], [zmin, zmax]]
-
-    # === Keypoint Matching Parameters ===
-    CAMERA_INTRINSICS = np.array([
-                            [653.76474515,     0.0,          756.55566752],
-                            [0.0,              655.82709085, 541.23742774],
-                            [0.0,              0.0,          1.0]
-                        ], dtype=np.float64)
-    
-    # LIDAR_TO_CAM_EXTRINSIC = np.array([
-    #     [1,  0,  0, 0],
-    #     [0,  0, -1, 0],
-    #     [0,  1,  0, 0],
-    #     [0,  0,  0, 1]
-    # ], dtype=np.float64)
-    
-    # từ base → camera front
-    LIDAR_TO_CAM_EXTRINSIC =  np.array([
-        [-0.98383629,  0.00314181, -0.17904252, -0.00723122],
-        [ 0.17903614, -0.0022086,  -0.98383999, -0.04821113],
-        [-0.00348647, -0.99999261,  0.00161041, -0.10187813],
-        [ 0.        ,  0.        ,  0.        ,  1.        ]
-    ])
-
-    DIST_COEFFS = np.array([-0.06065661 , 0.04854407 ,-0.0606453  , 0.02428142])
-    FEATURE_METHOD = "SIFT"
-    PIXEL_RADIUS = 5
-    MATCH_RATIO = 0.5
-
-    image = cv2.imread(r'/mnt/c/work/projects/intelijet_v2/pano_rest_1_20250721_132024.png', cv2.IMREAD_COLOR_RGB)
-    image2 = cv2.imread(r'/mnt/c/work/projects/intelijet_v2/pano_rest_1_20250721_132117.png', cv2.IMREAD_COLOR_RGB)
-
-    cloud = o3d.io.read_point_cloud(r"/mnt/c/work/projects/intelijet_v2/data/cloud_20250721_132036.ply")
-    cloud2 = o3d.io.read_point_cloud(r"/mnt/c/work/projects/intelijet_v2/data/cloud_20250721_132129.ply")
-
- 
-    keypoint_matcher = KeypointCloudAlignManager(camera_intrinsics=CAMERA_INTRINSICS,
-                                                 dist_coeffs=DIST_COEFFS,
-                                                 lidar_to_cam_extrinsic=LIDAR_TO_CAM_EXTRINSIC,
-                                                 feature_method="SIFT",
-                                                 pixel_radius=5,
-                                                 cloud_radius=0.3,
-                                                 match_ratio=0.5)
-   
-    # undistorted_img1 = FisheyeUndistorter(K=CAMERA_INTRINSICS,
-    #                                      D=DIST_COEFFS).undistort(image=image)
-    # undistorted_img2 = FisheyeUndistorter(K=CAMERA_INTRINSICS,
-    #                                     D=DIST_COEFFS).undistort(image=image2)
-    
-    keypoint_matcher.set_image1(image)
-    keypoint_matcher.set_image2(image2)
-    keypoint_matcher.set_cloud1(cloud)
-    keypoint_matcher.set_cloud2(cloud2)
-
-    pcd1, pcd2, img_result = keypoint_matcher.get_result()
-
-    # o3d.io.write_point_cloud("pcd1.ply", pcd1)
-    # o3d.io.write_point_cloud("pcd2.ply", pcd2)
-
-    plt.imshow(keypoint_matcher.draw_result())
-    plt.axis("off")
-    plt.show()
