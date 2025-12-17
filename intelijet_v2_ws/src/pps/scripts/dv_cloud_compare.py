@@ -80,6 +80,8 @@ class CloudComparer:
         # Trước khi so sánh, đảm bảo cả hai cloud đã được căn chỉnh va cắt bớt theo hull
         post = cloudconverter.crop_cloud_by_hull(pres, post)
         # Thực hiện xử lý màu hóa theo khoảng cách
+        # target_thickness of compute_heatmap_to_plane is in metter
+        
         result, dists = compute_heatmap_to_plane(post, pres, k=6, 
                                                  target_thickness=self.target_thickness, 
                                                  tolerance_thickness=self.tolerance_thickness)     
