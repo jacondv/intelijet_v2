@@ -22,7 +22,7 @@ from pps.msg import (
 )
 
 CLOUD_COMPARED_TOPIC = cfg.CLOUD_COMPARED_TOPIC
-
+CLOUD_COMPARED_UPSAMPLE_TOPIC = f"{CLOUD_COMPARED_TOPIC}/upsample"
 class CompareCloudServer:
 
     def __init__(self):
@@ -54,6 +54,14 @@ class CompareCloudServer:
         #"compare_cloud/result_cloud"
         self.pub = rospy.Publisher(
             CLOUD_COMPARED_TOPIC,
+            PointCloud2,
+            queue_size=1,
+            latch=True
+        )
+
+        #"upsample cloud compared"
+        self.pub2 = rospy.Publisher(
+            CLOUD_COMPARED_UPSAMPLE_TOPIC,
             PointCloud2,
             queue_size=1,
             latch=True
@@ -174,7 +182,6 @@ class CompareCloudServer:
             self.server.publish_feedback(feedback)
           
             # TODO: compare + color
-
             cloud_compared, distance = compute_heatmap_to_plane(
                 source=post_cloud, 
                 target=pre_cloud, 
@@ -185,7 +192,7 @@ class CompareCloudServer:
 
             # ===== PUBLISH =====
             feedback.stage = "publish"
-            feedback.progress = 0.9
+            feedback.progress = 0.8
             self.server.publish_feedback(feedback)
 
             # TODO: publish colored cloud
@@ -194,6 +201,19 @@ class CompareCloudServer:
             frame_id = "base_link"
             msg = cloudconverter.o3d_tensor_to_pointcloud2(cloud_compared, frame_id=frame_id)
             self.pub.publish(msg)
+
+            
+            # ===== UPSAMPLE =====
+            # Upsample and public cloud
+            feedback.stage = "upsample"
+            feedback.progress = 0.9
+            self.server.publish_feedback(feedback)
+
+            tunnel = TunnelProcessing(cloud_compared)
+            cloud_compared_upsample = tunnel.run_upsample(cloud_compared)
+            frame_id = "base_link"
+            msg = cloudconverter.o3d_tensor_to_pointcloud2(cloud_compared_upsample, frame_id=frame_id)
+            self.pub2.publish(msg)
 
             feedback.stage = "done"
             feedback.progress = 1.0

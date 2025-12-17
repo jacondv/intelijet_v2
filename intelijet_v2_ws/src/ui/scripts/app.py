@@ -37,6 +37,7 @@ from ui.widgets.inline_loading import InlineLoading
 
 BASE_DIR = cfg.BASE_DIR
 CLOUD_COMPARED_TOPIC = cfg.CLOUD_COMPARED_TOPIC
+CLOUD_COMPARED_UPSAMPLE_TOPIC = f"{CLOUD_COMPARED_TOPIC}/upsample"
 POST_SCAN_CLOUD_TOPIC = cfg.POST_SCAN_CLOUD_TOPIC
 
 CURRENT_JOB_FILE_NAME = "current_job.json"
@@ -205,7 +206,7 @@ class App(QMainWindow):
         o3d_cloud = cloudconverter.pointcloud2_to_o3d_tensor(msg)
         print(f"Received cloud on topic {topic_name}")
         # Show pointcloud
-        if topic_name in CLOUD_COMPARED_TOPIC:
+        if topic_name == CLOUD_COMPARED_TOPIC:
             try:
                 from ui.models.job_info import JobInfo
                 current_job = self.load_current_job(text_only=True)
@@ -228,12 +229,14 @@ class App(QMainWindow):
                 print(f"[Error] at on_cloud_received() to re-assign color : {e}")
                 pass
 
-        polydata = cloudconverter.o3d_to_vtk_polydata(o3d_cloud)
-        self.vtk_viewer.update(polydata)
 
-        # Save cloud to file ply
-        if polydata:
-            self.save_job(o3d_cloud, topic_name)
+        if topic_name != CLOUD_COMPARED_UPSAMPLE_TOPIC:
+            polydata = cloudconverter.o3d_to_vtk_polydata(o3d_cloud)
+            self.vtk_viewer.update(polydata)
+
+            # Save cloud to file ply
+            if polydata:
+                self.save_job(o3d_cloud, topic_name)
 
 
         # Emit align command to ROS
@@ -243,7 +246,7 @@ class App(QMainWindow):
             
 
         # Export Report
-        if topic_name in CLOUD_COMPARED_TOPIC:
+        if topic_name == CLOUD_COMPARED_UPSAMPLE_TOPIC:
             if self.ui.cbbAutoCompare.currentIndex()==1 or self.ui.cbbAutoReport.currentIndex()==1:
                 return # only export report when auto compare is on nad auto report is on. (1 is OFF)
 
@@ -259,8 +262,9 @@ class App(QMainWindow):
                 timestamp_str = time.strftime("%Y%m%d_%H%M%S", time.localtime())
                 filename = os.path.join(jobs_folder, f"{job_number}#{timestamp_str}#{safe_topic}_{index:02d}.pdf")
                 
-                tunnel = TunnelProcessing(o3d_cloud)
-                cloud_compared_upsample = tunnel.run_upsample(o3d_cloud)
+                # tunnel = TunnelProcessing(o3d_cloud)
+                # cloud_compared_upsample = tunnel.run_upsample(o3d_cloud)
+                cloud_compared_upsample = o3d_cloud
                 self.export_report(cloud_compared_upsample,filename)
 
             except Exception as e:
