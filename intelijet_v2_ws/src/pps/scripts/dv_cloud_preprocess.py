@@ -29,7 +29,7 @@ class CloudProcessorNode:
         self.sub_pre_topic = sub_pre_topic
         self.sub_post_topic = sub_post_topic
         
-        rospy.init_node("dv_cloud_process")
+        # rospy.init_node("dv_cloud_process")
         
         # Publishers
         self.pub_pre = rospy.Publisher(self.pub_pre_topic, PointCloud2, queue_size=1)
@@ -40,7 +40,7 @@ class CloudProcessorNode:
         rospy.Subscriber(self.sub_post_topic, PointCloud2, self.callback_post)
 
         rospy.loginfo("CloudProcessorNode initialized.")
-        rospy.spin()
+        # rospy.spin()
 
     def process_cloud(self, msg: PointCloud2, rgb=[255,255,255]) -> PointCloud2:
         from pps.data_converter import cloudconverter
@@ -62,10 +62,10 @@ class CloudProcessorNode:
         
         cloud_o3d = cloudconverter.voxel_down_sample_spatial(cloud_o3d, voxel_size=0.015)
         # Auto crop boundary
-        tunnel = TunnelProcessing(cloud_o3d)
-        result = tunnel.run_processing_pipeline()
+        # tunnel = TunnelProcessing(cloud_o3d)
+        # result = tunnel.run_processing_pipeline()
         # Cloud after process
-        return convert_open3d_to_pointcloud2(result, frame_id=msg.header.frame_id,rgb=rgb)
+        return convert_open3d_to_pointcloud2(cloud_o3d, frame_id=msg.header.frame_id,rgb=rgb)
 
     def callback_pres(self, msg):
         rospy.loginfo("Received /pre_scan_0")

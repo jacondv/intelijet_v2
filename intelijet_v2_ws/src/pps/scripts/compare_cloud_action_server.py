@@ -11,6 +11,8 @@ from shared.config_loader import CONFIG as cfg
 from pps.cloud_processing.utils_align import align_cloud
 from pps.image_processing.keypoint_processing_v2 import KeypointCloudAlignManager
 
+PRE_SCAN_PROCESSED_TOPIC = "/pre_scan_cloud"
+POST_SCAN_PROCESSED_TOPIC = "/post_scan_cloud"
 
 from sensor_msgs.msg import PointCloud2
 from pps.msg import (
@@ -24,12 +26,31 @@ CLOUD_COMPARED_TOPIC = cfg.CLOUD_COMPARED_TOPIC
 class CompareCloudServer:
 
     def __init__(self):
+
+        # Save the cloud from topic
+        self.pre_cloud = None
+        self.post_cloud = None
+
         self.server = actionlib.SimpleActionServer(
-            "compare_cloud",
+            "/compare_cloud",
             CompareCloudAction,
             execute_cb=self.execute,
             auto_start=False
         )
+
+        rospy.Subscriber(
+            PRE_SCAN_PROCESSED_TOPIC,
+            PointCloud2,
+            self._pre_cloud_cb,
+            queue_size=1
+        )
+        rospy.Subscriber(
+            POST_SCAN_PROCESSED_TOPIC,
+            PointCloud2,
+            self._post_cloud_cb,
+            queue_size=1
+        )
+
         #"compare_cloud/result_cloud"
         self.pub = rospy.Publisher(
             CLOUD_COMPARED_TOPIC,
@@ -40,6 +61,14 @@ class CompareCloudServer:
 
         self.server.start()
         rospy.loginfo("CompareCloud action server started")
+
+
+    # Callbacks
+    def _pre_cloud_cb(self, msg):
+        self.pre_cloud = cloudconverter.pointcloud2_to_o3d(msg)
+
+    def _post_cloud_cb(self, msg):
+        self.post_cloud = cloudconverter.pointcloud2_to_o3d(msg)
 
     def execute(self, goal):
         rospy.logwarn("EXECUTE ENTERED")
@@ -56,8 +85,21 @@ class CompareCloudServer:
             self.server.publish_feedback(feedback)
 
             # TODO: load prescan & postscan cloud
-            pre_cloud = cloudconverter.load_ply(goal.prescan_path, as_legacy=True)
-            post_cloud = cloudconverter.load_ply(goal.postscan_path, as_legacy=True)
+            if goal.prescan_path:
+                pre_cloud = cloudconverter.load_ply(goal.prescan_path, as_legacy=True)
+                post_cloud = cloudconverter.load_ply(goal.postscan_path, as_legacy=True)
+            else:
+                # Use cloud from topic
+                pre_cloud = self.pre_cloud
+                post_cloud = self.post_cloud
+
+            if pre_cloud is None or post_cloud is None:
+                msg = "Missing cloud from topic"
+                rospy.logerr(msg)
+                result.success = False
+                result.job_id = job_id
+                self.server.set_aborted(result, msg)
+                return
 
             # ===== PRE PROCESS=======#
             # This is auto crop ground and back side wall
@@ -72,15 +114,15 @@ class CompareCloudServer:
                 post_cloud = post_tunnel.run_processing_pipeline()
 
                 #---- extract keypoint by image
-
-                pre_image, intrinsic1, extrinsic1 = cloudconverter.cloud_to_image(pre_cloud)
-                post_image, intrinsic2, extrinsic2 = cloudconverter.cloud_to_image(post_cloud)
+                pre_image, intrinsic1, extrinsic1 = cloudconverter.cloud_to_image(filename=None,pcd=pre_cloud, rot_x=-90, rot_y=90, rot_z=0)
+                post_image, intrinsic2, extrinsic2 = cloudconverter.cloud_to_image(filename=None,pcd=post_cloud, rot_x=-90, rot_y=90, rot_z=0)
+ 
 
                 self.keypoint_manager = KeypointCloudAlignManager(camera_intrinsics=intrinsic1,
                                                     lidar_to_cam_extrinsic=extrinsic1,
                                                     dist_coeffs=np.zeros(5),
                                                     feature_method="SIFT",
-                                                    pixel_radius=5,
+                                                    pixel_radius=100,
                                                     cloud_radius=0.5,
                                                     match_ratio=0.5)
                 
@@ -91,8 +133,8 @@ class CompareCloudServer:
                 self.keypoint_manager.set_image2(post_image)
 
                 if self.keypoint_manager.is_ready():    
-                    # cloud1_target, cloud2_source, T = self.__keypoint_manager.get_result()
-                    _, source_patch, T = self.keypoint_manager.get_result()
+                    target_patch, source_patch, T = self.keypoint_manager.get_result()
+                    # _, source_patch, T = self.keypoint_manager.get_result()
                 else:
                     source_patch = None
 
@@ -106,11 +148,14 @@ class CompareCloudServer:
 
                 # TODO: align cloud
                 if source_patch:
-                    cloudconverter.o3d_to_ply(source_patch,'/root/inteliject_v2/source_patch.ply')
-                    print('Save source_patch.ply to /root/inteliject_v2')
-                    T = align_cloud(pre_cloud=pre_cloud, post_cloud=source_patch,return_transform_only=True)
+                    # cloudconverter.o3d_to_ply(source_patch,'/root/intelijet_v2/source_patch.ply')
+                    # cloudconverter.o3d_to_ply(cloud1_target,'/root/intelijet_v2/cloud1_target.ply')
+                    # cloudconverter.o3d_to_ply(post_cloud,'/root/intelijet_v2/post_cloud.ply')
+                    # cloudconverter.o3d_to_ply(pre_cloud,'/root/intelijet_v2/pre_cloud.ply')
+                    # post_cloud = align_cloud(pre_cloud=pre_cloud, post_cloud=post_cloud)
+                    T = align_cloud(pre_cloud=target_patch, post_cloud=source_patch,return_transform_only=True)
                     post_cloud.transform(T)
-                    
+
                 else:
                     post_cloud = align_cloud(pre_cloud=pre_cloud, post_cloud=post_cloud)
 

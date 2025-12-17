@@ -203,7 +203,7 @@ class App(QMainWindow):
         
         cloudconverter = CloudConverter()
         o3d_cloud = cloudconverter.pointcloud2_to_o3d_tensor(msg)
-
+        print(f"Received cloud on topic {topic_name}")
         # Show pointcloud
         if topic_name in CLOUD_COMPARED_TOPIC:
             try:
@@ -212,13 +212,18 @@ class App(QMainWindow):
                 project_name = current_job.split("/")[0]
                 job_number = current_job.split("/")[1]
                 jobs_folder = os.path.join(PROJECT_DIR, project_name,job_number)
+                # current_job_info_path = os.path.join(jobs_folder, JOBINFO_FILE_NAME)
+                job_info = JobInfo.load(jobs_folder)
+                if job_info:
+                    target_thickness = job_info.parameters.get("target_thickness",THICKNESS_DEFAULT)
+                    tolerance = job_info.parameters.get("tolerance",TOLERANCE_DEFAULT)
+                else:
+                    target_thickness = THICKNESS_DEFAULT
+                    tolerance = TOLERANCE_DEFAULT
 
-                current_job_info_path = os.path.join(jobs_folder, JOBINFO_FILE_NAME)
+                highlight_range = [target_thickness-tolerance, target_thickness+tolerance]
+                o3d_cloud = assign_colors(o3d_cloud, highlight_range=highlight_range)
                 
-                job_info = JobInfo.load(current_job_info_path)
-                target_thickness =  job_info.parameters.get("target_thickness", THICKNESS_DEFAULT) # Unit is mm
-                tolerance = job_info.parameters.get("tolerance", TOLERANCE_DEFAULT) # Unit is mm
-                o3d_cloud = assign_colors(o3d_cloud, target_thickness, tolerance)
             except Exception as e:
                 print(f"[Error] at on_cloud_received() to re-assign color : {e}")
                 pass

@@ -8,9 +8,79 @@ import os
 import numpy as np
 import ros_numpy
 from sensor_msgs.msg import PointCloud2
+import sensor_msgs.point_cloud2 as pc2
 
 
 class CloudConverter:
+
+    @staticmethod
+    def pointcloud2_to_o3d(
+        cloud_msg: PointCloud2,
+        remove_nan: bool = True
+    ):
+        """
+        Convert ROS PointCloud2 to Open3D PointCloud
+
+        Supports:
+        - XYZ
+        - XYZ + RGB (float32 or uint32 packed)
+
+        Parameters
+        ----------
+        cloud_msg : PointCloud2
+        remove_nan : bool
+
+        Returns
+        -------
+        o3d.geometry.PointCloud
+        """
+        import open3d as o3d
+
+        assert isinstance(cloud_msg, PointCloud2)
+
+        # ---------- Read points ----------
+        field_names = [f.name for f in cloud_msg.fields]
+
+        use_rgb = "rgb" in field_names or "rgba" in field_names
+
+        points = []
+        colors = []
+
+        for p in pc2.read_points(
+            cloud_msg,
+            skip_nans=remove_nan,
+            field_names=("x", "y", "z", "rgb") if use_rgb else ("x", "y", "z")
+        ):
+            if use_rgb:
+                x, y, z, rgb = p
+                points.append([x, y, z])
+
+                # RGB packed as float32
+                if isinstance(rgb, float):
+                    rgb = np.frombuffer(
+                        np.float32(rgb).tobytes(),
+                        dtype=np.uint8
+                    )
+                    r, g, b = rgb[2], rgb[1], rgb[0]
+                else:
+                    r = (rgb >> 16) & 255
+                    g = (rgb >> 8) & 255
+                    b = rgb & 255
+
+                colors.append([r / 255.0, g / 255.0, b / 255.0])
+            else:
+                x, y, z = p
+                points.append([x, y, z])
+
+        # ---------- Create Open3D cloud ----------
+        cloud_o3d = o3d.geometry.PointCloud()
+        cloud_o3d.points = o3d.utility.Vector3dVector(np.asarray(points))
+
+        if use_rgb and len(colors) == len(points):
+            cloud_o3d.colors = o3d.utility.Vector3dVector(np.asarray(colors))
+
+        return cloud_o3d
+
 
     @staticmethod
     def pointcloud2_to_o3d_tensor(msg: PointCloud2):
@@ -206,7 +276,7 @@ class CloudConverter:
                     success = o3d.t.io.write_point_cloud(filepath, pcd, write_ascii=write_ascii)
                     if success is True or success is None:
                         # Some versions return None; consider it success if no exception
-                        print(f"[o3d_to_ply] Saved tensor pointcloud to {filepath}")
+                        print(f"[o3d_to_ply] Saved tensor pointcloud to {filepath} {success}")
                         return filepath
                     else:
                         # explicit False
@@ -632,8 +702,8 @@ class CloudConverter:
             # ----- Camera param ---------
             ctr = vis.get_view_control()
             param = ctr.convert_to_pinhole_camera_parameters()
-            intrinsic = param.intrinsic
-            extrinsic = param.extrinsic
+            intrinsic = param.intrinsic.intrinsic_matrix.copy()
+            extrinsic = np.asarray(param.extrinsic).copy()
 
             vis.poll_events()
             vis.update_renderer()

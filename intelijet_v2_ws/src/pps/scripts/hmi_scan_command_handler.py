@@ -7,6 +7,8 @@ from std_srvs.srv import Trigger
 from align_service_client import AlignServiceClient
 
 from pps.msg import StartScanAction, StartScanGoal
+from pps.msg import CompareCloudAction, CompareCloudGoal
+
 from ros_blkarc_msgs.msg import TimedScanAction, TimedScanGoal
 from shared.pps_command import PPSCommand
 from shared.log_status import log_status
@@ -44,6 +46,13 @@ class ScanManagerNode:
         # rospy.logwarn("Starting AlignServiceClient")
         self.scanner_controller = get_scanner_controller(status_callback=self.set_state)
 
+        self.client = actionlib.SimpleActionClient(
+            '/compare_cloud',
+            CompareCloudAction
+        )
+        self.client.wait_for_server()
+        rospy.loginfo("Connected to /compare_cloud")
+
 
     def is_state(self, state):
         return self.current_state == state
@@ -78,11 +87,32 @@ class ScanManagerNode:
         elif cmd == PPSCommand.START_COMPARE.value:
 
             rospy.loginfo("Start compare command received")
-            success, message = self.__align_service_client.call()
-            if success:
-                rospy.loginfo("Alignment successful: %s", message)
+            # success, message = self.__align_service_client.call()
+
+            goal = CompareCloudGoal()
+            goal.do_pre_process = True
+            goal.do_post_process = True
+            goal.do_align = True
+            self.client.send_goal(goal)
+            
+            self.client.wait_for_result()
+            success = self.client.wait_for_result(rospy.Duration(150.0))
+            if not success:
+                rospy.logerr("Compare timeout")
+                self.client.cancel_goal()
+                return   
+            
+            result = self.client.get_result()
+            state = self.client.get_state()
+            if state == actionlib.GoalStatus.SUCCEEDED and result.success:
+                rospy.loginfo("Compare SUCCESS job_id=%s", result.job_id)
             else:
-                rospy.logerr("Alignment failed: %s", message)
+                rospy.logerr("Compare FAILED state=%d", state)
+                
+            # if success:
+            #     rospy.loginfo("Alignment successful: %s", message)
+            # else:
+            #     rospy.logerr("Alignment failed: %s", message)
 
         elif cmd == PPSCommand.OPEN_HOUSING.value:
             if self.is_state(DeviceStatus.OPEN_HOUSING):
