@@ -714,6 +714,89 @@ def assign_colors(tcloud, clip_max=150, highlight_range=(20, 40)):
     tcloud.point['colors'] = o3d.core.Tensor(colors.astype(np.float32))
     return tcloud
 
+# def assign_colors(tcloud, clip_max=150, highlight_range=(20, 40)):
+#     """
+#     Map the 'distances' field of a tensor PointCloud to 'colors'.
+
+#     Args:
+#         tcloud: o3d.t.geometry.PointCloud, must have 'distances' field
+#         clip_max: maximum distance to clip
+#         highlight_range: (low, high) range for pure green
+
+#     Returns:
+#         tcloud with updated 'colors' field (in-place)
+#     """
+#     import open3d as o3d
+#     import numpy as np
+
+#     # ---- Validate input type ----
+#     if tcloud is None:
+#         raise ValueError("tcloud is None")
+
+#     if not isinstance(tcloud, o3d.t.geometry.PointCloud):
+#         raise TypeError(
+#             f"tcloud must be o3d.t.geometry.PointCloud, got {type(tcloud)}"
+#         )
+
+#     # ---- Validate required field ----
+#     if 'distances' not in tcloud.point:
+#         raise KeyError(
+#             "PointCloud is missing required field 'distances'"
+#         )
+
+#     # ---- Validate highlight range ----
+#     if (
+#         not isinstance(highlight_range, (tuple, list))
+#         or len(highlight_range) != 2
+#         or highlight_range[0] >= highlight_range[1]
+#     ):
+#         raise ValueError(
+#             f"highlight_range must be (low, high), got {highlight_range}"
+#         )
+
+#     # ---- Validate clip_max ----
+#     if clip_max <= 0:
+#         raise ValueError("clip_max must be > 0")
+
+#     # ---- Convert distances safely ----
+#     try:
+#         distances = tcloud.point['distances']
+#         distances_np = distances.cpu().numpy()
+#     except Exception as e:
+#         raise RuntimeError(
+#             "Failed to convert 'distances' tensor to numpy array"
+#         ) from e
+
+#     # ---- Map distances to colors ----
+#     try:
+#         colors = map_distances_to_colors(
+#             distances_np,
+#             clip_max=clip_max,
+#             highlight_range=highlight_range
+#         )
+#     except Exception as e:
+#         raise RuntimeError(
+#             "map_distances_to_colors() failed"
+#         ) from e
+
+#     # ---- Validate output colors ----
+#     if colors.ndim != 2 or colors.shape[1] != 3:
+#         raise ValueError(
+#             f"colors must have shape (N,3), got {colors.shape}"
+#         )
+
+#     # ---- Assign colors back to tensor cloud ----
+#     try:
+#         tcloud.point['colors'] = o3d.core.Tensor(
+#             colors.astype(np.float32),
+#             device=tcloud.device
+#         )
+#     except Exception as e:
+#         raise RuntimeError(
+#             "Failed to assign colors to tcloud.point['colors']"
+#         ) from e
+
+#     return tcloud
 
 def remove_point(pcd, key_points, radius):
     import open3d as o3d
