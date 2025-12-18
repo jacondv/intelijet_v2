@@ -294,6 +294,7 @@ class App(QMainWindow):
         if topic_name in [POST_SCAN_CLOUD_TOPIC, PRE_SCAN_CLOUD_TOPIC, CLOUD_COMPARED_TOPIC]:
             polydata = cloudconverter.o3d_to_vtk_polydata(o3d_cloud)
             self.vtk_viewer.update(polydata)
+            self.ui.tab_mainview.setCurrentIndex(0)
 
             # Save cloud to file ply
             if polydata:
@@ -384,6 +385,8 @@ class App(QMainWindow):
         if filename:
             print("updated polydata from file:", filename)
         self.vtk_viewer.update(polydata)
+        self.ui.tab_mainview.setCurrentIndex(0)
+
 
 
     # 4.--- Show report view dialog---
@@ -509,6 +512,8 @@ class App(QMainWindow):
 
             # ✅ start thread
             self.worker.start()
+     
+       
 
     def on_compare_process(self, progress, stage):
         print(f"COMPARE{20*'='}: {int(progress*100)}%")  

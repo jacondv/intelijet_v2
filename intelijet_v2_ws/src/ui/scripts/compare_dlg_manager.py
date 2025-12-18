@@ -399,5 +399,8 @@ class CompareManager(QDialog, Ui_frm_MainForm):
         o3d_cloud = cloudconverter.load_ply(filepath)
         if o3d_cloud is not None:
             self.polydataSignal.emit(o3d_cloud)
+        
+        #Close dlg
+        self.reject()
 
 
