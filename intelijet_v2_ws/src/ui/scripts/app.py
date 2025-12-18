@@ -151,7 +151,8 @@ class App(QMainWindow):
             cb.currentIndexChanged.connect(self.update_param)
 
         # --- Control Buttons ---
-        self.ui.btnPreScan.released.connect(lambda: self.ui_send_cmd_signal.emit(PPSCommand.START_PRESCAN.value))
+        # self.ui.btnPreScan.released.connect(lambda: self.ui_send_cmd_signal.emit(PPSCommand.START_PRESCAN.value))
+        self.ui.btnPreScan.released.connect(self.confirm_and_send_prescan)
         self.ui.btnPostScan.released.connect(lambda: self.ui_send_cmd_signal.emit(PPSCommand.START_POSTSCAN.value))
         self.ui.btnCompare.released.connect(lambda: self.ui_send_cmd_signal.emit(PPSCommand.START_COMPARE.value))
         self.ui.btnCancel.released.connect(lambda: self.ui_send_cmd_signal.emit(PPSCommand.CANCEL_JOB.value))
@@ -190,6 +191,7 @@ class App(QMainWindow):
 
         #Load ui state
         self.load_ui_state()
+        # Send parameters to the ROS on the first boot.
         self.update_param()
 
     # Setting parameter
@@ -201,15 +203,13 @@ class App(QMainWindow):
         settings.setValue("cbbUseKeypoint_index", self.ui.cbbUseKeypoint.currentIndex())
         settings.setValue("cbbUpsample_index", self.ui.cbbUpsample.currentIndex())
 
-
     def load_ui_state(self):
         self.ui.cbbAutoAlign.setCurrentIndex(settings.value("cbbAutoAlign_index", 0, type=int))
         self.ui.cbbAutoCompare.setCurrentIndex(settings.value("cbbAutoCompare_index", 0, type=int))
-        self.ui.cbbAutoReport.setCurrentIndex(settings.value("cbbRemoveGround_index", 0, type=int))
+        self.ui.cbbAutoReport.setCurrentIndex(settings.value("cbbAutoReport_index", 0, type=int))
         self.ui.cbbRemoveGround.setCurrentIndex(settings.value("cbbRemoveGround_index", 0, type=int))
         self.ui.cbbUseKeypoint.setCurrentIndex(settings.value("cbbUseKeypoint_index", 0, type=int))
         self.ui.cbbUpsample.setCurrentIndex(settings.value("cbbUpsample_index", 0, type=int))
-
 
     # Update runtime param to ROS
     def update_param(self):
@@ -224,6 +224,21 @@ class App(QMainWindow):
 
         for key, value in params.items():
             rospy.set_param(key, value)
+
+
+    #confirm_send_prescan_signal
+    def confirm_and_send_prescan(self):
+        reply = QMessageBox.question(
+            self,
+            "Confirm",
+            "This will overwrite the existing Pre-Scan file. Continue?",
+            QMessageBox.Yes | QMessageBox.No,
+            QMessageBox.No
+        )
+
+        if reply == QMessageBox.Yes:
+            # Gửi signal nếu người dùng xác nhận
+            self.ui_send_cmd_signal.emit(PPSCommand.START_PRESCAN.value)
 
     # Reload data for history page when toolbox page 2 is activated
     def on_toolbox_changed(self, index):
@@ -384,7 +399,6 @@ class App(QMainWindow):
 
         if dlg.exec_() == QDialog.Rejected:
             return
-
 
 
     #5.0 -- Manual export report handler---
@@ -596,8 +610,8 @@ class App(QMainWindow):
             print("Error occurred while saving Open3D pointcloud:", e)
             print(f"Can not save file to {filepath}")
             return None
-    
-    
+
+
     #10. change current job
     def on_job_changed(self, index):
         import json
@@ -605,6 +619,14 @@ class App(QMainWindow):
             return  # không chọn gì cả
         
         if index == self.current_job_index: # Chỉ hỏi khi item khác item hiện tại
+            try:
+                with open(CURRENT_JOB_FILE, "w") as f:
+                    value = self.ui.cbbJobSelect.itemText(index)
+                    json.dump({"current_job": value}, f, indent=4)
+                self.current_job_index = self.ui.cbbJobSelect.currentIndex()
+            except Exception as e:
+                QMessageBox.warning(self, "Error", f"Cannot save job: {e}")
+
             return
 
         value = self.ui.cbbJobSelect.itemText(index)
