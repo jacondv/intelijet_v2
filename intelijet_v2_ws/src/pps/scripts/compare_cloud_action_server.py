@@ -42,13 +42,11 @@ class CompareCloudServer:
             PRE_SCAN_PROCESSED_TOPIC,
             PointCloud2,
             self._pre_cloud_cb,
-            queue_size=1
         )
         rospy.Subscriber(
             POST_SCAN_PROCESSED_TOPIC,
             PointCloud2,
             self._post_cloud_cb,
-            queue_size=1
         )
 
         #"compare_cloud/result_cloud"
@@ -84,6 +82,8 @@ class CompareCloudServer:
         feedback = CompareCloudFeedback()
 
         job_id = uuid.uuid4().hex
+        # Wait 2 seconds to receive the self.post_cloud.
+        rospy.sleep(2)
         rospy.loginfo(f"[{job_id}] Start compare")
 
         try:
@@ -114,6 +114,7 @@ class CompareCloudServer:
             if goal.do_pre_process:
                 feedback.stage = "pre-process"
                 feedback.progress = 0.2
+                self.server.publish_feedback(feedback)
 
                 pre_tunnel = TunnelProcessing(pre_cloud)
                 pre_cloud = pre_tunnel.run_processing_pipeline()
@@ -121,11 +122,16 @@ class CompareCloudServer:
                 post_tunnel = TunnelProcessing(post_cloud)
                 post_cloud = post_tunnel.run_processing_pipeline()
 
+            # ===== USE 2D KEYPOINT TO ALIGN=======#
+            if goal.do_2d_keypoint:
+                feedback.stage = "extract-2d-keypoint"
+                feedback.progress = 0.2
+                self.server.publish_feedback(feedback)
+
                 #---- extract keypoint by image
                 pre_image, intrinsic1, extrinsic1 = cloudconverter.cloud_to_image(filename=None,pcd=pre_cloud, rot_x=-90, rot_y=90, rot_z=0)
                 post_image, intrinsic2, extrinsic2 = cloudconverter.cloud_to_image(filename=None,pcd=post_cloud, rot_x=-90, rot_y=90, rot_z=0)
  
-
                 self.keypoint_manager = KeypointCloudAlignManager(camera_intrinsics=intrinsic1,
                                                     lidar_to_cam_extrinsic=extrinsic1,
                                                     dist_coeffs=np.zeros(5),
@@ -145,8 +151,9 @@ class CompareCloudServer:
                     # _, source_patch, T = self.keypoint_manager.get_result()
                 else:
                     source_patch = None
-
-                self.server.publish_feedback(feedback)
+            else:
+                source_patch=None
+                target_patch=None
 
             # ===== ALIGN =====
             if goal.do_align:
@@ -205,15 +212,18 @@ class CompareCloudServer:
             
             # ===== UPSAMPLE =====
             # Upsample and public cloud
-            feedback.stage = "upsample"
-            feedback.progress = 0.9
-            self.server.publish_feedback(feedback)
+            if goal.do_upsample:
+                feedback.stage = "upsample"
+                feedback.progress = 0.9
+                self.server.publish_feedback(feedback)
 
-            tunnel = TunnelProcessing(cloud_compared)
-            cloud_compared_upsample = tunnel.run_upsample(cloud_compared)
-            frame_id = "base_link"
-            msg = cloudconverter.o3d_tensor_to_pointcloud2(cloud_compared_upsample, frame_id=frame_id)
+                tunnel = TunnelProcessing(cloud_compared)
+                cloud_compared_upsample = tunnel.run_upsample(cloud_compared)
+                frame_id = "base_link"
+                msg = cloudconverter.o3d_tensor_to_pointcloud2(cloud_compared_upsample, frame_id=frame_id)
+            # Sent cloud compared for report export
             self.pub2.publish(msg)
+
 
             feedback.stage = "done"
             feedback.progress = 1.0

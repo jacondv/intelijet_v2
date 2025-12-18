@@ -24,7 +24,7 @@ from setting_page_manager import SettingPageManager
 
 from data_binder import DataBinder
 from ui.update_data_utils import DataBinder, load_config_to_ui, load_ui_to_config   
-from ui.compare_cloud_worker import cloud_compare
+# from ui.compare_cloud_worker import cloud_compare
 
 from shared.pps_command import PPSCommand
 
@@ -38,6 +38,7 @@ from ui.widgets.inline_loading import InlineLoading
 BASE_DIR = cfg.BASE_DIR
 CLOUD_COMPARED_TOPIC = cfg.CLOUD_COMPARED_TOPIC
 CLOUD_COMPARED_UPSAMPLE_TOPIC = f"{CLOUD_COMPARED_TOPIC}/upsample"
+PRE_SCAN_CLOUD_TOPIC = cfg.PRE_SCAN_CLOUD_TOPIC
 POST_SCAN_CLOUD_TOPIC = cfg.POST_SCAN_CLOUD_TOPIC
 
 CURRENT_JOB_FILE_NAME = "current_job.json"
@@ -127,8 +128,8 @@ class App(QMainWindow):
         #Receive cloud check cloud is come from /compared topic --> export report
         self.ui_data_update.connect(self.update_data)
         self.ui_send_cmd_signal.connect(self.ros_thread.send_command)
-        cloud_compare.compare_done.connect(self.update_pointcloud_from_data)
-        cloud_compare.compare_done2.connect(self.on_manual_export_report)
+        # cloud_compare.compare_done.connect(self.update_pointcloud_from_data)
+        # cloud_compare.compare_done2.connect(self.on_manual_export_report)
 
         # --- Control Buttons ---
         self.ui.btnPreScan.released.connect(lambda: self.ui_send_cmd_signal.emit(PPSCommand.START_PRESCAN.value))
@@ -198,15 +199,14 @@ class App(QMainWindow):
     # 1.0--- Update commond data from ROS ---
     def on_cloud_received(self, msg, topic_name):
         from pps.data_converter import CloudConverter
-        from pps.tunnel_processing import TunnelProcessing
         from pps.helper import assign_colors
 
-        
         cloudconverter = CloudConverter()
         o3d_cloud = cloudconverter.pointcloud2_to_o3d_tensor(msg)
         print(f"Received cloud on topic {topic_name}")
-        # Show pointcloud
-        if topic_name == CLOUD_COMPARED_TOPIC:
+
+        # 1. Assign Color
+        if topic_name in [CLOUD_COMPARED_TOPIC, CLOUD_COMPARED_UPSAMPLE_TOPIC]:
             try:
                 from ui.models.job_info import JobInfo
                 current_job = self.load_current_job(text_only=True)
@@ -230,46 +230,43 @@ class App(QMainWindow):
                 pass
 
 
-        if topic_name != CLOUD_COMPARED_UPSAMPLE_TOPIC:
+        # 2. Show pointcloud and Save Data
+        if topic_name in [POST_SCAN_CLOUD_TOPIC, PRE_SCAN_CLOUD_TOPIC, CLOUD_COMPARED_TOPIC]:
             polydata = cloudconverter.o3d_to_vtk_polydata(o3d_cloud)
             self.vtk_viewer.update(polydata)
 
             # Save cloud to file ply
             if polydata:
-                self.save_job(o3d_cloud, topic_name)
+                f_name = self.save_job(o3d_cloud, topic_name)
+
+            if topic_name == CLOUD_COMPARED_TOPIC:
+                self.report_name = f_name
 
 
-        # Emit align command to ROS
-        if topic_name in POST_SCAN_CLOUD_TOPIC:
+        # 3. Emit to ROS to call Compare Cloud Action
+        if topic_name == POST_SCAN_CLOUD_TOPIC:
             if self.ui.cbbAutoCompare.currentIndex()==0: 
                 self.ui_send_cmd_signal.emit(PPSCommand.START_COMPARE.value)
             
 
-        # Export Report
+        # 4. Export Report
         if topic_name == CLOUD_COMPARED_UPSAMPLE_TOPIC:
             if self.ui.cbbAutoCompare.currentIndex()==1 or self.ui.cbbAutoReport.currentIndex()==1:
                 return # only export report when auto compare is on nad auto report is on. (1 is OFF)
 
             try:
-                current_job = self.load_current_job(text_only=True)
-                project_name = current_job.split("/")[0]
-                job_number = current_job.split("/")[1]
-                jobs_folder = os.path.join(PROJECT_DIR, project_name,job_number)
-                # Chuẩn hóa tên topic
-                safe_topic = re.sub(r'[^a-zA-Z0-9_-]', '', topic_name)
-                index = sum(safe_topic in f for f in os.listdir(jobs_folder) if f.endswith('.pdf')) +  1
-                # Timestamp hiện tại
-                timestamp_str = time.strftime("%Y%m%d_%H%M%S", time.localtime())
-                filename = os.path.join(jobs_folder, f"{job_number}#{timestamp_str}#{safe_topic}_{index:02d}.pdf")
-                
-                # tunnel = TunnelProcessing(o3d_cloud)
-                # cloud_compared_upsample = tunnel.run_upsample(o3d_cloud)
+
                 cloud_compared_upsample = o3d_cloud
+                filename = self.report_name
                 self.export_report(cloud_compared_upsample,filename)
+
+                # Cleare report_name after export report
+                self.report_name = None
 
             except Exception as e:
                 # in toàn bộ thông tin lỗi
                 print(f"[Error] at on_cloud_received Export Report : {e}")
+
 
     def toggle_max(self):
         if not self.isFullScreen():
@@ -370,6 +367,7 @@ class App(QMainWindow):
 
     # 5.1--- Export report after compare done---
     def export_report(self, data, filename):
+        print(f'Start releasing the Report: {filename}')
         try:
             from datetime import datetime
             from ui.models.job_info import JobInfo
@@ -418,10 +416,10 @@ class App(QMainWindow):
             if filename.lower().endswith(".ply"):
                 filename = filename.replace(".ply",".pdf")
                 
-            else:
-                timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-                filename = f"Test_report#{timestamp}.pdf"
-                filename = f"{BASE_DIR}/data/reports/{filename}"
+            # else:
+            #     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            #     filename = f"Test_report#{timestamp}.pdf"
+            #     filename = f"{BASE_DIR}/data/reports/{filename}"
                 
             report.export(pcd=data,output_path=filename)
         except Exception as e:
@@ -470,15 +468,14 @@ class App(QMainWindow):
             self.worker.start()
 
     def on_compare_process(self, progress, stage):
-        print(f"COMPARE: {progress} %")
+        print(f"COMPARE{20*'='}: {int(progress*100)}%")  
 
     def on_compare_done(self, success, job_id):
         if success:
-            print("COMPARE DONE ",job_id)
+            print("✅COMPARE DONE ",job_id)
         else:
-            print("COMPARE FAILED ", job_id)
+            print("❌COMPARE FAILED ", job_id)
 
-                    
     # 7.--- Close event handler ---
     def closeEvent(self, event):
         # subprocess.call(["/mnt/c/work/projects/intelijet_v2/shutdown.sh"])
@@ -540,6 +537,7 @@ class App(QMainWindow):
         try:
             filepath = _generate_filename(topic_name, ext="ply")
             cloudconverter.o3d_to_ply(o3d_cloud, filepath) #save cloud to ply file.
+            return filepath
 
             #Save job information to json file, it provides information for later visualization and report generation
             # fname = os.path.basename(filepath)

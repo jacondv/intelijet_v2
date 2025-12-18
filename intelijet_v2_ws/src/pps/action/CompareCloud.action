@@ -1,9 +1,18 @@
 # ===== Goal =====
+#do_pre_process is TunnelProcessing->run_processing_pipeline
+#do_2d_keypoint is Extract cloud using 2D keypoint
+#do_align is align prescan and postscan cloud
+#do_post_process is Trim the edges around after aligning. 
+#Last step is compare 2 cloud
+#do_upsample is upsample cloud and sent to Report Export, if not we sent the compared cloud
+
 string prescan_path
 string postscan_path
 bool do_pre_process
+bool do_2d_keypoint
 bool do_align
 bool do_post_process
+bool do_upsample
 
 ---
 # ===== Result =====

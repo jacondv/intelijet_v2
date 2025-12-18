@@ -3,18 +3,18 @@
 import rospy
 import actionlib
 from std_msgs.msg import String, Empty, Int32
-from std_srvs.srv import Trigger
-from align_service_client import AlignServiceClient
-
-from pps.msg import StartScanAction, StartScanGoal
-from pps.msg import CompareCloudAction, CompareCloudGoal
-
-from ros_blkarc_msgs.msg import TimedScanAction, TimedScanGoal
-from shared.pps_command import PPSCommand
-from shared.log_status import log_status
-from shared.msg import DeviceStatus
-
+# from std_srvs.srv import Trigger
+# from align_service_client import AlignServiceClient
+# from pps.msg import StartScanAction, StartScanGoal
+# from pps.msg import CompareCloudAction, CompareCloudGoal
+from pps.cloud_compare.compare_cloud_base_client import CompareBaseClient
 from pps.sick_scan_controller import SickScanController
+
+# from ros_blkarc_msgs.msg import TimedScanAction, TimedScanGoal
+
+from shared.pps_command import PPSCommand
+# from shared.log_status import log_status
+from shared.msg import DeviceStatus
 
 from shared.config_loader import CONFIG as cfg
 
@@ -42,16 +42,30 @@ class ScanManagerNode:
         rospy.Subscriber(cfg.HMI_CMD_TOPIC, Int32, self.cmd_cb)
         rospy.loginfo("ScanManager ready. Listening on %s", cfg.HMI_CMD_TOPIC)
 
-        self.__align_service_client = AlignServiceClient()
+        # self.__align_service_client = AlignServiceClient()
         # rospy.logwarn("Starting AlignServiceClient")
         self.scanner_controller = get_scanner_controller(status_callback=self.set_state)
-
-        self.client = actionlib.SimpleActionClient(
-            '/compare_cloud',
-            CompareCloudAction
+        # ---- compare client ----
+        self.compare_client = CompareBaseClient(
+            prescan_path="",
+            postscan_path="",
+            do_pre_process=True,
+            do_2d_keypoint=True,
+            do_post_process=True,
+            do_align=True,
+            do_upsample=True,
+            timeout=150.0
         )
-        self.client.wait_for_server()
-        rospy.loginfo("Connected to /compare_cloud")
+                # gắn callback
+        self.compare_client.on_done_cb = self._on_compare_done
+        self.compare_client.on_timeout_cb = self._on_compare_timeout
+
+        # self.client = actionlib.SimpleActionClient(
+        #     '/compare_cloud',
+        #     CompareCloudAction
+        # )
+        # self.client.wait_for_server()
+        # rospy.loginfo("Connected to /compare_cloud")
 
 
     def is_state(self, state):
@@ -83,31 +97,41 @@ class ScanManagerNode:
         elif cmd == PPSCommand.CANCEL_JOB.value:
             self.scanner_controller.on_cancel()
             self.set_state(DeviceStatus.IDLE)
+            self.compare_client.cancel()
 
         elif cmd == PPSCommand.START_COMPARE.value:
 
             rospy.loginfo("Start compare command received")
+            # avoid double call start()
+            state = self.compare_client.client.get_state()
+            if state in [actionlib.GoalStatus.ACTIVE,
+                         actionlib.GoalStatus.PENDING]:
+                rospy.logwarn("Compare already running")
+                return
+            self.compare_client.send_goal()
+            
+            
             # success, message = self.__align_service_client.call()
 
-            goal = CompareCloudGoal()
-            goal.do_pre_process = True
-            goal.do_post_process = True
-            goal.do_align = True
-            self.client.send_goal(goal)
+            # goal = CompareCloudGoal()
+            # goal.do_pre_process = True
+            # goal.do_post_process = True
+            # goal.do_align = True
+            # self.client.send_goal(goal)
             
-            self.client.wait_for_result()
-            success = self.client.wait_for_result(rospy.Duration(150.0))
-            if not success:
-                rospy.logerr("Compare timeout")
-                self.client.cancel_goal()
-                return   
+            # self.client.wait_for_result()
+            # success = self.client.wait_for_result(rospy.Duration(150.0))
+            # if not success:
+            #     rospy.logerr("Compare timeout")
+            #     self.client.cancel_goal()
+            #     return   
             
-            result = self.client.get_result()
-            state = self.client.get_state()
-            if state == actionlib.GoalStatus.SUCCEEDED and result.success:
-                rospy.loginfo("Compare SUCCESS job_id=%s", result.job_id)
-            else:
-                rospy.logerr("Compare FAILED state=%d", state)
+            # result = self.client.get_result()
+            # state = self.client.get_state()
+            # if state == actionlib.GoalStatus.SUCCEEDED and result.success:
+            #     rospy.loginfo("Compare SUCCESS job_id=%s", result.job_id)
+            # else:
+            #     rospy.logerr("Compare FAILED state=%d", state)
                 
             # if success:
             #     rospy.loginfo("Alignment successful: %s", message)
@@ -130,21 +154,21 @@ class ScanManagerNode:
             pass
 
 
-    def __send_scan_cmd(self, output_topic):
+    # def __send_scan_cmd(self, output_topic):
         
-        goal = TimedScanGoal(output_topic=output_topic,
-                             scan_time_seconds=self.scan_time_seconds)
+    #     goal = TimedScanGoal(output_topic=output_topic,
+    #                          scan_time_seconds=self.scan_time_seconds)
 
-        rospy.loginfo("Sending scan goal: %s", output_topic)
-        self.__scan_action_client.send_goal(goal)
-        self.__scan_action_client.wait_for_result()
-        result = self.__scan_action_client.get_result()
-        if result.success:
-            rospy.loginfo("Scan succeeded:")
-            return True
-        else:
-            rospy.logerr("Scan failed:")
-            return False
+    #     rospy.loginfo("Sending scan goal: %s", output_topic)
+    #     self.__scan_action_client.send_goal(goal)
+    #     self.__scan_action_client.wait_for_result()
+    #     result = self.__scan_action_client.get_result()
+    #     if result.success:
+    #         rospy.loginfo("Scan succeeded:")
+    #         return True
+    #     else:
+    #         rospy.logerr("Scan failed:")
+    #         return False
 
 
 
