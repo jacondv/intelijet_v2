@@ -4,7 +4,9 @@ import actionlib
 import time
 
 from pps.msg import CompareCloudAction, CompareCloudGoal
+from shared.config_loader import CONFIG as cfg
 
+from shared.log_status import log_status
 class CompareBaseClient:
     def __init__(self,
                  prescan_path="",
@@ -60,11 +62,24 @@ class CompareBaseClient:
     def set_timeout(self, timeout: float):
         self.timeout = timeout
 
+    def show_config(self):
+        print("===== Current Config =====")
+        print(f"Prescan path    : {self.prescan_path}")
+        print(f"Postscan path   : {self.postscan_path}")
+        print(f"Do pre-process  : {self.do_pre_process}")
+        print(f"Do 2D keypoint  : {self.do_2d_keypoint}")
+        print(f"Do post-process : {self.do_post_process}")
+        print(f"Do align        : {self.do_align}")
+        print(f"Do upsample     : {self.do_upsample}")
+        print("==========================")
+
     # ---------- CALLBACKS ----------
     def _on_feedback(self, fb):
-        # fb.status: string
+        # fb.stage: string
         # fb.progress: float [0-100]
-        rospy.loginfo("COMPARE [%-12s] %3.0f%%", fb.status, fb.progress)
+        rospy.loginfo("COMPARE [%-12s] %3.0f%%", fb.stage, fb.progress*100)
+        msg = f"[INFO] COMPARE [{fb.stage:<12}] {fb.progress*100:3.0f}%"
+        log_status(name=cfg.NOTIFICATION, message=msg)
 
 
     def _on_done(self, state, result):
@@ -73,7 +88,8 @@ class CompareBaseClient:
 
         state_str = actionlib.GoalStatus.to_string(state)
         rospy.loginfo("COMPARE DONE [%s] success=%s", state_str, result.success)   
-
+        msg = "[INFO] COMPARE DONE [%s] success=%s" % (state_str, result.success)
+        log_status(name=cfg.NOTIFICATION, message=msg)
 
     def _check_timeout(self, event):
         if self._start_time is None:
@@ -94,6 +110,8 @@ class CompareBaseClient:
 
         if elapsed > self.timeout:
             rospy.logerr("COMPARE TIMEOUT after %.1f seconds", elapsed)
+            msg = f"[INFO] COMPARE TIMEOUT after {elapsed} seconds"
+            log_status(name=cfg.NOTIFICATION, message=msg)
             self._timeout_timer.shutdown()
             self.client.cancel_goal()  
 

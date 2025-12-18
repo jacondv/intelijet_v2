@@ -115,7 +115,6 @@ class Ui_frm_MainForm(object):
 "    border-radius: 4px;         /* bo góc nhẹ */\n"
 "    background: #FFFFFF;        /* nền trắng */\n"
 "    margin: 0;\n"
-"    transition: all 0.2s;\n"
 "}\n"
 "\n"
 "/* Hover: viền xanh nhạt */\n"

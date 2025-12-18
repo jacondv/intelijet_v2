@@ -23,6 +23,7 @@ from pps.msg import (
 
 CLOUD_COMPARED_TOPIC = cfg.CLOUD_COMPARED_TOPIC
 CLOUD_COMPARED_UPSAMPLE_TOPIC = f"{CLOUD_COMPARED_TOPIC}/upsample"
+
 class CompareCloudServer:
 
     def __init__(self):
@@ -30,6 +31,7 @@ class CompareCloudServer:
         # Save the cloud from topic
         self.pre_cloud = None
         self.post_cloud = None
+        self.post_msg =None
 
         self.server = actionlib.SimpleActionServer(
             "/compare_cloud",
@@ -74,7 +76,8 @@ class CompareCloudServer:
         self.pre_cloud = cloudconverter.pointcloud2_to_o3d(msg)
 
     def _post_cloud_cb(self, msg):
-        self.post_cloud = cloudconverter.pointcloud2_to_o3d(msg)
+        # We should handle this later, as it takes a while and the compare command was called too early.
+        self.post_msg = msg
 
     def execute(self, goal):
         rospy.logwarn("EXECUTE ENTERED")
@@ -83,9 +86,9 @@ class CompareCloudServer:
 
         job_id = uuid.uuid4().hex
         # Wait 2 seconds to receive the self.post_cloud.
-        rospy.sleep(2)
         rospy.loginfo(f"[{job_id}] Start compare")
-
+        print(goal)
+        self.post_cloud = cloudconverter.pointcloud2_to_o3d(self.post_msg)
         try:
             # ===== LOAD =====
             feedback.stage = "load"

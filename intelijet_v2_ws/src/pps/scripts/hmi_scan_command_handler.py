@@ -56,9 +56,6 @@ class ScanManagerNode:
             do_upsample=True,
             timeout=150.0
         )
-                # gắn callback
-        self.compare_client.on_done_cb = self._on_compare_done
-        self.compare_client.on_timeout_cb = self._on_compare_timeout
 
         # self.client = actionlib.SimpleActionClient(
         #     '/compare_cloud',
@@ -108,9 +105,14 @@ class ScanManagerNode:
                          actionlib.GoalStatus.PENDING]:
                 rospy.logwarn("Compare already running")
                 return
+            
+            # Get parameter from ros server
+            self.compare_client.set_pre_process(rospy.get_param("/runtime/do_pre_process", True))
+            self.compare_client.set_2d_keypoint(rospy.get_param("/runtime/do_2d_keypoint", True))
+            self.compare_client.set_align(rospy.get_param("/runtime/do_align", True))
+            self.compare_client.set_upsample(rospy.get_param("/runtime/do_upsample", True))
             self.compare_client.send_goal()
-            
-            
+
             # success, message = self.__align_service_client.call()
 
             # goal = CompareCloudGoal()

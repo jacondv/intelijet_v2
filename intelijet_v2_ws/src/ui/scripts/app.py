@@ -8,6 +8,8 @@ import re
 import time
 
 import sys, subprocess
+import rospy
+
 from PyQt5.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QLabel, QWidget, QPushButton, QComboBox
 from PyQt5.QtCore import pyqtSignal
 from PyQt5.QtWidgets import QMessageBox, QDialog
@@ -33,7 +35,7 @@ from ui.intelijet_ui import Ui_MainWindow
 from ui.tunnel_report.report_controler import ReportGenerator
 
 from shared.config_loader import CONFIG as cfg
-from ui.widgets.inline_loading import InlineLoading
+
 
 BASE_DIR = cfg.BASE_DIR
 CLOUD_COMPARED_TOPIC = cfg.CLOUD_COMPARED_TOPIC
@@ -121,6 +123,10 @@ class App(QMainWindow):
                                     self.ui_data_update)
         self.ros_thread.start()
 
+        # if not rospy.core.is_initialized():
+        #     rospy.init_node("app_node", anonymous=False)
+
+
         # --- Signals ---
         # self.cloud_received_signal.connect(self.update_pointcloud)
         #Receive cloud and Send align, compare request to ROS if cloud come from postcloud topic
@@ -130,6 +136,19 @@ class App(QMainWindow):
         self.ui_send_cmd_signal.connect(self.ros_thread.send_command)
         # cloud_compare.compare_done.connect(self.update_pointcloud_from_data)
         # cloud_compare.compare_done2.connect(self.on_manual_export_report)
+
+        # Set rntime parameter for ROS
+        combo_boxes = [
+            self.ui.cbbAutoAlign,
+            self.ui.cbbAutoCompare,
+            self.ui.cbbAutoReport,
+            self.ui.cbbRemoveGround,
+            self.ui.cbbUseKeypoint,
+            self.ui.cbbUpsample
+        ]
+
+        for cb in combo_boxes:
+            cb.currentIndexChanged.connect(self.update_param)
 
         # --- Control Buttons ---
         self.ui.btnPreScan.released.connect(lambda: self.ui_send_cmd_signal.emit(PPSCommand.START_PRESCAN.value))
@@ -171,14 +190,40 @@ class App(QMainWindow):
 
         #Load ui state
         self.load_ui_state()
+        self.update_param()
 
     # Setting parameter
     def save_ui_state(self):
+        settings.setValue("cbbAutoAlign_index", self.ui.cbbAutoAlign.currentIndex())
         settings.setValue("cbbAutoCompare_index", self.ui.cbbAutoCompare.currentIndex())
+        settings.setValue("cbbAutoReport_index", self.ui.cbbAutoReport.currentIndex())
+        settings.setValue("cbbRemoveGround_index", self.ui.cbbRemoveGround.currentIndex())
+        settings.setValue("cbbUseKeypoint_index", self.ui.cbbUseKeypoint.currentIndex())
+        settings.setValue("cbbUpsample_index", self.ui.cbbUpsample.currentIndex())
+
 
     def load_ui_state(self):
-        index = settings.value("cbbAutoCompare_index", 0, type=int)
-        self.ui.cbbAutoCompare.setCurrentIndex(index)
+        self.ui.cbbAutoAlign.setCurrentIndex(settings.value("cbbAutoAlign_index", 0, type=int))
+        self.ui.cbbAutoCompare.setCurrentIndex(settings.value("cbbAutoCompare_index", 0, type=int))
+        self.ui.cbbAutoReport.setCurrentIndex(settings.value("cbbRemoveGround_index", 0, type=int))
+        self.ui.cbbRemoveGround.setCurrentIndex(settings.value("cbbRemoveGround_index", 0, type=int))
+        self.ui.cbbUseKeypoint.setCurrentIndex(settings.value("cbbUseKeypoint_index", 0, type=int))
+        self.ui.cbbUpsample.setCurrentIndex(settings.value("cbbUpsample_index", 0, type=int))
+
+
+    # Update runtime param to ROS
+    def update_param(self):
+        params = {
+            "/runtime/do_align": self.ui.cbbAutoAlign.currentText().lower() == 'on',
+            "/runtime/auto_compare": self.ui.cbbAutoCompare.currentText().lower() == 'on',
+            "/runtime/auto_report": self.ui.cbbAutoReport.currentText().lower() == 'on',
+            "/runtime/do_pre_process": self.ui.cbbRemoveGround.currentText().lower() == 'on',
+            "/runtime/do_2d_keypoint": self.ui.cbbUseKeypoint.currentText().lower() == 'on',
+            "/runtime/do_upsample": self.ui.cbbUpsample.currentText().lower() == 'on',
+        }
+
+        for key, value in params.items():
+            rospy.set_param(key, value)
 
     # Reload data for history page when toolbox page 2 is activated
     def on_toolbox_changed(self, index):
@@ -315,22 +360,6 @@ class App(QMainWindow):
             self.ui.lblPLCStatus.setText("unknown".upper())
                
                
-    # # 1.2--- Update pointcloud from reatime signal ---
-    # def update_pointcloud(self, msg, topic_name):
-
-    #     from pps.data_converter import CloudConverter
-    #     cloudconverter = CloudConverter()
-    
-    #     # o3d_cloud = convert_pointcloud2_to_o3d_v2(msg)
-    #     o3d_cloud = cloudconverter.pointcloud2_to_o3d_tensor(msg)
-
-
-    #     polydata = cloudconverter.o3d_to_vtk_polydata(o3d_cloud)
-
-    #     self.vtk_viewer.update(polydata)
-    #     if polydata:
-    #         self.save_job(o3d_cloud, topic_name)
-
     # 3.--- Update pointcloud from available data---
     def update_pointcloud_from_data(self, data, filename=None):
         from pps.data_converter import CloudConverter

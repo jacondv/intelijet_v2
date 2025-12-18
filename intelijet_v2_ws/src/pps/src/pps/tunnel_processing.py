@@ -44,7 +44,7 @@ class TunnelProcessing:
     # ------------------------------
     # Basic operations
     # ------------------------------
-
+    # Crop ground (Note only for ground plane)
     def crop(self, 
             pcd, 
             min_bound: np.ndarray, 
