@@ -31,6 +31,7 @@ from ui.update_data_utils import DataBinder, load_config_to_ui, load_ui_to_confi
 from shared.pps_command import PPSCommand
 
 from ui.intelijet_ui import Ui_MainWindow 
+from ui.keyboard import TouchKeyboard
 
 from ui.tunnel_report.report_controler import ReportGenerator
 
@@ -714,6 +715,9 @@ if __name__ == "__main__":
 
     app = QApplication(sys.argv)
     # Load style QSS tại đây
+
+    keyboard_filter = TouchKeyboard()
+    app.installEventFilter(keyboard_filter)
     
     with open(f"{BASE_DIR}/intelijet_v2_ws/src/ui/src/ui/app.qss") as f:
         app.setStyleSheet(f.read())
