@@ -1,18 +1,67 @@
 # vtk_viewer.py
 import vtk
 from vtk.qt.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
-from PyQt5.QtWidgets import QWidget, QVBoxLayout, QPushButton
+from PyQt5.QtCore import Qt
+from PyQt5.QtWidgets import QWidget, QVBoxLayout, QPushButton, QGestureEvent, QPinchGesture
 
-# Subclass QVTKRenderWindowInteractor để bắt resize
+import rospy
+# # Subclass QVTKRenderWindowInteractor để bắt resize
+# class QVTKWidget(QVTKRenderWindowInteractor):
+#     def __init__(self, parent=None, on_resize=None):
+#         super().__init__(parent)
+#         self._on_resize = on_resize
+
+#     def resizeEvent(self, event):
+#         super().resizeEvent(event)
+#         if self._on_resize:
+#             self._on_resize()
+
+# Support touch zoom
 class QVTKWidget(QVTKRenderWindowInteractor):
-    def __init__(self, parent=None, on_resize=None):
+    def __init__(self, parent=None, on_resize=None, vtk_viewer=None):
         super().__init__(parent)
         self._on_resize = on_resize
+        self._vtk_viewer = vtk_viewer
+
+        # 🔥 bắt buộc để nhận touch thật
+        self.setAttribute(Qt.WA_AcceptTouchEvents, True)
+        self.grabGesture(Qt.PinchGesture)
 
     def resizeEvent(self, event):
         super().resizeEvent(event)
         if self._on_resize:
             self._on_resize()
+
+    def event(self, event):
+        if event.type() == QGestureEvent.Gesture:
+            return self._gesture_event(event)
+        return super().event(event)
+
+
+    def _gesture_event(self, event: QGestureEvent):
+
+        pinch = event.gesture(Qt.PinchGesture)
+        if pinch:
+            self._handle_pinch(pinch)
+            return True
+
+        return False
+
+    def _handle_pinch(self, pinch: QPinchGesture):
+        if pinch.state() == Qt.GestureUpdated:
+            factor = pinch.scaleFactor()
+
+            if abs(factor - 1.0) < 0.02:   # ignore tiny pinch noise
+                return
+            
+            # clamp cho mượt, tránh zoom điên
+            factor = max(0.9, min(1.1, factor))
+
+            if self._vtk_viewer:
+                self._vtk_viewer.on_pinch_zoom(factor)
+
+
+
 
 class VTKViewer:
     def __init__(self, parent_widget: QWidget):
@@ -23,7 +72,7 @@ class VTKViewer:
         self.initial_camera_state = None
 
         # ----- VTK widget -----
-        self.vtkWidget = QVTKWidget(parent_widget, on_resize=self._update_overlay_button)
+        self.vtkWidget = QVTKWidget(parent_widget, on_resize=self._update_overlay_button, vtk_viewer=self)
         layout = parent_widget.layout()
         if layout is None:
             layout = QVBoxLayout(parent_widget)
@@ -78,6 +127,22 @@ class VTKViewer:
 
         self.vtkWidget.Initialize()
         self.vtkWidget.Start()
+
+    #Zoom function
+    def on_pinch_zoom(self, scale_factor):
+        cam = self.renderer.GetActiveCamera()
+
+        if cam.GetParallelProjection():
+            # orthographic
+            scale = cam.GetParallelScale()
+            cam.SetParallelScale(scale / scale_factor)
+        else:
+            # perspective
+            cam.Dolly(scale_factor)
+            self.renderer.ResetCameraClippingRange()
+
+        self.vtkWidget.GetRenderWindow().Render()
+
 
 
     # ------------------ Camera ------------------
@@ -186,3 +251,7 @@ class VTKViewer:
 
         self.vtkWidget.GetRenderWindow().Render()
         self._enable_box_widget()
+
+
+
+# How to use touch screen for zoom
