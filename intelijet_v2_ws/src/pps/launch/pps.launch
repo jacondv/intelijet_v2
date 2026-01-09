@@ -1,10 +1,9 @@
 <launch>
 
 
-	<!-- PPS load configuration -->
-	<!-- <node pkg="shared" name="config_manager_node" type="config_manager_node.py" /> -->
-
 	<!-- PPS main processing data -->
+	<!-- <node pkg="pps" name="scan_to_cloud_msg_node" type="scan_to_cloud_msg_node.py" /> -->
+
 	<!-- <node pkg="pps" name="dv_cloud_compare" type="dv_cloud_compare.py" /> -->
 	<node pkg="pps" name="dv_cloud_preprocess" type="dv_cloud_preprocess.py" />
 	<node pkg="pps" type="compare_cloud_action_server.py" name="compare_cloud_action_server" output="screen" />
@@ -35,7 +34,7 @@
 	<!-- Laser assembler Service-->
 	<node pkg="laser_assembler" type="point_cloud2_assembler" name="assembler_node" output="screen">
 		<param name="frame_id" value="LMS_511_scan_plane"/>
-		<!-- <remap from="/cloud" to="/cloud_interlaced"/> -->
+		<!-- <remap from="/cloud" to="/cloud_msg"/> -->
 		<param name="fixed_frame" type="string" value="base_link" />
 		<param name="max_clouds" type="int" value="6000" />
 		<param name="ignore_laser_skew" type="bool" value="false" />

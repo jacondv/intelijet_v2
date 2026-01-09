@@ -17,6 +17,8 @@ import rospy
 #             self._on_resize()
 
 # Support touch zoom
+
+
 class QVTKWidget(QVTKRenderWindowInteractor):
     def __init__(self, parent=None, on_resize=None, vtk_viewer=None):
         super().__init__(parent)
@@ -62,7 +64,6 @@ class QVTKWidget(QVTKRenderWindowInteractor):
 
 
 
-
 class VTKViewer:
     def __init__(self, parent_widget: QWidget):
         self.parent_widget = parent_widget
@@ -72,7 +73,8 @@ class VTKViewer:
         self.initial_camera_state = None
 
         # ----- VTK widget -----
-        self.vtkWidget = QVTKWidget(parent_widget, on_resize=self._update_overlay_button, vtk_viewer=self)
+        self.vtkWidget = QVTKWidget(parent_widget, on_resize=None, vtk_viewer=self)
+
         layout = parent_widget.layout()
         if layout is None:
             layout = QVBoxLayout(parent_widget)
@@ -95,23 +97,25 @@ class VTKViewer:
 
         # ---- Zoom center button (overlay) ----
         self.btn_zoom_center = QPushButton("⤢", self.parent_widget)
+        self.btn_zoom_center.show()
         self.btn_zoom_center.setToolTip("Zoom to initial view")
         self.btn_zoom_center.setFixedSize(100, 100)
         self.btn_zoom_center.setStyleSheet("""
             QPushButton {
-                background: rgba(40, 40, 40, 180);
+                background: rgb(40, 40, 40);
                 border: 1px solid white;       /* viền trắng */
                 color: white;
-                border-radius: 32px;
+                border-radius: 0px;
                 font-size: 24pt;
             }
             QPushButton:hover {
-                background: rgba(70, 70, 70, 200);
+                background: rgb(70, 70, 70);
             }
         """)
+
         self.btn_zoom_center.clicked.connect(self.restore_initial_view)
         self.btn_zoom_center.raise_()
-        self._update_overlay_button()  # vị trí lúc đầu
+        # self._update_overlay_button()  # vị trí lúc đầu
 
         # ----- Axes orientation -----
         axes = vtk.vtkAxesActor()
@@ -142,6 +146,14 @@ class VTKViewer:
             self.renderer.ResetCameraClippingRange()
 
         self.vtkWidget.GetRenderWindow().Render()
+
+
+    def move_button_to_bottom_right(self, margin=10):
+        margin = 10
+        x = self.vtkWidget.width() - self.btn_zoom_center.width() - margin
+        y = self.vtkWidget.height() - self.btn_zoom_center.height() - margin
+        self.btn_zoom_center.raise_()
+        self.btn_zoom_center.move(x, y)
 
 
 
@@ -187,13 +199,6 @@ class VTKViewer:
 
         self.vtkWidget.GetRenderWindow().Render()
 
-
-    def _update_overlay_button(self):
-        margin = 10
-        x = self.vtkWidget.width() - self.btn_zoom_center.width() - margin
-        y = self.vtkWidget.height() - self.btn_zoom_center.height() - margin
-        self.btn_zoom_center.move(x, y)
-        # self.btn_zoom_center.raise_()
 
     # ------------------ Box Widget ------------------
     def _enable_box_widget(self):
