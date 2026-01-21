@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file './intelijet.ui'
+# Form implementation generated from reading ui file 'intelijet.ui'
 #
 # Created by: PyQt5 UI code generator 5.14.1
 #
@@ -13,7 +13,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
-        MainWindow.resize(1474, 971)
+        MainWindow.resize(1678, 971)
         MainWindow.setStyleSheet("\n"
 "/* ==================== PUSHBUTTON ==================== */\n"
 "\n"
@@ -111,6 +111,20 @@ class Ui_MainWindow(object):
 "    font-size: 18pt;\n"
 "    font-weight: bold;\n"
 "    selection-background-color: #D0E4F5; /* khi chọn item */\n"
+"}\n"
+"\n"
+"QComboBox:disabled {\n"
+"    background-color: #e0e0e0;\n"
+"    color: #888888;\n"
+"    border: 1px solid #b0b0b0;\n"
+"}\n"
+"\n"
+"QComboBox::drop-down:disabled {\n"
+"    background-color: #d0d0d0;\n"
+"}\n"
+"\n"
+"QComboBox::down-arrow:disabled {\n"
+"    image: none;\n"
 "}\n"
 "\n"
 "/* Drop-down list */\n"
@@ -463,13 +477,22 @@ class Ui_MainWindow(object):
         self.exit_widget.setObjectName("exit_widget")
         self.horizontalLayout_3 = QtWidgets.QHBoxLayout(self.exit_widget)
         self.horizontalLayout_3.setContentsMargins(0, 0, 0, 0)
+        self.horizontalLayout_3.setSpacing(10)
         self.horizontalLayout_3.setObjectName("horizontalLayout_3")
+        self.btnLogin = QtWidgets.QPushButton(self.exit_widget)
+        self.btnLogin.setMaximumSize(QtCore.QSize(60, 60))
+        icon1 = QtGui.QIcon()
+        icon1.addPixmap(QtGui.QPixmap(":/icon/icon/user.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.btnLogin.setIcon(icon1)
+        self.btnLogin.setIconSize(QtCore.QSize(35, 35))
+        self.btnLogin.setObjectName("btnLogin")
+        self.horizontalLayout_3.addWidget(self.btnLogin)
         self.btnShutdown = QtWidgets.QPushButton(self.exit_widget)
         self.btnShutdown.setMinimumSize(QtCore.QSize(0, 0))
         self.btnShutdown.setMaximumSize(QtCore.QSize(16777215, 60))
-        icon1 = QtGui.QIcon()
-        icon1.addPixmap(QtGui.QPixmap(":/icon/icon/power-button.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-        self.btnShutdown.setIcon(icon1)
+        icon2 = QtGui.QIcon()
+        icon2.addPixmap(QtGui.QPixmap(":/icon/icon/power-button.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.btnShutdown.setIcon(icon2)
         self.btnShutdown.setIconSize(QtCore.QSize(60, 60))
         self.btnShutdown.setCheckable(False)
         self.btnShutdown.setObjectName("btnShutdown")
@@ -510,10 +533,10 @@ class Ui_MainWindow(object):
         self.pushButton_4.setStyleSheet("background-color: #FFF9C4;\n"
 "border-radius:12px;")
         self.pushButton_4.setText("")
-        icon2 = QtGui.QIcon()
-        icon2.addPixmap(QtGui.QPixmap(":/icon/icon/arrow-96-48.ico"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-        icon2.addPixmap(QtGui.QPixmap(":/icon/icon/arrow-31-48.ico"), QtGui.QIcon.Normal, QtGui.QIcon.On)
-        self.pushButton_4.setIcon(icon2)
+        icon3 = QtGui.QIcon()
+        icon3.addPixmap(QtGui.QPixmap(":/icon/icon/arrow-96-48.ico"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        icon3.addPixmap(QtGui.QPixmap(":/icon/icon/arrow-31-48.ico"), QtGui.QIcon.Normal, QtGui.QIcon.On)
+        self.pushButton_4.setIcon(icon3)
         self.pushButton_4.setCheckable(True)
         self.pushButton_4.setObjectName("pushButton_4")
         self.verticalLayout_3.addWidget(self.pushButton_4)

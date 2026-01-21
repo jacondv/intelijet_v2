@@ -147,6 +147,8 @@ class App(QMainWindow):
             self.ui.cbbUseKeypoint,
             self.ui.cbbUpsample
         ]
+        self.ui.cbbAutoAlign.setEnabled(False)
+        self.ui.cbbUpsample.setEnabled(False)
 
         for cb in combo_boxes:
             cb.currentIndexChanged.connect(self.update_param)
@@ -162,6 +164,8 @@ class App(QMainWindow):
         self.ui.btnShutdown.released.connect(self.on_shutdown)
 
         self.ui.btnFullScreen.released.connect(self.toggle_max)
+
+        self.ui.btnLogin.released.connect(self.on_login_clicked)
 
         # --- Select Job to work process ---
         self.load_active_jobs(self.ui.cbbJobSelect, ACTIVE_JOB_FILE)
@@ -337,6 +341,43 @@ class App(QMainWindow):
         else:
             self.showMaximized()
             self.ui.btnFullScreen.setText("Full Screen")
+
+    def on_login_clicked(self):
+        
+        from ui.widgets.security_manager import security
+        from ui.widgets.login_dialog_view import LoginDialog
+        from PyQt5.QtGui import QIcon
+
+
+        def _on_auth_changed(level):
+            self.ui.cbbAutoAlign.setEnabled(level >= security.ADMIN)
+            self.ui.cbbUpsample.setEnabled(level >= security.ADMIN)
+            self.ui.cbbAutoCompare.setEnabled(level >= security.ADMIN)
+            self.ui.cbbUseKeypoint.setEnabled(level >= security.ADMIN)
+            
+
+        from PyQt5.QtWidgets import QMessageBox
+        if security.level() != security.VIEWER:
+            security.logout()
+            _on_auth_changed(level=security.VIEWER)
+            self.ui.btnLogin.setIcon(QIcon(":/icon/icon/user.png"))
+            return
+
+        dlg = LoginDialog(self)
+        if dlg.exec_() != dlg.Accepted:
+            return
+
+        level = security.login(dlg.password())
+
+        if not level:
+            QMessageBox.warning(self, "Error", "Wrong password")
+            return
+
+        _on_auth_changed(level=level)
+        # self.ui.btnLogin.setText("Logout")
+        self.ui.btnLogin.setIcon(QIcon(":/icon/icon/user-logout.png"))
+
+
 
     # 1.1--- Update commond data from ROS ---
     def update_data(self, data):
