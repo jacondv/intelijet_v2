@@ -88,7 +88,8 @@ class CompareCloudServer:
         # Wait 2 seconds to receive the self.post_cloud.
         rospy.loginfo(f"[{job_id}] Start compare")
         print(goal)
-        self.post_cloud = cloudconverter.pointcloud2_to_o3d(self.post_msg)
+        if self.post_cloud is not None:
+            self.post_cloud = cloudconverter.pointcloud2_to_o3d(self.post_msg)
         try:
             # ===== LOAD =====
             feedback.stage = "load"
