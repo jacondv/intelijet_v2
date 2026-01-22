@@ -6,7 +6,7 @@ from report_controler import ReportGenerator
 
 report = ReportGenerator()
 pcd = "/mnt/c/work/projects/intelijet_v2/data/Jobnumber1/cloud_compared_new2.ply"
-report.export(pcd)
+report.export(pcd,output_path="tunnel_report.pdf")
 
 # def uri_for(path):
 #     p = Path(path)

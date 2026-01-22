@@ -46,14 +46,21 @@ class ScanManagerNode:
         # rospy.logwarn("Starting AlignServiceClient")
         self.scanner_controller = get_scanner_controller(status_callback=self.set_state)
         # ---- compare client ----
+
+        do_align        = rospy.get_param("/runtime/do_align", True)
+        do_pre_process  = rospy.get_param("/runtime/do_pre_process", True)
+        do_2d_keypoint  = rospy.get_param("/runtime/do_2d_keypoint", False)
+        do_upsample     = rospy.get_param("/runtime/do_upsample", False)
+        do_post_process     = rospy.get_param("/runtime/do_post_process", False)
+        
         self.compare_client = CompareBaseClient(
             prescan_path="",
             postscan_path="",
-            do_pre_process=True,
-            do_2d_keypoint=True,
-            do_post_process=True,
-            do_align=True,
-            do_upsample=True,
+            do_pre_process=do_pre_process,
+            do_2d_keypoint=do_2d_keypoint,
+            do_post_process=do_post_process,
+            do_align=do_align,
+            do_upsample=do_upsample,
             timeout=150.0
         )
 

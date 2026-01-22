@@ -119,46 +119,46 @@ class KeypointMatcher:
         return inlier_matches
     
     
-    def match_keypoints_by_region(self,kp1, des1, kp2, des2, ratio_test=0.75, n_best=2, K=np.eye(3,3),image_shape=None):
-        h, w = image_shape[:2]
+    # def match_keypoints_by_region(self,kp1, des1, kp2, des2, ratio_test=0.75, n_best=2, K=np.eye(3,3),image_shape=None):
+    #     h, w = image_shape[:2]
         
-        region_filters = {
-            "top_left":     lambda pt: pt[0] < w // 2 and pt[1] < h // 2,
-            "top_right":    lambda pt: pt[0] >= w // 2 and pt[1] < h // 2,
-            "bottom_left":  lambda pt: pt[0] < w // 2 and pt[1] >= h // 2,
-            "bottom_right": lambda pt: pt[0] >= w // 2 and pt[1] >= h // 2,
-        }
+    #     region_filters = {
+    #         "top_left":     lambda pt: pt[0] < w // 2 and pt[1] < h // 2,
+    #         "top_right":    lambda pt: pt[0] >= w // 2 and pt[1] < h // 2,
+    #         "bottom_left":  lambda pt: pt[0] < w // 2 and pt[1] >= h // 2,
+    #         "bottom_right": lambda pt: pt[0] >= w // 2 and pt[1] >= h // 2,
+    #     }
 
-        good_matches_all = []
+    #     good_matches_all = []
 
-        for region_name, condition in region_filters.items():
-            idxs = [i for i, kp in enumerate(kp1) if condition(kp.pt)]
-            if not idxs:
-                continue
-            des1_sub = des1[idxs]
-            matcher = cv2.BFMatcher(self.norm_type)
-            raw_matches = matcher.knnMatch(des1_sub, des2, k=2)
+    #     for region_name, condition in region_filters.items():
+    #         idxs = [i for i, kp in enumerate(kp1) if condition(kp.pt)]
+    #         if not idxs:
+    #             continue
+    #         des1_sub = des1[idxs]
+    #         matcher = cv2.BFMatcher(self.norm_type)
+    #         raw_matches = matcher.knnMatch(des1_sub, des2, k=2)
 
-            good = []
-            for i, match in enumerate(raw_matches):
-                if len(match) < 2:
-                    continue
+    #         good = []
+    #         for i, match in enumerate(raw_matches):
+    #             if len(match) < 2:
+    #                 continue
 
-                m, n = match
-                if m.distance < ratio_test * n.distance:
-                    # print(m.distance, ratio_test*n.distance)
+    #             m, n = match
+    #             if m.distance < ratio_test * n.distance:
+    #                 # print(m.distance, ratio_test*n.distance)
 
-                    m.queryIdx = idxs[m.queryIdx]  # map về index gốc
-                    good.append(m)
+    #                 m.queryIdx = idxs[m.queryIdx]  # map về index gốc
+    #                 good.append(m)
 
-            good = sorted(good, key=lambda m: m.distance)[:n_best]
-            good_matches_all.extend(good)
+    #         good = sorted(good, key=lambda m: m.distance)[:n_best]
+    #         good_matches_all.extend(good)
 
-        # ----- Tính Essential matrix và lọc inliers -----
-        if len(good_matches_all) < 5:
-            return []  # Không đủ để tính E
+    #     # ----- Tính Essential matrix và lọc inliers -----
+    #     if len(good_matches_all) < 5:
+    #         return []  # Không đủ để tính E
 
-        return good_matches_all
+    #     return good_matches_all
 
     def match_keypoints_by_proximity(self,kp1, des1, kp2, des2, ratio_test=0.75, n_best=2, max_pixel_dist=50):
         """
@@ -387,44 +387,44 @@ class KeypointCloudExtractor:
         return cloud_crop, keypoint3d
 
 
-class FisheyeUndistorter:
-    def __init__(self, K: np.ndarray, D: np.ndarray):
-        """
-        K: Ma trận nội tại camera (3x3 hoặc 4x4)
-        D: Distortion coefficients (4x1 hoặc 4,)
-        """
-        # Tự động cắt K nếu là 4x4
-        if K.shape == (4, 4):
-            K = K[:3, :3]
-        elif K.shape != (3, 3):
-            raise ValueError("K phải là ma trận 3x3 hoặc 4x4")
+# class FisheyeUndistorter:
+#     def __init__(self, K: np.ndarray, D: np.ndarray):
+#         """
+#         K: Ma trận nội tại camera (3x3 hoặc 4x4)
+#         D: Distortion coefficients (4x1 hoặc 4,)
+#         """
+#         # Tự động cắt K nếu là 4x4
+#         if K.shape == (4, 4):
+#             K = K[:3, :3]
+#         elif K.shape != (3, 3):
+#             raise ValueError("K phải là ma trận 3x3 hoặc 4x4")
 
-        self.K = K.astype(np.float64)
-        self.D = D.astype(np.float64).reshape(-1)
+#         self.K = K.astype(np.float64)
+#         self.D = D.astype(np.float64).reshape(-1)
 
-        # Kiểm tra distortion fisheye
-        if self.D.size != 4:
-            raise ValueError("Distortion fisheye phải có đúng 4 phần tử")
+#         # Kiểm tra distortion fisheye
+#         if self.D.size != 4:
+#             raise ValueError("Distortion fisheye phải có đúng 4 phần tử")
 
-        self.map1 = None
-        self.map2 = None
-        self.image_size = None
+#         self.map1 = None
+#         self.map2 = None
+#         self.image_size = None
 
-    def undistort(self, image: np.ndarray) -> np.ndarray:
-        """
-        Undistort ảnh đầu vào. Tự tạo lại map nếu kích thước ảnh thay đổi.
-        """
-        h, w = image.shape[:2]
-        image_size = (w, h)
+#     def undistort(self, image: np.ndarray) -> np.ndarray:
+#         """
+#         Undistort ảnh đầu vào. Tự tạo lại map nếu kích thước ảnh thay đổi.
+#         """
+#         h, w = image.shape[:2]
+#         image_size = (w, h)
 
-        # Nếu chưa tạo map hoặc ảnh thay đổi size
-        if self.map1 is None or image_size != self.image_size:
-            self.image_size = image_size
-            self.map1, self.map2 = cv2.fisheye.initUndistortRectifyMap(
-                self.K, self.D, np.eye(3), self.K, image_size, cv2.CV_16SC2
-            )
+#         # Nếu chưa tạo map hoặc ảnh thay đổi size
+#         if self.map1 is None or image_size != self.image_size:
+#             self.image_size = image_size
+#             self.map1, self.map2 = cv2.fisheye.initUndistortRectifyMap(
+#                 self.K, self.D, np.eye(3), self.K, image_size, cv2.CV_16SC2
+#             )
 
-        return cv2.remap(image, self.map1, self.map2, interpolation=cv2.INTER_LINEAR)
+#         return cv2.remap(image, self.map1, self.map2, interpolation=cv2.INTER_LINEAR)
 
 
 class KeypointCloudAlignManager:
@@ -468,6 +468,8 @@ class KeypointCloudAlignManager:
         
         self.__process_status = 0 # 0: ready, 1: busy, 2: Done
         self._T = np.eye(4,dtype=np.float64)
+
+        self.result_image = None
 
     @property
     def process_status(self):
@@ -552,6 +554,7 @@ class KeypointCloudAlignManager:
             self.__process_status = 1
             self.__croped_cloud1, self.__croped_cloud2 = self.__process()
             self.__process_status = 2
+            # self.result_image = self.draw_result()
 
     
     def __process(self):
@@ -751,7 +754,7 @@ class CalibrationVisualizer:
         """
         Hiển thị ảnh + chiếu điểm cloud lên ảnh với màu RGB dựa trên (x, y, z)
         """
-        
+        from matplotlib import pyplot as plt
         result = self.project_cloud_to_image(cloud, image, K, T_lc,dist , radius=radius, thres=thres)
         plt.figure(figsize=(10, 10))
         plt.imshow(result)

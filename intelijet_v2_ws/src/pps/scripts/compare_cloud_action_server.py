@@ -79,6 +79,7 @@ class CompareCloudServer:
         # We should handle this later, as it takes a while and the compare command was called too early.
         self.post_msg = msg
 
+
     def execute(self, goal):
         rospy.logwarn("EXECUTE ENTERED")
         result = CompareCloudResult()
@@ -152,9 +153,17 @@ class CompareCloudServer:
 
                 if self.keypoint_manager.is_ready():    
                     target_patch, source_patch, T = self.keypoint_manager.get_result()
+                    ###
+                    # import cv2
+                    # import time
+                    # image_out = self.keypoint_manager.result_image
+                    # filename = f"/mnt/c/WORK/projects/intelijet_v2/data/matches_{int(time.time()*1000)}.png"
+                    # cv2.imwrite(filename, image_out)
+                    ###
                     # _, source_patch, T = self.keypoint_manager.get_result()
                 else:
                     source_patch = None
+                    
             else:
                 source_patch=None
                 target_patch=None
@@ -227,7 +236,6 @@ class CompareCloudServer:
                 msg = cloudconverter.o3d_tensor_to_pointcloud2(cloud_compared_upsample, frame_id=frame_id)
             # Sent cloud compared for report export
             self.pub2.publish(msg)
-
 
             feedback.stage = "done"
             feedback.progress = 1.0

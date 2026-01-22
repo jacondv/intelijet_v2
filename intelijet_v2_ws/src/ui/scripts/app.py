@@ -24,7 +24,7 @@ from history_page_manager import HistoryPageManager
 from project_dlg_manager import ProjectManager 
 from setting_page_manager import SettingPageManager
 
-from data_binder import DataBinder
+# from data_binder import DataBinder
 from ui.update_data_utils import DataBinder, load_config_to_ui, load_ui_to_config   
 # from ui.compare_cloud_worker import cloud_compare
 
@@ -215,6 +215,7 @@ class App(QMainWindow):
         self.ui.cbbRemoveGround.setCurrentIndex(settings.value("cbbRemoveGround_index", 0, type=int))
         self.ui.cbbUseKeypoint.setCurrentIndex(settings.value("cbbUseKeypoint_index", 0, type=int))
         self.ui.cbbUpsample.setCurrentIndex(settings.value("cbbUpsample_index", 0, type=int))
+
 
     # Update runtime param to ROS
     def update_param(self):
@@ -430,7 +431,6 @@ class App(QMainWindow):
         self.ui.tab_mainview.setCurrentIndex(0)
 
 
-
     # 4.--- Show report view dialog---
     def on_viewreport_dlg(self):
         # from reportselect_dlg_manager import reportselect_dlg
@@ -540,12 +540,21 @@ class App(QMainWindow):
             # ✅ chạy trong main thread → OK
             from ui.compare_cloud_worker import CompareWorker
             # ✅ tạo worker, TRUYỀN PATH
+
+            do_align        = rospy.get_param("/runtime/do_align", True)
+            do_pre_process  = rospy.get_param("/runtime/do_pre_process", True)
+            do_2d_keypoint  = rospy.get_param("/runtime/do_2d_keypoint", False)
+            do_upsample     = rospy.get_param("/runtime/do_upsample", False)
+            do_post_process     = rospy.get_param("/runtime/do_post_process", False)
+
             self.worker = CompareWorker(
                 prescan_path=pre,
                 postscan_path=post,
-                do_pre_process=True,
-                do_align=True,
-                do_post_process=True
+                do_2d_keypoint=do_2d_keypoint,
+                do_pre_process=do_pre_process,
+                do_align=do_align,
+                do_post_process=do_post_process,
+                do_upsample=do_upsample
             )
 
             # ✅ connect signal
@@ -558,13 +567,27 @@ class App(QMainWindow):
        
 
     def on_compare_process(self, progress, stage):
-        print(f"COMPARE{20*'='}: {int(progress*100)}%")  
+
+        def make_progress_bar(progress, width=20):
+            progress = max(0.0, min(1.0, progress))  # clamp
+            filled = int(progress * width)
+            bar = "=" * filled + " " * (width - filled)
+            return f"COMPARE [{bar}] {int(progress * 100):3d}%"
+
+        _string = make_progress_bar(progress)
+        print(_string)  
+        self.lblNotification.setText(_string)
 
     def on_compare_done(self, success, job_id):
+        
         if success:
             print("✅COMPARE DONE ",job_id)
+            _string = "✅COMPARE DONE "
         else:
             print("❌COMPARE FAILED ", job_id)
+            _string = "❌COMPARE FAILED "
+
+        self.lblNotification.setText(_string)
 
     # 7.--- Close event handler ---
     def closeEvent(self, event):
@@ -708,6 +731,7 @@ class App(QMainWindow):
                     self.ui.cbbJobSelect.blockSignals(False)
             except:
                 pass
+
 
     def load_current_job(self, text_only=False):
         import json

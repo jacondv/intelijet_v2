@@ -5,6 +5,8 @@ from PyQt5.QtWidgets import (
     QApplication
 )
 import subprocess
+import shutil
+import warnings
 
 
 class TouchKeyboard(QObject):
@@ -13,12 +15,20 @@ class TouchKeyboard(QObject):
         self.proc = None
 
     def show_keyboard(self):
+        # if shutil.which("onboard") is None:
+        #     return
+        
         if self.proc is None or self.proc.poll() is not None:
-            self.proc = subprocess.Popen(
-                ["onboard"],
-                stdout=subprocess.DEVNULL,
-                stderr=subprocess.DEVNULL
-            )
+            try:
+                self.proc = subprocess.Popen(
+                    ["onboard"],
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL
+                )
+            except FileNotFoundError:
+                warnings.warn("On-screen keyboard (onboard) is not installed.")
+            except Exception as e:
+                warnings.warn(f"Failed to launch onboard keyboard: {e}")
 
     def hide_keyboard(self):
         if self.proc:

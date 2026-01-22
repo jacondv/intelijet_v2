@@ -1,0 +1,24 @@
+{
+	"folders": [
+		{
+			"path": "../../../.."
+		},
+		{
+			"path": "../../../../../pointcloud"
+		},
+		{
+			"path": "../../../../../PPS_MX3-239_backup_250620"
+		}
+	],
+	"settings": {
+		"python.autoComplete.extraPaths": [
+			"/opt/ros/noetic/lib/python3/dist-packages"
+		],
+		"python.analysis.extraPaths": [
+			"/opt/ros/noetic/lib/python3/dist-packages"
+		],
+		"files.associations": {
+			"iostream": "cpp"
+		}
+	}
+}
