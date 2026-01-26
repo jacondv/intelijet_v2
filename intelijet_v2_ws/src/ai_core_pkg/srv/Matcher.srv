@@ -1,0 +1,9 @@
+# Request
+string method             
+sensor_msgs/Image img0     
+sensor_msgs/Image img1    
+---
+# Response
+float32[] keypoints0       # flatten [x0,y0,x1,y1,...]
+float32[] keypoints1       # flatten [x0,y0,x1,y1,...]
+float32[] confidence      

@@ -9,7 +9,7 @@ from pps.tunnel_processing import TunnelProcessing
 from pps.helper import compute_heatmap_to_plane
 from shared.config_loader import CONFIG as cfg
 from pps.cloud_processing.utils_align import align_cloud
-from pps.image_processing.keypoint_processing_v2 import KeypointCloudAlignManager
+from pps.image_processing.keypoint_processing_v3 import KeypointCloudAlignManager
 
 PRE_SCAN_PROCESSED_TOPIC = "/pre_scan_cloud"
 POST_SCAN_PROCESSED_TOPIC = "/post_scan_cloud"

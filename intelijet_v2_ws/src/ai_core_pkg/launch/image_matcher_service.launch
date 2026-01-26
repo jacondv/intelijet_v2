@@ -1,0 +1,15 @@
+<launch>
+    <!-- Đặt biến môi trường PYTHONPATH và PATH để dùng venv -->
+    <env name="PATH" value="$(find ai_core_pkg)/venv/bin:$(env PATH)" />
+    <!-- Note catkin_python_setup() to help python search for packages -->
+    <!-- <env name="PYTHONPATH" value="$(find ai_core_pkg)/venv/lib/python3.8/site-packages:$(env PYTHONPATH)" /> -->
+    <!-- <env name="PYTHONPATH" value="$(find ai_core_pkg)/src:$(find ai_core_pkg)/venv/lib/python3.10/site-packages:$(env PYTHONPATH)" /> -->
+    <!-- Chạy node service -->
+    <node pkg="ai_core_pkg"
+        type="image_matcher_service.py"
+        name="image_matcher_service_node"
+        output="screen"
+        />
+</launch>
+
+

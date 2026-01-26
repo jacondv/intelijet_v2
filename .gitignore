@@ -25,6 +25,8 @@
 *.bag
 token.txt
 
+config/last_user.yaml
+
 # === FILE ROS VÀ BUILD ===
 build/
 devel/
@@ -52,6 +54,9 @@ Makefile
 # === PYTHON ===
 __pycache__/
 *.py[cod]
+
+venv/
+*/venv/
 
 # === VISUAL STUDIO CODE ===
 .vscode/

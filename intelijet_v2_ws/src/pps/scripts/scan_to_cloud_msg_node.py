@@ -6,6 +6,13 @@ from sensor_msgs.msg import LaserScan, PointCloud2
 from laser_geometry import LaserProjection
 
 class ScanToCloudNode:
+    """
+    Docstring for ScanToCloudNode
+    This node subscribes to /scan (LaserScan), converts it to PointCloud2,
+    and publishes to /cloud_msg (PointCloud2). 
+    It used for interfacing with other nodes that require point cloud data.
+    Note: We should forward the topic in launch file (for Assemblecloud serive to work).
+    """
     def __init__(self):
         rospy.init_node("scan_to_cloud_msg_node", anonymous=True)
 
