@@ -13,7 +13,7 @@ class CompareBaseClient:
                  postscan_path="",
                  do_pre_process=True,
                  do_2d_keypoint=True,
-                 do_post_process=True,
+                 do_post_process=False,
                  do_align=True,
                  do_upsample=True,
                  timeout=150.0):

@@ -76,7 +76,12 @@ class ComparePipeline:
         if feedback_cb:
             feedback_cb("post-process", 0.6)
 
-        post_cloud = cloudconverter.crop_cloud_by_hull(pre_cloud, post_cloud)
+        try:
+            post_cloud = cloudconverter.crop_cloud_by_hull(pre_cloud, post_cloud)
+            
+        except Exception as e: 
+            print(f"Post process crop cloud by hull failed: {e}")
+            
         return post_cloud
 
     # ----------------------------

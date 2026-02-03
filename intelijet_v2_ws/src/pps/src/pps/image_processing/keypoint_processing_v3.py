@@ -6,6 +6,8 @@ import rospy
 import random
 import cv2
 
+from pps.image_processing.keypoint_project import KeyPointProject
+
 def apply_clahe(image):
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY) if len(image.shape) == 3 else image
     clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8,8))
@@ -15,218 +17,10 @@ def normalize_brightness(image):
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY) if len(image.shape) == 3 else image
     return cv2.equalizeHist(gray)
 
-class KeypointMatcher:
-    
-    """
-    matcher = KeypointMatcher(method='SIFT')
-    kp1, desc1 = matcher.extract_keypoints_and_descriptors(img1)
-    kp2, desc2 = matcher.extract_keypoints_and_descriptors(img2)
-    matches = matcher.match_keypoints(desc1, desc2, ratio_test=0.4)
-    print(matches)
-    img_result = matcher.draw_matches(img1, kp1, img2, kp2, matches)
-
-    cv2.namedWindow("Matches", cv2.WINDOW_NORMAL)
-    cv2.resizeWindow("Matches", 400, 300)
-
-    cv2.imshow("Matches", img_result)
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
-    """
-    
-    def __init__(self, method='ORB'):
-        self.T = np.eye(4, dtype=np.float64)
-        self.method = method.upper()
-        self.detector, self.norm_type = self._init_detector(self.method)
-
-    def _init_detector(self, method):
-        if method == 'SIFT':
-            return cv2.SIFT_create(), cv2.NORM_L2
-        elif method == 'ORB':
-            return cv2.ORB_create(), cv2.NORM_HAMMING
-        elif method == 'AKAZE':
-            return cv2.AKAZE_create(), cv2.NORM_HAMMING
-        elif method == 'BRISK':
-            return cv2.BRISK_create(), cv2.NORM_HAMMING
-        else:
-            raise ValueError(f"[ERROR] Unsupported method: {method}")
-            
-    def extract_keypoints_and_descriptors(self, image):
-        """
-        Trích xuất keypoints và descriptors từ ảnh.
-        """
-        image = apply_clahe(image)
-        image = normalize_brightness(image)
-        keypoints, descriptors = self.detector.detectAndCompute(image, None)
-        return keypoints, descriptors
-
-
-    def match_keypoints(self,kp1, desc1, kp2, desc2, ratio_test=0.5, K=np.eye(3,3)):
-        """
-        Dùng BFMatcher + Lowe's ratio test để khớp các descriptor.
-        """
-
-        # ====== VALIDATION ======
-        if desc1 is None or desc2 is None:
-            raise ValueError("Descriptors must not be None.")
-
-        if not isinstance(desc1, np.ndarray) or not isinstance(desc2, np.ndarray):
-            raise TypeError("Descriptors must be numpy arrays.")
-
-        if desc1.ndim != 2 or desc2.ndim != 2:
-            raise ValueError(f"Descriptors must be 2D arrays, got {desc1.ndim} and {desc2.ndim} dimensions.")
-
-        if desc1.shape[1] != desc2.shape[1]:
-            raise ValueError(f"Descriptor dimensions must match. Got {desc1.shape[1]} vs {desc2.shape[1]}.")
-
-        if len(desc1) < 2 or len(desc2) < 2:
-            raise ValueError("Need at least 2 descriptors in each set to perform knnMatch(k=2).")
-
-        if not (0 < ratio_test < 1):
-            raise ValueError("ratio_test must be in (0, 1)")
-
-        # Tạo một matcher dùng Brute-Force (BFMatcher) với loại khoảng cách (norm) được chỉ định
-        matcher = cv2.BFMatcher(self.norm_type)
-
-        # So khớp các descriptor giữa desc1 và desc2, lấy 2 match gần nhất cho mỗi descriptor trong desc1
-        raw_matches = matcher.knnMatch(desc1, desc2, k=2)
-
-        good_matches = []
-        for match in raw_matches:
-            if len(match) < 2:
-                continue
-            m,n = match 
-            # m,n is best match and second best match
-            # Nếu khoảng cách giữa m và n càng lớn chứng tỏ m là tốt vì nó mang đặt trưng khá riêg
-            if m.distance < ratio_test * n.distance:
-                good_matches.append(m)
-                
-        src_pts = np.float32([kp1[m.queryIdx].pt for m in good_matches]).reshape(-1, 1, 2)
-        dst_pts = np.float32([kp2[m.trainIdx].pt for m in good_matches]).reshape(-1, 1, 2)
-        # Tính Essential matrix + mask lọc inliers
-
-
-        E, mask = cv2.findEssentialMat(src_pts, dst_pts, K[:3, :3], method=cv2.RANSAC, threshold=1.0)
-
-        # Tính pose từ E (R, t) và lọc inliers
-        _, R, t, mask_pose = cv2.recoverPose(E, src_pts, dst_pts, K[:3, :3])
-
-        T = np.eye(4, dtype=np.float64)     # Khởi tạo ma trận 4x4 đơn vị
-        T[:3, :3] = R                        # Gán phần xoay
-        T[:3, 3] = t.ravel()                 # Gán phần tịnh tiến (dạng (3,))
-        self.T=np.linalg.inv(T)
-
-        # (Tuỳ chọn) chỉ lấy các điểm inlier
-        inlier_matches = [m for i, m in enumerate(good_matches) if mask_pose[i]]
-        return inlier_matches
-      
-
-    def match_keypoints_by_proximity(self,kp1, des1, kp2, des2, ratio_test=0.75, n_best=2, max_pixel_dist=50,K=None):
-
-        """
-        Match keypoints using BFMatcher + Lowe ratio test,
-        then filter using Fundamental Matrix.
-        """
-
-        # ===== VALIDATION =====
-        if des1 is None or des2 is None:
-            raise ValueError("Descriptors must not be None.")
-
-        matcher = cv2.BFMatcher(self.norm_type)
-        raw_matches = matcher.knnMatch(des1, des2, k=2)
-
-        # ===== Lowe ratio test =====
-        good_matches = []
-        for m, n in raw_matches:
-            if m.distance < ratio_test * n.distance:
-                good_matches.append(m)
-
-        if len(good_matches) < 8:
-            raise ValueError("Not enough matches to compute Fundamental Matrix")
-
-        # ===== Extract point coordinates =====
-        pts1 = np.float32([kp1[m.queryIdx].pt for m in good_matches])
-        pts2 = np.float32([kp2[m.trainIdx].pt for m in good_matches])
-
-        # ===== Fundamental Matrix (geometry filtering) =====
-        F, inliers = cv2.findFundamentalMat(
-            pts1, pts2,
-            cv2.USAC_MAGSAC,
-            ransacReprojThreshold=1.0,
-            confidence=0.999
-        )
-
-        if F is None:
-            raise ValueError("Fundamental Matrix estimation failed")
-
-        inliers = inliers.ravel().astype(bool)
-
-        inlier_matches = [m for i, m in enumerate(good_matches) if inliers[i]]
-
-        # ===== OPTIONAL: recover pose if K is given =====
-        if K is not None and len(inlier_matches) >= 8:
-            pts1_in = pts1[inliers]
-            pts2_in = pts2[inliers]
-
-            E = K.T @ F @ K
-            _, R, t, _ = cv2.recoverPose(E, pts1_in, pts2_in, K)
-
-            T = np.eye(4)
-            T[:3, :3] = R
-            T[:3, 3] = t.ravel()
-            self.T = np.linalg.inv(T)
-
-        return inlier_matches
-
-
-    def draw_good_matches(self,img1, kp1, img2, kp2, good_matches, max_matches=5000):
-        """
-        Vẽ các good_matches giữa hai ảnh.
-
-        Args:
-            img1 (np.ndarray): Ảnh thứ nhất.
-            kp1 (list): Danh sách keypoints của ảnh 1.
-            img2 (np.ndarray): Ảnh thứ hai.
-            kp2 (list): Danh sách keypoints của ảnh 2.
-            good_matches (list): Danh sách các cv2.DMatch đã lọc.
-            max_matches (int): Số lượng match tối đa để vẽ.
-
-        Returns:
-            img_out (np.ndarray): Ảnh đã vẽ match.
-        """
-        img_out = cv2.drawMatches(
-            img1, kp1, img2, kp2,
-            good_matches[:max_matches],
-            None,
-            flags=cv2.DrawMatchesFlags_NOT_DRAW_SINGLE_POINTS
-        )
-        return img_out
-    
-    
-    def get_matched_keypoint_coords(self, kp1, kp2, matches):
-        """
-        Trả về tọa độ (x, y) của các keypoint được matched giữa hai ảnh.
-        """
-
-        # ===== VALIDATION =====
-        if not isinstance(kp1, (list, tuple)) or not all(isinstance(k, cv2.KeyPoint) for k in kp1):
-            raise TypeError("kp1 must be a list of cv2.KeyPoint")
-        if not isinstance(kp2, (list, tuple)) or not all(isinstance(k, cv2.KeyPoint) for k in kp2):
-            raise TypeError("kp2 must be a list of cv2.KeyPoint")
-        if not isinstance(matches, (list, tuple)) or not all(hasattr(m, 'queryIdx') and hasattr(m, 'trainIdx') for m in matches):
-            raise TypeError("matches must be a list of cv2.DMatch with valid indices")
-
-        if len(matches) == 0:
-            raise ValueError("No matches provided.")
-
-        max_qidx = max(m.queryIdx for m in matches)
-        max_tidx = max(m.trainIdx for m in matches)
-        if max_qidx >= len(kp1) or max_tidx >= len(kp2):
-            raise IndexError("Match index out of bounds for provided keypoints.")
-        
-        # ===== EXTRACT MATCHED COORDINATES =====
-        pts1 = np.array([kp1[m.queryIdx].pt for m in matches], dtype=np.float32)
-        pts2 = np.array([kp2[m.trainIdx].pt for m in matches], dtype=np.float32)
-        return pts1, pts2
+import numpy as np
+import open3d as o3d
+import cv2
+import copy
 
 
 class KeypointCloudExtractor:
@@ -401,10 +195,6 @@ class KeypointCloudAlignManager:
         # self.matcher = KeypointMatcher(method=self.__feature_method)
         from ai_core_pkg.image_matcher_client  import call_matcher_service
         self.matcher = call_matcher_service
-
-        self.extractor = KeypointCloudExtractor(self.__camera_intrinsics, 
-                                                self.__lidar_to_cam_extrinsic, 
-                                                np.zeros_like(self.__dist_coeffs))
         
         self.__process_status = 0 # 0: ready, 1: busy, 2: Done
         self._T = np.eye(4,dtype=np.float64)
@@ -429,14 +219,13 @@ class KeypointCloudAlignManager:
 
     def set_cloud2(self, cloud):
         self.cloud2 = cloud
-        # self._try_process()
+        self._try_process()
 
 
     def set_image2(self, image):
         # self.image2 = FisheyeUndistorter(K=self.__camera_intrinsics,D=self.__dist_coeffs).undistort(image)
         self.image2 = image
         # self.kp2, self.desc2 = self.matcher.extract_keypoints_and_descriptors(self.image2)
-
 
         self._try_process()
 
@@ -449,42 +238,40 @@ class KeypointCloudAlignManager:
 
 
     def draw_result(self):
-        """
-        Vẽ các good_matches giữa hai ảnh.
+        import cv2
 
-        Args:
-            img1 (np.ndarray): Ảnh thứ nhất.
-            kp1 (list): Danh sách keypoints của ảnh 1.
-            img2 (np.ndarray): Ảnh thứ hai.
-            kp2 (list): Danh sách keypoints của ảnh 2.
-            good_matches (list): Danh sách các cv2.DMatch đã lọc.
-            max_matches (int): Số lượng match tối đa để vẽ.
+        image1 = self.image1
+        image2 = self.image2
+        kp1=self.__pts1
+        kp2=self.__pts2
 
-        Returns:
-            img_out (np.ndarray): Ảnh đã vẽ match.
-        """
-        print(f"Draw {len(self.__good_matched)} matched point")
-        img1 = self.image1; img2=self.image2; kp1 = self.kp1; kp2 = self.kp2; 
-        img_out = cv2.drawMatches(
-            img1, 
-            kp1, 
-            img2, 
-            kp2,
-            self.__good_matched,
-            None,
+        assert len(kp1) == len(kp2)
+        
+        # ---- convert kp array -> cv2.KeyPoint ----
+        kp0_cv = [cv2.KeyPoint(float(x), float(y), 1) for x, y in kp1]
+        kp1_cv = [cv2.KeyPoint(float(x), float(y), 1) for x, y in kp2]
+        # ---- tạo match 1-1 giả ----
+        matches = [
+            cv2.DMatch(_queryIdx=i, _trainIdx=i, _distance=0)
+            for i in range(len(kp1))
+        ]
+
+        vis = cv2.drawMatches(
+            image1, kp0_cv,
+            image2, kp1_cv,
+            matches, None,
             flags=cv2.DrawMatchesFlags_NOT_DRAW_SINGLE_POINTS
         )
 
-        return img_out
+        return vis
     
 
     def is_ready(self):
         """
         Kiểm tra xem đã nhận đủ dữ liệu để xử lý hay chưa.
         """
-        return (self.image1 is not None and self.kp1 is not None and self.desc1 is not None and
-                self.image2 is not None and self.kp2 is not None and self.desc2 is not None and
-                self.cloud1 is not None and self.cloud2 is not None)
+        return (self.cloud1 is not None and 
+                self.cloud2 is not None)
     
 
     def _try_process(self):
@@ -510,14 +297,26 @@ class KeypointCloudAlignManager:
         # if len(good_matches) == 0:
         #    return self.cloud1, self.cloud2
 
-        self.__pts1, self.__pts2, self.__good_matched = self.matcher(self.image1, self.image2)
-        MAX_KEYPOINTS = min(len(self.__pts1), 100)
-        self.__pts1 = self.__pts1[:MAX_KEYPOINTS]
-        self.__pts2 = self.__pts2[:MAX_KEYPOINTS]
+        keypoint_project1 = KeyPointProject()
+        keypoint_project2 = KeyPointProject()
 
-        cloud1_crop, keypoint3d_of_cloud1 = self.extractor.extract(self.cloud1, self.image1, self.__pts1, pixel_radius=self.pixel_radius,cloud_radius=self.cloud_radius)
-        cloud2_crop, keypoint3d_of_cloud2 = self.extractor.extract(self.cloud2, self.image2, self.__pts2, pixel_radius=self.pixel_radius,cloud_radius=self.cloud_radius)
-        self._T = self._compute_transform_matrix(source_points=keypoint3d_of_cloud2, target_points=keypoint3d_of_cloud1)
+        self.image1, _, _ = keypoint_project1.cloud_to_image(self.cloud1, rot_x=-90, rot_y=90, rot_z=0)
+        self.image2, _, _ = keypoint_project2.cloud_to_image(self.cloud2, rot_x=-90, rot_y=90, rot_z=0)
+
+        
+        self.__pts1, self.__pts2, self.__good_matched = self.matcher(self.image1, self.image2)
+        idx = np.random.choice(len(self.__pts1), 300, replace=True)
+        # ---- chọn theo index ----
+        print(f"Detect {len(idx)} markers")
+        self.__pts1 = self.__pts1[idx]
+        self.__pts2 = self.__pts2[idx]
+
+        # cloud1_crop = keypoint_project1.keypoints_to_cloud(self.cloud1, self.__pts1, threshold=5, rot_x=-90, rot_y=90, rot_z=0)
+        cloud2_crop = keypoint_project2.keypoints_to_cloud(self.cloud2, self.__pts2, threshold=5, rot_x=-90, rot_y=90, rot_z=0)
+
+        # self._T = self._compute_transform_matrix(source_points=keypoint3d_of_cloud2, target_points=keypoint3d_of_cloud1)
+        self._T = None
+        cloud1_crop = None
         return cloud1_crop, cloud2_crop
     
     def _compute_transform_matrix(self, source_points, target_points, max_iterations=100, distance_threshold=0.05, ransac_point=5):

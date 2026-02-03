@@ -10,7 +10,7 @@ def main():
 
     # Đọc ảnh
     img0 = cv2.imread("/mnt/c/WORK/projects/intelijet_v2/intelijet_v2_ws/src/ai_core_pkg/images/matches_1769067378842_pos.png")
-    img1 = cv2.imread("/mnt/c/WORK/projects/intelijet_v2/intelijet_v2_ws/src/ai_core_pkg/images/matches_1769067378842_pre.png")
+    img1 = cv2.imread("/mnt/c/WORK/projects/intelijet_v2/intelijet_v2_ws/src/ai_core_pkg/images/matches_1769070894491_pre.png")
 
     if img0 is None or img1 is None:
         rospy.logerr("Cannot load images")

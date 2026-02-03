@@ -2,3 +2,5 @@ kornia
 kornia-rs
 kornia_moons
 opencv-python
+pyyaml
+rospkg

@@ -11,6 +11,9 @@
 	<node pkg="pps" name="hmi_scan_command_handler" type="hmi_scan_command_handler.py" />
 	
 
+	<!-- AI CORE -->
+	<include file="$(find ai_core_pkg)/launch/image_matcher_service.launch"/>
+
 	<!-- ENCODER01 -->
 	<node pkg="encoder_process" name="encoder_process_node" type="encoder_process_node.py" />
 	<!-- <node pkg="encoder_process" name="test_runrosbag_laserscan" type="test_runrosbag_laserscan.py" /> -->

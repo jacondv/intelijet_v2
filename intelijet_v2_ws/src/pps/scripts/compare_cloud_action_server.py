@@ -8,8 +8,9 @@ from pps.data_converter import cloudconverter
 from pps.tunnel_processing import TunnelProcessing
 from pps.helper import compute_heatmap_to_plane
 from shared.config_loader import CONFIG as cfg
-from pps.cloud_processing.utils_align import align_cloud
+from pps.cloud_processing.utils_align import align_cloud, pre_align_cloud
 from pps.image_processing.keypoint_processing_v3 import KeypointCloudAlignManager
+from pps.helper import crop_pointcloud_by_box, check_transform
 
 PRE_SCAN_PROCESSED_TOPIC = "/pre_scan_cloud"
 POST_SCAN_PROCESSED_TOPIC = "/post_scan_cloud"
@@ -77,6 +78,7 @@ class CompareCloudServer:
 
     def _post_cloud_cb(self, msg):
         # We should handle this later, as it takes a while and the compare command was called too early.
+
         self.post_msg = msg
 
 
@@ -89,8 +91,8 @@ class CompareCloudServer:
         # Wait 2 seconds to receive the self.post_cloud.
         rospy.loginfo(f"[{job_id}] Start compare")
         print(goal)
-        if self.post_cloud is not None:
-            self.post_cloud = cloudconverter.pointcloud2_to_o3d(self.post_msg)
+        # if self.post_cloud is not None:
+        #     self.post_cloud = cloudconverter.pointcloud2_to_o3d(self.post_msg)
         try:
             # ===== LOAD =====
             feedback.stage = "load"
@@ -103,16 +105,25 @@ class CompareCloudServer:
                 post_cloud = cloudconverter.load_ply(goal.postscan_path, as_legacy=True)
             else:
                 # Use cloud from topic
+
+                self.post_cloud = cloudconverter.pointcloud2_to_o3d(self.post_msg)
                 pre_cloud = self.pre_cloud
                 post_cloud = self.post_cloud
 
             if pre_cloud is None or post_cloud is None:
-                msg = "Missing cloud from topic"
-                rospy.logerr(msg)
+                msg = f"Missing cloud from topic {pre_cloud is None} {post_cloud is None}"
                 result.success = False
                 result.job_id = job_id
                 self.server.set_aborted(result, msg)
                 return
+
+
+            # ===== PRE ALIGN=======#
+            feedback.stage = "pre-align"
+            feedback.progress = 0.15
+            self.server.publish_feedback(feedback)
+            T_pre_align = pre_align_cloud(post_cloud=post_cloud, pre_cloud=pre_cloud)
+            post_cloud.transform(T_pre_align)
 
             # ===== PRE PROCESS=======#
             # This is auto crop ground and back side wall
@@ -127,16 +138,21 @@ class CompareCloudServer:
                 post_tunnel = TunnelProcessing(post_cloud)
                 post_cloud = post_tunnel.run_processing_pipeline()
 
+            
+            __post_cloud = crop_pointcloud_by_box(post_cloud, min_bound=(0,-10,0), max_bound=(11,10,3.25))
+
             # ===== USE 2D KEYPOINT TO ALIGN=======#
             if goal.do_2d_keypoint:
+
                 feedback.stage = "extract-2d-keypoint"
-                feedback.progress = 0.2
+                feedback.progress = 0.3
                 self.server.publish_feedback(feedback)
 
                 #---- extract keypoint by image
-                pre_image, intrinsic1, extrinsic1 = cloudconverter.cloud_to_image(filename=None,pcd=pre_cloud, rot_x=-90, rot_y=90, rot_z=0)
-                post_image, intrinsic2, extrinsic2 = cloudconverter.cloud_to_image(filename=None,pcd=post_cloud, rot_x=-90, rot_y=90, rot_z=0)
- 
+                # pre_image, intrinsic1, extrinsic1 = cloudconverter.cloud_to_image(filename=None,pcd=pre_cloud, rot_x=-90, rot_y=90, rot_z=0)
+                # post_image, intrinsic2, extrinsic2 = cloudconverter.cloud_to_image(filename=None,pcd=post_cloud, rot_x=-90, rot_y=90, rot_z=0)
+                intrinsic1=None
+                extrinsic1=None
                 self.keypoint_manager = KeypointCloudAlignManager(camera_intrinsics=intrinsic1,
                                                     lidar_to_cam_extrinsic=extrinsic1,
                                                     dist_coeffs=np.zeros(5),
@@ -146,21 +162,20 @@ class CompareCloudServer:
                                                     match_ratio=0.5)
                 
                 self.keypoint_manager.set_cloud1(pre_cloud)
-                self.keypoint_manager.set_cloud2(post_cloud)
+                self.keypoint_manager.set_cloud2(__post_cloud)
 
-                self.keypoint_manager.set_image1(pre_image)
-                self.keypoint_manager.set_image2(post_image)
+                # self.keypoint_manager.set_image1(pre_image)
+                # self.keypoint_manager.set_image2(post_image)
 
                 if self.keypoint_manager.is_ready():    
                     target_patch, source_patch, T = self.keypoint_manager.get_result()
                     ###
-                    # import cv2
-                    # import time
-                    # image_out = self.keypoint_manager.result_image
-                    # filename = f"/mnt/c/WORK/projects/intelijet_v2/data/matches_{int(time.time()*1000)}.png"
-                    # cv2.imwrite(filename, image_out)
+                    import cv2
+                    import time
+                    image_out = self.keypoint_manager.draw_result()
+                    filename = f"/root/intelijet_v2/data/{int(time.time())}_matches.png"
+                    cv2.imwrite(filename, image_out)
                     ###
-                    # _, source_patch, T = self.keypoint_manager.get_result()
                 else:
                     source_patch = None
                     
@@ -168,7 +183,7 @@ class CompareCloudServer:
                 source_patch=None
                 target_patch=None
 
-            # ===== ALIGN =====
+            # ===== ALIGN =====+
             if goal.do_align:
                 feedback.stage = "align"
                 feedback.progress = 0.4
@@ -176,17 +191,21 @@ class CompareCloudServer:
 
                 # TODO: align cloud
                 if source_patch:
-                    # cloudconverter.o3d_to_ply(source_patch,'/root/intelijet_v2/source_patch.ply')
-                    # cloudconverter.o3d_to_ply(cloud1_target,'/root/intelijet_v2/cloud1_target.ply')
-                    # cloudconverter.o3d_to_ply(post_cloud,'/root/intelijet_v2/post_cloud.ply')
-                    # cloudconverter.o3d_to_ply(pre_cloud,'/root/intelijet_v2/pre_cloud.ply')
-                    # post_cloud = align_cloud(pre_cloud=pre_cloud, post_cloud=post_cloud)
-                    T = align_cloud(pre_cloud=target_patch, post_cloud=source_patch,return_transform_only=True)
-                    post_cloud.transform(T)
 
+                    cloudconverter.o3d_to_ply(source_patch,f'/root/intelijet_v2/data/{int(time.time())}_source_patch.ply')
+                    # cloudconverter.o3d_to_ply(post_cloud,'/root/intelijet_v2/data/post_cloud.ply')
+                    # cloudconverter.o3d_to_ply(pre_cloud,'/root/intelijet_v2/data/pre_cloud.ply')    
+                    
+                    
+                    T = align_cloud(pre_cloud=pre_cloud, post_cloud=source_patch,return_transform_only=True)
                 else:
-                    post_cloud = align_cloud(pre_cloud=pre_cloud, post_cloud=post_cloud)
+                    T = align_cloud(pre_cloud=pre_cloud, post_cloud=__post_cloud,return_transform_only=True)
 
+
+                if check_transform(T, verbose=True):
+                    # Check if T is not over limit
+                    post_cloud.transform(T)
+         
                 
             # ===== POST PROCESS =====
             # Recrop cloud after align
@@ -194,7 +213,11 @@ class CompareCloudServer:
                 feedback.stage = "post-process"
                 feedback.progress = 0.6
                 self.server.publish_feedback(feedback) 
-                post_cloud = cloudconverter.crop_cloud_by_hull(pre_cloud,post_cloud)
+                try:
+                    post_cloud = cloudconverter.crop_cloud_by_hull(pre_cloud,post_cloud)
+                except Exception as e:
+                    rospy.logerr(f"Post process crop cloud by [crop_cloud_by_hull] failed: {e}")
+
 
             # ===== COMPARE =====
             feedback.stage = "compare"
@@ -234,6 +257,8 @@ class CompareCloudServer:
                 cloud_compared_upsample = tunnel.run_upsample(cloud_compared)
                 frame_id = "base_link"
                 msg = cloudconverter.o3d_tensor_to_pointcloud2(cloud_compared_upsample, frame_id=frame_id)
+            else:
+                rospy.sleep(2.0)
             # Sent cloud compared for report export
             self.pub2.publish(msg)
 

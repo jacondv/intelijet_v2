@@ -8,7 +8,7 @@ import cv2
 _bridge = CvBridge()
 _srv = None
 SERVICE_NAME = 'match_images'
-def call_matcher_service(img0_cv, img1_cv, method="loftr",conf_th=0.9):
+def call_matcher_service(img0_cv, img1_cv, method="loftr",conf_th=0.7):
     """
     This client calls the image matcher service to get matched keypoints between two images.
     

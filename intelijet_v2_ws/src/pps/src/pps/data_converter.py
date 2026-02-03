@@ -427,7 +427,7 @@ class CloudConverter:
         """
         import numpy as np
         import open3d as o3d
-        from scipy.spatial import Delaunay
+        from scipy.spatial import Delaunay, QhullError
         # --- Lấy points numpy từ target ---
         hull_cloud = hull_cloud.voxel_down_sample(voxel_size=0.05)
         if isinstance(hull_cloud, o3d.geometry.PointCloud):
@@ -448,7 +448,11 @@ class CloudConverter:
             raise TypeError("source must be o3d.geometry.PointCloud or o3d.t.geometry.PointCloud")
 
         # --- Tạo Delaunay hull ---
-        hull = Delaunay(points_target)
+        try:
+            hull = Delaunay(points_target)
+        except QhullError as e:
+            raise RuntimeError(f"Delaunay hull failed: {e}")
+
 
         # --- Kiểm tra điểm nằm trong hull ---
         mask_inside = hull.find_simplex(points_source) >= 0
@@ -726,6 +730,8 @@ class CloudConverter:
         except Exception as e:
             print(f"[cloud_to_image] Failed to render or save image: {e}")
             return None
+
+
 
 
 # if __name__ == "__main__":

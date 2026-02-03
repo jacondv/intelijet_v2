@@ -1016,3 +1016,50 @@ def cloud_downsample(pcd, voxel_size: float):
     down_pcd.point["colors"] = colors_down
 
     return down_pcd
+
+
+
+from scipy.spatial.transform import Rotation as R
+import numpy as np
+
+
+def check_transform(T,
+                          max_rot_deg=(10,10,10),
+                          max_trans=0.5,
+                          verbose=True):
+
+    # --- Rotation ---
+    rot = R.from_matrix(T[:3, :3])
+    roll, pitch, yaw = rot.as_euler('xyz', degrees=True)
+
+    # --- Translation ---
+    t = T[:3, 3]
+    trans_norm = np.linalg.norm(t)
+
+    rot_ok = (
+        abs(roll)  <= max_rot_deg[0] and
+        abs(pitch) <= max_rot_deg[1] and
+        abs(yaw)   <= max_rot_deg[2]
+    )
+
+    trans_ok = trans_norm <= max_trans
+
+    ok = rot_ok and trans_ok
+
+    # --- Print / Log ---
+    if verbose:
+        print("---- Alignment Check ----")
+        print(f"Rotation [deg]  roll={roll:.2f}, pitch={pitch:.2f}, yaw={yaw:.2f}")
+        print(f"Translation [m] x={t[0]:.3f}, y={t[1]:.3f}, z={t[2]:.3f}")
+        print(f"Translation norm = {trans_norm:.3f} m")
+
+        if not rot_ok:
+            print("❌ Rotation exceeds threshold:", max_rot_deg)
+        if not trans_ok:
+            print("❌ Translation exceeds threshold:", max_trans)
+
+        print("RESULT:", "✅ OK" if ok else "❌ FAILED")
+        print("-------------------------")
+
+    return ok
+

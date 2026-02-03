@@ -67,6 +67,8 @@ class App(QMainWindow):
 
     def __init__(self):
         super().__init__()
+        self.report_name = ""
+
 
         # --- UI chính ---
         self.ui = Ui_MainWindow()
@@ -318,17 +320,20 @@ class App(QMainWindow):
 
         # 4. Export Report
         if topic_name == CLOUD_COMPARED_UPSAMPLE_TOPIC:
-            if self.ui.cbbAutoCompare.currentIndex()==1 or self.ui.cbbAutoReport.currentIndex()==1:
+                
+            if self.ui.cbbAutoCompare.currentText().lower() == 'off' or self.ui.cbbAutoReport.currentText().lower() == 'off':
                 return # only export report when auto compare is on nad auto report is on. (1 is OFF)
 
             try:
+
+                print(f"Export Report=========================>")
 
                 cloud_compared_upsample = o3d_cloud
                 filename = self.report_name
                 self.export_report(cloud_compared_upsample,filename)
 
                 # Cleare report_name after export report
-                self.report_name = None
+                # self.report_name = None
 
             except Exception as e:
                 # in toàn bộ thông tin lỗi
