@@ -52,6 +52,7 @@ class MatcherServiceNode:
         resp.confidence = conf if matches.get("confidence") is not None else []
         t1 = time.perf_counter()
         print(f"Inference time: {(t1 - t0)*1000:.2f} ms")
+        rospy.logwarn(f"Inference time: {(t1 - t0)*1000:.2f} ms")
         return resp
 
 if __name__ == "__main__":
