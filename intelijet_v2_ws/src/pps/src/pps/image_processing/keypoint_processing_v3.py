@@ -22,6 +22,8 @@ import open3d as o3d
 import cv2
 import copy
 
+MAX_KEYPOINT = 500
+
 
 class KeypointCloudExtractor:
     """
@@ -305,7 +307,7 @@ class KeypointCloudAlignManager:
 
         
         self.__pts1, self.__pts2, self.__good_matched = self.matcher(self.image1, self.image2)
-        idx = np.random.choice(len(self.__pts1), 300, replace=True)
+        idx = np.random.choice(len(self.__pts1), MAX_KEYPOINT, replace=True)
         # ---- chọn theo index ----
         print(f"Detect {len(idx)} markers")
         self.__pts1 = self.__pts1[idx]

@@ -192,7 +192,7 @@ class CompareCloudServer:
                 # TODO: align cloud
                 if source_patch:
 
-                    cloudconverter.o3d_to_ply(source_patch,f'/root/intelijet_v2/data/{int(time.time())}_source_patch.ply')
+                    # cloudconverter.o3d_to_ply(source_patch,f'/root/intelijet_v2/data/{int(time.time())}_source_patch.ply')
                     # cloudconverter.o3d_to_ply(post_cloud,'/root/intelijet_v2/data/post_cloud.ply')
                     # cloudconverter.o3d_to_ply(pre_cloud,'/root/intelijet_v2/data/pre_cloud.ply')    
                     

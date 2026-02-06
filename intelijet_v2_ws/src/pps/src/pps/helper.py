@@ -1098,6 +1098,11 @@ def surface_area(
 
     pcd = pcd.voxel_down_sample(voxel_size=min(radii) / 2)
 
+
+    cl, ind = pcd.remove_radius_outlier(nb_points=8, radius=2*min(radii))
+    pcd = pcd.select_by_index(ind)
+
+
     if estimate_normals:
         pcd.estimate_normals(
             search_param=o3d.geometry.KDTreeSearchParamHybrid(
@@ -1115,6 +1120,8 @@ def surface_area(
     # Tính diện tích
     area = mesh.get_surface_area()
     return area
+
+
 
 
 
