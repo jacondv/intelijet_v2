@@ -44,5 +44,5 @@ class Encoder58x8(BaseEncoder):
         Trả về raw encoder value (int)
         """
         message_data = list(data)
-        raw_val, = solver.onvert_can_to_encoder_value(message_data)  # nếu hàm cũ trả 1 giá trị
+        raw_val = solver.onvert_can_to_encoder_value(message_data)  # nếu hàm cũ trả 1 giá trị
         return int(raw_val)
