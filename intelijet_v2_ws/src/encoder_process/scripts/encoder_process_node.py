@@ -3,13 +3,14 @@
 # 2026-03-24 Change to eRob Motor, now we can read the Housing angle value from the PLC
 
 
+
 import rospy
 from sensor_msgs.msg import JointState
 from can_msgs.msg import Frame
 from std_msgs.msg import Int32, Float32
 
 from encoder_process import encoder_utils as solver
-from encoder_process.base_encoder import BaseEncoder, EncoderEROB
+from encoder_process.base_encoder import BaseEncoder, EncoderEROB, Encoder58x8
 
 from shared.config_loader import CONFIG
 cfg = CONFIG
@@ -48,6 +49,7 @@ class EncoderProcessNode:
 
 
 if __name__ == "__main__":
-    encoder_type = EncoderEROB()
+    # encoder_type = EncoderEROB()
+    encoder_type = Encoder58x8()
     node = EncoderProcessNode(encoder=encoder_type)
     rospy.spin()

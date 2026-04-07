@@ -105,7 +105,7 @@ class CompareCloudServer:
                 post_cloud = cloudconverter.load_ply(goal.postscan_path, as_legacy=True)
             else:
                 # Use cloud from topic
-
+                
                 self.post_cloud = cloudconverter.pointcloud2_to_o3d(self.post_msg)
                 pre_cloud = self.pre_cloud
                 post_cloud = self.post_cloud
