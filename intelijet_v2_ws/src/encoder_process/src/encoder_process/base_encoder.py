@@ -1,5 +1,5 @@
 import struct
-import encoder_utils as solver
+import encoder_process.encoder_utils as solver
 
 class BaseEncoder:
     """Interface chung cho tất cả encoder"""

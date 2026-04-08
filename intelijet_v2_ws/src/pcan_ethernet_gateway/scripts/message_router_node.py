@@ -8,13 +8,14 @@ COB_ID_MAPPING = {
     "encoder": [0x285],  
     "plc": [0x7f]   
 }
+PCAN_GATEWAY_RECV_TOPIC = "/pcan_received_messanges"
 
 class MessageRouter:
     def __init__(self):
         rospy.init_node("message_router_node")  
 
         # Subscribe CAN frames từ PCAN Gateway
-        self.sub = rospy.Subscriber("/pcan_received_messanges", Frame, self.callback)
+        self.sub = rospy.Subscriber(PCAN_GATEWAY_RECV_TOPIC, Frame, self.callback)
 
         # Publishers cho từng nhóm
         self.pub_encoder = rospy.Publisher(cfg.ENCODER01_CAN_MSG, Frame, queue_size=10)

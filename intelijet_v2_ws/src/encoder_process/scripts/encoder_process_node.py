@@ -24,7 +24,7 @@ class EncoderProcessNode:
         # ROS Pub/Sub
         self.pub_joint_states = rospy.Publisher("/joint_states", JointState, queue_size=10)
         rospy.Subscriber(cfg.ENCODER01_CAN_MSG, Frame, self.can_callback)
-        self.pub_encoder_data = rospy.Publisher(ENCODER_DATA_TOPIC, Float32, queue_size=10)
+        self.pub_encoder_data = rospy.Publisher(ENCODER_DATA_TOPIC, Int32, queue_size=10)
 
     def can_callback(self, msg: Frame):
         data_bytes = bytes(msg.data)
