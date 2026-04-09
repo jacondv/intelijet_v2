@@ -46,7 +46,7 @@ class CommandHandler:
 
         elif cmd == "set_zero_position":
             pdo_name= "RxZeroCommand"
-            field_name="bPerformPostScan"
+            field_name="gRx_byZeroRequest"
             self.send_pdo(pdo_name, field_name, value=1)
             rospy.sleep(0.5)
             self.send_pdo(pdo_name, field_name, value=0)

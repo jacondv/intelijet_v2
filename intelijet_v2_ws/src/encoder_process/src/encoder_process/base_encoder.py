@@ -4,16 +4,18 @@ import encoder_process.encoder_utils as solver
 class BaseEncoder:
     """Interface chung cho tất cả encoder"""
     def decode_angle(self, data: bytes) -> float:
-        """Decode giá trị góc từ CAN frame"""
+        """Decode the angle value from the CAN frame"""
         raise NotImplementedError
 
     def decode_raw(self, data: bytes) -> int:
-        """Decode giá trị raw từ CAN frame"""
+        """Decode raw values ​​from CAN frame"""
         raise NotImplementedError
     
 
 class EncoderEROB(BaseEncoder):
-    """Encoder kiểu float32 + int32"""
+
+    """Encoder return float32 for angle + int32 for raw value"""
+
     def decode_angle(self, data: bytes) -> float:
         return struct.unpack('<f', data[0:4])[0]
 
@@ -23,7 +25,7 @@ class EncoderEROB(BaseEncoder):
 
 class Encoder58x8(BaseEncoder):
     """
-    Encoder EROB: decode CAN frame theo solver của bạn
+    Encoder 58x8: decode CAN frame theo solver
     - CAN data -> raw encoder value
     - CAN data -> draw_wire_length -> angle (rad)
     """
