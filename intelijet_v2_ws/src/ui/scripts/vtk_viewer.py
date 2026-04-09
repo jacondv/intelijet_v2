@@ -17,7 +17,30 @@ import rospy
 #             self._on_resize()
 
 # Support touch zoom
+class DraggableButton(QPushButton):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._drag_active = False
+        self.setCursor(Qt.OpenHandCursor)  # con trỏ tay mở
 
+    def mousePressEvent(self, event):
+        if event.button() == Qt.LeftButton:
+            self._drag_active = True
+            self._drag_pos = event.globalPos() - self.frameGeometry().topLeft()
+            self.setCursor(Qt.ClosedHandCursor)  # con trỏ tay nắm
+            event.accept()
+        super().mousePressEvent(event)
+
+    def mouseMoveEvent(self, event):
+        if self._drag_active:
+            self.move(event.globalPos() - self._drag_pos)
+            event.accept()
+        super().mouseMoveEvent(event)
+
+    def mouseReleaseEvent(self, event):
+        self._drag_active = False
+        self.setCursor(Qt.OpenHandCursor)
+        super().mouseReleaseEvent(event)
 
 class QVTKWidget(QVTKRenderWindowInteractor):
     def __init__(self, parent=None, on_resize=None, vtk_viewer=None):
@@ -96,7 +119,7 @@ class VTKViewer:
         self.iren.SetInteractorStyle(style)
 
         # ---- Zoom center button (overlay) ----
-        self.btn_zoom_center = QPushButton("⤢", self.parent_widget)
+        self.btn_zoom_center = DraggableButton("⤢", self.parent_widget)
         self.btn_zoom_center.show()
         self.btn_zoom_center.setToolTip("Zoom to initial view")
         self.btn_zoom_center.setFixedSize(100, 100)
