@@ -71,7 +71,7 @@ class CloudProcessorNode:
         rospy.loginfo("Received /pre_scan_0")
         processed = self.process_cloud(msg, rgb=[255,255,255])
         if isinstance(processed, PointCloud2):
-            rospy.loginfo("processed is a PointCloud2 message.")
+            rospy.loginfo("processed is a PointCloud2 message and sent --> pre_scan_0")
         else:
             rospy.logerr("processed is NOT a PointCloud2 message.")
 
@@ -82,7 +82,7 @@ class CloudProcessorNode:
         rospy.loginfo("Received /post_scan_0")
         processed = self.process_cloud(msg, rgb=[255,255,0])
         if isinstance(processed, PointCloud2):
-            rospy.loginfo("processed is a PointCloud2 message.")
+            rospy.loginfo("processed is a PointCloud2 message and sent --> post_scan_0")
         else:
             rospy.logerr("processed is NOT a PointCloud2 message.")
             

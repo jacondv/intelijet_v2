@@ -1028,6 +1028,15 @@ def check_transform(T,
                           max_trans=0.5,
                           verbose=False):
 
+    '''Kiểm tra ma trận transform T có nằm trong ngưỡng cho phép về rotation và translation hay không.
+    Args:
+    - T: np.ndarray shape (4,4), ma trận transform
+    - max_rot_deg: tuple (max_roll, max_pitch, max_yaw) ngưỡng rotation theo độ
+    - max_trans: float, ngưỡng translation theo mét
+    - verbose: bool, có in chi tiết ra console hay không
+    Returns:
+    - ok: bool, True nếu T nằm trong ngưỡng, False nếu vượt ngưỡng
+    '''
     # --- Rotation ---
     rot = R.from_matrix(T[:3, :3])
     roll, pitch, yaw = rot.as_euler('xyz', degrees=True)
