@@ -37,8 +37,8 @@ if the connection to the scanner fails.
         <param name="min_ang" type="double" value="-1.658062789" />
         <param name="max_ang" type="double" value="1.658062789" />
         
-        <param name="range_min" type="double" value="1.1"/>
-        <param name="range_max" type="double" value="25"/>
+        <param name="range_min" type="double" value="2.0"/>
+        <param name="range_max" type="double" value="15"/>
         <param name="intensity" type="bool" value="true"/>
         <param name="intensity_resolution_16bit" type="bool" value="false"/>
         <param name="hostname" type="string" value="$(arg hostname)"/>
@@ -60,7 +60,7 @@ if the connection to the scanner fails.
         <param name="ang_res" type="double" value="0.1667" />
         <param name="scan_freq" type="double" value="25" />
 
-        <param name="time_offset" type="double" value="-0.001" />
+        <param name="time_offset" type="double" value="-0.005" />
 
         <param name="filter_echos" type="int" value="2" />
 
