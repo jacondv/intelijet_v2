@@ -221,6 +221,96 @@ def remove_points_outside_radius(cloud, radius, origin=(0.0, 0.0, 0.0)):
     )
 
 
+def remove_points_inside_box(cloud, min_point, max_point):
+    """
+    Loại bỏ các điểm nằm bên trong bounding box được định nghĩa bởi min_point và max_point.
+    Giữ nguyên kiểu dữ liệu của cloud đầu vào.
+
+    Hỗ trợ:
+        - sensor_msgs.msg.PointCloud2
+        - o3d.geometry.PointCloud
+        - o3d.t.geometry.PointCloud
+
+    Tham số:
+        cloud: Point cloud đầu vào
+        min_point: Tuple hoặc array (x_min, y_min, z_min)
+        max_point: Tuple hoặc array (x_max, y_max, z_max)
+
+    Trả về:
+        Cloud cùng loại với các điểm bên ngoài box.
+    """
+    import open3d as o3d
+
+    min_point = np.asarray(min_point, dtype=np.float32)
+    max_point = np.asarray(max_point, dtype=np.float32)
+
+    if isinstance(cloud, PointCloud2):
+        cloud_arr = ros_numpy.point_cloud2.pointcloud2_to_array(cloud)
+        if cloud_arr.size == 0:
+            return cloud
+
+        xyz = ros_numpy.point_cloud2.get_xyz_points(cloud_arr, remove_nans=False)
+        mask = ~(
+            (xyz[:, 0] >= min_point[0]) & (xyz[:, 0] <= max_point[0]) &
+            (xyz[:, 1] >= min_point[1]) & (xyz[:, 1] <= max_point[1]) &
+            (xyz[:, 2] >= min_point[2]) & (xyz[:, 2] <= max_point[2])
+        )
+
+        filtered_arr = cloud_arr[mask]
+        return ros_numpy.point_cloud2.array_to_pointcloud2(
+            filtered_arr,
+            stamp=cloud.header.stamp,
+            frame_id=cloud.header.frame_id
+        )
+
+    elif isinstance(cloud, o3d.geometry.PointCloud):
+        points = np.asarray(cloud.points)
+        if points.size == 0:
+            return cloud
+
+        mask = ~(
+            (points[:, 0] >= min_point[0]) & (points[:, 0] <= max_point[0]) &
+            (points[:, 1] >= min_point[1]) & (points[:, 1] <= max_point[1]) &
+            (points[:, 2] >= min_point[2]) & (points[:, 2] <= max_point[2])
+        )
+
+        filtered_pcd = o3d.geometry.PointCloud()
+        filtered_pcd.points = o3d.utility.Vector3dVector(points[mask])
+
+        if cloud.has_colors():
+            colors = np.asarray(cloud.colors)
+            filtered_pcd.colors = o3d.utility.Vector3dVector(colors[mask])
+        if cloud.has_normals():
+            normals = np.asarray(cloud.normals)
+            filtered_pcd.normals = o3d.utility.Vector3dVector(normals[mask])
+
+        return filtered_pcd
+
+    elif isinstance(cloud, o3d.t.geometry.PointCloud):
+        positions = np.asarray(cloud.point["positions"].numpy())
+        if positions.size == 0:
+            return cloud
+
+        mask = ~(
+            (positions[:, 0] >= min_point[0]) & (positions[:, 0] <= max_point[0]) &
+            (positions[:, 1] >= min_point[1]) & (positions[:, 1] <= max_point[1]) &
+            (positions[:, 2] >= min_point[2]) & (positions[:, 2] <= max_point[2])
+        )
+
+        filtered_pcd = o3d.t.geometry.PointCloud()
+        for key in cloud.point:
+            arr = np.asarray(cloud.point[key].numpy())
+            if arr.ndim == 1:
+                arr = arr.reshape(-1, 1)
+            filtered_pcd.point[key] = o3d.core.Tensor(arr[mask], dtype=cloud.point[key].dtype)
+
+        return filtered_pcd
+
+    raise TypeError(
+        f"remove_points_inside_box() chưa hỗ trợ kiểu dữ liệu {type(cloud)}"
+    )
+
+
 def process_cloud(pcd, voxel_size=0.015):
     pcd_croped = crop(pcd,[-4,4], [0,4],[-0.5,3])
     pcd_croped, _ = pcd_croped.remove_statistical_outlier(nb_neighbors=5, std_ratio=1)
