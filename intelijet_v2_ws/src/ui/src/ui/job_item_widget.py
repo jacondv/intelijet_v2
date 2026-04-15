@@ -162,9 +162,9 @@ class FileItemWidget(QWidget):
         name_no_ext, _ = os.path.splitext(base)        # Bỏ phần .ply
         
         parts = name_no_ext.split("#")
-        jobname, datetime_raw, name = parts if len(parts) >= 3 else ("Unknown", "Unknown", name_no_ext)
+        jobname, datetime_raw, name = parts[:3] if len(parts) == 3 else ("Unknown", "Unknown", name_no_ext)
+               
         name = format_name(name)
-        
         
             
         try:

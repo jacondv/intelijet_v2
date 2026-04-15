@@ -41,6 +41,11 @@ from shared.config_loader import CONFIG as cfg
 BASE_DIR = cfg.BASE_DIR
 CLOUD_COMPARED_TOPIC = cfg.CLOUD_COMPARED_TOPIC
 CLOUD_COMPARED_UPSAMPLE_TOPIC = f"{CLOUD_COMPARED_TOPIC}/upsample"
+
+CLOUD_COMPARED_TOPIC_MANUAL = cfg.CLOUD_COMPARED_TOPIC + "_manual"
+CLOUD_COMPARED_UPSAMPLE_TOPIC_MANUAL = f"{CLOUD_COMPARED_TOPIC_MANUAL}/upsample"
+
+
 PRE_SCAN_CLOUD_TOPIC = cfg.PRE_SCAN_CLOUD_TOPIC
 POST_SCAN_CLOUD_TOPIC = cfg.POST_SCAN_CLOUD_TOPIC
 
@@ -68,6 +73,7 @@ class App(QMainWindow):
     def __init__(self):
         super().__init__()
         self.report_name = ""
+        self.current_post_scan_path = ""
 
 
         # --- UI chính ---
@@ -274,15 +280,21 @@ class App(QMainWindow):
         print(f"Received cloud on topic {topic_name}")
 
         # 1. Assign Color
-        if topic_name in [CLOUD_COMPARED_TOPIC, CLOUD_COMPARED_UPSAMPLE_TOPIC]:
+        if topic_name in [CLOUD_COMPARED_TOPIC, CLOUD_COMPARED_UPSAMPLE_TOPIC, CLOUD_COMPARED_TOPIC_MANUAL, CLOUD_COMPARED_UPSAMPLE_TOPIC_MANUAL]:
             try:
                 from ui.models.job_info import JobInfo
-                current_job = self.load_current_job(text_only=True)
-                project_name = current_job.split("/")[0]
-                job_number = current_job.split("/")[1]
-                jobs_folder = os.path.join(PROJECT_DIR, project_name,job_number)
-                # current_job_info_path = os.path.join(jobs_folder, JOBINFO_FILE_NAME)
+                if topic_name in [CLOUD_COMPARED_TOPIC_MANUAL, CLOUD_COMPARED_UPSAMPLE_TOPIC_MANUAL]:
+                    jobs_folder = os.path.dirname(self.report_name)
+                else:           
+                    current_job = self.load_current_job(text_only=True)
+                    project_name = current_job.split("/")[0]
+                    job_number = current_job.split("/")[1]
+                    jobs_folder = os.path.join(PROJECT_DIR, project_name,job_number)
+                    # current_job_info_path = os.path.join(jobs_folder, JOBINFO_FILE_NAME)
+                
+               
                 job_info = JobInfo.load(jobs_folder)
+
                 if job_info:
                     target_thickness = job_info.parameters.get("target_thickness",THICKNESS_DEFAULT)
                     tolerance = job_info.parameters.get("tolerance",TOLERANCE_DEFAULT)
@@ -297,9 +309,9 @@ class App(QMainWindow):
                 print(f"[Error] at on_cloud_received() to re-assign color : {e}")
                 pass
 
-
+      
         # 2. Show pointcloud and Save Data
-        if topic_name in [POST_SCAN_CLOUD_TOPIC, PRE_SCAN_CLOUD_TOPIC, CLOUD_COMPARED_TOPIC]:
+        if topic_name in [POST_SCAN_CLOUD_TOPIC, PRE_SCAN_CLOUD_TOPIC, CLOUD_COMPARED_TOPIC,CLOUD_COMPARED_TOPIC_MANUAL]:
             polydata = cloudconverter.o3d_to_vtk_polydata(o3d_cloud)
             self.vtk_viewer.update(polydata)
             self.ui.tab_mainview.setCurrentIndex(0)
@@ -311,6 +323,14 @@ class App(QMainWindow):
             if topic_name == CLOUD_COMPARED_TOPIC:
                 self.report_name = f_name
 
+        if topic_name in [CLOUD_COMPARED_TOPIC_MANUAL]:
+           
+             # Save cloud to file ply
+            self.report_name = self.current_post_scan_path.replace("post_scan_cloud", "cloud_compared")
+            if polydata:
+                cloudconverter.o3d_to_ply(o3d_cloud, self.report_name) #save cloud to ply file.
+
+
 
         # 3. Emit to ROS to call Compare Cloud Action
         if topic_name == POST_SCAN_CLOUD_TOPIC:
@@ -319,7 +339,7 @@ class App(QMainWindow):
             
 
         # 4. Export Report
-        if topic_name == CLOUD_COMPARED_UPSAMPLE_TOPIC:
+        if topic_name in [CLOUD_COMPARED_UPSAMPLE_TOPIC, CLOUD_COMPARED_UPSAMPLE_TOPIC_MANUAL]:
                 
             if self.ui.cbbAutoCompare.currentText().lower() == 'off' or self.ui.cbbAutoReport.currentText().lower() == 'off':
                 return # only export report when auto compare is on nad auto report is on. (1 is OFF)
@@ -452,11 +472,11 @@ class App(QMainWindow):
 
 
     #5.0 -- Manual export report handler---
-    def on_manual_export_report(self, data, filename):
-        if self.ui.cbbAutoReport.currentText().lower() == 'off':
-            return # Auto report is off.
 
-        self.export_report(data, filename)
+    # def on_manual_export_report(self, data, filename):
+    #     if self.ui.cbbAutoReport.currentText().lower() == 'off':
+    #         return # Auto report is off.
+    #     self.export_report(data, filename)
 
     # 5.1--- Export report after compare done---
     def export_report(self, data, filename):
@@ -532,8 +552,8 @@ class App(QMainWindow):
         if jobcompare_dlg.exec_() == QDialog.Accepted:
             data = jobcompare_dlg.get_result()
             
-            pre, post, *_ = data
-            if pre is None or post is None:
+            prescan_path, postscan_path, *_ = data
+            if prescan_path is None or postscan_path is None:
                 return
              
             # cloud_compare.set_prescan(pre)
@@ -553,8 +573,8 @@ class App(QMainWindow):
             do_post_process     = rospy.get_param("/runtime/do_post_process", False)
 
             self.worker = CompareWorker(
-                prescan_path=pre,
-                postscan_path=post,
+                prescan_path=prescan_path,
+                postscan_path=postscan_path,
                 do_2d_keypoint=do_2d_keypoint,
                 do_pre_process=do_pre_process,
                 do_align=do_align,
@@ -591,7 +611,9 @@ class App(QMainWindow):
         else:
             print("❌COMPARE FAILED ", job_id)
             _string = "❌COMPARE FAILED "
-
+        self.current_post_scan_path = job_id
+        rospy.logwarn(f"self.current_post_scan_path {self.current_post_scan_path}")
+        rospy.logwarn(f"self.current_post_scan_path {os.path.dirname(self.current_post_scan_path)}")
         self.lblNotification.setText(_string)
 
     # 7.--- Close event handler ---
@@ -651,36 +673,25 @@ class App(QMainWindow):
         cloudconverter = CloudConverter()
 
         from ui.tunnel_report.report_data_model import ReportHeader
+        from ui.models.file_name  import generate_filename
 
         try:
-            filepath = _generate_filename(topic_name, ext="ply")
+            project_name = self.ui.cbbJobSelect.currentText().split("/")[0]
+            job_number = self.ui.cbbJobSelect.currentText().split("/")[1]
+            jobs_root = os.path.join(PROJECT_DIR, project_name)
+            folder = os.path.join(jobs_root, job_number)
+
+            # filepath = _generate_filename(topic_name, ext="ply")
+            filepath = generate_filename(
+                folder=folder,
+                job=job_number,
+                scan_type=topic_name,  # hoặc "postscan" tùy theo logic của bạn
+                ext="ply"
+            )
             cloudconverter.o3d_to_ply(o3d_cloud, filepath) #save cloud to ply file.
             return filepath
 
-            #Save job information to json file, it provides information for later visualization and report generation
-            # fname = os.path.basename(filepath)
-            # job_number = fname.split("#")[0] if "#" in filepath else "--"
-
-            # header = ReportHeader(
-            #         site_name = "Jacon Equipment",
-            #         job_name= job_number,
-            #         applied_thickness = 30,
-            #         tolerance = 10,
-            #         operator = "Jacon"
-            # )
-            # # header.save(path=filepath.replace(".ply", ".json"))
-
-            # if topic_name in CLOUD_COMPARED_TOPIC:
-            #     from ui.tunnel_report.report_controler import ReportGenerator
-            #     report = ReportGenerator()
-            #     report.set_info(
-            #         site_name = header.site_name,
-            #         job_name= header.job_name,
-            #         applied_thickness = header.applied_thickness,
-            #         tolerance = header.tolerance
-            #     )
-            #     report.export(o3d_cloud,output_path=filepath.replace(".ply", ".pdf"))
-
+   
         except Exception as e:
             print("Error occurred while saving Open3D pointcloud:", e)
             print(f"Can not save file to {filepath}")
@@ -737,6 +748,12 @@ class App(QMainWindow):
             except:
                 pass
 
+
+    def load_job_info_from_file(self, filepath):
+        from ui.models.job_info import JobInfo
+        job_folder = os.path.dirname(filepath)
+        job_info = JobInfo.load(job_folder)
+        return job_info
 
     def load_current_job(self, text_only=False):
         import json

@@ -19,6 +19,8 @@ PRE_SCAN_CLOUD_TOPIC = cfg.PRE_SCAN_CLOUD_TOPIC
 POST_SCAN_CLOUD_TOPIC = cfg.POST_SCAN_CLOUD_TOPIC
 CLOUD_COMPARED_TOPIC = cfg.CLOUD_COMPARED_TOPIC
 CLOUD_COMPARED_UPSAMPLE_TOPIC = f"{CLOUD_COMPARED_TOPIC}/upsample"
+CLOUD_COMPARED_TOPIC_MANUAL = CLOUD_COMPARED_TOPIC + "_manual"
+CLOUD_COMPARED_UPSAMPLE_TOPIC_MANUAL = f"{CLOUD_COMPARED_TOPIC_MANUAL}/upsample"
 
 ENCODER_DATA_TOPIC =  cfg.ENCODER01_DATA
 
@@ -41,6 +43,8 @@ class RosThread(threading.Thread):
         rospy.Subscriber(POST_SCAN_CLOUD_TOPIC, PointCloud2, self.cloud_received_signal_callback,callback_args=POST_SCAN_CLOUD_TOPIC,queue_size=1)
         rospy.Subscriber(CLOUD_COMPARED_TOPIC, PointCloud2, self.cloud_received_signal_callback,callback_args=CLOUD_COMPARED_TOPIC,queue_size=1)
         rospy.Subscriber(CLOUD_COMPARED_UPSAMPLE_TOPIC, PointCloud2, self.cloud_received_signal_callback,callback_args=CLOUD_COMPARED_UPSAMPLE_TOPIC,queue_size=1)
+        rospy.Subscriber(CLOUD_COMPARED_TOPIC_MANUAL, PointCloud2, self.cloud_received_signal_callback,callback_args=CLOUD_COMPARED_TOPIC_MANUAL,queue_size=1)
+        rospy.Subscriber(CLOUD_COMPARED_UPSAMPLE_TOPIC_MANUAL, PointCloud2, self.cloud_received_signal_callback,callback_args=CLOUD_COMPARED_UPSAMPLE_TOPIC_MANUAL,queue_size=1)
 
         # listennig Encoder value
         rospy.Subscriber(ENCODER_DATA_TOPIC, Int32, self.update_encoder_raw_value)

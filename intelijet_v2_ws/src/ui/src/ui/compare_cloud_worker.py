@@ -45,7 +45,7 @@ class CompareWorker(QThread):
             self.tolerance = THICKNESS_TOLERANCE
 
         client = actionlib.SimpleActionClient(
-            '/compare_cloud_manual',
+            '/compare_cloud',
             CompareCloudAction
         )
 
@@ -73,7 +73,8 @@ class CompareWorker(QThread):
         self.progress.emit(fb.progress, fb.stage)
 
     def on_done(self, status, result):
-        self.finished.emit(result.success, result.job_id)
+        # self.finished.emit(result.success, result.job_id)
+        self.finished.emit(result.success, self.postscan_path)
 
 
 

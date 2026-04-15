@@ -11,7 +11,7 @@ from pps.tunnel_processing import TunnelProcessing
 
 from shared.config_loader import CONFIG as cfg
 
-CLOUD_OUT = cfg.CLOUD_COMPARED_TOPIC
+CLOUD_OUT = cfg.CLOUD_COMPARED_TOPIC + "_manual"
 CLOUD_UP = f"{CLOUD_OUT}/upsample"
 
 
@@ -47,7 +47,7 @@ class CompareCloudManualServer:
 
     # ---------------- EXECUTE ----------------
     def execute(self, goal):
-
+        print(goal)
         job_id = uuid.uuid4().hex
 
         try:
@@ -67,13 +67,18 @@ class CompareCloudManualServer:
 
             msg = cloudconverter.o3d_tensor_to_pointcloud2(cloud, "base_link")
             self.pub.publish(msg)
+            rospy.loginfo("Published compared cloud to %s", CLOUD_OUT)
 
             if goal.do_upsample:
                 self.fb("upsample", 0.9)
 
                 up = TunnelProcessing(cloud).run_upsample(cloud)
                 msg2 = cloudconverter.o3d_tensor_to_pointcloud2(up, "base_link")
-                self.pub2.publish(msg2)
+            else:
+                msg2 = msg
+            self.pub2.publish(msg2)
+
+            rospy.loginfo("Published compared cloud to %s", CLOUD_UP)
 
             self.fb("done", 1.0)
 

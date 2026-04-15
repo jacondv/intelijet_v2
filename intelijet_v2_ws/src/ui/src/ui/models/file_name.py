@@ -6,7 +6,7 @@ FILENAME_TEMPLATE = "{job}#{timestamp_str}#{type}#{index}#SCAN{scan_id}.{ext}"
 # example: job1#20240601_153000#prescan#01#SCAN01.ply
 def generate_filename(folder: str, job: str, scan_type: str, ext="ply"):
     """
-    scan_type: 'prescan' | 'postscan' | 'compared'
+    scan_type: 'pre_scan' | 'post_scan' | 'compared'
     """
 
     os.makedirs(folder, exist_ok=True)
@@ -25,7 +25,7 @@ def generate_filename(folder: str, job: str, scan_type: str, ext="ply"):
     current_scan_id = scan_ids[-1] if scan_ids else 0
 
     # --- 2. Nếu prescan → tạo scan_id mới ---
-    if scan_type == "prescan" or current_scan_id is None:
+    if scan_type == "pre_scan" or current_scan_id is None:
         scan_id = time.strftime("%Y%m%d%H%M%S")
         index = "00"   # prescan không cần index
     else:

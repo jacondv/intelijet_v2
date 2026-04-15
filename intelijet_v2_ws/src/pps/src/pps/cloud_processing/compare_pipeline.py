@@ -5,7 +5,7 @@ from pps.data_converter import cloudconverter
 from pps.tunnel_processing import TunnelProcessing
 from pps.helper import compute_heatmap_to_plane
 from pps.cloud_processing.utils_align import align_cloud
-from pps.image_processing.keypoint_processing_v2 import KeypointCloudAlignManager
+from pps.image_processing.keypoint_processing_v3 import KeypointCloudAlignManager
 
 from pps.helper import crop_pointcloud_by_box, check_transform
 from pps.cloud_processing.utils_align import align_cloud, pre_align_cloud
@@ -57,7 +57,7 @@ class CloudComparePipeline:
             kpm.set_cloud2(post_crop)
 
             if kpm.is_ready():
-                target_patch, source_patch, _ = kpm.get_result()
+                target_patch, source_patch, T = kpm.get_result()
 
         # ===== ALIGN =====
         if goal.do_align:
