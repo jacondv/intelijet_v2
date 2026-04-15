@@ -45,7 +45,7 @@ class CompareWorker(QThread):
             self.tolerance = THICKNESS_TOLERANCE
 
         client = actionlib.SimpleActionClient(
-            '/compare_cloud',
+            '/compare_cloud_manual',
             CompareCloudAction
         )
 
