@@ -8,7 +8,7 @@ trap "xhost -local:docker; echo 'Stopping container...'; sudo docker stop $CONTA
 
 sudo xrandr --output DSI-1 --rotate right
 
-CONTAINER_NAME=intelijet
+CONTAINER_NAME=intelijet_v1.1
 IMAGE_NAME=jacondv/jacon-pps-noetic
 
 # QT_ENV="export QT_AUTO_SCREEN_SCALE_FACTOR=0; export QT_SCREEN_SCALE_FACTORS=1.25; export QT_SCALE_FACTOR=1.25;"
