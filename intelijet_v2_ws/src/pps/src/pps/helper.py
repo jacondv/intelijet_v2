@@ -322,7 +322,7 @@ def compute_heatmap_to_plane(source, target, k=6,target_thickness=0.03, toleranc
     # Tính trước normal cho target
     # start_time = time.time()
     import open3d as o3d
-
+    rospy.loginfo("Computing heatmap to plane...")
     source = cloudconverter.tensor_to_o3d_legacy(source)
     target = cloudconverter.tensor_to_o3d_legacy(target)
 

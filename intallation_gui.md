@@ -50,7 +50,7 @@ sudo apt install okular
 sudo apt install evince
 ```
 
-# Config loaded
+<!-- # Config loaded
 ```bash
 pip3 install watchdog
-```
+``` -->

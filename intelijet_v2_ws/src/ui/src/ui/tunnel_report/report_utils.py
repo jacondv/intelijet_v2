@@ -287,3 +287,5 @@ class PLYProcessor:
             img.save(buf, format="PNG")
             img_base64 = base64.b64encode(buf.getvalue()).decode("utf-8")
             return f"data:image/png;base64,{img_base64}"
+
+    

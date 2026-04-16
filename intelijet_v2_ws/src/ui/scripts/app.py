@@ -279,20 +279,20 @@ class App(QMainWindow):
         o3d_cloud = cloudconverter.pointcloud2_to_o3d_tensor(msg)
         print(f"Received cloud on topic {topic_name}")
 
+        # define job_folder based on current selected job or manual compare mode
+        if topic_name in [CLOUD_COMPARED_TOPIC_MANUAL, CLOUD_COMPARED_UPSAMPLE_TOPIC_MANUAL]:
+            jobs_folder = os.path.dirname(self.current_post_scan_path)
+            job_number = jobs_folder.split("/")[-1]
+        else:
+            current_job = self.load_current_job(text_only=True)
+            project_name = current_job.split("/")[0]
+            job_number = current_job.split("/")[1]
+            jobs_folder = os.path.join(PROJECT_DIR, project_name,job_number)
+            
         # 1. Assign Color
         if topic_name in [CLOUD_COMPARED_TOPIC, CLOUD_COMPARED_UPSAMPLE_TOPIC, CLOUD_COMPARED_TOPIC_MANUAL, CLOUD_COMPARED_UPSAMPLE_TOPIC_MANUAL]:
             try:
                 from ui.models.job_info import JobInfo
-                if topic_name in [CLOUD_COMPARED_TOPIC_MANUAL, CLOUD_COMPARED_UPSAMPLE_TOPIC_MANUAL]:
-                    jobs_folder = os.path.dirname(self.report_name)
-                else:           
-                    current_job = self.load_current_job(text_only=True)
-                    project_name = current_job.split("/")[0]
-                    job_number = current_job.split("/")[1]
-                    jobs_folder = os.path.join(PROJECT_DIR, project_name,job_number)
-                    # current_job_info_path = os.path.join(jobs_folder, JOBINFO_FILE_NAME)
-                
-               
                 job_info = JobInfo.load(jobs_folder)
 
                 if job_info:
@@ -309,7 +309,6 @@ class App(QMainWindow):
                 print(f"[Error] at on_cloud_received() to re-assign color : {e}")
                 pass
 
-      
         # 2. Show pointcloud and Save Data
         if topic_name in [POST_SCAN_CLOUD_TOPIC, PRE_SCAN_CLOUD_TOPIC, CLOUD_COMPARED_TOPIC,CLOUD_COMPARED_TOPIC_MANUAL]:
             polydata = cloudconverter.o3d_to_vtk_polydata(o3d_cloud)
@@ -317,19 +316,21 @@ class App(QMainWindow):
             self.ui.tab_mainview.setCurrentIndex(0)
 
             # Save cloud to file ply
-            if polydata:
-                f_name = self.save_job(o3d_cloud, topic_name)
+            from ui.models.file_name  import generate_filename
 
-            if topic_name == CLOUD_COMPARED_TOPIC:
+            filepath = generate_filename(
+                folder=jobs_folder,
+                job=job_number,
+                scan_type=topic_name,  # hoặc "postscan" tùy theo logic của bạn
+                ext="ply"
+            )
+            if polydata:
+                f_name = self.save_job(o3d_cloud, filepath=filepath)
+
+            if topic_name in [CLOUD_COMPARED_TOPIC, CLOUD_COMPARED_TOPIC_MANUAL]:
                 self.report_name = f_name
 
-        if topic_name in [CLOUD_COMPARED_TOPIC_MANUAL]:
-           
-             # Save cloud to file ply
-            self.report_name = self.current_post_scan_path.replace("post_scan_cloud", "cloud_compared")
-            if polydata:
-                cloudconverter.o3d_to_ply(o3d_cloud, self.report_name) #save cloud to ply file.
-
+  
 
 
         # 3. Emit to ROS to call Compare Cloud Action
@@ -350,10 +351,10 @@ class App(QMainWindow):
 
                 cloud_compared_upsample = o3d_cloud
                 filename = self.report_name
+                filename = filename.replace(".ply", ".pdf")
                 self.export_report(cloud_compared_upsample,filename)
 
-                # Cleare report_name after export report
-                # self.report_name = None
+
 
             except Exception as e:
                 # in toàn bộ thông tin lỗi
@@ -583,6 +584,7 @@ class App(QMainWindow):
             )
 
             # ✅ connect signal
+            self.current_post_scan_path = postscan_path
             self.worker.progress.connect(self.on_compare_process)
             self.worker.finished.connect(self.on_compare_done)
 
@@ -602,6 +604,7 @@ class App(QMainWindow):
         _string = make_progress_bar(progress)
         print(_string)  
         self.lblNotification.setText(_string)
+ 
 
     def on_compare_done(self, success, job_id):
         
@@ -611,9 +614,7 @@ class App(QMainWindow):
         else:
             print("❌COMPARE FAILED ", job_id)
             _string = "❌COMPARE FAILED "
-        self.current_post_scan_path = job_id
-        rospy.logwarn(f"self.current_post_scan_path {self.current_post_scan_path}")
-        rospy.logwarn(f"self.current_post_scan_path {os.path.dirname(self.current_post_scan_path)}")
+        
         self.lblNotification.setText(_string)
 
     # 7.--- Close event handler ---
@@ -640,63 +641,19 @@ class App(QMainWindow):
 
 
     # 9.--- Save job to disk ---
-    def save_job(self, o3d_cloud, topic_name):
-        """
-        Lưu Open3D PointCloud (legacy hoặc tensor) ra .ply, giữ color và các field extra như 'distances' hoặc 'distance_mm'.
-        Tên file: {job_number}_{YYYYmmdd_HHMMSS}_{safe_topic}.ply
-        """
-        def _generate_filename(topic_name: str, ext = "ply") -> str:
-
-            # jobs_root = self.jobsetting_page.jobs_root
-            # job_number = self.ui.lblCurrentJob.text()
-            
-            project_name = self.ui.cbbJobSelect.currentText().split("/")[0]
-            job_number = self.ui.cbbJobSelect.currentText().split("/")[1]
-            jobs_root = os.path.join(PROJECT_DIR, project_name)
-
-            # Chuẩn hóa tên topic
-            safe_topic = re.sub(r'[^a-zA-Z0-9_-]', '', topic_name)
-
-            # Tạo thư mục cho job nếu chưa tồn tại
-            folder = os.path.join(jobs_root, job_number)
-            os.makedirs(folder, exist_ok=True)
-            index = sum(safe_topic in f for f in os.listdir(folder) if f.endswith('.ply')) +  1
-
-            # Timestamp hiện tại
-            timestamp_str = time.strftime("%Y%m%d_%H%M%S", time.localtime())
-
-            filename = os.path.join(folder, f"{job_number}#{timestamp_str}#{safe_topic}_{index:02d}.{ext}")
-
-            return filename
-
+    def save_job(self, o3d_cloud, filepath):
         from pps.data_converter import CloudConverter
         cloudconverter = CloudConverter()
 
-        from ui.tunnel_report.report_data_model import ReportHeader
-        from ui.models.file_name  import generate_filename
-
         try:
-            project_name = self.ui.cbbJobSelect.currentText().split("/")[0]
-            job_number = self.ui.cbbJobSelect.currentText().split("/")[1]
-            jobs_root = os.path.join(PROJECT_DIR, project_name)
-            folder = os.path.join(jobs_root, job_number)
-
-            # filepath = _generate_filename(topic_name, ext="ply")
-            filepath = generate_filename(
-                folder=folder,
-                job=job_number,
-                scan_type=topic_name,  # hoặc "postscan" tùy theo logic của bạn
-                ext="ply"
-            )
             cloudconverter.o3d_to_ply(o3d_cloud, filepath) #save cloud to ply file.
+            print(f"Saved cloud to {filepath}")
             return filepath
-
-   
         except Exception as e:
             print("Error occurred while saving Open3D pointcloud:", e)
             print(f"Can not save file to {filepath}")
             return None
-
+        
 
     #10. change current job
     def on_job_changed(self, index):
