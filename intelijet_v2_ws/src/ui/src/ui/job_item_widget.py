@@ -191,6 +191,8 @@ class FileItemWidget(QWidget):
             name = f"[{info['scan_id']}]POSTSCAN({info['index']})"
         elif 'compared' in info['type']:
             name = f"[{info['scan_id']}]COMPARE({info['index']})"
+        elif 'report' in info['type']:
+            name = f"[{info['scan_id']}]FINALREPORT"
         else:
             name = f"[{info['scan_id']}]{info['type'].upper()}({info['index']})"
 

@@ -541,8 +541,13 @@ class App(QMainWindow):
                 print(f"[App] Failed to export report for {filename}")
             else:
                 print(f"[App] Report exported successfully: {filename}")
-                final_report_name = re.sub(r'#cloud_compared[^#]*#', '#Report#', filename)
-                shutil.copy(filename, final_report_name)
+                parts = filename.split("#")
+                if len(parts) >= 4:
+                    parts[2] = "finalreport"
+                    final_report_name = "#".join(parts)
+                    print(f"[App] Report exported final_report_name: {final_report_name}")
+                    shutil.copy(filename, final_report_name)
+   
 
         except Exception as e:
             print(f"[App] Failed to export report: {e}")
