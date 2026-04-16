@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 import os
+import shutil
+
 #allow create file with full permission
 os.umask(0)
 from pathlib import Path
@@ -535,7 +537,13 @@ class App(QMainWindow):
             #     filename = f"Test_report#{timestamp}.pdf"
             #     filename = f"{BASE_DIR}/data/reports/{filename}"
                 
-            report.export(pcd=data,output_path=filename)
+            if not report.export(pcd=data,output_path=filename):
+                print(f"[App] Failed to export report for {filename}")
+            else:
+                print(f"[App] Report exported successfully: {filename}")
+                final_report_name = re.sub(r'#cloud_compared[^#]*#', '#Report#', filename)
+                shutil.copy(filename, final_report_name)
+
         except Exception as e:
             print(f"[App] Failed to export report: {e}")
 

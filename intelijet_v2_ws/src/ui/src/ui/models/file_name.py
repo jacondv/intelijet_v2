@@ -81,17 +81,51 @@ def parse_filename(filename: str):
     """
 
     match = re.match(pattern, name, re.VERBOSE)
-    if not match:
-        return None
 
-    return {
-        "job": match.group("job"),
-        "timestamp": match.group("timestamp"),
-        "type": match.group("type"),
-        "index": int(match.group("index")),
-        "scan_id": int(match.group("scan_id")),
-        "ext": match.group("ext"),
+    # ✅ CASE 1: regex match OK
+    if match:
+        return {
+            "job": match.group("job"),
+            "timestamp": match.group("timestamp"),
+            "type": match.group("type"),
+            "index": int(match.group("index")),
+            "scan_id": int(match.group("scan_id")),
+            "ext": match.group("ext"),
+        }
+
+    # ❗ CASE 2: fallback split "#"
+    parts = name.split("#")
+
+    job = parts[0] if len(parts) > 0 else ""
+    timestamp = parts[1] if len(parts) > 1 else ""
+    type_index = parts[2] if len(parts) > 2 else ""
+    scan_ext = parts[3] if len(parts) > 3 else ""
+
+    # type + index
+    if "_" in type_index:
+        t = type_index.rsplit("_", 1)
+        type_name = t[0]
+        index = int(t[1]) if t[1].isdigit() else -1
+    else:
+        type_name = type_index
+        index = -1
+
+    # scan + ext
+    if "." in scan_ext:
+        scan_part, ext = scan_ext.rsplit(".", 1)
+        scan_id = int(scan_part.replace("SCAN", "")) if scan_part.startswith("SCAN") else -1
+    else:
+        scan_id = -1
+        ext = ""
+
+    result = {
+        "job": job,
+        "timestamp": timestamp,
+        "type": type_name,
+        "index": f"{int(index):02d}",
+        "scan_id": f"{int(scan_id):03d}",
+        "ext": ext,
     }
-
-
+   
+    return result   
 

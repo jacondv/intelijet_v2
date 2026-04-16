@@ -100,7 +100,10 @@ class ReportGenerator:
             date=date,
             time=time
         )
-    
-        self.create_pdf(report_data=data.to_json(), output_path=output_path, debug_html=False)
+        try:
+            self.create_pdf(report_data=data.to_json(), output_path=output_path, debug_html=False)
+            return True
+        except Exception as e:
+            print(f"[ReportGenerator] Error exporting report: {e}")
     
 

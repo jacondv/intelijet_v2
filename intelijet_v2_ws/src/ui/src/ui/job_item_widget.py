@@ -2,6 +2,7 @@ from PyQt5.QtWidgets import QWidget, QHBoxLayout, QLineEdit, QPushButton, QMessa
 from PyQt5.QtCore import pyqtSignal, QEvent
 from ui.job_item_ui import Ui_Form
 from ui.file_item_detail import Ui_frmFileItemDetail
+from ui.models.file_name import parse_filename as _parse_filename
 import os
 from datetime import datetime
 
@@ -135,7 +136,7 @@ class FileItemWidget(QWidget):
         self.ui.btnOpen.show()
         self.ui.chkChooseCloud.show()
 
-    def parse_filename(self,filename: str):
+    def parse_filename_old(self,filename: str):
         """
         Phân tích filename dạng: Jobname#yyyymmdd_hhmmss#name.ply
         Trả về dict chứa jobname, datetime, name và original filename.
@@ -180,7 +181,30 @@ class FileItemWidget(QWidget):
             "datetime": datetime_str,
         }
         
-    
+    def parse_filename(self, filename: str):
+        
+        info = _parse_filename(filename)
+        
+        if 'pre_scan' in info['type']:
+            name = f"[{info['scan_id']}]PRESCAN"
+        elif 'post_scan' in info['type']:
+            name = f"[{info['scan_id']}]POSTSCAN({info['index']})"
+        elif 'compared' in info['type']:
+            name = f"[{info['scan_id']}]COMPARE({info['index']})"
+        else:
+            name = f"[{info['scan_id']}]{info['type'].upper()}({info['index']})"
+
+        result =  {
+            "jobname": info['job'],
+            "name": name,
+            "datetime": info['timestamp'],
+        }
+      
+        return result
+
+
+
+
     def on_open_clicked(self):
         self.openSignal.emit()
 
