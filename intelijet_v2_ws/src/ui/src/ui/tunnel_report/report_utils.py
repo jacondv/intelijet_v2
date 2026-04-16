@@ -2,12 +2,22 @@
 import numpy as np
 from pps.helper import surface_area, filter_pcd_by_distance
 
+AREA_SCALE = 1.0 # nếu cần scale diện tích
+
 class PLYProcessor:
     def __init__(self):
         self.distances = None
         self.pcd = None
         self.target_thickness = 0
         self.tolerance = 0
+
+        self._area_total = 0.0
+        self._area_complete = 0.0
+        self._avg_thickness = 0.0
+        self._volume = 0.0
+        self._distribution_chart_img = None
+        self._tunnel_view_img = None
+
 
     def load(self, ply_path):
         import open3d as o3d
@@ -27,6 +37,8 @@ class PLYProcessor:
             if "distances" not in pcd.point:
                 raise ValueError("PLY file doesn't contain the [distances] field.")
             self.distances = np.abs(pcd.point["distances"].numpy())
+
+
         except Exception as e:
             print(f"Input cloud is not in Open3D Tensor format. {e}")
             return None
@@ -37,13 +49,41 @@ class PLYProcessor:
     def set_parameters(self, target_thickness, tolerance):
         self.target_thickness = target_thickness
         self.tolerance = tolerance
+        
+        self._process()
+
+    def _process(self):
+        import open3d as o3d
+        # Calculate total area
+        self._area_total = surface_area(self.pcd, radii=(0.1, 0.15)) * AREA_SCALE
+
+        # Calculate area meeting the required thickness     
+        min_thickness_mm = max(self.target_thickness - 1 * self.tolerance,20)
+        filtered_pcd = filter_pcd_by_distance(self.pcd, d_min=min_thickness_mm, d_max=500)
+
+        o3d.t.io.write_point_cloud(
+            r"C:\WORK\projects\PPS_Report_Tool\data\filtered_cloud.ply",
+            filtered_pcd
+        )
+        self._area_complete = surface_area(filtered_pcd, radii=(0.1, 0.15)) * AREA_SCALE  # m²
+
+        # Calculate average thickness
 
 
-    def get_header(self):
-        header = {
-            
-        }
-        return 
+        # mask valid distances
+        abs_dist = np.abs(self.distances)
+        mask_valid = (abs_dist >= min_thickness_mm)
+        valid_ratio = np.mean(mask_valid) * 100
+
+        MIN_VALID_RATIO = 1.0  # % – chỉnh theo yêu cầu kỹ thuật
+        if valid_ratio < MIN_VALID_RATIO:
+            self._avg_thickness = 0
+            self._volume = 0
+            return # quá ít điểm hợp lệ, bỏ qua
+        else:
+            self._avg_thickness = np.mean(self.distances[mask_valid]) #mm
+            self._volume = self._area_complete * self._avg_thickness / 1000.0   # m² * m = m³
+
 
 
     def export_distribution_chart(self,bins, save_path=None):
@@ -57,57 +97,20 @@ class PLYProcessor:
         img_base64 = self.__render_pointcloud_to_image(self.pcd, out_path=out_path)
         return img_base64
     
-        
+
     def avg_thickness(self): # return in mm
-        if self.distances is None or self.distances.size == 0:
-            return None  # hoặc 0.0 nếu pipeline bắt buộc number
-
-        # minimum valid thickness (mm)
-        min_thickness_mm = max(self.target_thickness - 1 * self.tolerance,20)
-
-        # mask valid distances
-        abs_dist = np.abs(self.distances)
-        mask_valid = (abs_dist >= min_thickness_mm)
-        valid_ratio = np.mean(mask_valid) * 100
-
-        MIN_VALID_RATIO = 1.0  # % – chỉnh theo yêu cầu kỹ thuật
-        if valid_ratio < MIN_VALID_RATIO:
-            return 0  # không đủ dữ liệu để ước tính
-
-
-        mean_thickness_mm = np.mean(self.distances[mask_valid]) #mm
-
-        return mean_thickness_mm
+        return self._avg_thickness
 
     def area(self):
-        area = surface_area(self.pcd, radii=(0.1, 0.15))
-        return area
+        return self._area_total
+
+    def area_complete(self):
+        return self._area_complete
 
 
     def volume(self):
-        """
-        Estimate sprayed volume (m³) from distance map.
-        Distances are in mm.
-        """
-
-        import open3d as o3d
-
-
-        
-        min_thickness_mm = max(self.target_thickness - 1 * self.tolerance,20)
-        filtered_pcd = filter_pcd_by_distance(self.pcd, d_min=min_thickness_mm, d_max=500)
-
-        valid_area = surface_area(filtered_pcd, radii=(0.1, 0.15))  # m²
-
-
-        mean_thickness_mm = self.avg_thickness()
-        mean_thickness_m = mean_thickness_mm / 1000.0  # mm → m
-        volume_m3 = valid_area * mean_thickness_m
-
-        print(f"Area that meets the required thickness: {valid_area} m2")
-        print(f"Volume of the area meeting the required thickness: {volume_m3}m3")
-
-        return volume_m3
+        return self._volume
+    
     
     def __plot_distance_distribution(self,distances, bins, save_path=None):
         """
