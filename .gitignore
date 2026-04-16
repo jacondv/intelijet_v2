@@ -44,6 +44,7 @@ log/
 **/logs/
 **/.catkin_tools/
 
+.catkin_workspace
 
 # === CMAKE ===
 CMakeFiles/
