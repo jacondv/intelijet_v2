@@ -58,7 +58,7 @@ class CloudProcessorNode:
                                         min_bound=[cfg.crop_box.min.x, cfg.crop_box.min.y, cfg.crop_box.min.z], 
                                         max_bound=[cfg.crop_box.max.x, cfg.crop_box.max.y, cfg.crop_box.max.z])
         
-        cloud_o3d = remove_points_inside_box(pcd=cloud_o3d, min_point=(-0.5, -1, -0.5), max_point=(3, 1, 4))
+        cloud_o3d = remove_points_inside_box(cloud=cloud_o3d, min_point=(-0.5, -1, -0.5), max_point=(3, 1, 4))
         #Downsample
         
         cloud_o3d = cloudconverter.voxel_down_sample_spatial(cloud_o3d, voxel_size=0.015)

@@ -8,8 +8,8 @@ from std_msgs.msg import String, Empty, Int32
 # from pps.msg import StartScanAction, StartScanGoal
 # from pps.msg import CompareCloudAction, CompareCloudGoal
 from pps.cloud_compare.compare_cloud_base_client import CompareBaseClient
-# from pps.sick_scan_controller import SickScanController
-from pps.sick_scan_eRob_controller import SickScanErobController
+from pps.sick_scan_controller import SickScanController
+# from pps.sick_scan_eRob_controller import SickScanErobController
 
 # from ros_blkarc_msgs.msg import TimedScanAction, TimedScanGoal
 
@@ -21,8 +21,8 @@ from shared.config_loader import CONFIG as cfg
 
 def get_scanner_controller(status_callback=None, active_lidar=cfg.active_lidar):
     if active_lidar == "lms511":
-        # controller = SickScanController(status_callback=status_callback)
-        controller = SickScanErobController(status_callback=status_callback)
+        controller = SickScanController(status_callback=status_callback)
+        # controller = SickScanErobController(status_callback=status_callback)
         return controller
     
 
