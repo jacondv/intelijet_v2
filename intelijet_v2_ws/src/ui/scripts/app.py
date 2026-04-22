@@ -2,6 +2,7 @@
 import os
 import shutil
 
+
 #allow create file with full permission
 os.umask(0)
 from pathlib import Path
@@ -36,6 +37,7 @@ from ui.intelijet_ui import Ui_MainWindow
 from ui.keyboard import TouchKeyboard
 
 from ui.tunnel_report.report_controler import ReportGenerator
+from ui.tunnel_report.report_utils import delete_old_final_report
 
 from shared.config_loader import CONFIG as cfg
 
@@ -546,7 +548,9 @@ class App(QMainWindow):
                     parts[2] = "finalreport"
                     final_report_name = "#".join(parts)
                     print(f"[App] Report exported final_report_name: {final_report_name}")
+                    delete_old_final_report(filename)# only delete old final report with the same job, avoid delete all final report of other job.
                     shutil.copy(filename, final_report_name)
+
    
 
         except Exception as e:

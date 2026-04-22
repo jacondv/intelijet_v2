@@ -1,4 +1,5 @@
 
+import os
 import numpy as np
 from pps.helper import surface_area, filter_pcd_by_distance
 
@@ -289,3 +290,21 @@ class PLYProcessor:
             return f"data:image/png;base64,{img_base64}"
 
     
+
+def delete_old_final_report(file_path: str):
+    folder = os.path.dirname(file_path)
+
+    if not os.path.exists(folder):
+        print("Folder does not exist")
+        return
+
+    for filename in os.listdir(folder):
+        # check file pdf + chứa "final"
+        if filename.lower().endswith(".pdf") and "final" in filename.lower():
+            full_path = os.path.join(folder, filename)
+
+            try:
+                os.remove(full_path)
+                print(f"Deleted: {full_path}")
+            except Exception as e:
+                print(f"Failed to delete {full_path}: {e}")

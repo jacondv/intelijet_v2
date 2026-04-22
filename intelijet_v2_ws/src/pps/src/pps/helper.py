@@ -366,7 +366,6 @@ def compute_heatmap_to_plane(source, target, k=6,target_thickness=0.03, toleranc
 
 
 
-
 def smooth_cloud(tcloud, k=8, m=3, threshold=20.0):
     """
     Smooth distances and colors in a tensor PointCloud using KDTreeFlann (legacy).
