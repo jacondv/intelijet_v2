@@ -3,6 +3,7 @@ import os
 import numpy as np
 from pps.helper import surface_area, filter_pcd_by_distance
 
+
 class PLYProcessor:
     def __init__(self):
         self.distances = None
@@ -39,7 +40,7 @@ class PLYProcessor:
         self.target_thickness = target_thickness
         self.tolerance = tolerance
 
-
+    
     def get_header(self):
         header = {
             
@@ -93,22 +94,35 @@ class PLYProcessor:
 
         import open3d as o3d
 
+    def compute_thickness_metrics(self):
+        if self.distances is None or self.distances.size == 0:
+            return {
+                "avg_thickness_mm": None,
+                "total_area_m2": None,
+                "reached_area_m2": None,
+                "volume_m3": None
+            }
+        distances = self.distances
+        mask = (distances > -25) & (distances < 25)
+        distances[mask] = np.abs(distances[mask])
+        distances = np.where(distances < -25, np.abs(distances), distances)
+
+        min_thickness_mm = max(self.target_thickness - 1 * self.tolerance, 0)
+        filtered_pcd = filter_pcd_by_distance(self.pcd, d_min=min_thickness_mm, d_max=1000)
+        valid_area = surface_area(filtered_pcd, radii=(0.1, 0.15))  # m²
+        total_area = surface_area(self.pcd, radii=(0.1, 0.15))  # m²
+
+        mean_thickness_mm = distances.mean()  # mm
+
+        volume_m3 = valid_area * mean_thickness_mm/1000
 
         
-        min_thickness_mm = max(self.target_thickness - 1 * self.tolerance,20)
-        filtered_pcd = filter_pcd_by_distance(self.pcd, d_min=min_thickness_mm, d_max=500)
-
-        valid_area = surface_area(filtered_pcd, radii=(0.1, 0.15))  # m²
-
-
-        mean_thickness_mm = self.avg_thickness()
-        mean_thickness_m = mean_thickness_mm / 1000.0  # mm → m
-        volume_m3 = valid_area * mean_thickness_m
-
-        print(f"Area that meets the required thickness: {valid_area} m2")
-        print(f"Volume of the area meeting the required thickness: {volume_m3}m3")
-
-        return volume_m3
+        return {
+                "avg_thickness_mm": mean_thickness_mm,
+                "total_area_m2": total_area,
+                "reached_area_m2": valid_area,
+                "volume_m3": volume_m3
+            }
     
     def __plot_distance_distribution(self,distances, bins, save_path=None):
         """
@@ -199,7 +213,7 @@ class PLYProcessor:
                                     width=800, height=600,
                                     fov_deg=60.0,
                                     point_size=2.0,
-                                    background=(0.5, 0.5, 0.0, 1.0)):
+                                    background=(1.0, 1.0, 1.0, 1.0)):
         """
         Render an Open3D pointcloud to an image (base64 + optional file).
         Supports both legacy and tensor pointclouds.

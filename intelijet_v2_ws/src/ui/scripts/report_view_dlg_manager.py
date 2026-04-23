@@ -582,6 +582,6 @@ class ReportViewManager(QDialog, Ui_frm_MainForm):
         import subprocess
         print(filepath)
         if os.path.exists(filepath):
-            subprocess.Popen(["okular", filepath])
+            subprocess.Popen(["evince", filepath])
         else:
             print(f"File not found: {filepath}")

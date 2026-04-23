@@ -77,14 +77,17 @@ class ReportGenerator:
             target_thickness=applied_thickness,
             tolerance=tolerance
         )
+        thickness_metrics = processor.compute_thickness_metrics()
 
         #---------------------
         thickness_chart_img = processor.export_distribution_chart(bins=bins, save_path=None)
         # tunnel_view_img = f"{BASE_DIR}/intelijet_v2_ws/src/ui/src/ui/tunnel_report/assets/images/tunnel.png"
         tunnel_view_img = processor.export_tunnel_view_image(out_path=None)
         
-        shotcrete_volume = round(processor.volume(),3)
-        avg_thickness = round(processor.avg_thickness(),0)
+        shotcrete_volume = round(thickness_metrics["volume_m3"],1)
+        avg_thickness = round(thickness_metrics["avg_thickness_mm"],0)
+        reached_area = round(thickness_metrics["reached_area_m2"],1)
+        total_area = round(thickness_metrics["total_area_m2"],1)    
         
 
         data = ReportData.from_inputs(
@@ -94,6 +97,8 @@ class ReportGenerator:
             tolerance=tolerance,
             avg_thickness=avg_thickness,
             shotcrete_volume=shotcrete_volume,
+            total_area_m2=total_area,
+            reached_area_m2=reached_area,
             logo=f"{BASE_DIR}/intelijet_v2_ws/src/ui/src/ui/tunnel_report/assets/images/logo.png",
             tunnel_view=tunnel_view_img,
             thickness_chart=thickness_chart_img,

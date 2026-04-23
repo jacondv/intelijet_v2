@@ -60,7 +60,7 @@ class CloudComparePipeline:
             if kpm.is_ready():
                 target_patch, source_patch, T = kpm.get_result()
 
-            # ===== ALIGN =====
+            # ===== ALIGN 2nd TIME =====
             if goal.do_align:
                 fb("align", 0.4)
 

@@ -48,6 +48,8 @@ class ReportData:
         self.logo = None
         self.tunnel_view = None
         self.thickness_chart = None
+        self.total_area_m2 = None
+        self.reached_area_m2 = None
 
     @classmethod
     def from_inputs(cls, site_name, job_name, applied_thickness, tolerance, avg_thickness, shotcrete_volume, logo,tunnel_view,thickness_chart, **kwargs):
@@ -58,6 +60,9 @@ class ReportData:
         obj.tolerance = tolerance
         obj.avg_thickness = avg_thickness
         obj.shotcrete_volume = shotcrete_volume
+        obj.total_area_m2 = kwargs.get("total_area_m2", 0)
+        obj.reached_area_m2 = kwargs.get("reached_area_m2", 0)
+
 
         # Optional
         obj.date = kwargs.get("date")
@@ -107,6 +112,9 @@ class ReportData:
 
         raise TypeError("Image must be path, PIL.Image.Image, or numpy.ndarray")
 
+
+
+    
     def to_json(self):
         # this json should map which report teamplate html
         data = {
@@ -121,7 +129,10 @@ class ReportData:
             "shotcrete_volume": self.shotcrete_volume,
             "tunnel_view_uri": self.tunnel_view,
             "thickness_chart_uri": self.thickness_chart,
-            "create_date": datetime.now().strftime("%d/%m/%Y %H:%M")
+            "create_date": datetime.now().strftime("%d-%b-%Y %H:%M"),
+            "total_area_m2": self.total_area_m2,
+            "reached_area_m2": self.reached_area_m2
+
         }
         return data
 

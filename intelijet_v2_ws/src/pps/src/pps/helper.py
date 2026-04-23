@@ -1300,8 +1300,6 @@ def surface_area(
 
 
 
-
-
 def filter_pcd_by_distance(pcd: 'o3d.t.geometry.PointCloud',
                            d_min: float,
                            d_max: float) -> 'o3d.t.geometry.PointCloud':

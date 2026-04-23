@@ -516,7 +516,7 @@ class App(QMainWindow):
                     applied_thickness = job_info.parameters.get("target_thickness", 10),
                     tolerance = job_info.parameters.get("tolerance", 10),
                     operator = "Unknown",
-                    date = dt.strftime("%d/%m/%Y") if dt else None,
+                    date = dt.strftime("%d/%b/%Y") if dt else None,
                     time = tt.strftime("%H:%M:%S") if tt else None
                 )
             else:
@@ -526,7 +526,7 @@ class App(QMainWindow):
                     applied_thickness = 40,
                     tolerance = 10,
                     operator = "Unknown",
-                    date = dt.strftime("%d/%m/%Y") if dt else None,
+                    date = dt.strftime("%d/%b/%Y") if dt else None,
                     time = tt.strftime("%H:%M:%S") if tt else None
                     
                 )
