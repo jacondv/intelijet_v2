@@ -4,11 +4,13 @@ import rospy
 from pps.data_converter import cloudconverter
 from pps.tunnel_processing import TunnelProcessing
 from pps.helper import compute_heatmap_to_plane
+# from pps.cloud_compare.compare_method_m3c2 import compute_heatmap_m3c2_ep as compute_heatmap_to_plane
 from pps.cloud_processing.utils_align import align_cloud
 from pps.image_processing.keypoint_processing_v3 import KeypointCloudAlignManager
 
 from pps.helper import crop_pointcloud_by_box, check_transform
 from pps.cloud_processing.utils_align import align_cloud, pre_align_cloud
+# from pps.cloud_processing.ceres_aligner import ceres_refine_icp
 
 class CloudComparePipeline:
 
@@ -26,14 +28,13 @@ class CloudComparePipeline:
         # ===== PRE PROCESS =====
         if goal.do_pre_process:
             fb("pre-process", 0.2)
-
             pre_cloud = TunnelProcessing(pre_cloud).run_processing_pipeline()
             post_cloud = TunnelProcessing(post_cloud).run_processing_pipeline()
 
         post_crop = crop_pointcloud_by_box(
             post_cloud,
-            min_bound=(0, -10, 0),
-            max_bound=(11, 10, 3.25)
+            min_bound=(0, -10, -0.3),
+            max_bound=(11, 10, 7)
         )
 
         # ===== 2D KEYPOINT =====
@@ -59,17 +60,17 @@ class CloudComparePipeline:
             if kpm.is_ready():
                 target_patch, source_patch, T = kpm.get_result()
 
-        # ===== ALIGN =====
-        if goal.do_align:
-            fb("align", 0.4)
+            # ===== ALIGN =====
+            if goal.do_align:
+                fb("align", 0.4)
 
-            src = source_patch if source_patch is not None else post_crop
+                src = source_patch if source_patch is not None else post_crop
 
-            T = align_cloud(
-                pre_cloud=pre_cloud,
-                post_cloud=src,
-                return_transform_only=True
-            )
+                T = align_cloud(
+                    pre_cloud=pre_cloud,
+                    post_cloud=src,
+                    return_transform_only=True
+                )
 
             if check_transform(T):
                 post_cloud.transform(T)
@@ -92,5 +93,21 @@ class CloudComparePipeline:
             tolerance_thickness=10,
             k=6
         )
+        # indices = np.where(np.abs(distance) < 25.0)[0]
+        # new_post_cloud = post_cloud.select_by_index(indices)
+
+        # T,sumary = ceres_refine_icp(
+        #     src_cloud=new_post_cloud,
+        #     tgt_cloud=pre_cloud,
+        #     init_T=np.eye(4),
+        #     max_iter=20)
+
+        # print(f"Ceres ICP refine result:\nT:\n{T}\nSummary:\n{sumary}")
+        # cloud_compared, distance = compute_heatmap_to_plane(
+        #         source=pre_cloud,
+        #         target=post_cloud,
+        #         target_thickness=30,
+        #         tolerance_thickness=10,
+        # )
 
         return cloud_compared, distance

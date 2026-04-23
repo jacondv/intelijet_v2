@@ -6,18 +6,17 @@ import numpy as np
 # ===== Global instance với config mặc định =====
 
 PRE_CONFIG = ICPConfig(
-    threshold=[0.5,0.3],
-    max_iters=[1,1],
+    threshold=  [1,    0.5, 0.2,   0.05, 0.02],
+    voxel_radii=[0.2,  0.1, 0.1,   0.02, 0.01],
+    max_iters=  [10, 10, 10, 30,  50],
     align_area=None,
-    voxel_radii=[0.25,0.15]
 )
 
-
 DEFAULT_ICP_CONFIG = ICPConfig(
-    threshold=[0.5,0.3,0.02],
-    max_iters=[20,20,30],
+    threshold=  [0.15,   0.05, 0.05,  0.03, 0.02],
+    voxel_radii=[0.02,  0.02,  0.01, 0.01, 0.01],
+    max_iters=  [20, 20, 20, 100, 100],
     align_area=None,
-    voxel_radii=[0.25,0.15,0.01]
 )
 
 def pre_align_cloud(post_cloud, pre_cloud):

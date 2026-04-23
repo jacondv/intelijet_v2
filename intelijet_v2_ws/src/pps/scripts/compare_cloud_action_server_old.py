@@ -173,7 +173,7 @@ class CompareCloudServer:
                     import cv2
                     import time
                     image_out = self.keypoint_manager.draw_result()
-                    filename = f"/root/intelijet_v2/data/{int(time.time())}_matches.png"
+                    filename = f"/root/intelijet_v2/data/log/{int(time.time())}_matches.png"
                     cv2.imwrite(filename, image_out)
                     ###
                 else:

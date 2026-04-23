@@ -33,7 +33,11 @@ class PointCloudAlignerManager:
     def align(self, source, target, init_transform=np.eye(4,dtype=np.float64)):
         self.__aligned_cloud = self.__aligner.align(source, target, init_transform)
         self.__transform = self.__aligner.get_transformation_matrix()
+        print(f"[ICPAligner] Finished alignment: {self.__aligner.get_result()}")
         return self.__aligned_cloud
+    
+    def get_result(self):
+        return self.__aligner.get_result()
     
 
     

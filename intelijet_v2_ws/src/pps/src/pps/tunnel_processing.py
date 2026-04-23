@@ -392,7 +392,7 @@ class TunnelProcessing:
 
     def get_plane(self,
         pcd,
-        normal_angle_threshold: float = 5.0,
+        normal_angle_threshold: float = 8.0,
         radius: float = 0.2,
         reference_plane: str = "xy",
         min_bound: np.ndarray = [0.0,-5.0,-1.0],
