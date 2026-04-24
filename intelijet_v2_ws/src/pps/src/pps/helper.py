@@ -326,10 +326,25 @@ def compute_heatmap_to_plane(source, target, k=6,target_thickness=0.03, toleranc
     source = cloudconverter.tensor_to_o3d_legacy(source)
     target = cloudconverter.tensor_to_o3d_legacy(target)
 
+    def __orient_normals_inward(pcd, sensor_pos=np.array([0, 0, 0], dtype=np.float32)):
+        points = np.asarray(pcd.points)
+        normals = np.asarray(pcd.normals)
+
+        vec = sensor_pos - points
+
+        dot = np.sum(normals * vec, axis=1)
+
+        normals[dot < 0] *= -1
+
+        pcd.normals = o3d.utility.Vector3dVector(normals)
+
+        return pcd
+
     target.estimate_normals(
         search_param=o3d.geometry.KDTreeSearchParamKNN(knn=k)
     )
     target.orient_normals_consistent_tangent_plane(k=3*k)
+    target = __orient_normals_inward(target)
 
     target_points = np.asarray(target.points)
     target_normals = np.asarray(target.normals)
@@ -365,6 +380,60 @@ def compute_heatmap_to_plane(source, target, k=6,target_thickness=0.03, toleranc
     return source, distances
 
 
+def run_compare(source, target,k=6):
+    # Tính trước normal cho target
+    # start_time = time.time()
+    import open3d as o3d
+    rospy.loginfo("Compare prescan vs postscan...")
+    source = cloudconverter.tensor_to_o3d_legacy(source)
+    target = cloudconverter.tensor_to_o3d_legacy(target)
+
+    def __orient_normals_inward(pcd, sensor_pos=np.array([0, 0, 0], dtype=np.float32)):
+        points = np.asarray(pcd.points)
+        normals = np.asarray(pcd.normals)
+
+        vec = sensor_pos - points
+
+        dot = np.sum(normals * vec, axis=1)
+
+        normals[dot < 0] *= -1
+
+        pcd.normals = o3d.utility.Vector3dVector(normals)
+
+        return pcd
+
+    target.estimate_normals(
+        search_param=o3d.geometry.KDTreeSearchParamKNN(knn=k)
+    )
+    target.orient_normals_consistent_tangent_plane(k=3*k)
+    target = __orient_normals_inward(target)
+
+    target_points = np.asarray(target.points)
+    target_normals = np.asarray(target.normals)
+    target_tree = cKDTree(target_points)
+    source_points = np.asarray(source.points)
+
+    distances = []
+
+    distances_nn, indices = target_tree.query(source_points, k=1) # We don't need distances_nn here because we compute point-to-plane distance
+
+    centroids = target_points[indices] 
+    normals   = target_normals[indices] 
+    diff = source_points - centroids 
+    distances = np.sum(diff * normals, axis=1)  # (N,)
+    distances = distances.astype(np.float32)
+    
+    source = cloudconverter.o3d_legacy_to_tensor(source)
+    distances_mm = np.round(distances * 1000).astype(np.float32)
+    distances_mm = distances_mm.reshape(-1, 1)
+
+    n_points = source.point["positions"]
+    if len(distances) != len(n_points):
+        raise ValueError(f"Number of element distances ({len(distances)}) does not match number of point clouds ({n_points})")
+
+    source.point["distances"] = o3d.core.Tensor(distances_mm, dtype=o3d.core.Dtype.Float32)
+
+    return source, distances
 
 def smooth_cloud(tcloud, k=8, m=3, threshold=20.0):
     """
@@ -413,48 +482,6 @@ def smooth_cloud(tcloud, k=8, m=3, threshold=20.0):
         
     return tcloud
 
-
-
-# def compute_heatmap_to_plane_old_version(source, target, k=10):
-
-#     import open3d as o3d
-
-#     # Tính trước normal cho target
-#     target.estimate_normals(
-#         search_param=o3d.geometry.KDTreeSearchParamKNN(knn=k)
-#     )
-
-#     target_points = np.asarray(target.points)
-#     target_normals = np.asarray(target.normals)
-#     target_tree = o3d.geometry.KDTreeFlann(target)
-
-#     source_points = np.asarray(source.points)
-
-#     distances = []
-
-#     for pt in source_points:
-#         # Tìm điểm gần nhất trong target
-#         [_, idx, _] = target_tree.search_knn_vector_3d(pt, 1)
-#         nearest_idx = idx[0]
-
-#         centroid = target_points[nearest_idx]
-#         normal = target_normals[nearest_idx]
-
-#         # Khoảng cách point-to-plane
-#         dist = np.abs(np.dot(pt - centroid, normal))
-#         distances.append(dist)
-
-#     distances = np.array(distances, dtype=np.float32)
-
-#     # Scale và tô màu heatmap
-#     distances_log = np.log1p(distances)
-#     distances_normalized = (distances_log - distances_log.min()) / (distances_log.ptp() + 1e-9)
-
-#     cmap = plt.get_cmap("jet")
-#     colors = cmap(distances_normalized)[:, :3]
-
-#     source.colors = o3d.utility.Vector3dVector(colors)
-#     return source, distances
 
 
 def assign_colors_by_threshold(pcd, distances, threshold=[0.03, 0.04]):
@@ -871,6 +898,7 @@ def assign_colors(tcloud, clip_max=150, highlight_range=(20, 40)):
     Returns:
         tcloud with updated 'colors' field (in-place)
     """
+    print("Assigning colors based on distances...")
     import open3d as o3d
     if 'distances' not in tcloud.point:
         raise ValueError("PointCloud must have 'distances' field")
@@ -882,89 +910,6 @@ def assign_colors(tcloud, clip_max=150, highlight_range=(20, 40)):
     tcloud.point['colors'] = o3d.core.Tensor(colors.astype(np.float32))
     return tcloud
 
-# def assign_colors(tcloud, clip_max=150, highlight_range=(20, 40)):
-#     """
-#     Map the 'distances' field of a tensor PointCloud to 'colors'.
-
-#     Args:
-#         tcloud: o3d.t.geometry.PointCloud, must have 'distances' field
-#         clip_max: maximum distance to clip
-#         highlight_range: (low, high) range for pure green
-
-#     Returns:
-#         tcloud with updated 'colors' field (in-place)
-#     """
-#     import open3d as o3d
-#     import numpy as np
-
-#     # ---- Validate input type ----
-#     if tcloud is None:
-#         raise ValueError("tcloud is None")
-
-#     if not isinstance(tcloud, o3d.t.geometry.PointCloud):
-#         raise TypeError(
-#             f"tcloud must be o3d.t.geometry.PointCloud, got {type(tcloud)}"
-#         )
-
-#     # ---- Validate required field ----
-#     if 'distances' not in tcloud.point:
-#         raise KeyError(
-#             "PointCloud is missing required field 'distances'"
-#         )
-
-#     # ---- Validate highlight range ----
-#     if (
-#         not isinstance(highlight_range, (tuple, list))
-#         or len(highlight_range) != 2
-#         or highlight_range[0] >= highlight_range[1]
-#     ):
-#         raise ValueError(
-#             f"highlight_range must be (low, high), got {highlight_range}"
-#         )
-
-#     # ---- Validate clip_max ----
-#     if clip_max <= 0:
-#         raise ValueError("clip_max must be > 0")
-
-#     # ---- Convert distances safely ----
-#     try:
-#         distances = tcloud.point['distances']
-#         distances_np = distances.cpu().numpy()
-#     except Exception as e:
-#         raise RuntimeError(
-#             "Failed to convert 'distances' tensor to numpy array"
-#         ) from e
-
-#     # ---- Map distances to colors ----
-#     try:
-#         colors = map_distances_to_colors(
-#             distances_np,
-#             clip_max=clip_max,
-#             highlight_range=highlight_range
-#         )
-#     except Exception as e:
-#         raise RuntimeError(
-#             "map_distances_to_colors() failed"
-#         ) from e
-
-#     # ---- Validate output colors ----
-#     if colors.ndim != 2 or colors.shape[1] != 3:
-#         raise ValueError(
-#             f"colors must have shape (N,3), got {colors.shape}"
-#         )
-
-#     # ---- Assign colors back to tensor cloud ----
-#     try:
-#         tcloud.point['colors'] = o3d.core.Tensor(
-#             colors.astype(np.float32),
-#             device=tcloud.device
-#         )
-#     except Exception as e:
-#         raise RuntimeError(
-#             "Failed to assign colors to tcloud.point['colors']"
-#         ) from e
-
-#     return tcloud
 
 def remove_point(pcd, key_points, radius):
     import open3d as o3d
@@ -1343,3 +1288,63 @@ def filter_pcd_by_distance(pcd: 'o3d.t.geometry.PointCloud',
     pcd_out = pcd_out.select_by_mask(mask)
 
     return pcd_out
+
+
+def remove_small_clusters(
+    pcd,
+    eps,
+    min_points=30,
+    min_cluster_size=1000
+):
+    """
+    Remove small disconnected clusters from Open3D Tensor PointCloud.
+
+    Parameters
+    ----------
+    tpcd : o3d.t.geometry.PointCloud
+        Input tensor point cloud (có thể có custom fields)
+    eps : float
+        DBSCAN distance threshold
+    min_points : int
+        DBSCAN min_points
+    min_cluster_size : int
+        Cluster có số điểm < ngưỡng này sẽ bị loại
+
+    Returns
+    -------
+    tpcd_clean : o3d.t.geometry.PointCloud
+        Cloud đã lọc (giữ lại field gốc)
+    """
+
+    import numpy as np
+    import open3d as o3d
+
+    # --- Convert sang legacy để chạy DBSCAN ---
+    legacy = pcd.to_legacy()
+
+    # --- DBSCAN ---
+    labels = np.array(
+        legacy.cluster_dbscan(eps=eps, min_points=min_points)
+    )
+
+    # --- Bỏ noise ---
+    valid_mask = labels >= 0
+    valid_labels = labels[valid_mask]
+
+    if len(valid_labels) == 0:
+        # không có cluster hợp lệ → return rỗng
+        return pcd.select_by_index([])
+
+    # --- Đếm size từng cluster ---
+    counts = np.bincount(valid_labels)
+
+    # --- Giữ cluster đủ lớn ---
+    keep_clusters = np.where(counts >= min_cluster_size)[0]
+
+    # --- Lấy index cần giữ ---
+    keep_indices = np.where(np.isin(labels, keep_clusters))[0]
+
+    # --- Select từ cloud gốc (giữ toàn bộ field custom) ---
+    tpcd_clean = pcd.select_by_index(keep_indices.tolist())
+
+    return tpcd_clean

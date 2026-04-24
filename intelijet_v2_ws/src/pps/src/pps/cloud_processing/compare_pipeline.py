@@ -3,7 +3,7 @@ import rospy
 
 from pps.data_converter import cloudconverter
 from pps.tunnel_processing import TunnelProcessing
-from pps.helper import compute_heatmap_to_plane
+from pps.helper import compute_heatmap_to_plane, remove_small_clusters
 # from pps.cloud_compare.compare_method_m3c2 import compute_heatmap_m3c2_ep as compute_heatmap_to_plane
 from pps.cloud_processing.utils_align import align_cloud
 from pps.image_processing.keypoint_processing_v3 import KeypointCloudAlignManager
@@ -85,7 +85,7 @@ class CloudComparePipeline:
 
         # ===== COMPARE =====
         fb("compare", 0.7)
-
+        post_cloud = remove_small_clusters(post_cloud,eps=0.2,min_points=4,min_cluster_size=10000)
         cloud_compared, distance = compute_heatmap_to_plane(
             source=post_cloud,
             target=pre_cloud,

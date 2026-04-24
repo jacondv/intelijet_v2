@@ -48,9 +48,9 @@ class PLYProcessor:
         return 
 
 
-    def export_distribution_chart(self,bins, save_path=None):
+    def export_distribution_chart(self,bins):
         # self.pcd = self.load_ply(self.ply_path)
-        img,_,_ = self.__plot_distance_distribution(self.distances, bins, save_path=None)
+        img,_,_ = self.__plot_distance_distribution(self.distances, bins)
         return img #image is base64 format for report teamplate html
     
 
@@ -59,40 +59,6 @@ class PLYProcessor:
         img_base64 = self.__render_pointcloud_to_image(self.pcd, out_path=out_path)
         return img_base64
     
-        
-    def avg_thickness(self): # return in mm
-        if self.distances is None or self.distances.size == 0:
-            return None  # hoặc 0.0 nếu pipeline bắt buộc number
-
-        # minimum valid thickness (mm)
-        min_thickness_mm = max(self.target_thickness - 1 * self.tolerance,20)
-
-        # mask valid distances
-        abs_dist = np.abs(self.distances)
-        mask_valid = (abs_dist >= min_thickness_mm)
-        valid_ratio = np.mean(mask_valid) * 100
-
-        MIN_VALID_RATIO = 1.0  # % – chỉnh theo yêu cầu kỹ thuật
-        if valid_ratio < MIN_VALID_RATIO:
-            return 0  # không đủ dữ liệu để ước tính
-
-
-        mean_thickness_mm = np.mean(self.distances[mask_valid]) #mm
-
-        return mean_thickness_mm
-
-    def area(self):
-        area = surface_area(self.pcd, radii=(0.1, 0.15))
-        return area
-
-
-    def volume(self):
-        """
-        Estimate sprayed volume (m³) from distance map.
-        Distances are in mm.
-        """
-
-        import open3d as o3d
 
     def compute_thickness_metrics(self):
         if self.distances is None or self.distances.size == 0:
@@ -123,97 +89,99 @@ class PLYProcessor:
                 "reached_area_m2": valid_area,
                 "volume_m3": volume_m3
             }
-    
-    def __plot_distance_distribution(self,distances, bins, save_path=None):
-        """
-        Plot distance distribution with arbitrary bin edges.
-        distances_m: array of distances in meters
-        bins_m: list of bin edges in meters (e.g., [0.02, 0.04, 0.06])
-        save_path: nếu khác None, lưu hình ảnh ra file (png/jpg/pdf)
-        Distances converted to millimeters.
-        """
+        
+    def __plot_distance_distribution(self, distances, bins):
         import numpy as np
         import matplotlib.pyplot as plt
-        import io
+        import tempfile
         import base64
+        import os
 
-        # Convert to millimeters
-        if self.distances is None or len(self.distances) == 0:
+        # ---- Empty case ----
+        if distances is None or len(distances) == 0:
             from PIL import Image
-            from io import BytesIO
 
-            img = Image.new("RGB", (100, 100), (255, 255, 255))  # RGB trắng hoàn toàn
-            buffered = BytesIO()
-            img.save(buffered, format="PNG")
-            img_base64 = base64.b64encode(buffered.getvalue()).decode("utf-8")
+            tmp = tempfile.NamedTemporaryFile(suffix=".png", delete=False)
+            tmp_path = tmp.name
+            tmp.close()
 
-            return f"data:image/png;base64,{img_base64}", 0, 0 
+            img = Image.new("RGB", (200, 200), (255, 255, 255))
+            img.save(tmp_path)
+
+            with open(tmp_path, "rb") as f:
+                img_base64 = base64.b64encode(f.read()).decode("utf-8")
+
+            os.remove(tmp_path)
+
+            return f"data:image/png;base64,{img_base64}", [0], [0]
+
         total = len(distances)
 
         counts = []
         labels = []
 
-        # < first bin
+        # bins
         counts.append(np.sum(distances < bins[0]))
         labels.append(f"< {bins[0]:.0f} mm")
 
-        # middle bins
         for i in range(len(bins) - 1):
             low, high = bins[i], bins[i + 1]
             counts.append(np.sum((distances >= low) & (distances < high)))
             labels.append(f"[{low:.0f}, {high:.0f}) mm")
 
-        # >= last bin
         counts.append(np.sum(distances >= bins[-1]))
         labels.append(f">= {bins[-1]:.0f} mm")
 
-        # Percentages
         percents = [c / total * 100 for c in counts]
 
-        # 🎨 Màu riêng cho từng cột
-        colors = ["#CA150F", "#39EB16", "#09BCF3", "#1120F0", "#C110E0", "#BB00D4"]
+        colors = ["#ff6060", "#64ffa0", "#315aff", "#315aff", "#315aff", "#315aff"]
         colors = (colors * ((len(labels) // len(colors)) + 1))[:len(labels)]
 
-        # Plot bar chart
-        fig, ax = plt.subplots()
-        bars = ax.bar(labels, counts, color=colors, edgecolor='none', width=0.2)
-        plt.rcParams.update({'font.size': 14})
+        # ---- Plot ----
+        fig, ax = plt.subplots(figsize=(8, 4.5))
+        bars = ax.bar(labels, counts, color=colors, edgecolor='none', width=0.5)
 
-        # Annotate bars
         for bar, count, pct in zip(bars, counts, percents):
             height = bar.get_height()
-            ax.text(bar.get_x() + bar.get_width()/2, height + total * 0.01,
-                    f"({pct:.1f}%)",
-                    ha='center', va='bottom', fontsize=14)
+            ax.text(
+                bar.get_x() + bar.get_width()/2,
+                height + total * 0.01,
+                f"{int(height):,}\n({pct:.0f}%)",
+                ha='center',
+                va='bottom',
+                fontsize=12
+            )
 
-        ax.set_ylim(0, max(counts) * 1.2)
-        ax.set_xlabel("Distance Range (mm)", fontsize=14)
-        ax.set_ylabel("Number of Points", fontsize=14)
-        ax.set_title("Distance Distribution of Point Cloud", fontsize=14)
+        ax.set_ylim(0, max(counts) * 1.2 if max(counts) > 0 else 1)
+        ax.set_xlabel("Thickness Range (mm)")
+        ax.set_ylabel("Number of Points")
+        ax.set_title("Thickness Distribution")
+        ax.grid(axis='y', linestyle='--', alpha=0.3)
+
         plt.tight_layout()
 
-        # Chuyển figure thành PIL Image
-        buf = io.BytesIO()
-        fig.savefig(buf, format='png', dpi=150)
-        buf.seek(0)
-        img_base64 = base64.b64encode(buf.read()).decode('utf-8')
+        # ---- Save to temp file ----
+        tmp = tempfile.NamedTemporaryFile(suffix=".png", delete=False)
+        tmp_path = tmp.name
+        tmp.close()
+
+        fig.savefig(tmp_path, dpi=150)
         plt.close(fig)
 
-        # Lưu hình ảnh nếu save_path khác None
-        if save_path:
-            fig.savefig(save_path, dpi=300)
-            plt.close(fig)  # đóng figure để không hiển thị
-        # else:
-        #     plt.show()  # nếu không có path thì show bình thường
+        # ---- Convert to base64 ----
+        with open(tmp_path, "rb") as f:
+            img_base64 = base64.b64encode(f.read()).decode("utf-8")
 
-        return f"data:image/png;base64,{img_base64}", counts, percents 
+        os.remove(tmp_path)
+
+        return f"data:image/png;base64,{img_base64}", counts, percents
 
 
     def __render_pointcloud_to_image(self, pcd, out_path=None,
                                     width=800, height=600,
                                     fov_deg=60.0,
                                     point_size=2.0,
-                                    background=(1.0, 1.0, 1.0, 1.0)):
+                                    background=(255.0, 255.0, 255.0, 1.0)):
         """
         Render an Open3D pointcloud to an image (base64 + optional file).
         Supports both legacy and tensor pointclouds.

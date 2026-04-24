@@ -14,9 +14,9 @@ class ReportGenerator:
         self.job_name=None      
         self.applied_thickness=30
         self.tolerance=10
-        self.date = datetime.now().strftime("%d/%m/%Y")
+        self.date = datetime.now().strftime("%d-%b-%Y")
         self.time = datetime.now().strftime("%H:%M:%S")
-        self.create_date = datetime.now().strftime("%d/%m/%Y")
+        self.create_date = datetime.now().strftime("%d-%b-%Y")
 
 
     def set_info(self, site_name="Unknown", job_name="Unknown",operator="Unknown",date=None, time=None,applied_thickness=30,tolerance=10):
@@ -26,7 +26,7 @@ class ReportGenerator:
         self.tolerance=tolerance
         self.date = date or self.date
         self.time = time or self.time
-        self.create_date = datetime.now().strftime("%d/%m/%Y")
+        self.create_date = datetime.now().strftime("%d-%b-%Y")
         self.operator=operator
 
     def get_info(self) -> dict:
@@ -80,8 +80,7 @@ class ReportGenerator:
         thickness_metrics = processor.compute_thickness_metrics()
 
         #---------------------
-        thickness_chart_img = processor.export_distribution_chart(bins=bins, save_path=None)
-        # tunnel_view_img = f"{BASE_DIR}/intelijet_v2_ws/src/ui/src/ui/tunnel_report/assets/images/tunnel.png"
+        thickness_chart_img = processor.export_distribution_chart(bins=bins)
         tunnel_view_img = processor.export_tunnel_view_image(out_path=None)
         
         shotcrete_volume = round(thickness_metrics["volume_m3"],1)

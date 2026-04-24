@@ -2,7 +2,7 @@
 import vtk
 from vtk.qt.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
 from PyQt5.QtCore import Qt
-from PyQt5.QtWidgets import QWidget, QVBoxLayout, QPushButton, QGestureEvent, QPinchGesture
+from PyQt5.QtWidgets import QWidget, QVBoxLayout, QPushButton, QGestureEvent, QPinchGesture, QPanGesture
 
 import rospy
 # # Subclass QVTKRenderWindowInteractor để bắt resize
@@ -51,6 +51,7 @@ class QVTKWidget(QVTKRenderWindowInteractor):
         # 🔥 bắt buộc để nhận touch thật
         self.setAttribute(Qt.WA_AcceptTouchEvents, True)
         self.grabGesture(Qt.PinchGesture)
+        self.grabGesture(Qt.PanGesture)
 
     def resizeEvent(self, event):
         super().resizeEvent(event)
@@ -70,6 +71,11 @@ class QVTKWidget(QVTKRenderWindowInteractor):
             self._handle_pinch(pinch)
             return True
 
+        pan = event.gesture(Qt.PanGesture)
+        if pan:
+            self._handle_pan(pan)
+            return True
+
         return False
 
     def _handle_pinch(self, pinch: QPinchGesture):
@@ -85,7 +91,24 @@ class QVTKWidget(QVTKRenderWindowInteractor):
             if self._vtk_viewer:
                 self._vtk_viewer.on_pinch_zoom(factor)
 
+    def _handle_pan(self, pan: QPanGesture):
 
+        if pan.state() == Qt.GestureUpdated:
+            delta = pan.delta()
+
+            dx = delta.x()
+            dy = delta.y()
+
+            # ignore noise nhỏ
+            if abs(dx) < 1 and abs(dy) < 1:
+                return
+
+            # scale để control tốc độ drag
+            dx *= 0.5
+            dy *= 0.5
+
+            if self._vtk_viewer:
+                self._vtk_viewer.on_pan(dx, dy)
 
 class VTKViewer:
     def __init__(self, parent_widget: QWidget):
@@ -170,6 +193,27 @@ class VTKViewer:
 
         self.vtkWidget.GetRenderWindow().Render()
 
+    def on_pan(self, dx, dy):
+        cam = self.renderer.GetActiveCamera()
+
+        # hệ số điều khiển tốc độ drag
+        sensitivity = 0.2
+
+        if cam.GetParallelProjection():
+            # 🟢 Orthographic: pan = translate view bằng rotate nhẹ
+            cam.Azimuth(-dx * sensitivity)
+            cam.Elevation(dy * sensitivity)
+
+            self.renderer.ResetCameraClippingRange()
+
+        else:
+            # 🔵 Perspective: orbit camera quanh target
+            cam.Azimuth(-dx * sensitivity)
+            cam.Elevation(dy * sensitivity)
+
+            self.renderer.ResetCameraClippingRange()
+
+        self.vtkWidget.GetRenderWindow().Render()
 
     def move_button_to_bottom_right(self, margin=10):
         margin = 10
@@ -264,7 +308,7 @@ class VTKViewer:
 
         actor = vtk.vtkActor()
         actor.SetMapper(mapper)
-        actor.GetProperty().SetPointSize(2)
+        actor.GetProperty().SetPointSize(3)
 
         if self.current_actor:
             self.renderer.RemoveActor(self.current_actor)

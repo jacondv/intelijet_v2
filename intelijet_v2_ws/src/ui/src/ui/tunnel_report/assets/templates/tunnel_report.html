@@ -144,20 +144,19 @@
             <td>{{ data.reached_area_m2 }} / {{ data.total_area_m2 }}</td>
         </tr>
     </table>
-
-    <!-- SECTION 1: TUNNEL VIEW -->
-    <div class="section">
-        <div class="section-title">TUNNEL VIEW</div>
-        <div class="image-container">
-            <img src="{{ data.tunnel_view_uri }}" alt="Tunnel View">
-        </div>
-    </div>
-
-    <!-- SECTION 2: THICKNESS DISTRIBUTION -->
+    <!-- SECTION 1: THICKNESS DISTRIBUTION -->
     <div class="section">
         <div class="section-title">SHOTCRETE THICKNESS DISTRIBUTION</div>
         <div class="image-container">
             <img src="{{ data.thickness_chart_uri }}" alt="Thickness Chart">
+        </div>
+    </div>
+
+    <!-- SECTION 2: TUNNEL VIEW -->
+    <div class="section">
+        <div class="section-title">TUNNEL VIEW</div>
+        <div class="image-container">
+            <img src="{{ data.tunnel_view_uri }}" alt="Tunnel View">
         </div>
     </div>
 
