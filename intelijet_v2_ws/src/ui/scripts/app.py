@@ -78,6 +78,7 @@ class App(QMainWindow):
         super().__init__()
         self.report_name = ""
         self.current_post_scan_path = ""
+        self.isManualCompare = False
 
 
         # --- UI chính ---
@@ -322,17 +323,27 @@ class App(QMainWindow):
             # Save cloud to file ply
             from ui.models.file_name  import generate_filename
 
-            filepath = generate_filename(
-                folder=jobs_folder,
-                job=job_number,
-                scan_type=topic_name,  # hoặc "postscan" tùy theo logic của bạn
-                ext="ply"
-            )
+            if self.isManualCompare is False:
+                filepath = generate_filename(
+                    folder=jobs_folder,
+                    job=job_number,
+                    scan_type=topic_name,  # hoặc "postscan" tùy theo logic của bạn
+                    ext="ply"
+                )
+            else:
+                filepath = generate_filename(
+                    folder="",job="",scan_type="",ext="ply",
+                    filepath=self.current_post_scan_path)
+
+                self.current_post_scan_path=""
+
+
             if polydata:
                 f_name = self.save_job(o3d_cloud, filepath=filepath)
 
             if topic_name in [CLOUD_COMPARED_TOPIC, CLOUD_COMPARED_TOPIC_MANUAL]:
                 self.report_name = f_name
+                self.isManualCompare = False 
 
   
 
@@ -573,7 +584,10 @@ class App(QMainWindow):
             prescan_path, postscan_path, *_ = data
             if prescan_path is None or postscan_path is None:
                 return
-             
+            
+            self.isManualCompare = True
+            self.current_post_scan_path = postscan_path
+
             # cloud_compare.set_prescan(pre)
             # cloud_compare.set_postscan(post)
             # if self.ui.cbbAutoAlign.currentText().lower() == "on":
@@ -601,7 +615,6 @@ class App(QMainWindow):
             )
 
             # ✅ connect signal
-            self.current_post_scan_path = postscan_path
             self.worker.progress.connect(self.on_compare_process)
             self.worker.finished.connect(self.on_compare_done)
 
