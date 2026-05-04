@@ -49,7 +49,7 @@ class EncoderProcessNode:
 
 
 if __name__ == "__main__":
-    encoder_type = EncoderEROB()
-    # encoder_type = Encoder58x8()
+    # encoder_type = EncoderEROB()
+    encoder_type = Encoder58x8()
     node = EncoderProcessNode(encoder=encoder_type)
     rospy.spin()

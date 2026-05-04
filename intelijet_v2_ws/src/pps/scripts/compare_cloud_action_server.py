@@ -65,6 +65,11 @@ class CompareCloudServer:
 
         try:
             pre = self.pre_cloud
+            for i in range(10):
+                if self.post_cloud is not None:
+                    break
+                rospy.sleep(1)
+ 
             post = self.post_cloud
 
             if pre is None or post is None:
@@ -92,6 +97,7 @@ class CompareCloudServer:
             res.success = True
             res.job_id = job_id
             self.server.set_succeeded(res)
+            self.post_cloud = None
 
         except Exception as e:
             rospy.logerr(str(e))
