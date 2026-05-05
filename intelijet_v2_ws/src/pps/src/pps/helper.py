@@ -1464,3 +1464,58 @@ def remove_small_clusters(
         return pcd.select_by_index(keep_indices.tolist())
     else:
         return pcd.select_by_index(keep_indices)
+
+
+def keep_largest_cluster(
+    pcd,
+    eps,
+    min_points=30000
+):
+    """
+    Chỉ giữ lại cluster lớn nhất.
+
+    Hỗ trợ:
+    - o3d.t.geometry.PointCloud
+    - o3d.geometry.PointCloud
+
+    Return cùng kiểu với input.
+    """
+
+    import numpy as np
+    import open3d as o3d
+
+    # --- Detect type ---
+    is_tensor = isinstance(pcd, o3d.t.geometry.PointCloud)
+
+    # --- Convert sang legacy nếu cần ---
+    legacy = pcd.to_legacy() if is_tensor else pcd
+
+    # --- DBSCAN ---
+    labels = np.array(
+        legacy.cluster_dbscan(
+            eps=eps,
+            min_points=min_points
+        )
+    )
+
+    # --- Bỏ noise ---
+    valid_labels = labels[labels >= 0]
+
+    # Không có cluster
+    if len(valid_labels) == 0:
+        return pcd.select_by_index([])
+
+    # --- Đếm số lượng point từng cluster ---
+    counts = np.bincount(valid_labels)
+
+    # --- Cluster lớn nhất ---
+    largest_cluster = np.argmax(counts)
+
+    # --- Index point thuộc cluster lớn nhất ---
+    keep_indices = np.where(labels == largest_cluster)[0]
+
+    # --- Return đúng kiểu input ---
+    if is_tensor:
+        return pcd.select_by_index(keep_indices.tolist())
+    else:
+        return pcd.select_by_index(keep_indices)
