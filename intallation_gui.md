@@ -54,3 +54,151 @@ sudo apt install evince
 ```bash
 pip3 install watchdog
 ``` -->
+
+
+# USB Data Copier - Installation Guide
+
+## 1. Copy Project Folder
+
+Copy the folder:
+
+```text
+intelijet_usbcopier
+```
+
+into your home directory:
+
+```text
+/home/<your_user>/
+```
+
+
+---
+
+## 2. Open Terminal
+
+Open a terminal window and go to the project folder:
+
+```bash
+cd ~/intelijet_usbcopier
+```
+
+---
+
+## 3. Run Installation Script
+
+Execute:
+
+```bash
+chmod +x install.sh
+./install.sh
+```
+
+---
+
+## 4. Verify Installation
+
+Plug in a USB drive.
+
+If the USB Data Copier window appears automatically, the installation is successful.
+
+---
+
+## 5. Check Service Status
+
+To verify that the service is running:
+
+```bash
+sudo systemctl status usb-copier.service
+```
+
+You should see:
+
+```text
+active (running)
+```
+
+---
+
+# Useful Commands
+
+## Restart Service
+
+```bash
+sudo systemctl restart usb-copier.service
+```
+
+## Stop Service
+
+```bash
+sudo systemctl stop usb-copier.service
+```
+
+## Start Service
+
+```bash
+sudo systemctl start usb-copier.service
+```
+
+## View Logs
+
+```bash
+journalctl -u usb-copier.service -f
+```
+
+---
+
+# Uninstall
+
+To remove the application service:
+
+```bash
+cd ~/intelijet_usbcopier
+chmod +x uninstall.sh
+./uninstall.sh
+```
+
+This will:
+- stop the service
+- disable auto start
+- remove the systemd service
+
+---
+
+# Run Manually (Without Service)
+
+```bash
+python3 usb_copier.py
+```
+
+or:
+
+```bash
+python3 usb_copier.py /path/to/source/data
+```
+
+---
+
+# Notes
+
+## If GUI Does Not Appear
+
+Run:
+
+```bash
+xhost +local:
+```
+
+Then restart the service:
+
+```bash
+sudo systemctl restart usb-copier.service
+```
+
+---
+
+# Service File Location
+
+```text
+/etc/systemd/system/usb-copier.service
+```
