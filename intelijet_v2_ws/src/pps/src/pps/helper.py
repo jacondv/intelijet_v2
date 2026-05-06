@@ -1414,7 +1414,7 @@ def filter_pcd_by_distance(pcd: 'o3d.t.geometry.PointCloud',
 
     # Áp mask cho toàn bộ point attributes
     pcd_out = pcd_out.select_by_mask(mask)
-
+    pcd_out = remove_small_clusters(pcd_out, eps=0.2, min_points=10, min_cluster_size=1000)
     return pcd_out
 
 
@@ -1460,25 +1460,28 @@ def remove_small_clusters(
     keep_indices = np.where(np.isin(labels, keep_clusters))[0]
 
     # --- Return đúng kiểu input ---
+
     if is_tensor:
         return pcd.select_by_index(keep_indices.tolist())
     else:
         return pcd.select_by_index(keep_indices)
+    
 
 
 def keep_largest_cluster(
     pcd,
-    eps,
-    min_points=30000
-):
+    eps=0.1,
+    min_points=30,
+    max_cluster_size=100
+    ):
     """
-    Chỉ giữ lại cluster lớn nhất.
+    Giữ lại:
+    - Các cluster có số điểm <= max_cluster_size
+    - Cluster lớn nhất (dù lớn hơn max_cluster_size)
 
-    Hỗ trợ:
-    - o3d.t.geometry.PointCloud
-    - o3d.geometry.PointCloud
-
-    Return cùng kiểu với input.
+    Hỗ trợ cả:
+    - o3d.t.geometry.PointCloud (tensor)
+    - o3d.geometry.PointCloud (legacy)
     """
 
     import numpy as np
@@ -1492,27 +1495,28 @@ def keep_largest_cluster(
 
     # --- DBSCAN ---
     labels = np.array(
-        legacy.cluster_dbscan(
-            eps=eps,
-            min_points=min_points
-        )
+        legacy.cluster_dbscan(eps=eps, min_points=min_points)
     )
 
-    # --- Bỏ noise ---
+    # --- Lọc cluster hợp lệ ---
     valid_labels = labels[labels >= 0]
-
-    # Không có cluster
     if len(valid_labels) == 0:
         return pcd.select_by_index([])
 
-    # --- Đếm số lượng point từng cluster ---
     counts = np.bincount(valid_labels)
 
-    # --- Cluster lớn nhất ---
+    # --- Chọn cluster lớn nhất ---
     largest_cluster = np.argmax(counts)
 
-    # --- Index point thuộc cluster lớn nhất ---
-    keep_indices = np.where(labels == largest_cluster)[0]
+    # --- Các cluster nhỏ hơn ngưỡng ---
+    small_clusters = np.where(counts <= max_cluster_size)[0]
+
+    # --- Giữ lại cluster nhỏ + cluster lớn nhất ---
+    keep_clusters = np.unique(
+        np.concatenate([small_clusters, [largest_cluster]])
+    )
+
+    keep_indices = np.where(np.isin(labels, keep_clusters))[0]
 
     # --- Return đúng kiểu input ---
     if is_tensor:

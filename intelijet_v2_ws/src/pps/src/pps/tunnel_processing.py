@@ -633,17 +633,18 @@ class TunnelProcessing:
         # minbound = [2.1, right_center[1]-0.3, ground_center[2]+0.3]
         # maxbound = [back_center[0]-0.2, left_center[1]+0.3, 6.2]
         minbound = [
-            safe_bound_value(front_center, 0, -0.3, 0.5),
-            safe_bound_value(right_center, 1, -0.5, -5.0),   # fallback khi right_center None
+            safe_bound_value(front_center, 0, -0.5, 0.5),
+            safe_bound_value(right_center, 1, -1.0, -5.0),   # fallback khi right_center None
             safe_bound_value(ground_center, 2, +0.3, 0.0)
         ]
 
 
         maxbound = [
-            safe_bound_value(back_center, 0, -0.3, 10.0),
-            safe_bound_value(left_center, 1, +0.5, 5.0),
-            11.0
+            safe_bound_value(back_center, 0, -0.1, 10.0),
+            safe_bound_value(left_center, 1, +1.0, 5.0),
+            15.0
         ]
+
         print(minbound, maxbound)
         cloud = self.crop(pcd=self.pcd, min_bound=minbound, max_bound=maxbound, normal=self.ground_plane_normal)
 

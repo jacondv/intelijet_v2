@@ -3,7 +3,7 @@ import rospy
 
 from pps.data_converter import cloudconverter
 from pps.tunnel_processing import TunnelProcessing
-from pps.helper import run_compare, remove_small_clusters
+from pps.helper import run_compare, keep_largest_cluster
 # from pps.cloud_compare.compare_method_m3c2 import compute_heatmap_m3c2_ep as compute_heatmap_to_plane
 from pps.cloud_processing.utils_align import align_cloud
 from pps.image_processing.keypoint_processing_v3 import KeypointCloudAlignManager
@@ -42,7 +42,7 @@ class CloudComparePipeline:
                 camera_intrinsics=None,
                 lidar_to_cam_extrinsic=None,
                 dist_coeffs=np.zeros(5),
-                feature_method="SIFT",
+                feature_method="SIFT", # SIFT is now not used.
                 pixel_radius=100,
                 cloud_radius=0.5,
                 match_ratio=0.5
@@ -88,7 +88,8 @@ class CloudComparePipeline:
         # ===== COMPARE =====
         fb("compare", 0.7)
 
-        post_cloud = remove_small_clusters(post_cloud,eps=0.2,min_points=4,min_cluster_size=10000)
+        post_cloud = keep_largest_cluster(post_cloud, eps=0.1, min_points=10,max_cluster_size=100)
+                
         cloud_compared, distance = run_compare(
             source=post_cloud,
             target=pre_cloud
