@@ -25,12 +25,6 @@ class CloudComparePipeline:
         T_pre_align = pre_align_cloud(post_cloud=post_cloud, pre_cloud=pre_cloud)
         post_cloud.transform(T_pre_align)
 
-        # ===== PRE PROCESS =====
-        if goal.do_pre_process:
-            fb("pre-process", 0.2)
-            pre_cloud = TunnelProcessing(pre_cloud).run_processing_pipeline()
-            post_cloud = TunnelProcessing(post_cloud).run_processing_pipeline()
-
         post_crop = crop_pointcloud_by_box(
             post_cloud,
             min_bound=(0, -10, -0.3),
@@ -74,6 +68,14 @@ class CloudComparePipeline:
 
             if check_transform(T):
                 post_cloud.transform(T)
+
+
+        # ===== PRE PROCESS (Crop ground)=====
+        if goal.do_pre_process:
+            fb("pre-process", 0.5)
+            # pre_cloud = TunnelProcessing(pre_cloud).run_processing_pipeline()
+            post_cloud = TunnelProcessing(post_cloud).run_processing_pipeline()
+
 
         # ===== POST PROCESS =====
         if goal.do_post_process:
