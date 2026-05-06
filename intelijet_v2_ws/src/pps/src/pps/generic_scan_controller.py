@@ -197,8 +197,11 @@ class GenericScanController(ABC):
         rospy.sleep(1)
         if self._thread is None or not self._thread.is_alive():
             log_status(name=cfg.NOTIFICATION, message="Job canceled")
+            rospy.sleep(2)
+            log_status(name=cfg.NOTIFICATION, message="...")
             return True
         else:
             log_status(name=cfg.NOTIFICATION, message="Job canceling failed")
             return False
+        
 

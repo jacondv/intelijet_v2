@@ -160,8 +160,12 @@ class App(QMainWindow):
             self.ui.cbbUseKeypoint,
             self.ui.cbbUpsample
         ]
-        self.ui.cbbAutoAlign.setEnabled(False)
-        self.ui.cbbUpsample.setEnabled(False)
+
+        for item in combo_boxes:
+            item.setEnabled(False)
+        self.ui.cbbRemoveGround.setEnabled(True) 
+        self.ui.cbbAutoReport.setEnabled(True)
+
 
         for cb in combo_boxes:
             cb.currentIndexChanged.connect(self.update_param)
@@ -396,6 +400,8 @@ class App(QMainWindow):
             self.ui.cbbUpsample.setEnabled(level >= security.ADMIN)
             self.ui.cbbAutoCompare.setEnabled(level >= security.ADMIN)
             self.ui.cbbUseKeypoint.setEnabled(level >= security.ADMIN)
+            # self.ui.cbbAutoReport.setEnabled(level >= security.ADMIN)
+            # self.ui.cbbRemoveGround.setEnabled(level >= security.ADMIN)
             
 
         from PyQt5.QtWidgets import QMessageBox
