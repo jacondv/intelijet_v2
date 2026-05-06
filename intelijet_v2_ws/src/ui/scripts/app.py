@@ -569,10 +569,8 @@ class App(QMainWindow):
                     parts[2] = "finalreport"
                     final_report_name = "#".join(parts)
                     print(f"[App] Report exported final_report_name: {final_report_name}")
-                    delete_old_final_report(filename)# only delete old final report with the same job, avoid delete all final report of other job.
+                    delete_old_final_report(final_report_name)# only delete old final report with the same segment, avoid delete all final report of other job.
                     shutil.copy(filename, final_report_name)
-
-   
 
         except Exception as e:
             print(f"[App] Failed to export report: {e}")

@@ -274,19 +274,35 @@ class PLYProcessor:
     
 
 def delete_old_final_report(file_path: str):
+
     folder = os.path.dirname(file_path)
 
     if not os.path.exists(folder):
         print("Folder does not exist")
         return
 
+    base_name = os.path.basename(file_path)
+
+    parts = base_name.split("#")
+
+    if len(parts) < 4:
+        print("Invalid filename format")
+        return
+
+    type_index = parts[2]
+    scan_name = os.path.splitext(parts[3])[0]
+
+    target_suffix = f"#{type_index}#{scan_name}.pdf"
+
     for filename in os.listdir(folder):
-        # check file pdf + chứa "final"
-        if filename.lower().endswith(".pdf") and "final" in filename.lower():
+
+        if filename.endswith(target_suffix):
+
             full_path = os.path.join(folder, filename)
 
             try:
                 os.remove(full_path)
                 print(f"Deleted: {full_path}")
+
             except Exception as e:
                 print(f"Failed to delete {full_path}: {e}")
