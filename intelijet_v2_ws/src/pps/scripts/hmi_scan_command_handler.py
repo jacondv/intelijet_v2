@@ -161,6 +161,10 @@ class ScanManagerNode:
                 return  
             self.scanner_controller.close_housing_auto()
 
+        elif cmd == PPSCommand.PAUSE_HOUSING.value:
+            self.scanner_controller.on_cancel()
+            self.set_state(DeviceStatus.IDLE)
+
         else:
             pass
 

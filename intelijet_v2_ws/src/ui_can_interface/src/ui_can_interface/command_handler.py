@@ -57,7 +57,8 @@ class CommandHandler:
             field_name="bServiceOpenScanner"
             self.send_pdo(pdo_name, field_name, value=1)
             self.send_pdo("RxScannerSpeed", "g_Rx_ScannerExtendSpeedInHz", value=command.uint16_value)
-            
+            #TODO : send open target position and close target position
+
             return True
         
         elif cmd == PPSCommand.PLC_CLOSE_HOUSING.value:
@@ -65,7 +66,8 @@ class CommandHandler:
             field_name="bServiceCloseScanner"
             self.send_pdo(pdo_name, field_name, value=1)
             self.send_pdo("RxScannerSpeed", "g_Rx_ScannerRetractSpeedInHz", value=command.uint16_value)
-
+            #TODO : send open target position and close target position
+            
             return True
         
         elif cmd == PPSCommand.PLC_PAUSE_HOUSING.value:
