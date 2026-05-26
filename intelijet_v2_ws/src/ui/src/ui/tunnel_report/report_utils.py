@@ -69,12 +69,13 @@ class PLYProcessor:
                 "volume_m3": None
             }
         distances = self.distances
-        mask = (distances > -25) & (distances < 25)
+        mask = (distances > -20) & (distances < 20)
         distances[mask] = np.abs(distances[mask])
-        distances = np.where(distances < -25, np.abs(distances), distances)
+        distances = np.where(distances < -20, np.abs(distances), distances)
 
         min_thickness_mm = max(self.target_thickness - 1 * self.tolerance, 0)
         filtered_pcd = filter_pcd_by_distance(self.pcd, d_min=min_thickness_mm, d_max=1000)
+        #valid_area is the area of points that have thickness >20mm.
         valid_area = surface_area(filtered_pcd, radii=(0.1, 0.15))  # m²
         total_area = surface_area(self.pcd, radii=(0.1, 0.15))  # m²
 
@@ -272,7 +273,6 @@ class PLYProcessor:
             return f"data:image/png;base64,{img_base64}"
 
     
-
 def delete_old_final_report(file_path: str):
 
     folder = os.path.dirname(file_path)
@@ -306,3 +306,4 @@ def delete_old_final_report(file_path: str):
 
             except Exception as e:
                 print(f"Failed to delete {full_path}: {e}")
+

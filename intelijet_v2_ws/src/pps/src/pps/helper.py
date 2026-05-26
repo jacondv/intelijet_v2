@@ -1414,7 +1414,7 @@ def filter_pcd_by_distance(pcd: 'o3d.t.geometry.PointCloud',
 
     # Áp mask cho toàn bộ point attributes
     pcd_out = pcd_out.select_by_mask(mask)
-    pcd_out = remove_small_clusters(pcd_out, eps=0.2, min_points=10, min_cluster_size=1000)
+    # pcd_out = remove_small_clusters(pcd_out, eps=0.2, min_points=10, min_cluster_size=1000)
     return pcd_out
 
 
