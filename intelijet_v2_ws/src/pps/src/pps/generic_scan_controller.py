@@ -102,7 +102,7 @@ class GenericScanController(ABC):
             rospy.logwarn(f"Joint {cfg.ENCODER_JOINT_NAME} not found in JointState")
 
     # ----- Wait until housing reaches target -----
-    def wait_until_target(self, target: float, timeout: float=60.0, direction=True, tolerance: float=0.01):
+    def wait_until_target(self, target: float, timeout: float=60.0, direction=True, tolerance: float=0.5):
         rospy.loginfo(f"[GenericScanController] Waiting until encoder reaches {target:.2f}°...")
         start_time = rospy.Time.now()
         rate = rospy.Rate(30)
@@ -119,6 +119,7 @@ class GenericScanController(ABC):
             if (rospy.Time.now() - start_time).to_sec() > timeout:
                 rospy.logwarn(f"Timeout waiting for target {target:.2f}° after {timeout}s")
                 return False
+            # rospy.logwarn(f"target {target:.2f}° CURRENT {current}°")
             rate.sleep()
         return False
 

@@ -82,7 +82,7 @@ class SickScanErobController(GenericScanController):
         speeds_targets = [
             # ('fast', cfg.housing_start_position, 10.0),
             # ('medium', cfg.housing_start_position+1, 10.0),
-            ('slow', cfg.housing_end_position, 180.0)
+            ('slow', cfg.housing_end_position, 150.0)
         ]
 
         for speed, target, timeout in speeds_targets:
@@ -101,7 +101,7 @@ class SickScanErobController(GenericScanController):
         speeds_targets = [
                         # ('fast', cfg.housing_start_position+50.0, 35.0), 
                         #   ('medium', cfg.housing_start_position+30, 35.0),
-                          ('slow', cfg.housing_start_position-5.0, 3.0)
+                          ('slow', cfg.housing_start_position-0.0, 30)
                           ]
 
         for speed, target, timeout in speeds_targets:
