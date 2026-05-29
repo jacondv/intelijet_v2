@@ -76,7 +76,12 @@ class PLYProcessor:
         min_thickness_mm = max(self.target_thickness - 1 * self.tolerance, 0)
         filtered_pcd = filter_pcd_by_distance(self.pcd, d_min=min_thickness_mm, d_max=1000)
         #valid_area is the area of points that have thickness >20mm.
-        valid_area = surface_area(filtered_pcd, radii=(0.1, 0.15))  # m²
+
+        if len(filtered_pcd.point.positions) < 100:  # ngưỡng tùy chọn
+            valid_area = 0.0
+        else:
+            valid_area = surface_area(filtered_pcd, radii=(0.1, 0.15))  # m²
+        
         total_area = surface_area(self.pcd, radii=(0.1, 0.15))  # m²
 
         mean_thickness_mm = distances.mean()  # mm

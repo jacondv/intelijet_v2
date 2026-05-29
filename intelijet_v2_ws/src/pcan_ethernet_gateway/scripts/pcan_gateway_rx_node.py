@@ -15,16 +15,16 @@ def main():
     rospy.init_node("pcan_gateway_rx_node")
 
     receiver = PcanUdpReceiver(listen_ip=PC_LOCAL_IP, listen_port=PCAN_GATEWAY_RECV_PORT )
-    pub = rospy.Publisher(PCAN_GATEWAY_RECV_TOPIC, Frame, queue_size=1000)
+    pub = rospy.Publisher(PCAN_GATEWAY_RECV_TOPIC, Frame, queue_size=1)
 
     rospy.loginfo(f"PCAN Gateway RX Node started, listening on {PC_LOCAL_IP}:{PCAN_GATEWAY_RECV_PORT }")
 
-    # rate = rospy.Rate(200)  # 200 Hz
+    rate = rospy.Rate(1000)  # default 200 Hz
     while not rospy.is_shutdown():
         frame = receiver.receive_frame()
         if frame:
             pub.publish(frame)
-        # rate.sleep()
+        rate.sleep()
 
 if __name__ == "__main__":
     try:
