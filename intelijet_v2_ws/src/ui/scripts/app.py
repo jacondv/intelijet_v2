@@ -363,7 +363,7 @@ class App(QMainWindow):
             
 
         # 4. Export Report
-        if topic_name in [CLOUD_COMPARED_UPSAMPLE_TOPIC, CLOUD_COMPARED_UPSAMPLE_TOPIC_MANUAL]:
+        if topic_name in [CLOUD_COMPARED_TOPIC, CLOUD_COMPARED_TOPIC_MANUAL]:
                 
             if self.ui.cbbAutoCompare.currentText().lower() == 'off' or self.ui.cbbAutoReport.currentText().lower() == 'off':
                 return # only export report when auto compare is on nad auto report is on. (1 is OFF)

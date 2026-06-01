@@ -69,14 +69,14 @@ class CompareCloudManualServer:
             self.pub.publish(msg)
             rospy.loginfo("Published compared cloud to %s", CLOUD_OUT)
 
-            if goal.do_upsample:
-                self.fb("upsample", 0.9)
+            # if goal.do_upsample:
+            #     self.fb("upsample", 0.9)
 
-                up = TunnelProcessing(cloud).run_upsample(cloud)
-                msg2 = cloudconverter.o3d_tensor_to_pointcloud2(up, "base_link")
-            else:
-                msg2 = msg
-            self.pub2.publish(msg2)
+            #     up = TunnelProcessing(cloud).run_upsample(cloud)
+            #     msg2 = cloudconverter.o3d_tensor_to_pointcloud2(up, "base_link")
+            # else:
+            #     msg2 = msg
+            # self.pub2.publish(msg2)
 
             rospy.loginfo("Published compared cloud to %s", CLOUD_UP)
 
