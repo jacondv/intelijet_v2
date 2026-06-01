@@ -89,7 +89,7 @@ class CloudComparePipeline:
         fb("compare", 0.7)
 
         post_cloud = keep_largest_cluster(post_cloud, eps=0.1, min_points=10,max_cluster_size=100)
-                
+        post_cloud = keep_largest_cluster(post_cloud, eps=0.1, min_points=10,max_cluster_size=0)
         cloud_compared, distance = run_compare(
             source=post_cloud,
             target=pre_cloud
