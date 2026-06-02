@@ -69,30 +69,46 @@ class PLYProcessor:
                 "volume_m3": None
             }
         distances = self.distances
-        mask = (distances > -20) & (distances < 20)
-        distances[mask] = np.abs(distances[mask])
-        distances = np.where(distances < -20, np.abs(distances), distances)
+        # mask = (distances > -20) & (distances < 20)
+        # distances[mask] = np.abs(distances[mask])
+        # distances = np.where(distances < -20, np.abs(distances), distances)
 
-        min_thickness_mm = max(self.target_thickness - 1 * self.tolerance, 0)
-        filtered_pcd = filter_pcd_by_distance(self.pcd, d_min=min_thickness_mm, d_max=1000)
-        #valid_area is the area of points that have thickness >20mm.
+        # min_thickness_mm = max(self.target_thickness - 1 * self.tolerance, 0)
+        # filtered_pcd = filter_pcd_by_distance(self.pcd, d_min=min_thickness_mm, d_max=1000)
+        # #valid_area is the area of points that have thickness >20mm.
 
-        if len(filtered_pcd.point.positions) < 100:  # ngưỡng tùy chọn
-            valid_area = 0.0
-        else:
-            valid_area = surface_area(filtered_pcd, radii=(0.1, 0.15))  # m²
+        # if len(filtered_pcd.point.positions) < 100:  # ngưỡng tùy chọn
+        #     valid_area = 0.0
+        # else:
+        #     valid_area = surface_area(filtered_pcd, radii=(0.1, 0.15))  # m²
         
-        total_area = surface_area(self.pcd, radii=(0.1, 0.15))  # m²
+        # total_area = surface_area(self.pcd, radii=(0.1, 0.15))  # m²
 
-        mean_thickness_mm = distances.mean()  # mm
+        # mean_thickness_mm = distances.mean()  # mm
 
-        volume_m3 = valid_area * mean_thickness_mm/1000
+        # volume_m3 = valid_area * mean_thickness_mm/1000
 
+
+        distances[np.abs(distances) < 12] = 0 # set thickness < 12mm to 0, consider as no damage (tùy chỉnh ngưỡng này)
+        distances[np.abs(distances) > 500] = 0 # set thickness > 500mm to 0, consider as noise
+
+        _min_reached_thickness_mm = max(self.target_thickness - 1 * self.tolerance, 0)
+        _mask_reached_target = distances > _min_reached_thickness_mm
+
+        _reached_pcd = filter_pcd_by_distance(self.pcd, d_min=_min_reached_thickness_mm, d_max=1000)
+        if len(_reached_pcd.point.positions) < 100:  # ngưỡng tùy chọn
+            reached_area = 0.0
+        else:
+            reached_area = surface_area(_reached_pcd, radii=(0.05, 0.07))  # m²
+
+        avg_thickness_mm = distances[_mask_reached_target].mean() if np.sum(_mask_reached_target) > 1000 else 0
+        total_area = surface_area(self.pcd, radii=(0.1, 0.15))
+        volume_m3 = reached_area * avg_thickness_mm/1000
         
         return {
-                "avg_thickness_mm": mean_thickness_mm,
+                "avg_thickness_mm": avg_thickness_mm,
                 "total_area_m2": total_area,
-                "reached_area_m2": valid_area,
+                "reached_area_m2": reached_area,
                 "volume_m3": volume_m3
             }
         
