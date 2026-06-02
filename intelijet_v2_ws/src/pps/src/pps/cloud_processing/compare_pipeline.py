@@ -1,6 +1,8 @@
+import os
+
 import numpy as np
 import rospy
-
+from datetime import datetime
 from pps.data_converter import cloudconverter
 from pps.tunnel_processing import TunnelProcessing
 from pps.helper import run_compare, keep_largest_cluster
@@ -11,6 +13,7 @@ from pps.image_processing.keypoint_processing_v3 import KeypointCloudAlignManage
 from pps.helper import crop_pointcloud_by_box, check_transform
 from pps.cloud_processing.utils_align import align_cloud, pre_align_cloud
 # from pps.cloud_processing.ceres_aligner import ceres_refine_icp
+from shared.config_loader import CONFIG as cfg
 
 class CloudComparePipeline:
 
@@ -53,6 +56,13 @@ class CloudComparePipeline:
 
             if kpm.is_ready():
                 target_patch, source_patch, T = kpm.get_result()
+                import cv2
+                import time
+                image_out = self.keypoint_manager.draw_result()
+                folder_path = f"{cfg.BASE_PATH}/{cfg.DATA_DIR}/log/images/{datetime.now().strftime("%Y%m%d")}"
+                os.makedirs(folder_path, exist_ok=True)
+                filename = f"{folder_path}/{int(time.time())}_keypoints.png"
+                cv2.imwrite(filename, image_out)
 
             # ===== ALIGN 2nd TIME =====
             if goal.do_align:
