@@ -915,9 +915,12 @@ def map_distances_to_colors(
 
         elif d < low:
             # Gradient red (1,0,0) → green (0,1,0)
-            # t = d / low if low > 0 else 0
-            # colors[i] = (1 - t, t, 0)
-            colors[i] = (0.5, 0, 0)
+            if d < 20:
+                colors[i] = (0.5, 0, 0)  # Đỏ hoàn toàn cho khoảng cách rất nhỏ
+            else:
+                t = d / low if low > 0 else 0
+                colors[i] = (1 - t, t, 0)
+            # colors[i] = (0.5, 0, 0)
 
         elif d <= high:
             # Pure green
