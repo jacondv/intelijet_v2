@@ -134,6 +134,7 @@ def generate_filename(folder: str, job: str, scan_type: str, ext="ply", filepath
     """
 
     # --- Nếu có filepath → parse ra rồi thay scan_type ---
+    scan_type = re.sub(r'[^a-zA-Z0-9_-]', '', scan_type)
     if filepath is not None:
         parsed = parse_filename(filepath)
         new_filename = FILENAME_TEMPLATE.format(
@@ -148,8 +149,6 @@ def generate_filename(folder: str, job: str, scan_type: str, ext="ply", filepath
 
     # --- Tạo filename mới như bình thường ---
     os.makedirs(folder, exist_ok=True)
-
-    scan_type = re.sub(r'[^a-zA-Z0-9_-]', '', scan_type)
 
     files = [f for f in os.listdir(folder) if f.endswith(f".{ext}")]
 
@@ -274,14 +273,14 @@ def parse_filename(filename: str):
 if __name__ == "__main__":
     pass
     # --- TEST ---
-    filename = "/root/intelijet_v2/data/project1/job1#20240601_153000#pre_scan_01#SCAN001.ply"
+    filename = "/root/intelijet_v2/data/project1/job1#20240601_153000#pre_scan_cloud_01#SCAN001.ply"
     parsed = parse_filename(filename)
     print(parsed)
 
     new_filename = generate_filename(
         folder=".",
         job=parsed["job"],
-        scan_type="compare_cloud",
+        scan_type="cloud_compared",
         ext=parsed["ext"],
         filepath=os.path.join(".", filename)
     )

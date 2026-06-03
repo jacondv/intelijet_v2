@@ -340,7 +340,7 @@ class App(QMainWindow):
                 )
             else:
                 filepath = generate_filename(
-                    folder="",job="",scan_type="",ext="ply",
+                    folder="",job="",scan_type=topic_name,ext="ply",
                     filepath=self.current_post_scan_path)
 
                 self.current_post_scan_path=""
@@ -372,10 +372,9 @@ class App(QMainWindow):
 
                 print(f"Export Report=========================>")
 
-                cloud_compared_upsample = o3d_cloud
                 filename = self.report_name
                 filename = filename.replace(".ply", ".pdf")
-                self.export_report(cloud_compared_upsample,filename)
+                self.export_report(o3d_cloud,filename)
 
 
 
