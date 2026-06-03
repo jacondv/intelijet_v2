@@ -455,6 +455,19 @@ def run_compare(source, target, k=6, radius=0.05):
     # Mask: trong hình trụ
     in_cylinder = lateral_dist <= radius                        # (N, K_cand) bool
 
+    # ================================================================== #
+    #  MỚI: LỌC MẶT NẠ - LOẠI BỎ ĐIỂM KHÔNG CÓ ỨNG VIÊN TRONG TRỤ        #
+    # ================================================================== #
+    # Kiểm tra xem dòng nào có ít nhất một điểm True (nằm trong trụ)
+    valid_mask = np.any(in_cylinder, axis=1)                    # (N,) bool
+    # Tiến hành lọc bỏ hoàn toàn các điểm Source lỗi ra khỏi các ma trận tính toán
+    src_pts      = src_pts[valid_mask]                          # (M, 3)
+    src_nrm      = src_nrm[valid_mask]                          # (M, 3)
+    in_cylinder  = in_cylinder[valid_mask]                      # (M, K_cand)
+    axial        = axial[valid_mask]                            # (M, K_cand)
+    idx_cand     = idx_cand[valid_mask]                         # (M, K_cand)
+    lateral_dist = lateral_dist[valid_mask]                     # (M, K_cand)
+    
     # ------------------------------------------------------------------ #
     #  5. Chọn điểm tốt nhất trong hình trụ                              #
     #     Ưu tiên: |axial| nhỏ nhất (chiếu thẳng vào bề mặt)            #

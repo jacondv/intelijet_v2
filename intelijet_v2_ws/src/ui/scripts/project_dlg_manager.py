@@ -416,7 +416,7 @@ class ProjectManager(QWidget, Ui_frm_ProjectPage):
         dlg.status_combo.setCurrentText(job_info.status)
         dlg.description_edit.setText(job_info.description)
         dlg.target_thickness_spin.setValue(job_info.parameters.get("target_thickness", 60))
-        dlg.tolerance_spin.setValue(job_info.parameters.get("tolerance", 10))
+        dlg.tolerance_spin.setValue(job_info.parameters.get("tolerance", 17))
 
         if dlg.exec() != QDialog.Accepted:
             return  # user cancel

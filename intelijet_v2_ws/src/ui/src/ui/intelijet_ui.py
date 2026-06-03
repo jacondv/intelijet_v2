@@ -920,7 +920,7 @@ class Ui_MainWindow(object):
         self.lblLidarStatus.setText(_translate("MainWindow", "--"))
         self.label_3.setText(_translate("MainWindow", "Encoder:"))
         self.lblEncoderStatus.setText(_translate("MainWindow", "--"))
-        self.label.setText(_translate("MainWindow", "Encoder value (rad):"))
+        self.label.setText(_translate("MainWindow", "Encoder value (deg):"))
         self.lblEncoder.setText(_translate("MainWindow", "--"))
         self.label_4.setText(_translate("MainWindow", "Encoder value (raw):"))
         self.lblEncoderRawValue.setText(_translate("MainWindow", "--"))

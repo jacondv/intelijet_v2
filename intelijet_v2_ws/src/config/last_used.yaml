@@ -36,12 +36,12 @@ crop_box:
   min:
     x: -1.0
     y: -5.0
-    z: 0.2
+    z: -1.0
   max:
-    x: 7.0
+    x: 11.0
     y: 5.0
     z: 8.0
-housing_start_position: 12
+housing_start_position: 2
 housing_end_position: 135
 encoder_length_at_zero_possition: 29910924
 housing_open_speed_fast: 115
@@ -51,8 +51,8 @@ housing_close_speed_fast: 115
 housing_close_speed_medium: 110
 housing_close_speed_slow: 105
 thickness:
-  target: 30
-  tolerance: 10
+  target: 50
+  tolerance: 17
 report:
   sitename: Jacon Equipment (test only)
   jobnumer: Jobnumber (test only)
