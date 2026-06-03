@@ -58,8 +58,8 @@ class CloudComparePipeline:
                 target_patch, source_patch, T = kpm.get_result()
                 import cv2
                 import time
-                image_out = self.keypoint_manager.draw_result()
-                folder_path = f"{cfg.BASE_PATH}/{cfg.DATA_DIR}/log/images/{datetime.now().strftime("%Y%m%d")}"
+                image_out = kpm.draw_result()
+                folder_path = f"{cfg.BASE_DIR}/{cfg.DATA_DIR}/log/{datetime.now().strftime('%Y%m%d')}/images"
                 os.makedirs(folder_path, exist_ok=True)
                 filename = f"{folder_path}/{int(time.time())}_keypoints.png"
                 cv2.imwrite(filename, image_out)

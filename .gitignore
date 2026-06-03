@@ -23,6 +23,7 @@
 *.gz
 *.ply
 *.bag
+!**/assets/images/**
 token.txt
 
 config/last_user.yaml

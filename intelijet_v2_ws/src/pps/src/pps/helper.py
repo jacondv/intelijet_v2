@@ -894,7 +894,7 @@ from shared.config_loader import CONFIG as cfg
 def map_distances_to_colors(
     distances, 
     clip_max=150,
-    highlight_range=(0.02, 0.04),
+    highlight_range=(20, 40),
     out_of_range_color=(0.678, 0.847, 0.902) #Light blue
 ):
     """

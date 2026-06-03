@@ -13,4 +13,6 @@ TryExec=/home/nuc/intelijet_v2/run_docker.sh
 # Đây là shortcut để chạy Intelijet từ container Docker
 # Script run_docker.sh có trách nhiệm kiểm tra container, 
 # nếu chưa có thì tạo mới, nếu có rồi thì attach vào.
+# gnome-extensions list xem các thong tin lien quan
+# gsettings set org.gnome.shell.extensions.ding icon-size 'large' để tăng kich thước icon
 # ========================================================
