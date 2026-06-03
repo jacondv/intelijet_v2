@@ -379,9 +379,151 @@ def compute_heatmap_to_plane(source, target, k=6,target_thickness=0.03, toleranc
 
     return source, distances
 
+def run_compare(source, target, k=6, radius=0.05):
+    """
+    So sánh 2 point cloud với lọc hình trụ - vectorized.
 
+    Args:
+        source : point cloud nguồn (tensor format)
+        target : point cloud đích (tensor format)
+        k      : số neighbor để estimate normal
+        radius : bán kính hình trụ lọc (mét)
+    """
+    import open3d as o3d
+    rospy.loginfo("Compare prescan vs postscan...")
 
-def run_compare(source, target,k=6):
+    source = cloudconverter.tensor_to_o3d_legacy(source)
+    target = cloudconverter.tensor_to_o3d_legacy(target)
+
+    # ------------------------------------------------------------------ #
+    #  1. Estimate + orient normals                                        #
+    # ------------------------------------------------------------------ #
+    sensor_pos = np.array([0.0, 0.0, 0.0], dtype=np.float32)
+
+    def _estimate_and_orient(pcd, k, sensor_pos):
+        pcd.estimate_normals(
+            search_param=o3d.geometry.KDTreeSearchParamKNN(knn=k)
+        )
+        pcd.orient_normals_consistent_tangent_plane(k=3 * k)
+
+        points  = np.asarray(pcd.points,  dtype=np.float32)
+        normals = np.asarray(pcd.normals, dtype=np.float32)
+
+        # Vectorized inward orient
+        vec = sensor_pos - points                       # (N,3)
+        dot = np.einsum('ij,ij->i', normals, vec)       # (N,)
+        normals[dot < 0] *= -1
+        pcd.normals = o3d.utility.Vector3dVector(normals)
+        return pcd, points, normals
+
+    source, src_pts, src_nrm = _estimate_and_orient(source, k, sensor_pos)
+    target, tgt_pts, tgt_nrm = _estimate_and_orient(target, k, sensor_pos)
+
+    # ------------------------------------------------------------------ #
+    #  2. Double-check hướng normal bằng cách so sánh source vs target    #
+    #     Nếu 2 normal ngược chiều nhau → bề mặt đang nhìn nhau → OK     #
+    #     Nếu cùng chiều → normal 1 trong 2 bị lật → flip target normal  #
+    # ------------------------------------------------------------------ #
+    # (Thực hiện sau bước match để chỉ check cặp điểm tương ứng)
+
+    # ------------------------------------------------------------------ #
+    #  3. Xây KDTree + query candidates vectorized                        #
+    # ------------------------------------------------------------------ #
+    target_tree = cKDTree(tgt_pts)
+
+    # Lấy top-K candidates (fixed K → kết quả là array đồng nhất, vectorize được)
+    K_cand = min(32, len(tgt_pts))                              # số candidates mỗi điểm
+    dist_nn, idx_cand = target_tree.query(src_pts, k=K_cand)   # (N, K_cand)
+
+    # ------------------------------------------------------------------ #
+    #  4. Lọc hình trụ - hoàn toàn vectorized                            #
+    # ------------------------------------------------------------------ #
+    # tgt_pts[idx_cand] : (N, K_cand, 3)
+    cand_pts = tgt_pts[idx_cand]                                # (N, K_cand, 3)
+
+    # Vector từ source point đến mỗi candidate
+    diff = cand_pts - src_pts[:, None, :]                       # (N, K_cand, 3)
+
+    # Thành phần axial (dọc normal source)
+    # einsum 'ni,nki->nk' : dot product mỗi diff[n,k] với src_nrm[n]
+    axial = np.einsum('ni,nki->nk', src_nrm, diff)             # (N, K_cand)
+
+    # Thành phần lateral (vuông góc normal) = diff - axial * normal
+    lateral = diff - axial[:, :, None] * src_nrm[:, None, :]   # (N, K_cand, 3)
+    lateral_dist = np.linalg.norm(lateral, axis=2)              # (N, K_cand)
+
+    # Mask: trong hình trụ
+    in_cylinder = lateral_dist <= radius                        # (N, K_cand) bool
+
+    # ------------------------------------------------------------------ #
+    #  5. Chọn điểm tốt nhất trong hình trụ                              #
+    #     Ưu tiên: |axial| nhỏ nhất (chiếu thẳng vào bề mặt)            #
+    #     Fallback: lateral_dist nhỏ nhất (khi hình trụ rỗng)           #
+    # ------------------------------------------------------------------ #
+
+    # Score để sort: trong trụ → |axial|, ngoài trụ → lateral + penalty lớn
+    PENALTY = 1e6
+    score = np.where(in_cylinder, np.abs(axial), lateral_dist + PENALTY)  # (N, K_cand)
+    best_local = np.argmin(score, axis=1)                       # (N,)
+    best_idx   = idx_cand[np.arange(len(src_pts)), best_local]  # (N,)
+
+    # ------------------------------------------------------------------ #
+    #  6. Tính point-to-plane distance                                    #
+    # ------------------------------------------------------------------ #
+    best_tgt_pts = tgt_pts[best_idx]                            # (N, 3)
+    best_tgt_nrm = tgt_nrm[best_idx]                           # (N, 3)
+
+    diff_final = src_pts - best_tgt_pts                         # (N, 3)
+
+    # ------------------------------------------------------------------ #
+    #  7. Sửa lỗi normal sai hướng                                       #
+    #                                                                     #
+    #  Nếu source và target là 2 scan của cùng 1 vật thể từ cùng sensor: #
+    #  normal của cặp điểm tương ứng phải ngược chiều nhau              #
+    #  (1 mặt nhìn vào sensor, 1 mặt là bản sao sau scan → cùng hướng)  #
+    #                                                                     #
+    #  Cách robust nhất: dùng normal source làm tham chiếu              #
+    #  → sign của distance phải nhất quán với src_nrm                   #
+    # ------------------------------------------------------------------ #
+
+    # Tính distance dùng normal target
+    dist_by_tgt_nrm = np.einsum('ni,ni->n', diff_final, best_tgt_nrm)  # (N,)
+
+    # Tính distance dùng normal source (reference)
+    dist_by_src_nrm = np.einsum('ni,ni->n', diff_final, src_nrm)        # (N,)
+
+    # Nếu 2 normal cùng chiều (dot > 0) → target normal bị lật → flip sign
+    nrm_agreement = np.einsum('ni,ni->n', src_nrm, best_tgt_nrm)        # (N,)
+    # normal nhất quán khi nrm_agreement < 0 (2 mặt nhìn nhau)
+    # Dùng src_nrm làm ground truth, flip kết quả khi target normal ngược
+    distances = np.where(nrm_agreement < 0,
+                         dist_by_tgt_nrm,
+                         -dist_by_tgt_nrm)                              # (N,)
+
+    # Guard: nếu vẫn ngờ vực, có thể dùng hoàn toàn src_nrm:
+    # distances = dist_by_src_nrm  # uncomment nếu target normal không tin cậy
+
+    distances = distances.astype(np.float32)
+
+    # ------------------------------------------------------------------ #
+    #  8. Đóng gói kết quả                                               #
+    # ------------------------------------------------------------------ #
+    source = cloudconverter.o3d_legacy_to_tensor(source)
+    distances_mm = np.round(distances * 1000).astype(np.float32).reshape(-1, 1)
+
+    n_points = source.point["positions"]
+    if len(distances) != len(n_points):
+        raise ValueError(
+            f"Number of element distances ({len(distances)}) does not match "
+            f"number of point clouds ({len(n_points)})"
+        )
+
+    source.point["distances"] = o3d.core.Tensor(
+        distances_mm, dtype=o3d.core.Dtype.Float32
+    )
+    return source, distances
+
+def run_compare_old(source, target,k=6):
     # Tính trước normal cho target
     # start_time = time.time()
     import open3d as o3d
@@ -415,7 +557,7 @@ def run_compare(source, target,k=6):
     source_points = np.asarray(source.points)
 
     distances = []
-
+    # Với moi diem trong source, tim diem gan nhat trong target.
     distances_nn, indices = target_tree.query(source_points, k=1) # We don't need distances_nn here because we compute point-to-plane distance
 
     centroids = target_points[indices] 
