@@ -185,7 +185,7 @@ class App(QMainWindow):
         self.ui.btnCloseScanner.released.connect(lambda: self.ui_send_cmd_signal.emit(PPSCommand.PAUSE_HOUSING.value))
         self.ui.btnShutdown.released.connect(self.on_shutdown)
 
-        self.ui.btnFullScreen.released.connect(self.toggle_max)
+        self.ui.btnFullScreen.released.connect(self.toggle_full_screen)
 
         self.ui.btnLogin.released.connect(self.on_login_clicked)
 
@@ -267,6 +267,13 @@ class App(QMainWindow):
         if reply == QMessageBox.Yes:
             # Gửi signal nếu người dùng xác nhận
             self.ui_send_cmd_signal.emit(PPSCommand.START_PRESCAN.value)
+
+    # Load last prescan at startup, and put to topic compare_cloud_action_server can use it to continue compare when prescan cloud is missing.
+    def load_last_prescan(self):
+        last_prescan_path = settings.value("last_prescan_path", "")
+        if last_prescan_path:
+            rospy.set_param("/runtime/last_prescan_path", last_prescan_path)
+            
 
     # Reload data for history page when toolbox page 2 is activated
     def on_toolbox_changed(self, index):
@@ -354,6 +361,9 @@ class App(QMainWindow):
                 self.report_name = f_name
                 self.isManualCompare = False 
 
+            if topic_name in [PRE_SCAN_CLOUD_TOPIC]:
+                settings.setValue("last_prescan_path", filepath)
+
   
 
 
@@ -384,7 +394,7 @@ class App(QMainWindow):
                 print(f"[Error] at on_cloud_received Export Report : {e}")
 
 
-    def toggle_max(self):
+    def toggle_full_screen(self):
         if not self.isFullScreen():
             self.showFullScreen()
             self.ui.btnFullScreen.setText("Exit Full Screen")   # đổi text khi full
