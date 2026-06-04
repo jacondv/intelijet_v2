@@ -379,7 +379,7 @@ def compute_heatmap_to_plane(source, target, k=6,target_thickness=0.03, toleranc
 
     return source, distances
 
-def run_compare(source, target, k=6, radius=0.05):
+def run_compare_m3c2(source, target, k=6, radius=0.05):
     """
     So sánh 2 point cloud với lọc hình trụ - vectorized.
 
@@ -409,11 +409,11 @@ def run_compare(source, target, k=6, radius=0.05):
         points  = np.asarray(pcd.points,  dtype=np.float32)
         normals = np.asarray(pcd.normals, dtype=np.float32)
 
-        # Vectorized inward orient
-        vec = sensor_pos - points                       # (N,3)
-        dot = np.einsum('ij,ij->i', normals, vec)       # (N,)
-        normals[dot < 0] *= -1
-        pcd.normals = o3d.utility.Vector3dVector(normals)
+        # # Vectorized inward orient
+        # vec = sensor_pos - points                       # (N,3)
+        # dot = np.einsum('ij,ij->i', normals, vec)       # (N,)
+        # normals[dot < 0] *= -1
+        # pcd.normals = o3d.utility.Vector3dVector(normals)
         return pcd, points, normals
 
     source, src_pts, src_nrm = _estimate_and_orient(source, k, sensor_pos)
@@ -467,7 +467,7 @@ def run_compare(source, target, k=6, radius=0.05):
     axial        = axial[valid_mask]                            # (M, K_cand)
     idx_cand     = idx_cand[valid_mask]                         # (M, K_cand)
     lateral_dist = lateral_dist[valid_mask]                     # (M, K_cand)
-    
+
     # ------------------------------------------------------------------ #
     #  5. Chọn điểm tốt nhất trong hình trụ                              #
     #     Ưu tiên: |axial| nhỏ nhất (chiếu thẳng vào bề mặt)            #
@@ -522,6 +522,8 @@ def run_compare(source, target, k=6, radius=0.05):
     #  8. Đóng gói kết quả                                               #
     # ------------------------------------------------------------------ #
     source = cloudconverter.o3d_legacy_to_tensor(source)
+    source = source.select_by_mask(valid_mask)  # Chỉ giữ lại các điểm có kết quả hợp lệ
+
     distances_mm = np.round(distances * 1000).astype(np.float32).reshape(-1, 1)
 
     n_points = source.point["positions"]
@@ -536,7 +538,7 @@ def run_compare(source, target, k=6, radius=0.05):
     )
     return source, distances
 
-def run_compare_old(source, target,k=6):
+def run_compare(source, target,k=6):
     # Tính trước normal cho target
     # start_time = time.time()
     import open3d as o3d
@@ -1524,7 +1526,10 @@ def surface_area(
         pcd,
         o3d.utility.DoubleVector(radii)
     )
-
+    # Save mesh for debugging
+    # now = datetime.now().strftime("%Y%m%d_%H%M%S")
+    # o3d.io.write_triangle_mesh(f"/root/intelijet_v2/data/log/{now}_mesh.ply",mesh)
+    
     # Tính diện tích
     area = mesh.get_surface_area()
     return area

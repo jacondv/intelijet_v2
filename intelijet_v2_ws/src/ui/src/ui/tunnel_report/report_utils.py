@@ -99,7 +99,7 @@ class PLYProcessor:
         if len(_reached_pcd.point.positions) < 100:  # ngưỡng tùy chọn
             reached_area = 0.0
         else:
-            reached_area = surface_area(_reached_pcd, radii=(0.05, 0.07))  # m²
+            reached_area = surface_area(_reached_pcd, radii=(0.03, 0.05))  # m²
 
         avg_thickness_mm = distances[_mask_reached_target].mean() if np.sum(_mask_reached_target) > 1000 else 0
         total_area = surface_area(self.pcd, radii=(0.1, 0.15))
