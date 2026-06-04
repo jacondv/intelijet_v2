@@ -221,6 +221,9 @@ class App(QMainWindow):
         # Send parameters to the ROS on the first boot.
         self.update_param()
 
+        # Load last prescan path to runtime param
+        self._load_last_prescan()
+
     # Setting parameter
     def save_ui_state(self):
         settings.setValue("cbbAutoAlign_index", self.ui.cbbAutoAlign.currentIndex())
@@ -269,7 +272,7 @@ class App(QMainWindow):
             self.ui_send_cmd_signal.emit(PPSCommand.START_PRESCAN.value)
 
     # Load last prescan at startup, and put to topic compare_cloud_action_server can use it to continue compare when prescan cloud is missing.
-    def load_last_prescan(self):
+    def _load_last_prescan(self):
         last_prescan_path = settings.value("last_prescan_path", "")
         if last_prescan_path:
             rospy.set_param("/runtime/last_prescan_path", last_prescan_path)

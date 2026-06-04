@@ -52,8 +52,8 @@ class CompareCloudServer:
         self.post_cloud = cloudconverter.pointcloud2_to_o3d(msg)
 
         if self.pre_cloud is None:
-            last_pre_path = rospy.get_param("/runtime/last_prescan_path", None)
-            if last_pre_path is not None:
+            last_pre_path = rospy.get_param("/runtime/last_prescan_path", "")
+            if last_pre_path:
                 rospy.loginfo(f"No Pre-scan found --> Load last Pre-scan cloud from: {last_pre_path}")
                 self.pre_cloud = cloudconverter.load_ply(last_pre_path, as_legacy=True)
 
