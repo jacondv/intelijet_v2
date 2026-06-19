@@ -13,7 +13,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
-        MainWindow.resize(1684, 971)
+        MainWindow.resize(1678, 971)
         MainWindow.setStyleSheet("\n"
 "/* ==================== PUSHBUTTON ==================== */\n"
 "\n"
@@ -349,7 +349,8 @@ class Ui_MainWindow(object):
 "    background-color: #2A8C91;\n"
 "}\n"
 "\n"
-"   ")
+"\n"
+"")
         self.centralwidget = QtWidgets.QWidget(MainWindow)
         self.centralwidget.setObjectName("centralwidget")
         self.gridLayout_2 = QtWidgets.QGridLayout(self.centralwidget)
@@ -358,7 +359,7 @@ class Ui_MainWindow(object):
         self.centralFrame = QtWidgets.QWidget(self.centralwidget)
         self.centralFrame.setObjectName("centralFrame")
         self.horizontalLayout_2 = QtWidgets.QHBoxLayout(self.centralFrame)
-        self.horizontalLayout_2.setContentsMargins(9, 0, 0, 0)
+        self.horizontalLayout_2.setContentsMargins(-1, 0, 0, 0)
         self.horizontalLayout_2.setSpacing(0)
         self.horizontalLayout_2.setObjectName("horizontalLayout_2")
         self.menu_main = QtWidgets.QWidget(self.centralFrame)
@@ -384,6 +385,7 @@ class Ui_MainWindow(object):
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.cbbJobSelect.sizePolicy().hasHeightForWidth())
         self.cbbJobSelect.setSizePolicy(sizePolicy)
+        self.cbbJobSelect.setMinimumSize(QtCore.QSize(0, 0))
         self.cbbJobSelect.setStyleSheet("QComboBox {\n"
 "    border: 1px solid #60a3bc;\n"
 "    padding: 6px 10px;\n"
@@ -479,7 +481,6 @@ class Ui_MainWindow(object):
         self.horizontalLayout_3.setObjectName("horizontalLayout_3")
         self.btnLogin = QtWidgets.QPushButton(self.exit_widget)
         self.btnLogin.setMaximumSize(QtCore.QSize(60, 60))
-        self.btnLogin.setText("")
         icon1 = QtGui.QIcon()
         icon1.addPixmap(QtGui.QPixmap(":/icon/icon/user.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.btnLogin.setIcon(icon1)
@@ -487,6 +488,7 @@ class Ui_MainWindow(object):
         self.btnLogin.setObjectName("btnLogin")
         self.horizontalLayout_3.addWidget(self.btnLogin)
         self.btnShutdown = QtWidgets.QPushButton(self.exit_widget)
+        self.btnShutdown.setMinimumSize(QtCore.QSize(0, 0))
         self.btnShutdown.setMaximumSize(QtCore.QSize(16777215, 60))
         icon2 = QtGui.QIcon()
         icon2.addPixmap(QtGui.QPixmap(":/icon/icon/power-button.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
@@ -521,7 +523,7 @@ class Ui_MainWindow(object):
         self.menu_small.setMaximumSize(QtCore.QSize(50, 16777215))
         self.menu_small.setObjectName("menu_small")
         self.verticalLayout_3 = QtWidgets.QVBoxLayout(self.menu_small)
-        self.verticalLayout_3.setContentsMargins(-1, 9, 9, 9)
+        self.verticalLayout_3.setContentsMargins(0, -1, -1, -1)
         self.verticalLayout_3.setObjectName("verticalLayout_3")
         spacerItem1 = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding)
         self.verticalLayout_3.addItem(spacerItem1)
@@ -567,6 +569,7 @@ class Ui_MainWindow(object):
         self.cloudFrame.setObjectName("cloudFrame")
         self.verticalLayout_7.addWidget(self.cloudFrame)
         self.horizontalLayout.addWidget(self.tab_cloud_view)
+        self.horizontalLayout.setStretch(0, 10)
         self.tab_mainview.addTab(self.tab_operator, "")
         self.tab_jobnumber = QtWidgets.QWidget()
         self.tab_jobnumber.setObjectName("tab_jobnumber")
@@ -821,7 +824,7 @@ class Ui_MainWindow(object):
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.btnPreScan.sizePolicy().hasHeightForWidth())
         self.btnPreScan.setSizePolicy(sizePolicy)
-        self.btnPreScan.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.btnPreScan.setStyleSheet("")
         self.btnPreScan.setObjectName("btnPreScan")
         self.verticalLayout_14.addWidget(self.btnPreScan)
         self.btnPostScan = QtWidgets.QPushButton(self.control_panel)
@@ -830,16 +833,22 @@ class Ui_MainWindow(object):
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.btnPostScan.sizePolicy().hasHeightForWidth())
         self.btnPostScan.setSizePolicy(sizePolicy)
-        self.btnPostScan.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.btnPostScan.setObjectName("btnPostScan")
         self.verticalLayout_14.addWidget(self.btnPostScan)
+        self.btnCompare = QtWidgets.QPushButton(self.control_panel)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.btnCompare.sizePolicy().hasHeightForWidth())
+        self.btnCompare.setSizePolicy(sizePolicy)
+        self.btnCompare.setObjectName("btnCompare")
+        self.verticalLayout_14.addWidget(self.btnCompare)
         self.btnCancel = QtWidgets.QPushButton(self.control_panel)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.btnCancel.sizePolicy().hasHeightForWidth())
         self.btnCancel.setSizePolicy(sizePolicy)
-        self.btnCancel.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.btnCancel.setIconSize(QtCore.QSize(64, 64))
         self.btnCancel.setFlat(True)
         self.btnCancel.setObjectName("btnCancel")
@@ -850,7 +859,6 @@ class Ui_MainWindow(object):
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.btnOpenScanner.sizePolicy().hasHeightForWidth())
         self.btnOpenScanner.setSizePolicy(sizePolicy)
-        self.btnOpenScanner.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.btnOpenScanner.setObjectName("btnOpenScanner")
         self.verticalLayout_14.addWidget(self.btnOpenScanner)
         self.btnCloseScanner = QtWidgets.QPushButton(self.control_panel)
@@ -859,51 +867,15 @@ class Ui_MainWindow(object):
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.btnCloseScanner.sizePolicy().hasHeightForWidth())
         self.btnCloseScanner.setSizePolicy(sizePolicy)
-        self.btnCloseScanner.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.btnCloseScanner.setObjectName("btnCloseScanner")
         self.verticalLayout_14.addWidget(self.btnCloseScanner)
         spacerItem9 = QtWidgets.QSpacerItem(0, 0, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding)
         self.verticalLayout_14.addItem(spacerItem9)
-        self.widget_6 = QtWidgets.QWidget(self.control_panel)
-        self.widget_6.setObjectName("widget_6")
-        self.gridLayout_3 = QtWidgets.QGridLayout(self.widget_6)
-        self.gridLayout_3.setContentsMargins(0, 0, 0, 0)
-        self.gridLayout_3.setSpacing(0)
-        self.gridLayout_3.setObjectName("gridLayout_3")
-        self.btnZoomCenter = QtWidgets.QPushButton(self.widget_6)
-        self.btnZoomCenter.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.btnZoomCenter.setStyleSheet("QPushButton#btnZoomCenter {\n"
-"    min-width: 100px;\n"
-"    min-height: 100px;\n"
-"    max-width: 100px;\n"
-"    max-height: 100px;\n"
-"\n"
-"    background-color: transparent;\n"
-"    color: #FFB74D;\n"
-"    border: none;\n"
-"    border-radius: 20px;\n"
-"    padding: 0px;\n"
-"\n"
-"}\n"
-"\n"
-"QPushButton#btnZoomCenter:hover {\n"
-"    background-color: transparent;\n"
-"}\n"
-"QPushButton#btnZoomCenter:pressed {\n"
-"    background-color: #3E959A;\n"
-"}\n"
-"\n"
-"\n"
-"")
-        self.btnZoomCenter.setText("")
-        icon4 = QtGui.QIcon()
-        icon4.addPixmap(QtGui.QPixmap(":/icon/icon/focus_orange.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-        self.btnZoomCenter.setIcon(icon4)
-        self.btnZoomCenter.setIconSize(QtCore.QSize(100, 100))
-        self.btnZoomCenter.setObjectName("btnZoomCenter")
-        self.gridLayout_3.addWidget(self.btnZoomCenter, 0, 0, 1, 1)
-        self.verticalLayout_14.addWidget(self.widget_6)
         self.horizontalLayout_2.addWidget(self.control_panel)
+        self.horizontalLayout_2.setStretch(0, 3)
+        self.horizontalLayout_2.setStretch(1, 1)
+        self.horizontalLayout_2.setStretch(2, 4)
+        self.horizontalLayout_2.setStretch(3, 3)
         self.gridLayout_2.addWidget(self.centralFrame, 0, 0, 1, 1)
         MainWindow.setCentralWidget(self.centralwidget)
         self.statusbar = QtWidgets.QStatusBar(MainWindow)
@@ -912,7 +884,7 @@ class Ui_MainWindow(object):
         MainWindow.setStatusBar(self.statusbar)
 
         self.retranslateUi(MainWindow)
-        self.toolBox.setCurrentIndex(0)
+        self.toolBox.layout().setSpacing(6)
         self.tab_mainview.setCurrentIndex(3)
         self.cbbAutoAlign.setCurrentIndex(0)
         self.cbbAutoCompare.setCurrentIndex(0)
@@ -974,6 +946,7 @@ class Ui_MainWindow(object):
         self.tab_mainview.setTabText(self.tab_mainview.indexOf(self.tab_system), _translate("MainWindow", "SYSTEM"))
         self.btnPreScan.setText(_translate("MainWindow", "PRE-SCAN"))
         self.btnPostScan.setText(_translate("MainWindow", "POST-SCAN"))
+        self.btnCompare.setText(_translate("MainWindow", "COMPARE"))
         self.btnCancel.setText(_translate("MainWindow", "CANCEL JOB"))
         self.btnOpenScanner.setText(_translate("MainWindow", "OPEN\n"
 "HOUSING"))

@@ -29,6 +29,7 @@ token.txt
 config/last_user.yaml
 
 # === FILE ROS VÀ BUILD ===
+qt/
 build/
 devel/
 install/

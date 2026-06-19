@@ -86,7 +86,7 @@ class App(QMainWindow):
         self.ui.setupUi(self)
 
         self.ui.tab_mainview.setCurrentIndex(0)
-        self.ui.btnCompare.setVisible(False) # hide compare button in main view, only show compare button in compare dialog.
+        # self.ui.btnCompare.setVisible(False) # hide compare button in main view, only show compare button in compare dialog.
 
         # --- Tab Setting ---
         self.setting_page = SettingPageManager()
@@ -175,7 +175,7 @@ class App(QMainWindow):
         # self.ui.btnPreScan.released.connect(lambda: self.ui_send_cmd_signal.emit(PPSCommand.START_PRESCAN.value))
         self.ui.btnPreScan.released.connect(self.confirm_and_send_prescan)
         self.ui.btnPostScan.released.connect(lambda: self.ui_send_cmd_signal.emit(PPSCommand.START_POSTSCAN.value))
-        self.ui.btnCompare.released.connect(lambda: self.ui_send_cmd_signal.emit(PPSCommand.START_COMPARE.value))
+        # self.ui.btnCompare.released.connect(lambda: self.ui_send_cmd_signal.emit(PPSCommand.START_COMPARE.value))
         self.ui.btnCancel.released.connect(lambda: self.ui_send_cmd_signal.emit(PPSCommand.CANCEL_JOB.value))
 
         self.ui.btnOpenScanner.pressed.connect(lambda: self.ui_send_cmd_signal.emit(PPSCommand.OPEN_HOUSING.value))

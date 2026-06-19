@@ -70,12 +70,18 @@ class CompareCloudServer:
         job_id = uuid.uuid4().hex
 
         try:
-            pre = self.pre_cloud
+            
             for i in range(10):
                 if self.post_cloud is not None:
                     break
                 rospy.sleep(1)
  
+            for i in range(10):
+                if self.pre_cloud is not None:
+                    break
+                rospy.sleep(1) 
+
+            pre = self.pre_cloud
             post = self.post_cloud
 
             if pre is None or post is None:

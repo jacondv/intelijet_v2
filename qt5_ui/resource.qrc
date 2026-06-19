@@ -1,23 +1,32 @@
 <RCC>
   <qresource prefix="icon">
+    <file>icon/focus_orange.png</file>
+    <file>icon/focus.png</file>
+    <file>icon/sort-asc-1.png</file>
+    <file>icon/sort-desc-1.png</file>
+    <file>icon/sort-asc.png</file>
+    <file>icon/sort-desc.png</file>
     <file>icon/rename.png</file>
     <file>icon/add-file.png</file>
     <file>icon/add-folder.png</file>
     <file>icon/folders.png</file>
     <file>icon/file.png</file>
     <file>icon/visual.png</file>
+    <file>icon/view.png</file>
     <file>icon/mark.png</file>
     <file>icon/note.png</file>
     <file>icon/check.png</file>
     <file>icon/delete.png</file>
     <file>icon/multiplication.png</file>
     <file>icon/save.png</file>
-    <file>icon/Jacon Equipment Logo PNG.png</file>
     <file>icon/power-button.png</file>
+    <file>icon/Jacon Equipment Logo PNG.png</file>
     <file>icon/arrow-31-48.ico</file>
     <file>icon/arrow-96-48.ico</file>
     <file>icon/car-4-48.ico</file>
     <file>icon/group-48.ico</file>
+    <file>icon/user-logout.png</file>
+    <file>icon/user.png</file>
     <file>icon/redeem-32.ico</file>
     <file>icon/redeem-48.ico</file>
     <file>icon/redeem-64.ico</file>
