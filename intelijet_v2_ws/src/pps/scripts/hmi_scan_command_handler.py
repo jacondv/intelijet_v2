@@ -165,7 +165,7 @@ class ScanManagerNode:
             self.scanner_controller.on_cancel()
             self.set_state(DeviceStatus.IDLE)
 
-        elif cmd == PPSCommand.SET_HOME_POSITION.value:
+        elif cmd == PPSCommand.PLC_SET_HOME_POSITION.value:
             self.scanner_controller.set_home_position()
 
         else:

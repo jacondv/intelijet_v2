@@ -1,15 +1,23 @@
 #!/bin/bash
 
-sudo usermod -aG docker nuc
+CONTAINER_NAME=intelijet
+IMAGE_NAME=jacondv/jacon-pps-noetic
+
+TARGET_USER=$USER
+
+if id -nG "$TARGET_USER" | grep -qw docker; then
+    echo "User '$TARGET_USER' is already in the docker group."
+else
+    echo "Adding '$TARGET_USER' to the docker group..."
+    sudo usermod -aG docker "$TARGET_USER"
+    echo "Done."
+fi
 
 # Cho phép container kết nối X server
 xhost +local:docker
 trap "xhost -local:docker; echo 'Stopping container...'; sudo docker stop $CONTAINER_NAME; exit" INT
 
-sudo xrandr --output DSI-1 --rotate right
-
-CONTAINER_NAME=intelijet
-IMAGE_NAME=jacondv/jacon-pps-noetic
+xrandr --output DSI-1 --rotate right
 
 # QT_ENV="export QT_AUTO_SCREEN_SCALE_FACTOR=0; export QT_SCREEN_SCALE_FACTORS=1.25; export QT_SCALE_FACTOR=1.25;"
 
@@ -26,7 +34,7 @@ run_container() {
         echo "Container $CONTAINER_NAME does not exist. Running new container..."
         sudo docker run -it \
             --name $CONTAINER_NAME \
-            -v /home/nuc/intelijet_v2:/root/intelijet_v2 \
+            -v "$HOME/intelijet_v2:/root/intelijet_v2" \
             -v /etc/localtime:/etc/localtime:ro \
             -v /etc/timezone:/etc/timezone:ro \
             -e DISPLAY=$DISPLAY \
@@ -45,4 +53,3 @@ run_container() {
 
 
 run_container
-
