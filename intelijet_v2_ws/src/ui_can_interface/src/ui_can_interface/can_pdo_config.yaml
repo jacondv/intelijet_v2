@@ -39,7 +39,9 @@ pdos:
     cob_id: 1932  
     fields:
       - name: gRx_byZeroRequest
-        byte: 1
+        byte: 0
+        bit: 0
+        type: bool
         type: byte #uint8
 
   RxScannerSpeed:

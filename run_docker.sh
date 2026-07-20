@@ -1,7 +1,7 @@
 #!/bin/bash
 
 CONTAINER_NAME=intelijet
-IMAGE_NAME=jacondv/jacon-pps-noetic
+IMAGE_NAME=jacondv/jacon-pps-noetic:v2.1
 
 TARGET_USER=$USER
 
