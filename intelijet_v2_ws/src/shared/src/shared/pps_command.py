@@ -13,10 +13,11 @@ class PPSCommand(Enum):
     # Command sent to PLC start at 101
 
     PLC_START_PRESCAN = 101
-    PCL_START_POSTSCAN = 102
+    PLC_START_POSTSCAN = 102
     PLC_OPEN_HOUSING = 103
     PLC_CLOSE_HOUSING = 104
     PLC_PAUSE_HOUSING = 105
+    PLC_SET_HOME_POSITION = 106
 
     #Command Set speed for Housing
     PLC_SET_RETRACT_SPEED = 201

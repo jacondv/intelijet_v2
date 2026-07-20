@@ -191,6 +191,8 @@ class App(QMainWindow):
 
         self.ui.btnLogin.released.connect(self.on_login_clicked)
 
+        self.ui.btnSetHome.released.connect(self.confirm_and_send_sethome)
+
         # --- Select Job to work process ---
         self.load_active_jobs(self.ui.cbbJobSelect, ACTIVE_JOB_FILE)
         self.load_current_job()
@@ -272,6 +274,19 @@ class App(QMainWindow):
         if reply == QMessageBox.Yes:
             # Gửi signal nếu người dùng xác nhận
             self.ui_send_cmd_signal.emit(PPSCommand.START_PRESCAN.value)
+
+    def confirm_and_send_sethome(self):
+        reply = QMessageBox.question(
+            self,
+            "Confirm",
+            "This will set current angle to zero. /nDo you want to continue?",
+            QMessageBox.Yes | QMessageBox.No,
+            QMessageBox.No
+        )
+
+        if reply == QMessageBox.Yes:
+            # Gửi signal nếu người dùng xác nhận
+            self.ui_send_cmd_signal.emit(PPSCommand.PLC_SET_HOME_POSITION.value)
 
     # Load last prescan at startup, and put to topic compare_cloud_action_server can use it to continue compare when prescan cloud is missing.
     def _load_last_prescan(self):

@@ -35,7 +35,7 @@ class CommandHandler:
             self.send_pdo(pdo_name, field_name, value=0)
             return True
 
-        elif cmd == PPSCommand.PCL_START_POSTSCAN.value:
+        elif cmd == PPSCommand.PLC_START_POSTSCAN.value:
             pdo_name= "RxScannerCommandRos"
             field_name="bPerformPostScan"
             self.send_pdo(pdo_name, field_name, value=1)
@@ -44,7 +44,7 @@ class CommandHandler:
             return True
 
 
-        elif cmd == "set_zero_position":
+        elif cmd == PPSCommand.PLC_SET_HOME_POSITION.value:
             pdo_name= "RxZeroCommand"
             field_name="gRx_byZeroRequest"
             self.send_pdo(pdo_name, field_name, value=1)

@@ -672,6 +672,40 @@ class Ui_MainWindow(object):
         self.lblEncoderRawValue.setObjectName("lblEncoderRawValue")
         self.horizontalLayout_9.addWidget(self.lblEncoderRawValue)
         self.verticalLayout_11.addWidget(self.widget_11)
+        self.widget_20 = QtWidgets.QWidget(self.widget_2)
+        self.widget_20.setObjectName("widget_20")
+        self.horizontalLayout_18 = QtWidgets.QHBoxLayout(self.widget_20)
+        self.horizontalLayout_18.setObjectName("horizontalLayout_18")
+        self.label_13 = QtWidgets.QLabel(self.widget_20)
+        self.label_13.setMinimumSize(QtCore.QSize(0, 60))
+        self.label_13.setObjectName("label_13")
+        self.horizontalLayout_18.addWidget(self.label_13)
+        self.btnSetHome = QtWidgets.QPushButton(self.widget_20)
+        self.btnSetHome.setMinimumSize(QtCore.QSize(0, 60))
+        self.btnSetHome.setMaximumSize(QtCore.QSize(145, 16777215))
+        self.btnSetHome.setStyleSheet("QPushButton {\n"
+"    background-color: #FFA726;     /* xanh sáng hơn */\n"
+"    color: white;\n"
+"    border: 1px solid #60a3bc;\n"
+"    padding: 6px 10px;\n"
+"    font-size: 20px;\n"
+"    border-radius:0;\n"
+"}\n"
+"\n"
+"QPushButton:hover {\n"
+"    background-color: #FFA726;     /* #60a3bc + sáng */\n"
+"    border: 1px solid #74b5cd;\n"
+"    font-size: 22px;\n"
+"}\n"
+"\n"
+"QPushButton:pressed {\n"
+"    background-color: #EF6C00;     /* #60a3bc - đậm */\n"
+"    border: 1px solid #4d8ea3;\n"
+"    \n"
+"}")
+        self.btnSetHome.setObjectName("btnSetHome")
+        self.horizontalLayout_18.addWidget(self.btnSetHome)
+        self.verticalLayout_11.addWidget(self.widget_20)
         spacerItem3 = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding)
         self.verticalLayout_11.addItem(spacerItem3)
         self.horizontalLayout_15.addWidget(self.widget_2)
@@ -952,6 +986,8 @@ class Ui_MainWindow(object):
         self.lblEncoder.setText(_translate("MainWindow", "--"))
         self.label_4.setText(_translate("MainWindow", "Encoder value (raw):"))
         self.lblEncoderRawValue.setText(_translate("MainWindow", "--"))
+        self.label_13.setText(_translate("MainWindow", "Set zero position"))
+        self.btnSetHome.setText(_translate("MainWindow", "Set"))
         self.groupBox_2.setTitle(_translate("MainWindow", "Processing stages"))
         self.label_8.setText(_translate("MainWindow", "Align Cloud"))
         self.cbbAutoAlign.setItemText(0, _translate("MainWindow", "On"))
@@ -980,7 +1016,6 @@ class Ui_MainWindow(object):
         self.btnCloseScanner.setText(_translate("MainWindow", "CLOSE\n"
 "HOUSING"))
 from ui import resource_rc
-
 
 if __name__ == "__main__":
     import sys

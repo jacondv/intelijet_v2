@@ -24,6 +24,7 @@ class HousingControl():
             'stop': PPSCommand.PLC_PAUSE_HOUSING.value,
             'set_retract_speed': PPSCommand.PLC_SET_RETRACT_SPEED.value,
             'set_extend_speed': PPSCommand.PLC_SET_EXTEND_SPEED.value,
+            'set_home_position': PPSCommand.PLC_SET_HOME_POSITION.value
         }
 
     def _send_cmd(self, cmd_name, speed=0):
@@ -62,6 +63,9 @@ class HousingControl():
 
     def stop(self):
         self._send_cmd('stop')
+
+    def set_home_position(self):
+        self._send_cmd('set_home_position')
 
 
 # ------------------- GenericScanController -------------------
@@ -206,3 +210,12 @@ class GenericScanController(ABC):
             return False
         
 
+    # ----- Set home position -----
+    def set_home_position(self):
+        try:
+            log_status(name=cfg.NOTIFICATION, message="[INFO] Setting home position...")
+            self.housing.set_home_position()
+            rospy.sleep(1)
+            log_status(name=cfg.NOTIFICATION, message="[INFO] Home position set.")
+        except Exception as e:
+            rospy.logerr(f"Error setting home position: {e}")
