@@ -128,7 +128,9 @@ class App(QMainWindow):
         
 
         # --- VTK Viewer ---
+        
         self.vtk_viewer = VTKViewer(self.ui.cloudFrame)
+        self.ui.btnZoomCenter.released.connect(self.vtk_viewer.restore_initial_view)
 
         #TODO
         

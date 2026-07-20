@@ -5,42 +5,7 @@ from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QWidget, QVBoxLayout, QPushButton, QGestureEvent, QPinchGesture, QPanGesture
 
 import rospy
-# # Subclass QVTKRenderWindowInteractor để bắt resize
-# class QVTKWidget(QVTKRenderWindowInteractor):
-#     def __init__(self, parent=None, on_resize=None):
-#         super().__init__(parent)
-#         self._on_resize = on_resize
 
-#     def resizeEvent(self, event):
-#         super().resizeEvent(event)
-#         if self._on_resize:
-#             self._on_resize()
-
-# Support touch zoom
-class DraggableButton(QPushButton):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self._drag_active = False
-        self.setCursor(Qt.OpenHandCursor)  # con trỏ tay mở
-
-    def mousePressEvent(self, event):
-        if event.button() == Qt.LeftButton:
-            self._drag_active = True
-            self._drag_pos = event.globalPos() - self.frameGeometry().topLeft()
-            self.setCursor(Qt.ClosedHandCursor)  # con trỏ tay nắm
-            event.accept()
-        super().mousePressEvent(event)
-
-    def mouseMoveEvent(self, event):
-        if self._drag_active:
-            self.move(event.globalPos() - self._drag_pos)
-            event.accept()
-        super().mouseMoveEvent(event)
-
-    def mouseReleaseEvent(self, event):
-        self._drag_active = False
-        self.setCursor(Qt.OpenHandCursor)
-        super().mouseReleaseEvent(event)
 
 class QVTKWidget(QVTKRenderWindowInteractor):
     def __init__(self, parent=None, on_resize=None, vtk_viewer=None):
@@ -141,27 +106,6 @@ class VTKViewer:
         style = vtk.vtkInteractorStyleTrackballCamera()
         self.iren.SetInteractorStyle(style)
 
-        # ---- Zoom center button (overlay) ----
-        self.btn_zoom_center = DraggableButton("⤢", self.parent_widget)
-        self.btn_zoom_center.show()
-        self.btn_zoom_center.setToolTip("Zoom to initial view")
-        self.btn_zoom_center.setFixedSize(100, 100)
-        self.btn_zoom_center.setStyleSheet("""
-            QPushButton {
-                background: rgb(40, 40, 40);
-                border: 1px solid white;       /* viền trắng */
-                color: white;
-                border-radius: 0px;
-                font-size: 24pt;
-            }
-            QPushButton:hover {
-                background: rgb(70, 70, 70);
-            }
-        """)
-
-        self.btn_zoom_center.clicked.connect(self.restore_initial_view)
-        self.btn_zoom_center.raise_()
-        # self._update_overlay_button()  # vị trí lúc đầu
 
         # ----- Axes orientation -----
         axes = vtk.vtkAxesActor()
@@ -214,15 +158,6 @@ class VTKViewer:
             self.renderer.ResetCameraClippingRange()
 
         self.vtkWidget.GetRenderWindow().Render()
-
-    def move_button_to_bottom_right(self, margin=10):
-        margin = 10
-        x = self.vtkWidget.width() - self.btn_zoom_center.width() - margin
-        y = self.vtkWidget.height() - self.btn_zoom_center.height() - margin
-        self.btn_zoom_center.raise_()
-        self.btn_zoom_center.move(x, y)
-
-
 
     # ------------------ Camera ------------------
     def _save_camera_state(self):
