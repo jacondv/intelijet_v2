@@ -502,6 +502,8 @@ class ReportViewManager(QDialog, Ui_frm_MainForm):
             return
 
         for project_name in sorted(os.listdir(PROJECT_DIR)):
+            if project_name.lower() == ".stfolder":
+                continue
             project_path = os.path.join(PROJECT_DIR, project_name)
             if os.path.isdir(project_path):
                 jobs = [j for j in sorted(os.listdir(project_path)) if os.path.isdir(os.path.join(project_path, j))]
