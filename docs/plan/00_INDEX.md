@@ -59,7 +59,7 @@ Ghi chú thứ tự:
 | P2 | ✅ Xong | Gộp TopicAliveMonitor/PingMonitor/StateEchoMonitor, bỏ eval(), sửa bug update_status, cập nhật devices.yaml (lidar ip=192.168.82.121), thêm iputils-ping vào Dockerfile. Việc 5 (ros_thread.py/app.py) đã soát — không cần sửa. Commit `9969317`, `2c6370e`, `e348971`. Chưa chạy test thật trong ROS/Docker — xem Ghi chú phát sinh trong phase_02. |
 | P3 | ✅ Xong (code) | NotificationCenter (lịch sử+ghim+chống spam), set_device_label, dialog lịch sử, log_status có level. Commit `44b8abb`. **Chưa chạy được test thật** (không cài được PyQt5 trong sandbox) — chỉ py_compile. Ưu tiên chạy `test_notification_center.py` trong Docker trước khi tin tưởng hoàn toàn. |
 | P4 | ✅ Xong | JobStore/CloudPipelineService/ReportService tách khỏi `App`. Commit `f045736`. Test JobStore chạy thật, pass 7/7 (service duy nhất không cần ROS/Qt). CloudPipelineService/ReportService mới chỉ py_compile — cần Docker để chạy 1 chu trình prescan→postscan→compare→report thật. |
-| P5 | ⬜ Chưa làm | |
+| P5 | ✅ Xong (code), ⚠️ CHƯA test thật | ScanPipelineWorker (hàng đợi 1 chỗ) đưa convert/color/VTK/save/report ra khỏi GUI thread; box widget + max_points giảm lag render. Commit `445696c`. **Đây là phase quan trọng nhất — bắt buộc chạy thử trong Docker trước khi tin tưởng** (chưa có ROS/Qt/Open3D trong sandbox để tự kiểm chứng "UI không đơ khi xuất report"). |
 | P6 | ⬜ Chưa làm | |
 | P7 | ⬜ Chưa làm | |
 | P8 | ⬜ Chưa làm | |

@@ -56,8 +56,26 @@ b. **Không dựng lại box widget mỗi lần update**: `VTKViewer.update()` h
 
 ## Báo cáo hoàn thành
 
-_(chưa có)_
+**Trạng thái: ✅ Xong (mặt code) — CHƯA kiểm chứng thật trong Docker.** Commit `445696c`.
+
+### Đã làm
+- `ui/src/ui/scan_pipeline_worker.py` (mới): `ScanPipelineWorker(QThread)` — 1 instance sống cùng vòng đời `App` (khác `CompareWorker` tạo mới mỗi lần bấm nút). `submit()` thread-safe, hàng đợi 1 chỗ (`_current_job`/`_pending_job` bảo vệ bằng `threading.Lock`): job mới đến khi đang chạy → thay thế job đang chờ (chưa chạy), job đang chạy luôn được chạy hết. `run()` là bản port gần như từng dòng của `on_cloud_received` cũ, chỉ đọc/ghi `job` dict + gọi `CloudPipelineService`/`ReportService`/`JobStore` (đều không đụng widget từ Phase 4) — không đụng `self.ui.*`/`vtk_viewer` bao giờ.
+- `app.py::on_cloud_received`: giờ chỉ đóng gói state cần thiết (snapshot `isManualCompare`, `current_post_scan_path`, 2 giá trị combobox auto-compare/auto-report đọc ngay trên GUI thread) vào dict rồi `submit()` — return ngay, không chặn GUI thread. Thêm 3 slot mới (`_on_scan_cloud_ready`, `_on_scan_report_done`, `_on_scan_report_failed`) nhận kết quả qua signal và cập nhật `vtk_viewer`/`self.report_name`/`self.isManualCompare`/`self.current_post_scan_path`/`NotificationCenter` — **đã soát kỹ để giữ đúng điều kiện mutate gốc** (ví dụ `current_post_scan_path` reset khi `isManualCompare` true, độc lập với điều kiện reset `isManualCompare`, đúng như code gốc chứ không gộp chung thành 1 cờ).
+- Xoá `App.export_report()`/`App.save_job()` — không còn call site sau khi logic chuyển vào worker (tương tự cách xử lý code chết ở Phase 4).
+- `closeEvent`: chờ `scan_worker.wait(5000)` trước khi kill ROS node; hết 5s thì log cảnh báo và thoát tiếp (không treo).
+- 2 sửa giảm lag render:
+  - `data_converter.py::o3d_to_vtk_polydata`: thêm tham số `max_points` (mặc định `None` — không đổi hành vi các caller khác), subsample đều khi vượt ngưỡng. Chỉ áp dụng ở `CloudPipelineService.to_vtk()` (ngưỡng 2,000,000 điểm) — **`save_ply`/`ReportService.export` dùng cloud gốc không bị cắt**, đúng yêu cầu không giảm chất lượng lưu/report.
+  - `vtk_viewer.py::_enable_box_widget`: tạo `vtkBoxWidget` + observer **một lần duy nhất**, các lần sau chỉ `SetProp3D`+`PlaceWidget()`+`On()`. Thêm None-check cho `self.current_actor` trong observer callback (phòng vệ nhẹ, không đổi hành vi khi actor luôn tồn tại như thực tế vận hành).
+- `py_compile` pass cho cả 5 file sửa/mới.
+
+### Chưa kiểm chứng được (không có ROS/Qt/Open3D/VTK trong sandbox)
+- **Tiêu chí thành công chính của cả kế hoạch** — "UI không đơ trong lúc xuất report" — **chưa xác nhận bằng cách chạy app thật**. Đây là phase quan trọng nhất, cần ưu tiên chạy thử trong Docker trước khi tin tưởng.
+- Chưa test: 2 scan liên tiếp nhanh (kiểm tra hàng đợi 1 chỗ hoạt động đúng, không crash), đóng app khi đang xuất report (kiểm tra `closeEvent` timeout), so sánh 1 file PDF trước/sau (đảm bảo không đổi chất lượng report).
+- Chưa xác nhận trực quan box widget không bị giật khi tương tác nhiều lần liên tiếp.
 
 ## Ghi chú phát sinh
 
-_(chưa có)_
+1. **Rủi ro race điều kiện đã được xử lý chủ động**: `isManualCompare`/`current_post_scan_path` được snapshot vào `job` dict ngay tại thời điểm `submit()` (GUI thread, đồng bộ) thay vì để worker đọc lại `self.*` — tránh trường hợp người dùng bấm "Compare" lần 2 trong lúc worker vẫn đang xử lý lần 1 làm lệch dữ liệu. Đây là điểm thiết kế quan trọng, khác một chút so với việc "chỉ di chuyển nguyên xi" nhưng bắt buộc phải làm để threading an toàn — đã ghi rõ trong code comment.
+2. Vì exception trong `_process()` giờ được bắt bởi `try/except` bao ngoài trong `run()` (thêm mới, cần thiết cho threading) thay vì bởi `try/except` cũ nằm ngay trong `on_cloud_received`, một số lỗi trước đây chỉ `print` ra console giờ sẽ **hiện luôn lên NotificationCenter** (qua `notify` signal) — đây là cải thiện tự nhiên đi kèm, không phải mục tiêu chính nhưng có lợi, phù hợp hướng đi Phase 3.
+3. Không tạo `ProcessedCloud`/wrapper gì thêm ngoài dict `job`/`metadata` đơn giản — giữ tối thiểu đúng tinh thần "không thêm trừu tượng khi chưa cần".
+4. Việc `PROJECT_DIR`/`THICKNESS_DEFAULT`/`TOLERANCE_DEFAULT`/6 topic string được truyền qua constructor thay vì worker tự tính lại từ `cfg` — chủ đích để `app.py` vẫn là nguồn duy nhất định nghĩa các hằng số này (matching quyết định đã đưa ra ở Phase 4 khi tách service), tránh 2 nơi có thể lệch nhau nếu `cfg` đổi cấu trúc sau này.
