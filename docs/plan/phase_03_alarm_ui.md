@@ -55,8 +55,25 @@ c. **Lịch sử cảnh báo**: thêm 1 dialog đơn giản (file mới `ui/src/
 
 ## Báo cáo hoàn thành
 
-_(chưa có)_
+**Trạng thái: ✅ Xong (mặt code).** Commit `44b8abb`.
+
+### Đã làm
+- `shared/log_status.py`: thêm tham số `level` tường minh, giữ tương thích ngược (không truyền `level` → suy từ `[WARN]`/`[ERROR]` như cũ); `unpack_log_status()` tự điền `level` cho payload cũ.
+- `ui/src/ui/notification_center.py` (mới): `NotificationCenter` — lịch sử tối đa 50, chống trùng trong 5s, luật ghim: `error` ghim label 10s, `info` đến trong lúc ghim bị bỏ qua, `warning`/`error` mới vẫn ghi đè được ngay. `push()` lưu lịch sử, `push_transient()` chỉ đổi label không lưu lịch sử (dùng cho tiến trình compare chạy liên tục). Kèm `set_device_label()` tô màu label thiết bị theo trạng thái.
+- `ui/src/ui/notification_history_dialog.py` (mới): dialog code thuần (không đụng `.ui`), liệt kê lịch sử, màu theo level, nút Close to cho cảm ứng, tự ngắt kết nối signal khi đóng (tránh leak).
+- `ui/scripts/app.py`: tạo 1 `NotificationCenter`, nối `label_changed` → `lblNotification`; gắn `mousePressEvent` để chạm vào label mở lịch sử. Gộp 4 khối if/else lặp trong `update_data` thành 1 vòng lặp qua `set_device_label`; **chỉ phát notification khi trạng thái thiết bị thực sự đổi** (so với `_prev_device_state`, không phát mỗi tick 1Hz — tránh việc 2 thiết bị lỗi cùng lúc giành giật label liên tục). `on_compare_process` → `push_transient` (không vào lịch sử, đúng yêu cầu chống spam); `on_compare_done` → `push` (vào lịch sử, level info/error theo success).
+- `ui/scripts/ros_thread.py::rosout_callback`: đổi `data_store[name]` từ string sang dict `{message, level}` để `level` từ `log_status()` thực sự tới được UI — đã grep xác nhận đây là nơi tiêu thụ duy nhất, không có call site nào khác bị vỡ.
+- `ui/src/ui/tests/test_notification_center.py` (mới): 5 test case theo đúng yêu cầu kế hoạch (cap 50, dedup, dedup hết hạn, error ghim chặn info, transient không vào lịch sử).
+- `py_compile` pass cho toàn bộ 7 file sửa/mới.
+
+### Chưa kiểm chứng được trong phiên này
+- **Không cài được PyQt5** trong sandbox (2 lần `pip install PyQt5` đều bị dừng/timeout — môi trường này không có sẵn Qt, đúng như Phase 1/2 đã gặp với `rospy`). Vì vậy **chưa chạy được** `test_notification_center.py` thật, chỉ `py_compile` (kiểm tra cú pháp) — logic đã soát tay kỹ theo từng test case nhưng chưa có kết quả chạy thực tế xác nhận.
+- Chưa test tay trong app thật (mục 3 phần Kiểm chứng: rút kết nối 1 thiết bị → xem label đổi đỏ + vào lịch sử; chạm label mở dialog).
+- **Khuyến nghị mạnh**: chạy `python3 -m pytest intelijet_v2_ws/src/ui/src/ui/tests/test_notification_center.py` (hoặc `python3 .../test_notification_center.py`) trong Docker trước khi coi phase này đáng tin cậy hoàn toàn — đây là lần đầu tiên trong 3 phase có code Qt thật (`QObject`, `pyqtSignal`) chưa từng được thực thi.
 
 ## Ghi chú phát sinh
 
-_(chưa có)_
+1. `push()` gọi `_try_update_label()` mỗi lần kể cả khi trùng (dedup chỉ chặn thêm bản ghi lịch sử mới, không chặn cập nhật label) — nghĩa là nếu 1 thiết bị vẫn đang lỗi, mỗi lần `update_data` phát lại thông báo giống hệt (nhưng theo thiết kế mới của tôi thì **chỉ phát khi trạng thái đổi**, không phát lặp lại mỗi giây — nên tình huống dedup lặp trong thực tế hiếm xảy ra qua đường này, chủ yếu áp dụng cho các log message từ `pps` gọi liên tiếp).
+2. Nếu 2 thiết bị đổi trạng thái lỗi trong cùng 1 tick `update_data` (ví dụ mất mạng làm cả Lidar và CAN rớt cùng lúc), label cuối cùng hiển thị là của thiết bị được xử lý sau trong vòng lặp `device_labels` (thứ tự: encoder, lidar, pcan, plc) — cả hai vẫn được ghi đầy đủ vào lịch sử, chỉ label hiện tại là của cái sau. Chấp nhận được vì lịch sử đầy đủ, nhưng ghi chú lại để không bất ngờ.
+3. Màu sắc (`LEVEL_COLORS`) hiện đặt cứng trong `notification_center.py` (không qua config) — nếu sau này muốn theo theme/dark-mode thì cần tách ra, nhưng không thuộc phạm vi phase này.
+4. Do không có PyQt5 để chạy thật, **rủi ro lớn nhất chưa được loại trừ**: khả năng `QObject.__init__(self, parent)` hoặc cách dùng `pyqtSignal` có lỗi cú pháp/runtime nhỏ mà `py_compile` không bắt được (vd sai kiểu tham số signal). Cần ưu tiên chạy thử trong Docker trước khi triển khai thật.
