@@ -96,19 +96,6 @@ def save_config(config_obj, filename=CONFIG_FILE_NAME):
     with open(config_path, "w") as f:
         yaml.dump(data, f, default_flow_style=False, sort_keys=False)
 
-# def reload_config():
-#     global CONFIG
-#     config_dir = get_config_dir()
-#     config_path = os.path.join(config_dir, "last_used.yaml")
-#     if os.path.isfile(config_path):
-#         CONFIG = load_config("last_used.yaml")
-#     else:
-#         CONFIG = load_config("commond.yaml", 
-#                              "lidar.yaml", 
-#                              "runtime.yaml")
-        
-#         save_config(CONFIG, filename="last_used.yaml")
-
 
 def reload_config():
     global CONFIG

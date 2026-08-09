@@ -28,8 +28,7 @@ from project_dlg_manager import ProjectManager
 from setting_page_manager import SettingPageManager
 
 # from data_binder import DataBinder
-from ui.update_data_utils import DataBinder, load_config_to_ui, load_ui_to_config   
-# from ui.compare_cloud_worker import cloud_compare
+from ui.update_data_utils import DataBinder, load_config_to_ui, load_ui_to_config
 
 from shared.pps_command import PPSCommand
 
@@ -151,8 +150,6 @@ class App(QMainWindow):
         #Receive cloud check cloud is come from /compared topic --> export report
         self.ui_data_update.connect(self.update_data)
         self.ui_send_cmd_signal.connect(self.ros_thread.send_command)
-        # cloud_compare.compare_done.connect(self.update_pointcloud_from_data)
-        # cloud_compare.compare_done2.connect(self.on_manual_export_report)
 
         # Set rntime parameter for ROS
         combo_boxes = [
@@ -626,15 +623,7 @@ class App(QMainWindow):
             self.isManualCompare = True
             self.current_post_scan_path = postscan_path
 
-            # cloud_compare.set_prescan(pre)
-            # cloud_compare.set_postscan(post)
-            # if self.ui.cbbAutoAlign.currentText().lower() == "on":
-            #     cloud_compare.align()
-            # cloud_compare.compare() #--> output signal compare_done the cloud result.
-
-            # ✅ chạy trong main thread → OK
             from ui.compare_cloud_worker import CompareWorker
-            # ✅ tạo worker, TRUYỀN PATH
 
             do_align        = rospy.get_param("/runtime/do_align", True)
             do_pre_process  = rospy.get_param("/runtime/do_pre_process", True)

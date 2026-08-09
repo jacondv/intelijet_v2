@@ -6,13 +6,11 @@ from datetime import datetime
 from pps.data_converter import cloudconverter
 from pps.tunnel_processing import TunnelProcessing
 from pps.helper import run_compare, keep_largest_cluster
-# from pps.cloud_compare.compare_method_m3c2 import compute_heatmap_m3c2_ep as compute_heatmap_to_plane
 from pps.cloud_processing.utils_align import align_cloud
 from pps.image_processing.keypoint_processing_v3 import KeypointCloudAlignManager
 
 from pps.helper import crop_pointcloud_by_box, check_transform
 from pps.cloud_processing.utils_align import align_cloud, pre_align_cloud
-# from pps.cloud_processing.ceres_aligner import ceres_refine_icp
 from shared.config_loader import CONFIG as cfg
 
 class CloudComparePipeline:
@@ -104,23 +102,5 @@ class CloudComparePipeline:
             source=post_cloud,
             target=pre_cloud
         )
-
-
-        # indices = np.where(np.abs(distance) < 25.0)[0]
-        # new_post_cloud = post_cloud.select_by_index(indices)
-
-        # T,sumary = ceres_refine_icp(
-        #     src_cloud=new_post_cloud,
-        #     tgt_cloud=pre_cloud,
-        #     init_T=np.eye(4),
-        #     max_iter=20)
-
-        # print(f"Ceres ICP refine result:\nT:\n{T}\nSummary:\n{sumary}")
-        # cloud_compared, distance = compute_heatmap_to_plane(
-        #         source=pre_cloud,
-        #         target=post_cloud,
-        #         target_thickness=30,
-        #         tolerance_thickness=10,
-        # )
 
         return cloud_compared, distance

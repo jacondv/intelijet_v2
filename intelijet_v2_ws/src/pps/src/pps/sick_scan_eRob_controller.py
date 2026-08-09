@@ -1,6 +1,5 @@
 
 #!/usr/bin/env python3
-# scripts/sick_scan_controller.py
 import rospy
 from pps.generic_scan_controller import GenericScanController
 from std_msgs.msg import String, Int32

@@ -8,7 +8,6 @@ from std_msgs.msg import String, Empty, Int32
 # from pps.msg import StartScanAction, StartScanGoal
 # from pps.msg import CompareCloudAction, CompareCloudGoal
 from pps.cloud_compare.compare_cloud_base_client import CompareBaseClient
-from pps.sick_scan_controller import SickScanController
 from pps.sick_scan_eRob_controller import SickScanErobController
 
 # from ros_blkarc_msgs.msg import TimedScanAction, TimedScanGoal
@@ -21,7 +20,6 @@ from shared.config_loader import CONFIG as cfg
 
 def get_scanner_controller(status_callback=None, active_lidar=cfg.active_lidar):
     if active_lidar == "lms511":
-        # controller = SickScanController(status_callback=status_callback)
         controller = SickScanErobController(status_callback=status_callback)
         return controller
     
@@ -65,14 +63,6 @@ class ScanManagerNode:
             do_upsample=do_upsample,
             timeout=150.0
         )
-
-        # self.client = actionlib.SimpleActionClient(
-        #     '/compare_cloud',
-        #     CompareCloudAction
-        # )
-        # self.client.wait_for_server()
-        # rospy.loginfo("Connected to /compare_cloud")
-
 
     def is_state(self, state):
         return self.current_state == state
@@ -122,33 +112,6 @@ class ScanManagerNode:
             self.compare_client.set_upsample(rospy.get_param("/runtime/do_upsample", True))
             self.compare_client.send_goal()
 
-            # success, message = self.__align_service_client.call()
-
-            # goal = CompareCloudGoal()
-            # goal.do_pre_process = True
-            # goal.do_post_process = True
-            # goal.do_align = True
-            # self.client.send_goal(goal)
-            
-            # self.client.wait_for_result()
-            # success = self.client.wait_for_result(rospy.Duration(150.0))
-            # if not success:
-            #     rospy.logerr("Compare timeout")
-            #     self.client.cancel_goal()
-            #     return   
-            
-            # result = self.client.get_result()
-            # state = self.client.get_state()
-            # if state == actionlib.GoalStatus.SUCCEEDED and result.success:
-            #     rospy.loginfo("Compare SUCCESS job_id=%s", result.job_id)
-            # else:
-            #     rospy.logerr("Compare FAILED state=%d", state)
-                
-            # if success:
-            #     rospy.loginfo("Alignment successful: %s", message)
-            # else:
-            #     rospy.logerr("Alignment failed: %s", message)
-
         elif cmd == PPSCommand.OPEN_HOUSING.value:
             if self.is_state(DeviceStatus.OPEN_HOUSING):
                 rospy.logwarn("Already in OPEN_HOUSING state, ignoring command")
@@ -170,24 +133,6 @@ class ScanManagerNode:
 
         else:
             pass
-
-
-    # def __send_scan_cmd(self, output_topic):
-        
-    #     goal = TimedScanGoal(output_topic=output_topic,
-    #                          scan_time_seconds=self.scan_time_seconds)
-
-    #     rospy.loginfo("Sending scan goal: %s", output_topic)
-    #     self.__scan_action_client.send_goal(goal)
-    #     self.__scan_action_client.wait_for_result()
-    #     result = self.__scan_action_client.get_result()
-    #     if result.success:
-    #         rospy.loginfo("Scan succeeded:")
-    #         return True
-    #     else:
-    #         rospy.logerr("Scan failed:")
-    #         return False
-
 
 
 def main():
