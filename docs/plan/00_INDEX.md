@@ -56,7 +56,7 @@ Ghi chú thứ tự:
 | Phase | Trạng thái | Ghi chú |
 |-------|-----------|---------|
 | P1 | ✅ Xong | Xoá 10 file chết (~4271 dòng) + dọn tham chiếu chết. Commit `761071c` (và các file bị xoá nằm lẫn trong commit `664290e` do lỗi staging — nội dung đúng, chỉ lệch message). py_compile pass. |
-| P2 | ⬜ Chưa làm | |
+| P2 | 🟡 Dở dang (WIP) | Dừng theo yêu cầu người dùng (tắt máy). Đã xong: gộp TopicAliveMonitor/PingMonitor/StateEchoMonitor, bỏ eval(), sửa bug update_status, cập nhật devices.yaml (lidar ip=192.168.82.121 từ sick_lms_511.launch). Commit `9969317`. Còn thiếu: Việc 5 (soát ros_thread.py/app.py), phần Kiểm chứng (chưa chạy ROS thật), docstring đã có sẵn trong code. Phiên sau đọc thẳng `phase_02_device_monitor.md` mục Báo cáo hoàn thành để tiếp tục. |
 | P3 | ⬜ Chưa làm | |
 | P4 | ⬜ Chưa làm | |
 | P5 | ⬜ Chưa làm | |

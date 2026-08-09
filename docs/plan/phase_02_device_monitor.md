@@ -77,8 +77,25 @@ Chi tiết bắt buộc:
 
 ## Báo cáo hoàn thành
 
-_(chưa có)_
+**Trạng thái: 🟡 Dở dang (WIP) — dừng giữa chừng theo yêu cầu người dùng (tắt máy).** Commit `9969317`.
+
+### Đã xong
+- Viết lại `shared/src/shared/device_monitor.py` theo đúng thiết kế 3 class: `TopicAliveMonitor` (gộp Lidar/Encoder/PCAN/PLCMonitor cũ, dùng cho encoder/pcan/plc), `PingMonitor` (mới — ping ICMP nền, thread riêng, ngưỡng 2 lần fail liên tiếp mới đổi DISCONNECTED), `StateEchoMonitor` (thay PPSMonitor, có thêm staleness check).
+- Dispatch bằng dict `MONITOR_CLASSES` thay `eval()`; type không hợp lệ hoặc monitor init lỗi → log lỗi + skip device đó, không crash `StatusReader`.
+- Sửa bug `update_status(dev_state, proc_state=None, detail=None)` — `None` giữ giá trị cũ thay vì ghi đè `''`.
+- `check_interval` = `max(timeout/2, 0.5)` (chặn timer quá dày) — đặt trong `Monitor.__init__`, dùng chung cho mọi loại monitor kể cả vòng lặp ping nền.
+- Docstring đầu file mô tả 3 loại monitor + cách thêm device mới (thay cho mục 7 "Docstring đầu file" trong kế hoạch).
+- Cập nhật `intelijet_v2_ws/src/config/devices.yaml`: `encoder`/`pcan`/`plc` → `type: TopicAliveMonitor`; `pps` → `type: StateEchoMonitor`; `lidar` → `type: PingMonitor`, bỏ `topic`/`msg_type`, thêm `ip: 192.168.82.121` — **tìm được IP thật** (không phải placeholder) từ `intelijet_v2_ws/src/sick_scan/launch/sick_lms_511.launch:15` (`<arg name="hostname" default="192.168.82.121"/>`).
+- `py_compile` pass; `yaml.safe_load` pass cho `devices.yaml`.
+
+### Còn thiếu (làm tiếp ở phiên sau)
+1. **Việc 5 — chưa soát lại `ui/scripts/ros_thread.py`/`ui/scripts/app.py`.** Theo thiết kế thì không cần đổi gì (key dict `lidar/encoder/pcan/plc/pps` và field `device_state` không đổi), nhưng **chưa mở 2 file này để xác nhận thực tế** — cần làm trước khi coi phase này xong.
+2. **Phần "Kiểm chứng" mục 2** (test thủ công: rút mạng lidar, xác nhận ping fail 1 lần chưa đổi trạng thái, 2 lần mới đổi) — chưa chạy vì không có môi trường ROS trong phiên này.
+3. Xác nhận `ping` binary có sẵn trong image Docker (gói `iputils-ping` — cần kiểm tra `Dockerfile`, hiện chưa thấy cài rõ ràng trong danh sách apt hiện tại). Nếu thiếu, `PingMonitor` sẽ luôn báo DISCONNECTED (subprocess lỗi "command not found") — **cần bổ sung `iputils-ping` vào Dockerfile nếu chưa có**, đây có thể thuộc phạm vi Phase 8 (Docker) hoặc xử lý ngay ở P2 tuỳ ai làm tiếp.
+4. Cập nhật bảng Trạng thái P2 trong `00_INDEX.md` từ 🟡 sang ✅ sau khi hoàn tất 3 mục trên.
 
 ## Ghi chú phát sinh
 
-_(chưa có)_
+1. **Cần kiểm tra `iputils-ping` có trong Dockerfile không** (xem mục 3 ở trên) — nếu thiếu, PingMonitor sẽ không hoạt động dù code đúng.
+2. IP lidar `192.168.82.121` lấy từ `default` của launch arg `hostname` trong `sick_lms_511.launch` — đây là giá trị mặc định trong code, cần người vận hành xác nhận đây đúng là IP thật đang dùng ở hiện trường (không phải giá trị test/demo), vì `.desktop`/launch có thể bị override bởi tham số khác khi chạy thật.
+3. `Monitor.__init__` giờ gọi `self._setup(cfg)` (hook do subclass override) rồi mới start timer — đây là thay đổi cấu trúc nhỏ so với thiết kế gốc trong kế hoạch (kế hoạch không nêu chi tiết cách tránh lặp code phần "tạo timer" giữa 3 subclass) nhưng không đổi hành vi bên ngoài, chỉ là cách tổ chức code nội bộ để 3 class không phải copy-paste đoạn `rospy.Timer(...)`.
