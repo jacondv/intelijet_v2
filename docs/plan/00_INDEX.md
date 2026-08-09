@@ -55,7 +55,7 @@ Ghi chú thứ tự:
 
 | Phase | Trạng thái | Ghi chú |
 |-------|-----------|---------|
-| P1 | ⬜ Chưa làm | |
+| P1 | ✅ Xong | Xoá 10 file chết (~4271 dòng) + dọn tham chiếu chết. Commit `761071c` (và các file bị xoá nằm lẫn trong commit `664290e` do lỗi staging — nội dung đúng, chỉ lệch message). py_compile pass. |
 | P2 | ⬜ Chưa làm | |
 | P3 | ⬜ Chưa làm | |
 | P4 | ⬜ Chưa làm | |

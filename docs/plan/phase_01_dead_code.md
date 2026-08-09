@@ -63,8 +63,38 @@ Quy tắc: chỉ xoá **khối code bị comment** (code từng chạy được)
 
 ## Báo cáo hoàn thành (Sonnet điền sau khi xong)
 
-_(chưa có)_
+**Trạng thái: ✅ Xong.**
+
+### Việc 1 — Xoá file (10/10, đúng danh sách, không có ngoại lệ)
+Tất cả 10 file đều grep sạch trước khi xoá (không còn tham chiếu sống nào ngoài các dòng đã dọn ở Việc 2):
+- `pps`: `keypoint_processing.py` (1093), `keypoint_processing_v2.py` (934), `sick_scan_controller.py` (211), `compare_cloud_action_server_old.py` (284), `scan_to_cloud_msg_node.py` (48), `compare_method_m3c2.py` (234), `utils_report.py` (62).
+- `shared`: `config_manager.py` (53).
+- `ui`: `scripts/main.py` (387), `src/ui/intelijet_ui(old).py` (965).
+- Tổng 4271 dòng xoá (khớp ước lượng ~4000 trong kế hoạch).
+- `ui/CMakeLists.txt`: gỡ block `catkin_install_python(PROGRAMS scripts/main.py ...)` (comment lại toàn khối vì không còn script nào để liệt kê). Không tìm thấy tham chiếu nào tới các file đã xoá trong `setup.py`/`CMakeLists.txt`/`package.xml` của `pps`, `shared`.
+
+### Việc 2 — Xoá tham chiếu chết / khối comment chết
+- `pps/scripts/hmi_scan_command_handler.py`: xoá `from pps.sick_scan_controller import SickScanController` (import sống nhưng class không dùng) + dòng comment gọi nó; xoá khối actionlib `CompareCloudAction` cũ bị comment (~6 dòng) trong `__init__`; xoá khối comment cũ (~26 dòng) trong nhánh `START_COMPARE`; xoá method `__send_scan_cmd` bị comment toàn bộ (~15 dòng) ở cuối class.
+- `pps/launch/pps.launch`: xoá dòng comment `<node ... scan_to_cloud_msg_node ...>`.
+- `pps/src/pps/cloud_processing/compare_pipeline.py`: xoá import comment `compare_method_m3c2`; xoá import comment `ceres_aligner` (tham chiếu module không tồn tại, gắn liền khối ceres bên dưới); xoá khối code chết cuối `run()` (ceres refine + `compute_heatmap_to_plane` cũ bị comment, ~16 dòng).
+- `pps/src/pps/sick_scan_eRob_controller.py`: sửa dòng header comment sai tên file (`# scripts/sick_scan_controller.py` — sót lại từ copy-paste, trỏ tới file vừa xoá).
+- `shared/src/shared/device_monitor.py`: xoá map `DEVICE_CLASSES` bị comment (~8 dòng), xoá 2 dòng comment gọi `DeviceMonitor`/`DEVICE_CLASSES` cũ trong `StatusReader.__init__`, xoá toàn bộ khối cuối file (~91 dòng: class `DeviceMonitor`/`DeviceStatusReader` cũ + dump schema `.msg`).
+- `shared/src/shared/config_loader.py`: xoá bản `reload_config()` cũ bị comment (~12 dòng), giữ bản đang dùng.
+- `ui/scripts/app.py`: xoá `# from ui.compare_cloud_worker import cloud_compare` (đầu file), 2 dòng `cloud_compare.compare_done*.connect` bị comment (init), khối `cloud_compare.set_prescan/set_postscan/align/compare` bị comment + 2 dòng comment tiếng Việt/emoji liền kề (trong `on_manual_compare`).
+
+### Kiểm chứng
+- `python3 -m py_compile` pass cho toàn bộ 8 file Python đã sửa (không xoá): `hmi_scan_command_handler.py`, `compare_pipeline.py`, `sick_scan_eRob_controller.py`, `device_monitor.py`, `config_loader.py`, `app.py`.
+- Grep quét lại toàn repo (`.py .launch .xml .sh CMakeLists.txt`) cho từng tên đã xoá — 0 kết quả, kể cả trường hợp dễ nhầm (`keypoint_processing` gốc vs `_v2`/`_v3`, `sick_scan_controller` vs `sick_scan_eRob_controller`).
+- Không có môi trường ROS trong phiên này → **chưa chạy được** `catkin_make`/mở app thật. Đây là phần chưa kiểm chứng — cần làm ở máy có Docker/ROS trước khi tin tưởng tuyệt đối.
+- `git diff --stat` giữa trước/sau (chỉ path `intelijet_v2_ws`) cho số dòng thay đổi lớn hơn dự kiến ở vài file KHÔNG phải do tôi sửa nhiều hơn báo cáo — xem Ghi chú phát sinh bên dưới (CRLF).
+
+### Commit
+- `664290e` — "Add optimization plan overview and detailed phase docs (P1-P9)": commit này lẽ ra chỉ nên chứa `docs/`, nhưng do 10 file đã bị `git rm` (stage) từ bước xác nhận trước đó, chúng bị gộp vào commit này khi tôi `git add docs/` rồi commit. Nội dung đúng như kế hoạch (đúng 10 file, không thừa), chỉ sai ở chỗ nằm nhầm commit/message.
+- `761071c` — `[P1] Remove dead code in pps/shared/ui`: chứa phần dọn tham chiếu chết (8 file sửa nội dung ở Việc 2).
 
 ## Ghi chú phát sinh
 
-_(chưa có)_
+1. **CRLF/LF tồn tại sẵn trong working tree trước khi phiên này bắt đầu** (không phải do tôi gây ra — đã xác nhận bằng `git status`/`git diff --stat` lúc mới bắt đầu, ảnh hưởng ~597 file toàn repo, insertions == deletions cho từng file, tức chỉ đổi line-ending không đổi nội dung). 8 file tôi `git add` ở Phase 1 (`app.py`, `device_monitor.py`, `config_loader.py`, `hmi_scan_command_handler.py`, `compare_pipeline.py`, `sick_scan_eRob_controller.py`, `pps.launch`, `CMakeLists.txt`) đã có sẵn CRLF trong working tree, nên khi tôi stage+commit, phần line-ending đó bị cuốn theo cùng nội dung tôi sửa — khiến `git diff --stat` giữa các commit hiển thị số dòng đổi lớn hơn nhiều so với các đoạn tôi thực sự sửa. Không ảnh hưởng hành vi Python (CRLF/LF không đổi ngữ nghĩa), nhưng nếu muốn repo nhất quán line-ending, cần một phase riêng dọn toàn bộ (KHÔNG nằm trong phạm vi tối ưu code — đây là vấn đề tooling/editor, đề xuất người dùng xử lý bằng `.gitattributes` + normalize 1 lần, ngoài phạm vi 9 phase).
+2. **`_guess_calling_package()` trong `config_loader.py`** hiện không còn được gọi ở đâu (hàm mồ côi) sau khi tôi xoá block `reload_config()` cũ tham chiếu gián tiếp tới ý tưởng đó — nhưng bản thân hàm này không nằm trong danh sách Việc 2 nên tôi **giữ nguyên**, không xoá (tránh vượt phạm vi phase). Đề xuất dọn ở Phase 6 (pps cleanup) hoặc một đợt dọn `shared` riêng.
+3. **`ui/CMakeLists.txt`**: sau khi bỏ `main.py`, khối `catkin_install_python` không còn script nào để liệt kê nên tôi comment nguyên khối thay vì xoá hẳn (giữ lại như một điểm neo/ghi chú cho người sau, tránh xoá cấu trúc CMake có thể cần khi thêm script khác) — nếu muốn xoá hẳn, có thể làm ở phase dọn dẹp khác.
+4. **Chưa kiểm chứng bằng chạy app/catkin_make thật** — phiên này không có môi trường ROS/Docker. Đề nghị người dùng chạy thử trong Docker trước khi bắt đầu Phase 2, dù rủi ro rất thấp (chỉ xoá code chết + gỡ tham chiếu, không đổi logic runtime nào).
