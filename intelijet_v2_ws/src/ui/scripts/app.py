@@ -40,6 +40,7 @@ from ui.notification_history_dialog import NotificationHistoryDialog
 from ui.services.job_store import JobStore
 from ui.services.cloud_pipeline import CloudPipelineService
 from ui.services.report_service import ReportService
+from ui.scan_pipeline_worker import ScanPipelineWorker
 
 from shared.config_loader import CONFIG as cfg
 
@@ -222,6 +223,34 @@ class App(QMainWindow):
         self.notification_center.label_changed.connect(self._on_notification_label_changed)
         self.lblNotification.mousePressEvent = self._open_notification_history
 
+        # --- Scan pipeline worker (runs convert/color/VTK/save/report off the GUI thread) ---
+        self.scan_worker = ScanPipelineWorker(
+            cloud_pipeline=self.cloud_pipeline,
+            report_service=self.report_service,
+            job_store=self.job_store,
+            topics={
+                "pre_scan": PRE_SCAN_CLOUD_TOPIC,
+                "post_scan": POST_SCAN_CLOUD_TOPIC,
+                "compared": CLOUD_COMPARED_TOPIC,
+                "compared_upsample": CLOUD_COMPARED_UPSAMPLE_TOPIC,
+                "compared_manual": CLOUD_COMPARED_TOPIC_MANUAL,
+                "compared_upsample_manual": CLOUD_COMPARED_UPSAMPLE_TOPIC_MANUAL,
+            },
+            project_dir=PROJECT_DIR,
+            thickness_default=THICKNESS_DEFAULT,
+            tolerance_default=TOLERANCE_DEFAULT,
+            parent=self,
+        )
+        self.scan_worker.cloud_ready.connect(self._on_scan_cloud_ready)
+        self.scan_worker.compare_requested.connect(
+            lambda: self.ui_send_cmd_signal.emit(PPSCommand.START_COMPARE.value)
+        )
+        self.scan_worker.report_done.connect(self._on_scan_report_done)
+        self.scan_worker.report_failed.connect(self._on_scan_report_failed)
+        self.scan_worker.notify.connect(
+            lambda source, message, level: self.notification_center.push(source, message, level)
+        )
+
         # --- Data binder ---
         self.data_binder = DataBinder(self.ui.centralFrame)
         load_config_to_ui(self.ui.tab_setting)
@@ -319,100 +348,44 @@ class App(QMainWindow):
                 self.history_page_in_toolbox.select_job(job)
 
 
-    # 1.0--- Update commond data from ROS ---
+    # 1.0--- Update commond data from ROS (packages the job and hands it to
+    # ScanPipelineWorker - the actual convert/color/save/report work runs
+    # off the GUI thread, see scan_pipeline_worker.py) ---
     def on_cloud_received(self, msg, topic_name):
-        o3d_cloud = self.cloud_pipeline.pointcloud2_to_o3d(msg)
         print(f"Received cloud on topic {topic_name}")
+        job = {
+            "msg": msg,
+            "topic_name": topic_name,
+            # Snapshot App state now (GUI thread) so the worker never reads
+            # self.* directly - avoids racing on_compare()/a later cloud
+            # arrival that might change these before the worker gets to run.
+            "is_manual": self.isManualCompare,
+            "post_scan_path_snapshot": self.current_post_scan_path,
+            "auto_compare_on": self.ui.cbbAutoCompare.currentIndex() == 0,
+            "auto_compare_off": self.ui.cbbAutoCompare.currentText().lower() == 'off',
+            "auto_report_off": self.ui.cbbAutoReport.currentText().lower() == 'off',
+        }
+        self.scan_worker.submit(job)
 
-        # define job_folder based on current selected job or manual compare mode
-        if topic_name in [CLOUD_COMPARED_TOPIC_MANUAL, CLOUD_COMPARED_UPSAMPLE_TOPIC_MANUAL]:
-            jobs_folder = os.path.dirname(self.current_post_scan_path)
-            job_number = jobs_folder.split("/")[-1]
-        else:
-            current_job = self.load_current_job(text_only=True)
-            project_name = current_job.split("/")[0]
-            job_number = current_job.split("/")[1]
-            jobs_folder = os.path.join(PROJECT_DIR, project_name,job_number)
+    def _on_scan_cloud_ready(self, polydata, metadata):
+        self.vtk_viewer.update(polydata)
+        self.ui.tab_mainview.setCurrentIndex(0)
 
-        # 1. Assign Color
-        if topic_name in [CLOUD_COMPARED_TOPIC, CLOUD_COMPARED_UPSAMPLE_TOPIC, CLOUD_COMPARED_TOPIC_MANUAL, CLOUD_COMPARED_UPSAMPLE_TOPIC_MANUAL]:
-            try:
-                from ui.models.job_info import JobInfo
-                job_info = JobInfo.load(jobs_folder)
+        if metadata["report_name"] is not None:
+            self.report_name = metadata["report_name"]
+        if metadata["reset_is_manual_compare"]:
+            self.isManualCompare = False
+        if metadata["reset_post_scan_path"]:
+            self.current_post_scan_path = ""
+        if metadata["last_prescan_path"] is not None:
+            settings.setValue("last_prescan_path", metadata["last_prescan_path"])
 
-                if job_info:
-                    target_thickness = job_info.parameters.get("target_thickness",THICKNESS_DEFAULT)
-                    tolerance = job_info.parameters.get("tolerance",TOLERANCE_DEFAULT)
-                else:
-                    target_thickness = THICKNESS_DEFAULT
-                    tolerance = TOLERANCE_DEFAULT
+    def _on_scan_report_done(self, final_path):
+        self.notification_center.push("report", f"Report exported: {os.path.basename(final_path)}", "info")
 
-                highlight_range = [target_thickness-tolerance, target_thickness+tolerance]
-                o3d_cloud = self.cloud_pipeline.assign_colors_for_highlight(o3d_cloud, highlight_range)
-
-            except Exception as e:
-                rospy.logerr(f"[App] on_cloud_received() failed to re-assign color: {e}")
-                self.notification_center.push("cloud", f"Failed to color point cloud: {e}", "warning")
-
-        # 2. Show pointcloud and Save Data
-        if topic_name in [POST_SCAN_CLOUD_TOPIC, PRE_SCAN_CLOUD_TOPIC, CLOUD_COMPARED_TOPIC,CLOUD_COMPARED_TOPIC_MANUAL]:
-            polydata = self.cloud_pipeline.to_vtk(o3d_cloud)
-            self.vtk_viewer.update(polydata)
-            self.ui.tab_mainview.setCurrentIndex(0)
-
-            # Save cloud to file ply
-            from ui.models.file_name  import generate_filename
-
-            if self.isManualCompare is False:
-                filepath = generate_filename(
-                    folder=jobs_folder,
-                    job=job_number,
-                    scan_type=topic_name,  # hoặc "postscan" tùy theo logic của bạn
-                    ext="ply"
-                )
-            else:
-                filepath = generate_filename(
-                    folder="",job="",scan_type=topic_name,ext="ply",
-                    filepath=self.current_post_scan_path)
-
-                self.current_post_scan_path=""
-
-
-            if polydata:
-                f_name = self.cloud_pipeline.save_ply(o3d_cloud, filepath)
-
-            if topic_name in [CLOUD_COMPARED_TOPIC, CLOUD_COMPARED_TOPIC_MANUAL]:
-                self.report_name = f_name
-                self.isManualCompare = False 
-
-            if topic_name in [PRE_SCAN_CLOUD_TOPIC]:
-                settings.setValue("last_prescan_path", filepath)
-
-  
-
-
-        # 3. Emit to ROS to call Compare Cloud Action
-        if topic_name == POST_SCAN_CLOUD_TOPIC:
-            if self.ui.cbbAutoCompare.currentIndex()==0: 
-                self.ui_send_cmd_signal.emit(PPSCommand.START_COMPARE.value)
-            
-
-        # 4. Export Report
-        if topic_name in [CLOUD_COMPARED_TOPIC, CLOUD_COMPARED_TOPIC_MANUAL]:
-                
-            if self.ui.cbbAutoCompare.currentText().lower() == 'off' or self.ui.cbbAutoReport.currentText().lower() == 'off':
-                return # only export report when auto compare is on nad auto report is on. (1 is OFF)
-
-            try:
-                print(f"Export Report=========================>")
-
-                filename = self.report_name
-                filename = filename.replace(".ply", ".pdf")
-                self.export_report(o3d_cloud,filename)
-
-            except Exception as e:
-                rospy.logerr(f"[App] on_cloud_received: could not start report export: {e}")
-                self.notification_center.push("report", f"Report export failed: {e}", "error")
+    def _on_scan_report_failed(self, error_message):
+        rospy.logerr(f"[App] Failed to export report: {error_message}")
+        self.notification_center.push("report", f"Report export failed: {error_message}", "error")
 
 
     def toggle_full_screen(self):
@@ -520,22 +493,6 @@ class App(QMainWindow):
             return
 
 
-    #5.0 -- Manual export report handler---
-
-    # def on_manual_export_report(self, data, filename):
-    #     if self.ui.cbbAutoReport.currentText().lower() == 'off':
-    #         return # Auto report is off.
-    #     self.export_report(data, filename)
-
-    # 5.1--- Export report after compare done---
-    def export_report(self, data, filename):
-        try:
-            final_path = self.report_service.export(data, filename)
-            self.notification_center.push("report", f"Report exported: {os.path.basename(final_path)}", "info")
-        except Exception as e:
-            rospy.logerr(f"[App] Failed to export report: {e}")
-            self.notification_center.push("report", f"Report export failed: {e}", "error")
-
     # 6.--- Start compare 2 cloud selected for dialog---
     def on_compare(self):
 
@@ -619,11 +576,18 @@ class App(QMainWindow):
 
     # 7.--- Close event handler ---
     def closeEvent(self, event):
+        # Give a possibly still-running scan pipeline job (report export can
+        # take a while) a chance to finish cleanly; don't hang the app if it
+        # doesn't - just move on and shut down anyway.
+        if self.scan_worker.isRunning():
+            if not self.scan_worker.wait(5000):
+                rospy.logwarn("[App] closeEvent: scan_worker still running after 5s, shutting down anyway")
+
         # subprocess.call(["/mnt/c/work/projects/intelijet_v2/shutdown.sh"])
         subprocess.call(["rosnode", "kill", "-a"])
         subprocess.call("pkill -f ros", shell=True)
         subprocess.call(["rosclean", "purge", "-y"])
-        event.accept()  
+        event.accept()
 
 
     # 8.--- Shutdown handler ---

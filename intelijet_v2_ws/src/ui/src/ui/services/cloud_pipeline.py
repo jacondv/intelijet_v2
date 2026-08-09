@@ -8,6 +8,11 @@ import rospy
 from pps.data_converter import CloudConverter
 from pps.helper import assign_colors
 
+# Display-only cap (see CloudConverter.o3d_to_vtk_polydata): clouds bigger
+# than this get evenly-subsampled before being handed to VTK for rendering.
+# Saved/report clouds are never capped.
+MAX_RENDER_POINTS = 2_000_000
+
 
 class CloudPipelineService:
     def __init__(self):
@@ -32,8 +37,8 @@ class CloudPipelineService:
             o3d_cloud = self.assign_colors_for_highlight(o3d_cloud, highlight_range)
         return o3d_cloud
 
-    def to_vtk(self, o3d_cloud):
-        return self._converter.o3d_to_vtk_polydata(o3d_cloud)
+    def to_vtk(self, o3d_cloud, max_points=MAX_RENDER_POINTS):
+        return self._converter.o3d_to_vtk_polydata(o3d_cloud, max_points=max_points)
 
     def save_ply(self, o3d_cloud, filepath):
         """Save `o3d_cloud` to `filepath`. Returns filepath on success, None

@@ -204,30 +204,32 @@ class VTKViewer:
 
     # ------------------ Box Widget ------------------
     def _enable_box_widget(self):
-        if self.box_widget:
-            self.box_widget.Off()
-            self.box_widget = None
+        # Box widget itself is created once and reused; only SetProp3D()
+        # (current_actor is a new vtkActor every update()) and PlaceWidget()
+        # need to run each time. Previously this tore down and rebuilt the
+        # whole widget + observer on every single cloud update.
+        if self.box_widget is None:
+            box = vtk.vtkBoxWidget()
+            box.SetInteractor(self.iren)
+            box.SetPlaceFactor(3)
+            box.ScalingEnabledOff()
+            box.GetOutlineProperty().SetOpacity(0)
+            box.OutlineCursorWiresOff()
+            box.GetHandleProperty().SetPointSize(1)
 
-        box = vtk.vtkBoxWidget()
-        box.SetInteractor(self.iren)
-        box.SetPlaceFactor(3)
-        box.SetProp3D(self.current_actor)
-        box.PlaceWidget()
-        box.ScalingEnabledOff()
-        box.GetOutlineProperty().SetOpacity(0)
-        box.OutlineCursorWiresOff()
-        box.GetHandleProperty().SetPointSize(1)
+            def on_interact(caller, event):
+                t = vtk.vtkTransform()
+                box.GetTransform(t)
+                if self.current_actor:
+                    self.current_actor.SetUserTransform(t)
+                self.vtkWidget.GetRenderWindow().Render()
 
+            box.AddObserver("InteractionEvent", on_interact)
+            self.box_widget = box
 
-        def on_interact(caller, event):
-            t = vtk.vtkTransform()
-            box.GetTransform(t)
-            self.current_actor.SetUserTransform(t)
-            self.vtkWidget.GetRenderWindow().Render()
-
-        box.AddObserver("InteractionEvent", on_interact)
-        box.On()
-        self.box_widget = box
+        self.box_widget.SetProp3D(self.current_actor)
+        self.box_widget.PlaceWidget()
+        self.box_widget.On()
 
     # ------------------ Update cloud ------------------
     def update(self, polydata):

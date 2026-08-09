@@ -321,7 +321,7 @@ class CloudConverter:
     # ------------------------------------------------------------------------------
 
     @staticmethod    
-    def o3d_to_vtk_polydata(pcd, voxel_size=0.0):
+    def o3d_to_vtk_polydata(pcd, voxel_size=0.0, max_points=None):
         import vtk
         import numpy as np
 
@@ -333,6 +333,15 @@ class CloudConverter:
         points = np.asarray(pcd.points)
         has_colors = pcd.has_colors()
         colors = np.asarray(pcd.colors) if has_colors else None
+
+        # Display-only cap: evenly-spaced subsample so on-screen rendering
+        # stays responsive for very large clouds. Does not affect anything
+        # saved to disk/report - callers pass the un-capped pcd for those.
+        if max_points is not None and points.shape[0] > max_points:
+            indices = np.linspace(0, points.shape[0] - 1, max_points).astype(int)
+            points = points[indices]
+            if has_colors:
+                colors = colors[indices]
 
         vtk_points = vtk.vtkPoints()
         vtk_colors = vtk.vtkUnsignedCharArray()
