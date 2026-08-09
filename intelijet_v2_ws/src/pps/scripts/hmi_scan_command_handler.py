@@ -19,6 +19,11 @@ from shared.msg import DeviceStatus
 from shared.config_loader import CONFIG as cfg
 
 def get_scanner_controller(status_callback=None, active_lidar=cfg.active_lidar):
+    # To support a new scanner type (e.g. a direct-3D scanner like
+    # BLK360G2 - see pps/scan_strategies/direct_3d.py): implement its
+    # ScanStrategy, then add a branch here that constructs a
+    # GenericScanController(strategy=<YourStrategy>(), status_callback=...)
+    # for it. No changes needed in GenericScanController itself.
     if active_lidar == "lms511":
         controller = SickScanErobController(status_callback=status_callback)
         return controller

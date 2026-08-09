@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # scripts/generic_scan_controller.py
 import rospy
-from abc import ABC, abstractmethod
+from abc import ABC
 from sensor_msgs.msg import JointState
 from std_msgs.msg import String, Int32
 from sensor_msgs.msg import PointCloud2
@@ -70,8 +70,14 @@ class HousingControl():
 
 # ------------------- GenericScanController -------------------
 class GenericScanController(ABC):
-    def __init__(self, status_callback=None):
+    def __init__(self, strategy, status_callback=None):
+        """strategy: a ScanStrategy instance owning how the cloud is
+        acquired for this scanner type (housing motion pattern + how the
+        cloud is obtained/published) - see pps/scan_strategies/base.py.
+        To support a new scanner, write a new ScanStrategy subclass and
+        pass it in here; this class stays scanner-agnostic."""
 
+        self.strategy = strategy
         self.status_callback = status_callback  # callback update state
         self.current_encoder_value = None
         self.current_encoder_value_in_degree = None
@@ -85,16 +91,20 @@ class GenericScanController(ABC):
 
         rospy.Subscriber("/joint_states", JointState, self.joint_state_cb)
 
-    # ----- Abstract methods -----
-    @abstractmethod
+    # ----- Scan workflow (delegates to the injected strategy) -----
     def run_workflow(self, publisher):
-        """Scan workflow, implement ở lớp con"""
-        pass
+        """Runs one full prescan/postscan acquisition via self.strategy.
+        Housing motion, publishing, and status_callback updates for this
+        acquisition are entirely the strategy's responsibility (see
+        ScanStrategy.acquire() docstring) - kept as a pure delegate here so
+        this sequencing isn't reordered vs. the pre-strategy behavior."""
+        return self.strategy.acquire(self, publisher)
 
-    @abstractmethod
     def reset(self):
-        """Reset sau scan, implement ở lớp con"""
-        pass
+        """Stop housing in case of emergency or end. Scanner-agnostic -
+        override in a subclass if a scanner type ever needs something
+        different on reset."""
+        self.housing.stop()
 
     # ----- Encoder callback -----
     def joint_state_cb(self, msg):
