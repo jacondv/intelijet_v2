@@ -2,7 +2,7 @@
 
 # This is the first step after the system receives cloud data from the lidar device
 
-from pps.helper import convert_open3d_to_pointcloud2, crop_pointcloud_by_box#,remove_points_inside_box,  notify_one, detect_boundary_pca, remove_boundary_region
+from pps.helper import crop_pointcloud_by_box
 # from pps.tunnel_processing import TunnelProcessing
 # from std_msgs.msg import Empty
 import rospy
@@ -62,7 +62,7 @@ class CloudProcessorNode:
         # tunnel = TunnelProcessing(cloud_o3d)
         # result = tunnel.run_processing_pipeline()
         # Cloud after process
-        return convert_open3d_to_pointcloud2(cloud_o3d, frame_id=msg.header.frame_id,rgb=rgb)
+        return cloudconverter.legacy_o3d_to_pointcloud2(cloud_o3d, frame_id=msg.header.frame_id, rgb=rgb)
 
     def callback_pres(self, msg):
         rospy.loginfo("Received /pre_scan_0")

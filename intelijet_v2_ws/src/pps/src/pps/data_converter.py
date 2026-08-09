@@ -240,6 +240,62 @@ class CloudConverter:
 
     # --------------------------------------------------------------------------
     @staticmethod
+    def legacy_o3d_to_pointcloud2(o3d_cloud, frame_id="base_link", rgb=[255, 0, 0]):
+        """
+        Convert a legacy Open3D point cloud (o3d.geometry.PointCloud) -> ROS
+        PointCloud2. For o3d.t.geometry.PointCloud (tensor) clouds, use
+        o3d_tensor_to_pointcloud2() instead.
+        """
+        import open3d as o3d
+        import numpy as np
+        import rospy
+        import ros_numpy
+        import std_msgs.msg
+
+        if not isinstance(o3d_cloud, o3d.geometry.PointCloud):
+            rospy.logerr("Input is not an Open3D PointCloud.")
+            return None
+
+        if not o3d_cloud.has_points():
+            rospy.logerr("Open3D PointCloud has no points.")
+            return None
+
+        rospy.loginfo("Converting Open3D point cloud to PointCloud2 format ply")
+        points = np.asarray(o3d_cloud.points)
+        colors = np.asarray(o3d_cloud.colors)
+
+        if colors.shape[0] == points.shape[0] and colors.shape[1] == 3:
+            rospy.loginfo("Converting Open3D has colors ")
+            colors = (colors * 255).astype(np.uint8)
+        else:
+            rospy.loginfo("Converting Open3D has no colors ")
+            # No colors on the input cloud - fall back to a solid color.
+            colors = np.tile(np.array(rgb, dtype=np.uint8), (points.shape[0], 1))
+
+        rgb_packed = ((colors[:, 0].astype(np.uint32) << 16) |
+                (colors[:, 1].astype(np.uint32) << 8) |
+                colors[:, 2].astype(np.uint32))
+
+        rgb_float = rgb_packed.view(np.float32)
+
+        data = np.zeros(points.shape[0], dtype=[
+            ('x', np.float32), ('y', np.float32), ('z', np.float32),
+            ('rgb', np.float32)
+        ])
+        data['x'] = points[:, 0]
+        data['y'] = points[:, 1]
+        data['z'] = points[:, 2]
+        data['rgb'] = rgb_float
+
+        header = std_msgs.msg.Header()
+        header.stamp = rospy.Time.now()
+        header.frame_id = frame_id
+        msg = ros_numpy.point_cloud2.array_to_pointcloud2(data, frame_id=header.frame_id, stamp=header.stamp)
+        msg.is_bigendian = False  # đảm bảo đúng cho ROS chạy trên x86
+        return msg
+
+    # --------------------------------------------------------------------------
+    @staticmethod
     def o3d_to_ply(pcd, filepath, write_ascii=False):
         """
         Save Open3D point cloud using Open3D writer only.
