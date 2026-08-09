@@ -41,6 +41,7 @@ class NewProjectDlg(QDialog):
 
         btn_ok = QPushButton("OK")
         btn_cancel = QPushButton("Cancel")
+        btn_ok.setDefault(True)  # so Enter (incl. from the on-screen keyboard) confirms
         btn_ok.clicked.connect(self.accept)
         btn_cancel.clicked.connect(self.reject)
 

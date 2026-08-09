@@ -700,7 +700,7 @@ if __name__ == "__main__":
 
     keyboard_filter = TouchKeyboard()
     app.installEventFilter(keyboard_filter)
-    
+
     with open(f"{BASE_DIR}/intelijet_v2_ws/src/ui/src/ui/app.qss") as f:
         app.setStyleSheet(f.read())
 
