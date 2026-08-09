@@ -21,6 +21,7 @@ RUN apt-get update && apt-get install -y \
     ros-noetic-pcl-conversions \
     ros-noetic-rosparam-shortcuts \
     ros-noetic-can-msgs \
+    iputils-ping \
     libpcl-dev \
     libvtk7-dev \
     python3-pyqt5 \
