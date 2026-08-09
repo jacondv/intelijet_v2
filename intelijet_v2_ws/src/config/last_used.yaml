@@ -60,3 +60,6 @@ report:
   tolerance: 10
   thickness_avg: 0
   shotcrete_vol: 0
+keyboard:
+  width: 1075
+  height: 429

@@ -6,8 +6,6 @@ from PyQt5.QtWidgets import QMessageBox, QLineEdit, QWidget, QApplication, QText
 from ui.setting_page_ui import Ui_setting_page  # file ui bạn vừa đưa
 from ui.update_data_utils import *
 
-# from keyboard_full_manager import FullKeyboard
-# Tạo 1 instance duy nhất
 
 class SettingPageManager(QtWidgets.QDialog, Ui_setting_page):
     def __init__(self, parent=None):
@@ -83,13 +81,6 @@ class SettingPageManager(QtWidgets.QDialog, Ui_setting_page):
         self.btnCancelHousingParam.clicked.connect(self.on_cancel)
 
         self.btnSetClosedPosition.clicked.connect(self.set_encoder_at_zero_default) # Set current value of encoder
-
-        # self.keyboard=FullKeyboard.get_instance()
-        # for edit in self.findChildren(QWidget):
-        #     edit.focusInEvent = lambda ev, w=edit: self.keyboard.attach(w)
-
-        # self.installEventFilter(self)
-
 
         load_config_to_ui(self)
 

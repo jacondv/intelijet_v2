@@ -52,7 +52,6 @@ RUN apt-get update && apt-get install -y \
     libffi-dev \
     shared-mime-info \
     fonts-liberation \
-    onboard \
     && rm -rf /var/lib/apt/lists/*
 # ros-noetic-laser-assembler / robot-state-publisher: used by pps.launch
 # (point_cloud2_assembler, robot_state_publisher nodes) - came for free with
@@ -70,12 +69,6 @@ RUN apt-get update && apt-get install -y \
 # fonts-liberation: native rendering deps of WeasyPrint (PDF report export,
 # ui/src/ui/tunnel_report/report_controler.py) - WeasyPrint itself is pure
 # Python (installed via pip below) but needs these system libs to render.
-# onboard: on-screen keyboard binary launched by ui/src/ui/keyboard.py's
-# TouchKeyboard (installed as an app-wide QApplication event filter in
-# app.py - fires on every QLineEdit/QTextEdit focus, e.g. typing a new
-# project name). Was missing entirely from this image (desktop-full didn't
-# include it either - it was always broken, just silently, since the code
-# only warnings.warn()s on FileNotFoundError instead of raising).
 #
 # If a package still fails to build with "missing dependency" after this,
 # the general fix is running (inside the container, from intelijet_v2_ws):

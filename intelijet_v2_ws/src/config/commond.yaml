@@ -33,3 +33,8 @@ ENCODER01_DATA:     "/encoder01/data"
 # This defined to show messagers to User interface
 NOTIFICATION: "notification"
 PLC_HEARTBEAT_MSG: "/plc/heatbeat"
+
+# On-screen keyboard window size, remembered across restarts (ui/keyboard.py)
+keyboard:
+  width: 900
+  height: 320
