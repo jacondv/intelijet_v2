@@ -1,0 +1,35 @@
+# Quick local run: `docker compose up --build`
+#
+# One-time per host session (X11 GUI access), before `up`:
+#   xhost +local:docker
+#
+# This mirrors run_docker.sh / run_intelijet.sh (same volumes, same
+# DISPLAY/X11 setup, --network host) but through Compose so `docker compose
+# up --build` is enough instead of the manual docker run one-liner.
+# Not part of the Phase 8 plan (docs/plan/phase_08_docker_compose.md) - that
+# phase will also add a desktop launcher + a proper Exit-button teardown.
+# This file is just for fast local iteration/testing in the meantime.
+services:
+  intelijet:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: jacondv/jacon-pps-noetic:compose
+    container_name: intelijet
+    network_mode: host
+    environment:
+      DISPLAY: ${DISPLAY}
+      QT_X11_NO_MITSHM: "1"
+      XDG_RUNTIME_DIR: /tmp/runtime-root
+      DISABLE_ROS1_EOL_WARNINGS: "1"
+    volumes:
+      - .:/root/intelijet_v2
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/timezone:/etc/timezone:ro
+      - /dev/dri:/dev/dri
+    cap_add:
+      - SYS_TIME
+    stdin_open: true
+    tty: true
+    command: ["bash", "-c", "/root/intelijet_v2/run_intelijet.sh"]
