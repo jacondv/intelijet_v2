@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 import os
-import shutil
 
 
 #allow create file with full permission
@@ -14,7 +13,7 @@ import sys, subprocess
 import rospy
 
 from PyQt5.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QLabel, QWidget, QPushButton, QComboBox
-from PyQt5.QtCore import pyqtSignal
+from PyQt5.QtCore import pyqtSignal, QTimer
 from PyQt5.QtWidgets import QMessageBox, QDialog
 from PyQt5.QtCore import QSettings
 
@@ -35,11 +34,12 @@ from shared.pps_command import PPSCommand
 from ui.intelijet_ui import Ui_MainWindow 
 from ui.keyboard import TouchKeyboard
 
-from ui.tunnel_report.report_controler import ReportGenerator
-from ui.tunnel_report.report_utils import delete_old_final_report
-
 from ui.notification_center import NotificationCenter, set_device_label, LEVEL_COLORS
 from ui.notification_history_dialog import NotificationHistoryDialog
+
+from ui.services.job_store import JobStore
+from ui.services.cloud_pipeline import CloudPipelineService
+from ui.services.report_service import ReportService
 
 from shared.config_loader import CONFIG as cfg
 
@@ -194,20 +194,23 @@ class App(QMainWindow):
         self.ui.btnSetHome.released.connect(self.confirm_and_send_sethome)
 
         # --- Select Job to work process ---
-        self.load_active_jobs(self.ui.cbbJobSelect, ACTIVE_JOB_FILE)
+        self.job_store = JobStore(ACTIVE_JOB_FILE, CURRENT_JOB_FILE)
+        self._populate_job_combobox()
         self.load_current_job()
         # self.ui.cbbJobSelect.currentIndexChanged.connect(self.on_job_changed)
         self.ui.cbbJobSelect.activated.connect(self.on_job_changed)
         self.current_job_index = self.ui.cbbJobSelect.currentIndex()
-        
-        
-        orig_show = self.ui.cbbJobSelect.showPopup
-        def new_show():
-            self.load_active_jobs(self.ui.cbbJobSelect, ACTIVE_JOB_FILE)
-            orig_show()
 
-        self.ui.cbbJobSelect.showPopup = new_show
-        # self.ui.cbbJobSelect.mousePressEvent = self.on_combo_click
+        # active_jobs.json can also be rewritten by another process (the two
+        # tablets sync it via Syncthing), so refresh periodically instead of
+        # only when the dropdown is opened.
+        self._job_refresh_timer = QTimer(self)
+        self._job_refresh_timer.timeout.connect(self._refresh_active_jobs)
+        self._job_refresh_timer.start(30000)
+
+        # --- Cloud/report services ---
+        self.cloud_pipeline = CloudPipelineService()
+        self.report_service = ReportService()
 
         # --- Status bar / notifications ---
         self.lblNotification = QLabel("Ready")
@@ -318,11 +321,7 @@ class App(QMainWindow):
 
     # 1.0--- Update commond data from ROS ---
     def on_cloud_received(self, msg, topic_name):
-        from pps.data_converter import CloudConverter
-        from pps.helper import assign_colors
-
-        cloudconverter = CloudConverter()
-        o3d_cloud = cloudconverter.pointcloud2_to_o3d_tensor(msg)
+        o3d_cloud = self.cloud_pipeline.pointcloud2_to_o3d(msg)
         print(f"Received cloud on topic {topic_name}")
 
         # define job_folder based on current selected job or manual compare mode
@@ -334,7 +333,7 @@ class App(QMainWindow):
             project_name = current_job.split("/")[0]
             job_number = current_job.split("/")[1]
             jobs_folder = os.path.join(PROJECT_DIR, project_name,job_number)
-            
+
         # 1. Assign Color
         if topic_name in [CLOUD_COMPARED_TOPIC, CLOUD_COMPARED_UPSAMPLE_TOPIC, CLOUD_COMPARED_TOPIC_MANUAL, CLOUD_COMPARED_UPSAMPLE_TOPIC_MANUAL]:
             try:
@@ -349,15 +348,15 @@ class App(QMainWindow):
                     tolerance = TOLERANCE_DEFAULT
 
                 highlight_range = [target_thickness-tolerance, target_thickness+tolerance]
-                o3d_cloud = assign_colors(o3d_cloud, highlight_range=highlight_range)
-                
+                o3d_cloud = self.cloud_pipeline.assign_colors_for_highlight(o3d_cloud, highlight_range)
+
             except Exception as e:
-                print(f"[Error] at on_cloud_received() to re-assign color : {e}")
-                pass
+                rospy.logerr(f"[App] on_cloud_received() failed to re-assign color: {e}")
+                self.notification_center.push("cloud", f"Failed to color point cloud: {e}", "warning")
 
         # 2. Show pointcloud and Save Data
         if topic_name in [POST_SCAN_CLOUD_TOPIC, PRE_SCAN_CLOUD_TOPIC, CLOUD_COMPARED_TOPIC,CLOUD_COMPARED_TOPIC_MANUAL]:
-            polydata = cloudconverter.o3d_to_vtk_polydata(o3d_cloud)
+            polydata = self.cloud_pipeline.to_vtk(o3d_cloud)
             self.vtk_viewer.update(polydata)
             self.ui.tab_mainview.setCurrentIndex(0)
 
@@ -380,7 +379,7 @@ class App(QMainWindow):
 
 
             if polydata:
-                f_name = self.save_job(o3d_cloud, filepath=filepath)
+                f_name = self.cloud_pipeline.save_ply(o3d_cloud, filepath)
 
             if topic_name in [CLOUD_COMPARED_TOPIC, CLOUD_COMPARED_TOPIC_MANUAL]:
                 self.report_name = f_name
@@ -405,18 +404,15 @@ class App(QMainWindow):
                 return # only export report when auto compare is on nad auto report is on. (1 is OFF)
 
             try:
-
                 print(f"Export Report=========================>")
 
                 filename = self.report_name
                 filename = filename.replace(".ply", ".pdf")
                 self.export_report(o3d_cloud,filename)
 
-
-
             except Exception as e:
-                # in toàn bộ thông tin lỗi
-                print(f"[Error] at on_cloud_received Export Report : {e}")
+                rospy.logerr(f"[App] on_cloud_received: could not start report export: {e}")
+                self.notification_center.push("report", f"Report export failed: {e}", "error")
 
 
     def toggle_full_screen(self):
@@ -502,10 +498,7 @@ class App(QMainWindow):
 
     # 3.--- Update pointcloud from available data---
     def update_pointcloud_from_data(self, data, filename=None):
-        from pps.data_converter import CloudConverter
-        cloudconverter = CloudConverter()
-
-        polydata = cloudconverter.o3d_to_vtk_polydata(data)
+        polydata = self.cloud_pipeline.to_vtk(data)
         if filename:
             print("updated polydata from file:", filename)
         self.vtk_viewer.update(polydata)
@@ -536,74 +529,12 @@ class App(QMainWindow):
 
     # 5.1--- Export report after compare done---
     def export_report(self, data, filename):
-        print(f'Start releasing the Report: {filename}')
         try:
-            from datetime import datetime
-            from ui.models.job_info import JobInfo
-            
-            report = ReportGenerator()
-            job_folder = os.path.dirname(filename)
-            project_name = os.path.basename(os.path.dirname(job_folder)) 
-            
-            basename = os.path.basename(filename)
-            basename_parts = basename.split("#")
-
-            job_name = basename_parts[0] if len(basename_parts) > 0 else "Unknown"    
-            
-            try:
-                dt = datetime.strptime(basename_parts[1], "%Y%m%d_%H%M%S").date()
-            except:
-                dt = None
-            try:
-                tt = datetime.strptime(basename_parts[1], "%Y%m%d_%H%M%S").time()
-            except:
-                tt = None
-
-            job_info = JobInfo.load(job_folder)
-            if job_info is not None:
-                report.set_info(
-                    site_name = project_name,
-                    job_name= job_name,
-                    applied_thickness = job_info.parameters.get("target_thickness", 10),
-                    tolerance = job_info.parameters.get("tolerance", 10),
-                    operator = "Unknown",
-                    date = dt.strftime("%d-%b-%Y") if dt else None,
-                    time = tt.strftime("%H:%M:%S") if tt else None
-                )
-            else:
-                report.set_info(
-                    site_name = "Unknown",
-                    job_name= job_name,
-                    applied_thickness = 40,
-                    tolerance = 10,
-                    operator = "Unknown",
-                    date = dt.strftime("%d-%b-%Y") if dt else None,
-                    time = tt.strftime("%H:%M:%S") if tt else None
-                    
-                )
-            
-            if filename.lower().endswith(".ply"):
-                filename = filename.replace(".ply",".pdf")
-                
-            # else:
-            #     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-            #     filename = f"Test_report#{timestamp}.pdf"
-            #     filename = f"{BASE_DIR}/data/reports/{filename}"
-                
-            if not report.export(pcd=data,output_path=filename):
-                print(f"[App] Failed to export report for {filename}")
-            else:
-                print(f"[App] Report exported successfully: {filename}")
-                parts = filename.split("#")
-                if len(parts) >= 4:
-                    parts[2] = "finalreport"
-                    final_report_name = "#".join(parts)
-                    print(f"[App] Report exported final_report_name: {final_report_name}")
-                    delete_old_final_report(final_report_name)# only delete old final report with the same segment, avoid delete all final report of other job.
-                    shutil.copy(filename, final_report_name)
-
+            final_path = self.report_service.export(data, filename)
+            self.notification_center.push("report", f"Report exported: {os.path.basename(final_path)}", "info")
         except Exception as e:
-            print(f"[App] Failed to export report: {e}")
+            rospy.logerr(f"[App] Failed to export report: {e}")
+            self.notification_center.push("report", f"Report export failed: {e}", "error")
 
     # 6.--- Start compare 2 cloud selected for dialog---
     def on_compare(self):
@@ -709,32 +640,15 @@ class App(QMainWindow):
             self.close()
 
 
-    # 9.--- Save job to disk ---
-    def save_job(self, o3d_cloud, filepath):
-        from pps.data_converter import CloudConverter
-        cloudconverter = CloudConverter()
-
-        try:
-            cloudconverter.o3d_to_ply(o3d_cloud, filepath) #save cloud to ply file.
-            print(f"Saved cloud to {filepath}")
-            return filepath
-        except Exception as e:
-            print("Error occurred while saving Open3D pointcloud:", e)
-            print(f"Can not save file to {filepath}")
-            return None
-        
-
     #10. change current job
     def on_job_changed(self, index):
-        import json
         if index < 0:
             return  # không chọn gì cả
-        
+
         if index == self.current_job_index: # Chỉ hỏi khi item khác item hiện tại
+            value = self.ui.cbbJobSelect.itemText(index)
             try:
-                with open(CURRENT_JOB_FILE, "w") as f:
-                    value = self.ui.cbbJobSelect.itemText(index)
-                    json.dump({"current_job": value}, f, indent=4)
+                self.job_store.set_current_job(value)
                 self.current_job_index = self.ui.cbbJobSelect.currentIndex()
             except Exception as e:
                 QMessageBox.warning(self, "Error", f"Cannot save job: {e}")
@@ -753,26 +667,20 @@ class App(QMainWindow):
         )
 
         if reply == QMessageBox.Yes:
-            # Lưu giá trị vào file JSON
             try:
-                with open(CURRENT_JOB_FILE, "w") as f:
-                    json.dump({"current_job": value}, f, indent=4)
+                self.job_store.set_current_job(value)
                 self.current_job_index = self.ui.cbbJobSelect.currentIndex()
             except Exception as e:
                 QMessageBox.warning(self, "Error", f"Cannot save job: {e}")
         else:
             # Nếu user chọn No, quay lại giá trị cũ
-            try:
-                with open(CURRENT_JOB_FILE, "r") as f:
-                    data = json.load(f)
-                last_value = data.get("current_job", "")
+            last_value = self.job_store.get_current_job()
+            if last_value:
                 idx = self.ui.cbbJobSelect.findText(last_value)
                 if idx >= 0:
                     self.ui.cbbJobSelect.blockSignals(True)
                     self.ui.cbbJobSelect.setCurrentIndex(idx)
                     self.ui.cbbJobSelect.blockSignals(False)
-            except:
-                pass
 
 
     def load_job_info_from_file(self, filepath):
@@ -782,22 +690,12 @@ class App(QMainWindow):
         return job_info
 
     def load_current_job(self, text_only=False):
-        import json
         """Load giá trị hiện tại của job từ file hoặc gán giá trị đầu tiên."""
-        last_job = None
-        try:
-            with open(CURRENT_JOB_FILE, "r") as f:
-                data = json.load(f)
-                last_job = data.get("current_job", None)
-        except FileNotFoundError:
-            pass
-        except Exception as e:
-            print(f"Error loading {CURRENT_JOB_FILE}: {e}")
+        last_job = self.job_store.get_current_job()
 
-        # Nếu có giá trị lưu trước đó và có trong combobox → chọn nó
         if text_only:
             return last_job
-        
+
         if last_job:
             idx = self.ui.cbbJobSelect.findText(last_job)
             if idx >= 0:
@@ -807,22 +705,29 @@ class App(QMainWindow):
         # Nếu không có hoặc giá trị cũ không hợp lệ → chọn giá trị đầu tiên
         if self.ui.cbbJobSelect.count() > 0:
             self.ui.cbbJobSelect.setCurrentIndex(0)
-        
-        return last_job
-            
-    #######################################################
-    def load_active_jobs(self,comboBox, json_file="active_job.json"):
-        import json
-        comboBox.clear()  # xóa item cũ
-        if not os.path.exists(json_file):
-            return
-        with open(json_file, "r") as f:
-            jobs = json.load(f)
 
-        for job in jobs:
-            # text hiển thị trong combobox
+        return last_job
+
+    #######################################################
+    def _populate_job_combobox(self):
+        self.ui.cbbJobSelect.clear()
+        for job in self.job_store.list_active_jobs():
             display_text = f"{job['project']}/{job['job']}"
-            comboBox.addItem(display_text, job)  # lưu dict job vào data
+            self.ui.cbbJobSelect.addItem(display_text, job)
+
+    def _refresh_active_jobs(self):
+        """Periodic refresh (active_jobs.json can be rewritten by another
+        process/tablet) - preserves the current selection instead of
+        resetting it, since this runs regardless of user interaction."""
+        current_text = self.ui.cbbJobSelect.currentText()
+        self.job_store.reload()
+        self.ui.cbbJobSelect.blockSignals(True)
+        self._populate_job_combobox()
+        idx = self.ui.cbbJobSelect.findText(current_text)
+        if idx >= 0:
+            self.ui.cbbJobSelect.setCurrentIndex(idx)
+        self.ui.cbbJobSelect.blockSignals(False)
+        self.current_job_index = self.ui.cbbJobSelect.currentIndex()
 
 if __name__ == "__main__":
 
