@@ -73,8 +73,24 @@ Class `Direct3DScanStrategy(ScanStrategy)` — **skeleton có docstring, raise N
 
 ## Báo cáo hoàn thành
 
-_(chưa có)_
+**Trạng thái: ✅ Xong (mặt code) — CHƯA chạy thử prescan/postscan thật.** Commit `78d8daa`.
+
+### Đã làm
+- `pps/scan_strategies/base.py`: interface `ScanStrategy.acquire(controller, publisher)` — 1 method duy nhất ôm toàn bộ acquisition (chuyển động housing + lấy cloud + publish), đúng như "Ghi chú thiết kế" trong kế hoạch đã cân nhắc trước (không tách 2 interface riêng vì với SickScan chuyển động housing chính là 1 phần phép đo).
+- `pps/scan_strategies/sick_2d_assemble.py`: `Sick2DAssembleStrategy` — chuyển nguyên thân `run_workflow`/`_open_housing_sequence`/`_close_housing_sequence`/`assemble_cloud_client` cũ, chỉ đổi `self.` → `controller.` ở đúng những chỗ thuộc về controller. **Đã đối chiếu bằng diff chuẩn hoá** giữa bản cũ và bản mới — khớp 100% ngoại trừ đúng phần thay thế có chủ đích, không sót/thêm bước nào.
+- `pps/scan_strategies/direct_3d.py`: skeleton `Direct3DScanStrategy`, `raise NotImplementedError`, docstring mô tả rõ luồng 5 bước dự kiến (mở góc cố định → gọi BLK360G2 → publish → đóng 1 lần → status_callback) và ghi rõ phần chưa biết (tên topic/action thật của `blk360g2_ros`). Chưa nối vào `get_scanner_controller()`.
+- `generic_scan_controller.py`: `GenericScanController.__init__` nhận `strategy`; `run_workflow()` chỉ còn `return self.strategy.acquire(self, publisher)` — **cố tình KHÔNG bọc try/finally ép đóng housing** dù "Thiết kế đích" gợi ý vậy, vì code gốc vốn chỉ gọi `housing.stop()` (không phải `close()`) khi mở thất bại — Ràng buộc yêu cầu giữ đúng hành vi cơ khí hiện tại, không "cải thiện" nó trong phase này (xem Ghi chú phát sinh #1). `reset()` chuyển từ abstract sang concrete mặc định (`self.housing.stop()`) vì vốn đã scanner-agnostic. Bỏ import `abstractmethod` không còn dùng.
+- `sick_scan_eRob_controller.py`: teo còn 6 dòng, chỉ inject `Sick2DAssembleStrategy()`, giữ nguyên tên class + chữ ký constructor.
+- `hmi_scan_command_handler.py`: chỉ thêm comment chỉ dẫn tại `get_scanner_controller()`, **không đổi giao diện/hành vi** — đã grep xác nhận không còn file nào khác tham chiếu `GenericScanController`/`SickScanErobController`.
+- `py_compile` pass cho toàn bộ 7 file sửa/mới.
+
+### Chưa kiểm chứng được (không có ROS/numpy/scipy trong sandbox)
+- Chưa chạy được 1 chu trình prescan/postscan thật để so log với bản trước (mục 3 phần Kiểm chứng) — cần Docker + phần cứng/simulator.
+- Chưa xác nhận `wait_until_target`/`joint_state_cb`/encoder callback hoạt động đúng qua lớp `controller` gián tiếp (logic không đổi, nhưng chỉ soát tay được, chưa chạy thật).
 
 ## Ghi chú phát sinh
 
-_(chưa có)_
+1. **Quyết định có chủ đích, khác với gợi ý trong mục "Thiết kế đích"**: không thêm try/finally ép `housing.close()`/`housing.stop()` bao quanh `strategy.acquire()` trong `GenericScanController.run_workflow()`. Lý do: code gốc hiện tại, khi `_open_housing_sequence()` thất bại, chỉ gọi `housing.stop()` (dừng tại chỗ) chứ không chủ động đóng lại — đây là hành vi cơ khí hiện tại. Mục "Ràng buộc" của chính kế hoạch này ghi rõ: "nếu code cũ KHÔNG đóng housing khi lỗi thì giữ nguyên hành vi cũ và ghi chú lại — không tự ý sửa hành vi cơ khí ở phase này". Tôi ưu tiên Ràng buộc (rõ ràng, cụ thể) hơn phần Thiết kế đích (mang tính gợi ý/aspirational) khi 2 phần mâu thuẫn nhau. Nếu về sau muốn có an toàn "luôn đóng khi lỗi", cần bàn với người vận hành trước vì đây là thay đổi hành vi cơ khí thật, ảnh hưởng an toàn thiết bị — không nên tự ý quyết trong 1 phase refactor.
+2. Giá trị trả về của `acquire()`/`run_workflow()` hiện **không được ai sử dụng thật sự** — `_scan_thread()` gọi `cloud = self.run_workflow(publisher)` nhưng biến `cloud` không dùng tiếp (cloud thật đã được publish trực tiếp bên trong `acquire()` rồi). Đã ghi chú rõ điều này trong docstring `ScanStrategy.acquire()` để người viết strategy mới (vd Direct3D) không nhầm tưởng cần trả cloud ra ngoài để ai đó publish hộ — bản thân strategy phải tự publish.
+3. `self.start_time`/`self.end_time` (thuộc tính lưu trên controller trong code gốc) đã đổi thành biến cục bộ trong `acquire()` — đã grep xác nhận không nơi nào khác trong `pps` đọc 2 thuộc tính này ngoài chính hàm đó, nên an toàn.
+4. Interface thực tế lệch nhẹ so với chữ ký gợi ý trong kế hoạch (`acquire(self, housing, cancel_check)`) — dùng `acquire(self, controller, publisher)` vì `wait_until_target`/`status_callback`/`cancel_job` đều là thành viên của `controller` (không phải riêng `housing`), và `publisher` bắt buộc phải truyền vào vì chính strategy tự publish (xem ghi chú #2). Đã ghi rõ lý do trong docstring `base.py`.
