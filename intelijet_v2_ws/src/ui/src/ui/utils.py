@@ -1,65 +1,13 @@
 import os
 import vtk
 import numpy as np
-import struct
-import sensor_msgs.point_cloud2 as pc2
 from sensor_msgs.msg import PointCloud2
 
 import ros_numpy
 
 from vtk.util import numpy_support
 
-import numpy as np
 
-
-def ros_pointcloud2_to_vtk_polydata(msg):
-    points = []
-    colors = []
-
-    for p in pc2.read_points(msg, field_names=("x", "y", "z", "rgb"), skip_nans=True):
-        x, y, z, rgb_float = p
-
-        points.append([x, y, z])
-
-        # Giải mã giá trị màu float32 thành RGB uint8
-        rgb_uint32 = struct.unpack('I', struct.pack('f', rgb_float))[0]
-        r = (rgb_uint32 >> 16) & 0xFF
-        g = (rgb_uint32 >> 8) & 0xFF
-        b = rgb_uint32 & 0xFF
-        colors.append([r, g, b])
-
-    np_points = np.array(points, dtype=np.float32)
-    np_colors = np.array(colors, dtype=np.uint8)
-
-    # Tạo vtkPoints từ numpy array
-    vtk_points = vtk.vtkPoints()
-    vtk_points.SetData(numpy_support.numpy_to_vtk(np_points, deep=True))
-
-    # Tạo vtkUnsignedCharArray cho màu
-    vtk_colors = numpy_support.numpy_to_vtk(np_colors, deep=True, array_type=vtk.VTK_UNSIGNED_CHAR)
-    vtk_colors.SetName("Colors")
-    vtk_colors.SetNumberOfComponents(3)
-
-    # Gán dữ liệu vào vtkPolyData
-    polydata = vtk.vtkPolyData()
-    polydata.SetPoints(vtk_points)
-    polydata.GetPointData().SetScalars(vtk_colors)
-
-    return polydata
-
-def ros_pointcloud2_to_o3d_to_vtk_polydata_voxel(msg, voxel_size=0.0):
-    # B1: ROS PointCloud2 → Open3D
-    o3d_cloud = convert_pointcloud2_to_o3d(msg)
-
-    # B2: Downsample bằng voxel filter
-    if voxel_size > 0:
-        o3d_cloud = o3d_cloud.voxel_down_sample(voxel_size)
-
-    # B3: Open3D → VTK
-    polydata = o3d_to_vtk_polydata(o3d_cloud)
-    return polydata
-
-    
 def o3d_to_vtk_polydata(pcd, voxel_size=0.0):
     import vtk
     import numpy as np
@@ -142,50 +90,6 @@ def convert_pointcloud2_to_o3d(msg):
     except Exception as e:
         rospy.logerr(f"Failed to convert PointCloud2 to Open3D format: {e}")
         return None
-
-def convert_pointcloud2_to_o3d_v2(msg):
-    import ros_numpy
-    import open3d as o3d
-
-
-    """Convert a ROS PointCloud2 message into an Open3D PointCloud, preserving extra fields."""
-    # if not isinstance(msg, PointCloud2):
-    #     rospy.logerr("Input message is not of type PointCloud2.")
-    #     return None
-
-    # Convert to structured NumPy array
-    cloud_arr = ros_numpy.point_cloud2.pointcloud2_to_array(msg)
-    field_names = cloud_arr.dtype.names
-
-    # Extract XYZ
-    if not all(k in field_names for k in ('x', 'y', 'z')):
-        return None
-
-    xyz = np.vstack((cloud_arr['x'], cloud_arr['y'], cloud_arr['z'])).T
-    o3d_cloud = o3d.geometry.PointCloud()
-    o3d_cloud.points = o3d.utility.Vector3dVector(xyz)
-
-    # === Handle RGB ===
-    if 'rgb' in field_names:
-        rgb_packed = cloud_arr['rgb']
-        rgb_uint8 = np.zeros((rgb_packed.shape[0], 3), dtype=np.uint8)
-        rgb_view = rgb_packed.view(np.uint32)
-        rgb_uint8[:, 0] = (rgb_view >> 16) & 255
-        rgb_uint8[:, 1] = (rgb_view >> 8) & 255
-        rgb_uint8[:, 2] = rgb_view & 255
-        o3d_cloud.colors = o3d.utility.Vector3dVector(rgb_uint8.astype(np.float32) / 255.0)
-
-    # === Handle any other extra fields (e.g., distances, intensity, normals) ===
-    skip_fields = {'x', 'y', 'z', 'rgb'}
-    for field in field_names:
-        if field in skip_fields:
-            continue
-        data = cloud_arr[field].astype(np.float32).reshape(-1)
-        print(f"Adding extra field to Open3D: {field} (len={len(data)})")
-        o3d_cloud.point[field] = o3d.utility.Vector3dVector(np.expand_dims(data, axis=1)) if data.ndim == 1 else o3d.utility.Vector3dVector(data)
-
-    return o3d_cloud
-
 
 def convert_pointcloud2_to_o3d_tensor(msg: PointCloud2):
     """

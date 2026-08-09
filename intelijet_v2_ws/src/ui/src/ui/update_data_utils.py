@@ -1,9 +1,6 @@
 from enum import Enum
-from shared.config_loader import CONFIG as cfg, save_config, reload_config 
+from shared.config_loader import CONFIG as cfg, save_config, reload_config
 from PyQt5 import QtWidgets
-from PyQt5.QtCore import QObject
-
-from PyQt5.QtWidgets import QWidget, QLineEdit, QLabel, QPushButton, QCheckBox
 from shared.msg import DeviceStatus
 from pps.helper import notify_one
 
@@ -261,40 +258,3 @@ class DataBinder:
                 
     def update_ui_from_status(self, status: dict):
         self._update_control_button_style(status)
-       
-
-
-class UiObjectManager(QObject):
-    def __init__(self, parent_widget: QWidget):
-        super().__init__(parent_widget)
-        self.widgets = {}
-
-        # Lưu tất cả widget con có objectName
-        for w in parent_widget.findChildren(QWidget):
-            if w.objectName():
-                self.widgets[w.objectName()] = w
-
-    def object_set_value(self, name: str, value):
-        if name not in self.widgets:
-            print(f"[WARN] Không tìm thấy widget: {name}")
-            return
-
-        w = self.widgets[name]
-
-        if isinstance(w, QLineEdit):
-            w.setText(str(value))
-        elif isinstance(w, QLabel):
-            w.setText(str(value))
-        elif isinstance(w, QPushButton):
-            w.setText(str(value))
-        elif isinstance(w, QCheckBox):
-            w.setChecked(bool(value))
-        else:
-            print(f"[INFO] Widget {name} ({type(w)}) chưa hỗ trợ set_value")
-
-    def object_set_style(self, name: str, style: str):
-        if name not in self.widgets:
-            print(f"[WARN] Không tìm thấy widget: {name}")
-            return
-
-        self.widgets[name].setStyleSheet(style)
