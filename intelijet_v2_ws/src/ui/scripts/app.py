@@ -38,6 +38,9 @@ from ui.keyboard import TouchKeyboard
 from ui.tunnel_report.report_controler import ReportGenerator
 from ui.tunnel_report.report_utils import delete_old_final_report
 
+from ui.notification_center import NotificationCenter, set_device_label, LEVEL_COLORS
+from ui.notification_history_dialog import NotificationHistoryDialog
+
 from shared.config_loader import CONFIG as cfg
 
 
@@ -206,10 +209,15 @@ class App(QMainWindow):
         self.ui.cbbJobSelect.showPopup = new_show
         # self.ui.cbbJobSelect.mousePressEvent = self.on_combo_click
 
-        # --- Status bar ---
+        # --- Status bar / notifications ---
         self.lblNotification = QLabel("Ready")
-        self.lblNotification.setStyleSheet("margin-left: 5px;")  
+        self.lblNotification.setStyleSheet("margin-left: 5px;")
         self.ui.statusbar.addWidget(self.lblNotification)
+
+        self._prev_device_state = {}
+        self.notification_center = NotificationCenter(parent=self)
+        self.notification_center.label_changed.connect(self._on_notification_label_changed)
+        self.lblNotification.mousePressEvent = self._open_notification_history
 
         # --- Data binder ---
         self.data_binder = DataBinder(self.ui.centralFrame)
@@ -465,38 +473,33 @@ class App(QMainWindow):
         if "encoder_value_in_deg" in data:
             self.ui.lblEncoder.setText(f"{data['encoder_value_in_deg']:.2f}")
         if "notification" in data:
-            self.lblNotification.setText(data["notification"])
+            notif = data["notification"]
+            if isinstance(notif, dict):
+                self.notification_center.push("rosout", notif.get("message", ""), notif.get("level", "info"))
+            elif notif:
+                self.notification_center.push("rosout", notif, "info")
         if "encoder_value_raw" in data:
             value = str(data["encoder_value_raw"])
             self.ui.lblEncoderRawValue.setText(value)
             self.setting_page.txtEncodeValueRaw.setText(value)
 
-        data = data['devices']
-        if "encoder" in data:
-            status = data['encoder']['device_state']
-            self.ui.lblEncoderStatus.setText(status)
-        else:
-            self.ui.lblEncoderStatus.setText("unknown".upper())
-    
-        if 'lidar' in data:
-            status = data['lidar']['device_state']
-            self.ui.lblLidarStatus.setText(status)
-        else:
-            self.ui.lblLidarStatus.setText("unknown".upper())
+        devices = data['devices']
+        device_labels = {
+            "encoder": self.ui.lblEncoderStatus,
+            "lidar": self.ui.lblLidarStatus,
+            "pcan": self.ui.lblPCANStatus,
+            "plc": self.ui.lblPLCStatus,
+        }
+        for name, label in device_labels.items():
+            state = devices[name]['device_state'] if name in devices else None
+            set_device_label(label, state)
 
-        if 'pcan' in data:
-            status = data['pcan']['device_state']
-            self.ui.lblPCANStatus.setText(status)
-        else:
-            self.ui.lblPCANStatus.setText("unknown".upper())
- 
-        if 'plc' in data:
-            status = data['plc']['device_state']
-            self.ui.lblPLCStatus.setText(status)
-        else:
-            self.ui.lblPLCStatus.setText("unknown".upper())
-               
-               
+            prev_state = self._prev_device_state.get(name)
+            if prev_state is not None and prev_state != state:
+                level = "info" if state == "Connected" else "error"
+                self.notification_center.push(name, f"{name}: {state or 'UNKNOWN'}", level)
+            self._prev_device_state[name] = state
+
     # 3.--- Update pointcloud from available data---
     def update_pointcloud_from_data(self, data, filename=None):
         from pps.data_converter import CloudConverter
@@ -659,20 +662,29 @@ class App(QMainWindow):
             return f"COMPARE [{bar}] {int(progress * 100):3d}%"
 
         _string = make_progress_bar(progress)
-        print(_string)  
-        self.lblNotification.setText(_string)
- 
+        print(_string)
+        self.notification_center.push_transient(_string, "info")
+
 
     def on_compare_done(self, success, job_id):
-        
+
         if success:
             print("✅COMPARE DONE ",job_id)
             _string = "✅COMPARE DONE "
         else:
             print("❌COMPARE FAILED ", job_id)
             _string = "❌COMPARE FAILED "
-        
-        self.lblNotification.setText(_string)
+
+        self.notification_center.push("compare", _string, "info" if success else "error")
+
+    def _on_notification_label_changed(self, text, level):
+        color = LEVEL_COLORS.get(level, LEVEL_COLORS["info"])
+        self.lblNotification.setStyleSheet(f"margin-left: 5px; color: {color}; font-weight: bold;")
+        self.lblNotification.setText(text)
+
+    def _open_notification_history(self, event):
+        dlg = NotificationHistoryDialog(self.notification_center, parent=self)
+        dlg.exec_()
 
     # 7.--- Close event handler ---
     def closeEvent(self, event):

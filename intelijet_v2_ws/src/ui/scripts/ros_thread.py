@@ -92,7 +92,10 @@ class RosThread(threading.Thread):
         data = unpack_log_status(msg)
         if data is not None:
             name = data.get("name")
-            self.data_store[name] = data.get("message")
+            self.data_store[name] = {
+                "message": data.get("message"),
+                "level": data.get("level", "info"),
+            }
 
 
     def emit_ui_data_update(self, msg):
