@@ -64,8 +64,33 @@ Gom phần xử lý dữ liệu (không-widget) của `on_cloud_received`:
 
 ## Báo cáo hoàn thành
 
-_(chưa có)_
+**Trạng thái: ✅ Xong.** Commit `f045736`.
+
+### Đã làm
+- `ui/src/ui/services/job_store.py`: `JobStore` — nguồn sự thật duy nhất cho `active_jobs.json`/`current_job.json`; ghi atomic (`.tmp` + `os.replace`); xử lý file thiếu/hỏng/sai kiểu bằng cách trả mặc định rỗng + log warning, không crash. **Đã chạy test thật** (không chỉ py_compile) — 7 test case pass 100% trong sandbox này (đây là service duy nhất không phụ thuộc ROS/Qt nên chạy được trực tiếp).
+- `ui/src/ui/services/cloud_pipeline.py`: `CloudPipelineService` — gom `pointcloud2_to_o3d`, `assign_colors_for_highlight`, `to_vtk`, `save_ply`; giữ 1 instance `CloudConverter` dùng lại thay vì tạo mới 3 nơi như trước (đúng điểm kế hoạch nêu ở dòng ~319, 506, 713 gốc).
+- `ui/src/ui/services/report_service.py`: `ReportService.export()` — chuyển nguyên thân `export_report` cũ, đổi từ "in lỗi rồi nuốt" sang **raise exception rõ ràng** khi thất bại (đúng yêu cầu thiết kế), App bắt và đẩy qua `NotificationCenter` (đã có từ Phase 3).
+- `app.py`: `on_cloud_received`, `update_pointcloud_from_data`, `export_report` giờ chỉ còn điều phối (gọi service → cập nhật widget); bỏ hẳn `save_job()`, bỏ monkeypatch `showPopup`, bỏ toàn bộ JSON I/O rải rác trong `on_job_changed`/`load_current_job` — thay bằng gọi `JobStore`. Thêm `QTimer` refresh danh sách job mỗi 30s (giữ nguyên lựa chọn hiện tại khi refresh, dùng `blockSignals`) thay cho việc đọc lại file mỗi lần mở dropdown.
+- Dọn 2 import không còn dùng (`ReportGenerator`, `delete_old_final_report`, `shutil`) sau khi logic chuyển sang `ReportService`.
+- `py_compile` pass cho toàn bộ 6 file sửa/mới.
+
+### Đối chiếu ràng buộc
+- 3 service không import PyQt, không đụng `self.ui` — đã soát bằng mắt toàn bộ 3 file, chỉ dùng `rospy.log*`.
+- Không sửa `ros_thread.py`, `vtk_viewer.py`, `tunnel_report/*` — đúng, không đụng.
+- Không đổi format 2 file JSON — đúng, `JobStore` đọc/ghi cùng cấu trúc `{"current_job": "..."}` và list `[{"project":..., "job":...}]` như cũ.
+- Grep xác nhận `project_dlg_manager.py`, `job_select_manager.py`, `report_view_dlg_manager.py`, `history_page_manager.py`, `compare_dlg_manager.py` đều có `ACTIVE_JOB_FILE`/hàm đọc job **riêng, độc lập**, không import từ `app.py` — refactor không ảnh hưởng các file này (đúng như kế hoạch cho phép).
+
+### Sai khác nhỏ so với mô tả gốc trong kế hoạch (đã cân nhắc, ghi lại)
+- Không tạo `ProcessedCloud` wrapper object như gợi ý — `process_incoming()` trả thẳng `o3d_cloud` vì không có metadata nào khác cần mang theo trong pipeline hiện tại; thêm wrapper sẽ là abstraction thừa. Có sẵn `process_incoming()` (gộp convert+color) lẫn 2 hàm rời `pointcloud2_to_o3d()`/`assign_colors_for_highlight()` — `app.py` dùng 2 hàm rời vì cần bước "convert trước, quyết định có tô màu hay không sau" theo đúng logic gốc (một số topic không tô màu).
+- `JobStore` không có `add_job(...)` như liệt kê trong kế hoạch — vì `app.py` không có nơi nào gọi add-job (việc thêm job nằm ở `project_dlg_manager.py`, ngoài phạm vi phase), nên không thêm API chưa có nơi dùng.
+- Không tìm cách "hook vào lúc dialog quản lý job đóng" để refresh cache — các trang quản lý job trong `app.py` là widget nhúng thường trực (tab), không phải dialog modal, nên không có sự kiện "đóng" rõ ràng để hook; dùng phương án dự phòng kế hoạch đã cho phép (QTimer 30s).
+
+### Chưa kiểm chứng được trong phiên này
+- `CloudPipelineService`, `ReportService` phụ thuộc `rospy`/`pps.data_converter`/Open3D/`ui.tunnel_report` — không chạy thật được trong sandbox này (không có ROS/Open3D), chỉ `py_compile`.
+- Chưa chạy được app thật để quét 1 chu trình đầy đủ prescan→postscan→compare→report như mục 3 phần Kiểm chứng yêu cầu — cần Docker.
 
 ## Ghi chú phát sinh
 
-_(chưa có)_
+1. `update_pointcloud_from_data` (được gọi từ `history_page_in_toolbox.polydataSignal` và `compare_dlg_manager` qua `jobcompare_dlg.polydataSignal`) nay dùng `self.cloud_pipeline.to_vtk(...)` — các signal này connect trong `__init__` TRƯỚC dòng khởi tạo `self.cloud_pipeline`, nhưng vì Qt signal chỉ thực thi khi có sự kiện thật (không đồng bộ ngay lúc connect), nên thứ tự này an toàn — đã kiểm tra kỹ, không phải bug.
+2. `ui/services/`, `ui/tests/` không được liệt kê trong `packages=['ui']` của `setup.py` — nhưng các subpackage có sẵn từ trước (`ui.models`, `ui.tunnel_report`, `ui.widgets`) cũng không được liệt kê và vẫn chạy được nhờ `catkin_python_setup()` symlink cả cây thư mục trong devel space — giữ nguyên quy ước hiện có, không sửa `setup.py`.
+3. Phát hiện phụ (không sửa, ngoài phạm vi): trong `report_service.py` (nguyên bản từ `export_report` cũ), fallback `applied_thickness` không nhất quán — nhánh có `job_info` dùng fallback `10`, nhánh không có `job_info` dùng fallback `40`. Đây là hành vi/giá trị hardcode có sẵn từ trước, giữ nguyên theo đúng nguyên tắc "chỉ di chuyển, không sửa hành vi"; có thể dọn khi làm Phase 6.
