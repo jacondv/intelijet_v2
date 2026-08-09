@@ -60,7 +60,7 @@ Ghi chú thứ tự:
 | P3 | ✅ Xong (code) | NotificationCenter (lịch sử+ghim+chống spam), set_device_label, dialog lịch sử, log_status có level. Commit `44b8abb`. **Chưa chạy được test thật** (không cài được PyQt5 trong sandbox) — chỉ py_compile. Ưu tiên chạy `test_notification_center.py` trong Docker trước khi tin tưởng hoàn toàn. |
 | P4 | ✅ Xong | JobStore/CloudPipelineService/ReportService tách khỏi `App`. Commit `f045736`. Test JobStore chạy thật, pass 7/7 (service duy nhất không cần ROS/Qt). CloudPipelineService/ReportService mới chỉ py_compile — cần Docker để chạy 1 chu trình prescan→postscan→compare→report thật. |
 | P5 | ✅ Xong (code), ⚠️ CHƯA test thật | ScanPipelineWorker (hàng đợi 1 chỗ) đưa convert/color/VTK/save/report ra khỏi GUI thread; box widget + max_points giảm lag render. Commit `445696c`. **Đây là phase quan trọng nhất — bắt buộc chạy thử trong Docker trước khi tin tưởng** (chưa có ROS/Qt/Open3D trong sandbox để tự kiểm chứng "UI không đơ khi xuất report"). |
-| P6 | ⬜ Chưa làm | |
+| P6 | ✅ Xong (code), ⚠️ CHƯA import/run thật | Việc 3 (6 điểm lỗi/anti-pattern) + Việc 1+2 (helper.py 1688 dòng → shim 55 dòng + pps/cloud_utils/*, xoá 19 hàm chết, hợp nhất convert vào CloudConverter). Commit `f462b42`, `29ea074`. Không có numpy/scipy/ROS trong sandbox nên chỉ kiểm chứng bằng py_compile + soát tay grep call-site kỹ. |
 | P7 | ⬜ Chưa làm | |
 | P8 | ⬜ Chưa làm | |
 | P9 | ⬜ Chưa làm | |
