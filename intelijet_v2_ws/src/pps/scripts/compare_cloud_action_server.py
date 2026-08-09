@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import rospy
 import actionlib
+import threading
 import uuid
 
 from sensor_msgs.msg import PointCloud2
@@ -25,6 +26,13 @@ class CompareCloudServer:
 
         self.pre_cloud = None
         self.post_cloud = None
+        # Set by _pre_cb/_post_cb, waited on in execute() instead of
+        # busy-polling with rospy.sleep(1). pre_cloud_event stays set once
+        # a pre-scan has arrived (pre_cloud itself is never reset, so a
+        # cycle can reuse an older pre-scan); post_cloud_event is cleared
+        # each time post_cloud is consumed, since post_cloud is too.
+        self.pre_cloud_event = threading.Event()
+        self.post_cloud_event = threading.Event()
 
         self.pipeline = CloudComparePipeline()
 
@@ -47,6 +55,7 @@ class CompareCloudServer:
     # ---------------- CALLBACK ----------------
     def _pre_cb(self, msg):
         self.pre_cloud = cloudconverter.pointcloud2_to_o3d(msg)
+        self.pre_cloud_event.set()
 
     def _post_cb(self, msg):
         self.post_cloud = cloudconverter.pointcloud2_to_o3d(msg)
@@ -56,6 +65,10 @@ class CompareCloudServer:
             if last_pre_path:
                 rospy.loginfo(f"No Pre-scan found --> Load last Pre-scan cloud from: {last_pre_path}")
                 self.pre_cloud = cloudconverter.load_ply(last_pre_path, as_legacy=True)
+                if self.pre_cloud is not None:
+                    self.pre_cloud_event.set()
+
+        self.post_cloud_event.set()
 
     # ---------------- FEEDBACK ----------------
     def fb(self, stage, progress):
@@ -70,16 +83,13 @@ class CompareCloudServer:
         job_id = uuid.uuid4().hex
 
         try:
-            
-            for i in range(10):
-                if self.post_cloud is not None:
-                    break
-                rospy.sleep(1)
- 
-            for i in range(10):
-                if self.pre_cloud is not None:
-                    break
-                rospy.sleep(1) 
+            if not self.post_cloud_event.wait(timeout=10):
+                self.server.set_aborted(CompareCloudResult(), "Timeout waiting for post-scan cloud")
+                return
+
+            if not self.pre_cloud_event.wait(timeout=10):
+                self.server.set_aborted(CompareCloudResult(), "Timeout waiting for pre-scan cloud")
+                return
 
             pre = self.pre_cloud
             post = self.post_cloud
@@ -110,6 +120,7 @@ class CompareCloudServer:
             res.job_id = job_id
             self.server.set_succeeded(res)
             self.post_cloud = None
+            self.post_cloud_event.clear()
 
         except Exception as e:
             rospy.logerr(str(e))

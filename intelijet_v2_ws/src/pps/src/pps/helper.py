@@ -1364,11 +1364,11 @@ def load_ply(filepath):
     try:
         pcd = o3d.io.read_point_cloud(filepath)
         if len(pcd.points) == 0:
-            print("⚠️ File have no data:", filepath)
+            rospy.logwarn(f"[helper.load_ply] File has no data: {filepath}")
             return None
         return pcd
     except Exception as e:
-        print(f"❌ Can't load file {filepath}: {e}")
+        rospy.logerr(f"[helper.load_ply] Can't load file {filepath}: {e}")
         return None
 
 

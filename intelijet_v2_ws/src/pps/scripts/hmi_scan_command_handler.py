@@ -22,7 +22,12 @@ def get_scanner_controller(status_callback=None, active_lidar=cfg.active_lidar):
     if active_lidar == "lms511":
         controller = SickScanErobController(status_callback=status_callback)
         return controller
-    
+
+    raise ValueError(
+        f"Unsupported active_lidar '{active_lidar}' in lidar.yaml "
+        f"(expected: 'lms511')"
+    )
+
 
 class ScanManagerNode:
     def __init__(self, action_server_name,

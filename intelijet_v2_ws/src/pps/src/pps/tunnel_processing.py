@@ -1,5 +1,6 @@
 # import open3d as o3d
 import numpy as np
+import rospy
 from scipy.spatial import ConvexHull
 from matplotlib.path import Path
 from scipy.spatial import cKDTree
@@ -627,7 +628,8 @@ class TunnelProcessing:
                 return default_center
             try:
                 return center[idx] + offset
-            except:
+            except Exception as e:
+                rospy.logwarn(f"[TunnelProcessing] safe_bound_value fallback for idx={idx}: {e}")
                 return default_center
             
         # minbound = [2.1, right_center[1]-0.3, ground_center[2]+0.3]

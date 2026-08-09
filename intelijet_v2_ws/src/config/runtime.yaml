@@ -27,6 +27,24 @@ thickness:
   target: 30  # target thickness in mm
   tolerance: 10 # allowable tolerance in mm
 
+# Parameters for pps.cloud_processing.compare_pipeline.CloudComparePipeline.run()
+# (used via shared.config_loader.CONFIG with these exact values as fallback
+# defaults in code, so a machine whose last_used.yaml predates this section
+# keeps working unchanged - see compare_pipeline.py::_cfg()).
+compare_pipeline:
+  crop_box:
+    min: [0, -10, -0.3]
+    max: [11, 10, 7]
+  keypoint:
+    pixel_radius: 100
+    cloud_radius: 0.5
+    match_ratio: 0.5
+  clustering:
+    eps: 0.1
+    min_points: 10
+    max_cluster_size_pass1: 100
+    max_cluster_size_pass2: 0
+
 report:
   sitename: "Jacon Equipment (test only)"
   jobnumer: "Jobnumber (test only)"

@@ -12,6 +12,20 @@ from pps.image_processing.keypoint_processing_v3 import KeypointCloudAlignManage
 from pps.helper import crop_pointcloud_by_box, check_transform
 from pps.cloud_processing.utils_align import align_cloud, pre_align_cloud
 from shared.config_loader import CONFIG as cfg
+from shared.log_status import log_status
+
+
+def _cfg(*names, default=None):
+    """Safe nested getattr on CONFIG - returns `default` if any level is
+    missing, so this keeps working even on a machine whose last_used.yaml
+    predates the `compare_pipeline:` section in runtime.yaml."""
+    obj = cfg
+    for name in names:
+        obj = getattr(obj, name, None)
+        if obj is None:
+            return default
+    return obj
+
 
 class CloudComparePipeline:
 
@@ -28,8 +42,8 @@ class CloudComparePipeline:
 
         post_crop = crop_pointcloud_by_box(
             post_cloud,
-            min_bound=(0, -10, -0.3),
-            max_bound=(11, 10, 7)
+            min_bound=_cfg("compare_pipeline", "crop_box", "min", default=(0, -10, -0.3)),
+            max_bound=_cfg("compare_pipeline", "crop_box", "max", default=(11, 10, 7))
         )
 
         # ===== 2D KEYPOINT =====
@@ -44,9 +58,9 @@ class CloudComparePipeline:
                 lidar_to_cam_extrinsic=None,
                 dist_coeffs=np.zeros(5),
                 feature_method="SIFT", # SIFT is now not used.
-                pixel_radius=100,
-                cloud_radius=0.5,
-                match_ratio=0.5
+                pixel_radius=_cfg("compare_pipeline", "keypoint", "pixel_radius", default=100),
+                cloud_radius=_cfg("compare_pipeline", "keypoint", "cloud_radius", default=0.5),
+                match_ratio=_cfg("compare_pipeline", "keypoint", "match_ratio", default=0.5)
             )
 
             kpm.set_cloud1(pre_cloud)
@@ -92,12 +106,22 @@ class CloudComparePipeline:
                 post_cloud = cloudconverter.crop_cloud_by_hull(pre_cloud, post_cloud)
             except Exception as e:
                 rospy.logerr(f"post-process failed: {e}")
+                log_status(
+                    name=cfg.NOTIFICATION,
+                    message=f"[WARN] Post-process crop skipped (using uncropped cloud): {e}",
+                    level="warning",
+                )
 
         # ===== COMPARE =====
         fb("compare", 0.7)
 
-        post_cloud = keep_largest_cluster(post_cloud, eps=0.1, min_points=10,max_cluster_size=100)
-        post_cloud = keep_largest_cluster(post_cloud, eps=0.1, min_points=10,max_cluster_size=0)
+        eps = _cfg("compare_pipeline", "clustering", "eps", default=0.1)
+        min_points = _cfg("compare_pipeline", "clustering", "min_points", default=10)
+        max_cluster_size_pass1 = _cfg("compare_pipeline", "clustering", "max_cluster_size_pass1", default=100)
+        max_cluster_size_pass2 = _cfg("compare_pipeline", "clustering", "max_cluster_size_pass2", default=0)
+
+        post_cloud = keep_largest_cluster(post_cloud, eps=eps, min_points=min_points, max_cluster_size=max_cluster_size_pass1)
+        post_cloud = keep_largest_cluster(post_cloud, eps=eps, min_points=min_points, max_cluster_size=max_cluster_size_pass2)
         cloud_compared, distance = run_compare(
             source=post_cloud,
             target=pre_cloud
