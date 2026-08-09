@@ -120,6 +120,7 @@ class OnScreenKeyboard(QDialog):
         self._target = None
         self._shift_on = False
         self._buttons = {}
+        self._popup_mode = False
 
         self._opacity_anim = QPropertyAnimation(self, b"windowOpacity", self)
         self._opacity_anim.setDuration(FADE_MS)
@@ -218,11 +219,33 @@ class OnScreenKeyboard(QDialog):
         if not isinstance(target, QLineEdit):
             return
 
+        self._adapt_to_modal_state()
+
         same_target = target is self._target
         self._target = target
         if not same_target:
             self._reposition(widget)
-        self._fade_to(1.0)
+        if not (same_target and self.windowOpacity() >= 0.99 and self.isVisible()):
+            self._fade_to(1.0)
+
+    def _adapt_to_modal_state(self):
+        """QDialog.exec_() (used app-wide for every input dialog, default
+        ApplicationModal) blocks mouse input to every other top-level window
+        in the app - except popups, which Qt explicitly exempts from modal
+        blocking (the same mechanism that lets a QComboBox dropdown work
+        while opened from inside a modal dialog). Flip to a Popup window
+        while a modal dialog is active so this keyboard keeps receiving
+        clicks; use a normal window otherwise, since Popup auto-closes on
+        any click outside it - unwanted friction when there's no modal
+        dialog to work around."""
+        modal_active = QApplication.activeModalWidget() is not None
+        if modal_active == self._popup_mode:
+            return
+        self._popup_mode = modal_active
+        was_visible = self.isVisible()
+        self.setWindowFlags((Qt.Popup if modal_active else Qt.Window) | Qt.WindowStaysOnTopHint)
+        if was_visible:
+            self.show()
 
     def detach(self):
         self._target = None
