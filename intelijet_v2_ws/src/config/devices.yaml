@@ -1,34 +1,39 @@
 # This is just an virtual device to collect real devices or real processes status
 # You can add/remove devices in the config/devices.yaml file to monitor them
 # The node will publish the status of each device on the device_name/status topic
+#
+# type: TopicAliveMonitor -> connected while messages keep arriving on `topic`
+#                             within `timeout` seconds (CAN devices).
+# type: PingMonitor        -> connected while ICMP ping to `ip` succeeds.
+# type: StateEchoMonitor   -> device_state mirrors last message payload, still
+#                             goes disconnected if no message within `timeout`.
 devices:
   - name: lidar
-    type: LidarMonitor
-    topic: /cloud
-    msg_type: sensor_msgs/PointCloud2
+    type: PingMonitor
+    ip: 192.168.82.121  # from sick_scan/launch/sick_lms_511.launch arg "hostname"
     timeout: 3.0
     mode: continuous
   - name: encoder
-    type: EncoderMonitor
+    type: TopicAliveMonitor
     topic: /encoder01/can_msg
     msg_type: can_msgs/Frame
     timeout: 3.0
     mode: continuous
   - name: pcan
-    type: PCANMonitor
+    type: TopicAliveMonitor
     topic: /pcan_received_messanges
     msg_type: can_msgs/Frame
     timeout: 3.0
     mode: continuous
   - name: pps
-    type: PPSMonitor
+    type: StateEchoMonitor
     topic: /pps/state
     msg_type: std_msgs/String
     timeout: 3.0
     mode: continuous
   - name: plc
     topic: /plc/heatbeat
-    type: PLCMonitor
+    type: TopicAliveMonitor
     msg_type: can_msgs/Frame
     timeout: 3.0
     mode: continuous
