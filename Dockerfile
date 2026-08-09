@@ -28,6 +28,8 @@ RUN apt-get update && apt-get install -y \
     ros-noetic-laser-assembler \
     ros-noetic-robot-state-publisher \
     ros-noetic-cv-bridge \
+    ros-noetic-diagnostic-updater \
+    ros-noetic-dynamic-reconfigure \
     iputils-ping \
     libpcl-dev \
     libvtk7-dev \
@@ -50,6 +52,7 @@ RUN apt-get update && apt-get install -y \
     libffi-dev \
     shared-mime-info \
     fonts-liberation \
+    onboard \
     && rm -rf /var/lib/apt/lists/*
 # ros-noetic-laser-assembler / robot-state-publisher: used by pps.launch
 # (point_cloud2_assembler, robot_state_publisher nodes) - came for free with
@@ -59,13 +62,20 @@ RUN apt-get update && apt-get install -y \
 # python3-vtk7: `import vtk` used throughout ui (vtk_viewer.py, utils.py,
 # cloud_pipeline.py...) - libvtk7-dev alone is only C++ headers, no Python
 # bindings.
-# libjsoncpp-dev, libboost-system-dev, libboost-serialization-dev: build deps
-# of the sick_scan package (see its CMakeLists.txt find_package calls) -
-# desktop-full bundled these too.
+# libjsoncpp-dev, libboost-system-dev, libboost-serialization-dev,
+# ros-noetic-diagnostic-updater, ros-noetic-dynamic-reconfigure: build deps
+# of the sick_scan package (see its package.xml/CMakeLists.txt find_package
+# calls) - desktop-full bundled these too.
 # libpango/libpangocairo/libgdk-pixbuf/libffi-dev/shared-mime-info/
 # fonts-liberation: native rendering deps of WeasyPrint (PDF report export,
 # ui/src/ui/tunnel_report/report_controler.py) - WeasyPrint itself is pure
 # Python (installed via pip below) but needs these system libs to render.
+# onboard: on-screen keyboard binary launched by ui/src/ui/keyboard.py's
+# TouchKeyboard (installed as an app-wide QApplication event filter in
+# app.py - fires on every QLineEdit/QTextEdit focus, e.g. typing a new
+# project name). Was missing entirely from this image (desktop-full didn't
+# include it either - it was always broken, just silently, since the code
+# only warnings.warn()s on FileNotFoundError instead of raising).
 #
 # If a package still fails to build with "missing dependency" after this,
 # the general fix is running (inside the container, from intelijet_v2_ws):

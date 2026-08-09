@@ -1,4 +1,4 @@
-BASE_DIR: /mnt/c/work/projects/intelijet_v2
+BASE_DIR: /root/intelijet_v2
 DATA_DIR: data
 HMI_CMD_TOPIC: /hmi/cmd
 PLC_CMD_TOPIC: /plc/cmd

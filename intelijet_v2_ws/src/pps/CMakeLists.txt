@@ -15,7 +15,6 @@ find_package(catkin REQUIRED COMPONENTS
   actionlib
   actionlib_msgs
   std_msgs
-  ros_blkarc_msgs  
 )
 
 ## System dependencies are found with CMake's conventions
@@ -169,10 +168,8 @@ include_directories(
 
 ## Mark executable scripts (Python etc.) for installation
 ## in contrast to setup.py, you can choose the destination
-catkin_install_python(PROGRAMS
-  scripts/dv_cloud_align.py
-  DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
-)
+# (no catkin_install_python() here - pps.launch runs scripts/*.py directly
+# from the source tree via rosrun/roslaunch, no install-space copy needed)
 
 ## Mark executables for installation
 ## See http://docs.ros.org/melodic/api/catkin/html/howto/format1/building_executables.html
