@@ -77,25 +77,26 @@ Chi tiết bắt buộc:
 
 ## Báo cáo hoàn thành
 
-**Trạng thái: 🟡 Dở dang (WIP) — dừng giữa chừng theo yêu cầu người dùng (tắt máy).** Commit `9969317`.
+**Trạng thái: ✅ Xong.** Commit `9969317`, `2c6370e` (WIP + docs), `e348971` (bổ sung `iputils-ping`).
 
-### Đã xong
+### Đã làm
 - Viết lại `shared/src/shared/device_monitor.py` theo đúng thiết kế 3 class: `TopicAliveMonitor` (gộp Lidar/Encoder/PCAN/PLCMonitor cũ, dùng cho encoder/pcan/plc), `PingMonitor` (mới — ping ICMP nền, thread riêng, ngưỡng 2 lần fail liên tiếp mới đổi DISCONNECTED), `StateEchoMonitor` (thay PPSMonitor, có thêm staleness check).
 - Dispatch bằng dict `MONITOR_CLASSES` thay `eval()`; type không hợp lệ hoặc monitor init lỗi → log lỗi + skip device đó, không crash `StatusReader`.
 - Sửa bug `update_status(dev_state, proc_state=None, detail=None)` — `None` giữ giá trị cũ thay vì ghi đè `''`.
 - `check_interval` = `max(timeout/2, 0.5)` (chặn timer quá dày) — đặt trong `Monitor.__init__`, dùng chung cho mọi loại monitor kể cả vòng lặp ping nền.
 - Docstring đầu file mô tả 3 loại monitor + cách thêm device mới (thay cho mục 7 "Docstring đầu file" trong kế hoạch).
 - Cập nhật `intelijet_v2_ws/src/config/devices.yaml`: `encoder`/`pcan`/`plc` → `type: TopicAliveMonitor`; `pps` → `type: StateEchoMonitor`; `lidar` → `type: PingMonitor`, bỏ `topic`/`msg_type`, thêm `ip: 192.168.82.121` — **tìm được IP thật** (không phải placeholder) từ `intelijet_v2_ws/src/sick_scan/launch/sick_lms_511.launch:15` (`<arg name="hostname" default="192.168.82.121"/>`).
-- `py_compile` pass; `yaml.safe_load` pass cho `devices.yaml`.
+- **Việc 5 — đã soát `ui/scripts/ros_thread.py` và `ui/scripts/app.py`**: `ros_thread.py` chỉ gọi `StatusReader()` và `get_status()` (không đổi chữ ký, giữ nguyên); `app.py::update_data` (dòng ~474-497) đọc `data['devices']['encoder'|'lidar'|'pcan'|'plc']['device_state']` — key và field không đổi. **Không cần sửa gì ở UI**, đúng như dự đoán trong thiết kế.
+- Bổ sung `iputils-ping` vào `Dockerfile` (image base `osrf/ros:noetic-desktop-full-focal` không đảm bảo có sẵn) — nếu thiếu, `PingMonitor` sẽ luôn báo DISCONNECTED vì `subprocess` gọi `ping` thất bại.
+- `py_compile` pass cho `device_monitor.py`; `yaml.safe_load` pass cho `devices.yaml`.
 
-### Còn thiếu (làm tiếp ở phiên sau)
-1. **Việc 5 — chưa soát lại `ui/scripts/ros_thread.py`/`ui/scripts/app.py`.** Theo thiết kế thì không cần đổi gì (key dict `lidar/encoder/pcan/plc/pps` và field `device_state` không đổi), nhưng **chưa mở 2 file này để xác nhận thực tế** — cần làm trước khi coi phase này xong.
-2. **Phần "Kiểm chứng" mục 2** (test thủ công: rút mạng lidar, xác nhận ping fail 1 lần chưa đổi trạng thái, 2 lần mới đổi) — chưa chạy vì không có môi trường ROS trong phiên này.
-3. Xác nhận `ping` binary có sẵn trong image Docker (gói `iputils-ping` — cần kiểm tra `Dockerfile`, hiện chưa thấy cài rõ ràng trong danh sách apt hiện tại). Nếu thiếu, `PingMonitor` sẽ luôn báo DISCONNECTED (subprocess lỗi "command not found") — **cần bổ sung `iputils-ping` vào Dockerfile nếu chưa có**, đây có thể thuộc phạm vi Phase 8 (Docker) hoặc xử lý ngay ở P2 tuỳ ai làm tiếp.
-4. Cập nhật bảng Trạng thái P2 trong `00_INDEX.md` từ 🟡 sang ✅ sau khi hoàn tất 3 mục trên.
+### Chưa kiểm chứng được (không có môi trường ROS trong các phiên này)
+- Test thủ công thật: chạy `StatusReader`, rút mạng lidar/tắt node CAN → xác nhận trạng thái đổi đúng theo thời gian thực, ping fail 1 lần chưa đổi trạng thái nhưng 2 lần liên tiếp mới đổi.
+- Build `catkin_make`/chạy app thật trong Docker.
+- Đây là rủi ro còn lại duy nhất của phase — code đã soát kỹ bằng mắt và logic đối chiếu đúng thiết kế, nhưng khuyến nghị người dùng chạy thử trong Docker thật trước khi tin tưởng tuyệt đối, đặc biệt phần `PingMonitor` (thread nền + subprocess).
 
 ## Ghi chú phát sinh
 
-1. **Cần kiểm tra `iputils-ping` có trong Dockerfile không** (xem mục 3 ở trên) — nếu thiếu, PingMonitor sẽ không hoạt động dù code đúng.
-2. IP lidar `192.168.82.121` lấy từ `default` của launch arg `hostname` trong `sick_lms_511.launch` — đây là giá trị mặc định trong code, cần người vận hành xác nhận đây đúng là IP thật đang dùng ở hiện trường (không phải giá trị test/demo), vì `.desktop`/launch có thể bị override bởi tham số khác khi chạy thật.
-3. `Monitor.__init__` giờ gọi `self._setup(cfg)` (hook do subclass override) rồi mới start timer — đây là thay đổi cấu trúc nhỏ so với thiết kế gốc trong kế hoạch (kế hoạch không nêu chi tiết cách tránh lặp code phần "tạo timer" giữa 3 subclass) nhưng không đổi hành vi bên ngoài, chỉ là cách tổ chức code nội bộ để 3 class không phải copy-paste đoạn `rospy.Timer(...)`.
+1. IP lidar `192.168.82.121` lấy từ `default` của launch arg `hostname` trong `sick_lms_511.launch` — đây là giá trị mặc định trong code, **cần người vận hành xác nhận đây đúng là IP thật đang dùng ở hiện trường** (không phải giá trị test/demo), vì có thể bị override bởi tham số khác khi chạy thật.
+2. `Monitor.__init__` giờ gọi `self._setup(cfg)` (hook do subclass override) rồi mới start timer — thay đổi cấu trúc nội bộ nhỏ so với mô tả gốc trong kế hoạch (kế hoạch không nêu chi tiết cách tránh lặp code phần "tạo timer" giữa 3 subclass), không đổi hành vi bên ngoài, chỉ giúp 3 class không phải copy-paste đoạn `rospy.Timer(...)`.
+3. Việc thêm `iputils-ping` vào Dockerfile về nguyên tắc thuộc phạm vi Phase 8 (Docker), nhưng xử lý ngay ở P2 vì nếu không có, tính năng cốt lõi của phase này (ping-based lidar status) không hoạt động — đã ghi chú rõ trong commit message để Phase 8 không bị bất ngờ khi thấy Dockerfile đã bị sửa trước đó.
