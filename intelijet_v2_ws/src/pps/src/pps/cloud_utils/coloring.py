@@ -19,7 +19,13 @@ def map_distances_to_colors(
       - dist > highlight_range[1] → green → blue gradient
       - dist > clip_max → out_of_range_color
     """
-    distances = np.abs(distances)
+    # Open3D tensor point cloud attributes come back as column vectors,
+    # shape (N, 1) - flatten to (N,) so each `d` below is a plain scalar,
+    # not a length-1 array (which breaks the `colors[i] = (1 - t, t, 0)`
+    # assignment further down: mixing a length-1 array with plain ints in
+    # one tuple makes an inhomogeneous sequence numpy can't assign into a
+    # single row).
+    distances = np.abs(distances).reshape(-1)
     colors = np.zeros((len(distances), 3))
 
     low, high = highlight_range
