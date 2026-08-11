@@ -54,6 +54,7 @@ RUN apt-get update && apt-get install -y \
     fonts-liberation \
     onboard \
     dbus-x11 \
+    evince \
     && rm -rf /var/lib/apt/lists/*
 # ros-noetic-laser-assembler / robot-state-publisher: used by pps.launch
 # (point_cloud2_assembler, robot_state_publisher nodes) - came for free with
@@ -84,6 +85,8 @@ RUN apt-get update && apt-get install -y \
 # onboard to the bottom edge) to have anywhere to connect to. Without it,
 # show_keyboard() silently no-ops (see the try/except around it) and
 # onboard never appears at all.
+# evince: PDF viewer, for opening the tunnel report PDFs the app exports
+# (ui/src/ui/tunnel_report/) directly on the kiosk screen.
 #
 # If a package still fails to build with "missing dependency" after this,
 # the general fix is running (inside the container, from intelijet_v2_ws):
