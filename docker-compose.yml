@@ -1,20 +1,17 @@
-# Quick local run: `docker compose up --build`
+# Single source of truth for running Intelijet in Docker - used both for
+# manual dev iteration (`docker compose up --build`) and by the desktop
+# icon launcher (install.sh generates it; run_docker.sh drives this file).
 #
-# One-time per host session (X11 GUI access), before `up`:
+# One-time per host session (X11 GUI access), before `up` - run_docker.sh
+# already does this, only needed manually if you invoke `docker compose`
+# yourself:
 #   xhost +local:docker
-#
-# This mirrors run_docker.sh / run_intelijet.sh (same volumes, same
-# DISPLAY/X11 setup, --network host) but through Compose so `docker compose
-# up --build` is enough instead of the manual docker run one-liner.
-# Not part of the Phase 8 plan (docs/plan/phase_08_docker_compose.md) - that
-# phase will also add a desktop launcher + a proper Exit-button teardown.
-# This file is just for fast local iteration/testing in the meantime.
 services:
   intelijet:
     build:
       context: .
       dockerfile: Dockerfile
-    image: jacondv/jacon-pps-noetic:compose
+    image: jacondv/jacon-pps-noetic:latest
     container_name: intelijet
     network_mode: host
     environment:
@@ -24,6 +21,15 @@ services:
       DISABLE_ROS1_EOL_WARNINGS: "1"
     volumes:
       - .:/root/intelijet_v2
+      # QSettings("JaconEquipment", "Intelijet") in ui/scripts/app.py (e.g.
+      # last_prescan_path) writes to ~/.config/JaconEquipment by Qt's own
+      # default - that's /root/.config/JaconEquipment in the container,
+      # which is NOT under the repo mount above and would be wiped on
+      # every `docker compose down` otherwise. Redirect it into the repo,
+      # next to last_used.yaml, instead of some host user's home directory
+      # (keeps all persistent state in one place, independent of which
+      # Linux user runs the icon).
+      - ./intelijet_v2_ws/src/config/.config:/root/.config/JaconEquipment
       - /tmp/.X11-unix:/tmp/.X11-unix:rw
       - /etc/localtime:/etc/localtime:ro
       - /etc/timezone:/etc/timezone:ro
@@ -32,4 +38,8 @@ services:
       - SYS_TIME
     stdin_open: true
     tty: true
+    # restart is driven by the desktop icon (run_docker.sh: down, then up
+    # -d, every click) and the app's own Exit button - not by Docker's own
+    # restart policy.
+    restart: "no"
     command: ["bash", "-c", "/root/intelijet_v2/run_intelijet.sh"]

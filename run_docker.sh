@@ -1,55 +1,35 @@
 #!/bin/bash
+# Desktop icon entry point (see install.sh, which generates intelijet.desktop
+# pointing here). Every run: stop whatever's currently up, then start a
+# fresh container from the already-built image - no rebuild, so this stays
+# fast (a few seconds), and always starts clean instead of attaching to
+# whatever state a previous run left behind.
+set -e
 
-CONTAINER_NAME=intelijet
-IMAGE_NAME=jacondv/jacon-pps-noetic:v2.1
+REPO_DIR="$(cd "$(dirname "$(readlink -f "$0")")" && pwd)"
+cd "$REPO_DIR"
 
-TARGET_USER=$USER
-
-if id -nG "$TARGET_USER" | grep -qw docker; then
-    echo "User '$TARGET_USER' is already in the docker group."
+if command -v docker-compose >/dev/null 2>&1 && ! docker compose version >/dev/null 2>&1; then
+    COMPOSE_CMD="docker-compose"
 else
-    echo "Adding '$TARGET_USER' to the docker group..."
-    sudo usermod -aG docker "$TARGET_USER"
-    echo "Done."
+    COMPOSE_CMD="docker compose"
 fi
 
-# Cho phép container kết nối X server
-xhost +local:docker
-trap "xhost -local:docker; echo 'Stopping container...'; sudo docker stop $CONTAINER_NAME; exit" INT
+if ! id -nG "$USER" | grep -qw docker; then
+    echo "User '$USER' is not in the docker group yet - run install.sh first."
+    exit 1
+fi
 
-xrandr --output DSI-1 --rotate right
+# Let the container connect to this session's X server.
+xhost +local:docker >/dev/null 2>&1
 
-# QT_ENV="export QT_AUTO_SCREEN_SCALE_FACTOR=0; export QT_SCREEN_SCALE_FACTORS=1.25; export QT_SCALE_FACTOR=1.25;"
+# Tablet screen rotation - no-op (harmless) on machines/monitors without a
+# DSI-1 output.
+xrandr --output DSI-1 --rotate right 2>/dev/null || true
 
+trap 'xhost -local:docker >/dev/null 2>&1' EXIT
 
-run_container() {
-    if [ "$(sudo docker ps -q -f name=$CONTAINER_NAME)" ]; then
-        echo "Container $CONTAINER_NAME is already running."
-        sudo docker exec -it $CONTAINER_NAME bash -c "$QT_ENV cd /root/intelijet_v2 && ./run_intelijet.sh"
+$COMPOSE_CMD down
+$COMPOSE_CMD up -d
 
-    elif [ "$(sudo docker ps -aq -f name=$CONTAINER_NAME)" ]; then
-        echo "Container $CONTAINER_NAME exists but stopped. Starting..."
-        sudo docker start -ai $CONTAINER_NAME
-    else
-        echo "Container $CONTAINER_NAME does not exist. Running new container..."
-        sudo docker run -it \
-            --name $CONTAINER_NAME \
-            -v "$HOME/intelijet_v2:/root/intelijet_v2" \
-            -v /etc/localtime:/etc/localtime:ro \
-            -v /etc/timezone:/etc/timezone:ro \
-            -e DISPLAY=$DISPLAY \
-            -e QT_X11_NO_MITSHM=1 \
-            -v /tmp/.X11-unix:/tmp/.X11-unix:rw \
-            -v /dev/dri:/dev/dri \
-            --network host \
-            --cap-add=SYS_TIME \
-            $IMAGE_NAME \
-            bash -c "$QT_ENV /root/intelijet_v2/run_intelijet.sh"
-
-    fi
-
-
-}
-
-
-run_container
+echo "Intelijet container restarted. Logs: $COMPOSE_CMD logs -f"
