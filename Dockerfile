@@ -52,6 +52,8 @@ RUN apt-get update && apt-get install -y \
     libffi-dev \
     shared-mime-info \
     fonts-liberation \
+    onboard \
+    dbus-x11 \
     && rm -rf /var/lib/apt/lists/*
 # ros-noetic-laser-assembler / robot-state-publisher: used by pps.launch
 # (point_cloud2_assembler, robot_state_publisher nodes) - came for free with
@@ -69,6 +71,19 @@ RUN apt-get update && apt-get install -y \
 # fonts-liberation: native rendering deps of WeasyPrint (PDF report export,
 # ui/src/ui/tunnel_report/report_controler.py) - WeasyPrint itself is pure
 # Python (installed via pip below) but needs these system libs to render.
+# onboard: on-screen keyboard binary launched by ui/src/ui/keyboard.py's
+# TouchKeyboard (installed as an app-wide QApplication event filter in
+# app.py - fires on every QLineEdit/QTextEdit focus, e.g. typing a new
+# project name). Launched once and kept running for the whole session;
+# shown/hidden after that via onboard's own D-Bus service (Show/Hide) -
+# NOT by killing/relaunching the process, which is what caused flicker/
+# dropped keystrokes/an unmovable window under repeated show-hide cycles.
+# dbus-x11: provides dbus-run-session, used by run_intelijet.sh to start a
+# private D-Bus session bus for the container - required for that D-Bus
+# Show/Hide call above (and for the gsettings/dconf calls that dock
+# onboard to the bottom edge) to have anywhere to connect to. Without it,
+# show_keyboard() silently no-ops (see the try/except around it) and
+# onboard never appears at all.
 #
 # If a package still fails to build with "missing dependency" after this,
 # the general fix is running (inside the container, from intelijet_v2_ws):
