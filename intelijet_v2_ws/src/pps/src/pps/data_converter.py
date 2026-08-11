@@ -354,7 +354,11 @@ class CloudConverter:
         import open3d as o3d
 
         if isinstance(pcd_legacy, o3d.geometry.PointCloud):
-            return o3d.t.geometry.PointCloud.from_legacy(pcd_legacy)
+            # open3d==0.13.0 (pinned in Dockerfile) names this
+            # from_legacy_pointcloud(), not from_legacy() (renamed in
+            # later Open3D versions) - see tensor_to_o3d_legacy() below
+            # for the same issue on the reverse conversion.
+            return o3d.t.geometry.PointCloud.from_legacy_pointcloud(pcd_legacy)
         elif isinstance(pcd_legacy, o3d.t.geometry.PointCloud):
             return pcd_legacy
         else:
@@ -368,7 +372,11 @@ class CloudConverter:
         import open3d as o3d
 
         if isinstance(pcd_t, o3d.t.geometry.PointCloud):
-            return pcd_t.to_legacy()
+            # open3d==0.13.0 (pinned in Dockerfile) names this
+            # to_legacy_pointcloud(), not to_legacy() (renamed in later
+            # Open3D versions) - confirmed by installing 0.13.0 in
+            # isolation and checking hasattr() directly, not guessed.
+            return pcd_t.to_legacy_pointcloud()
         elif isinstance(pcd_t, o3d.geometry.PointCloud):
             return pcd_t
         else:
