@@ -27,6 +27,7 @@
 token.txt
 
 config/last_user.yaml
+intelijet_v2_ws/src/config/last_used.yaml
 
 # === FILE ROS VÀ BUILD ===
 qt/
@@ -78,3 +79,7 @@ venv/
 # === HIDDEN SYSTEM FILES ===
 .DS_Store
 Thumbs.db
+
+# === RUNTIME STATE (Docker bind mount target, not source) ===
+# QSettings("JaconEquipment", "Intelijet") data - see docker-compose.yml
+intelijet_v2_ws/src/config/.config/

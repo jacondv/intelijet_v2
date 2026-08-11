@@ -80,8 +80,17 @@ Kết quả cần đạt: sau khi bấm Exit, `docker ps` không còn container 
 
 ## Báo cáo hoàn thành
 
-_(chưa có)_
+Việc 1-3 xong:
+- `docker-compose.yml`: hợp nhất thành bản chính thức duy nhất (trước đó có 1 bản "quick dev" tách riêng, giờ dùng chung cho cả dev lẫn icon). `docker compose config` parse hợp lệ (đã chạy thật trong phiên này).
+- `run_docker.sh`: viết lại thành launcher mỏng - group check, `xhost`, `xrandr` rotate (giữ), phát hiện `docker compose` vs `docker-compose` cũ, rồi `down` + `up -d`.
+- `install.sh` (mới, không có trong plan gốc - phát sinh theo yêu cầu người dùng "cài đặt đơn giản"): tự cài Docker (script `get.docker.com`) + compose plugin nếu thiếu, thêm user vào group `docker`, `docker compose build` một lần, sinh `intelijet.desktop` với đường dẫn tuyệt đối đúng máy đang cài (vào `~/.local/share/applications` + `~/Desktop` nếu có) - giải quyết đúng vấn đề Việc 3 nêu (không dùng `$HOME` được trong .desktop).
+- `docs/INSTALL.md` (mới): hướng dẫn cài từ máy trắng - clone → `./install.sh`.
+- Xoá `intelijet.desktop` tĩnh ở gốc repo (hardcode `/home/nuc/...`) - đã bị thay thế hoàn toàn bởi bản `install.sh` tự sinh.
+
+Việc 4 (nút Exit tắt toàn bộ container từ trong app) **chưa làm** - người dùng chỉ yêu cầu phần cài đặt/icon lần này, không đụng `app.py`.
 
 ## Ghi chú phát sinh
 
-_(chưa có)_
+1. **Lệch khỏi Việc 2 gốc theo yêu cầu người dùng**: plan gốc đề xuất icon dùng `docker compose up -d` (tái sử dụng container đang chạy nếu có). Người dùng chốt: mỗi lần bấm icon phải **restart** (down rồi up lại) để luôn khởi động sạch, không rebuild image (giữ nhanh). Đã implement đúng theo hướng này trong `run_docker.sh`.
+2. **Chưa kiểm chứng thật trên máy Linux có Docker** (Kiểm chứng mục 2-3 của phase): phiên làm việc này chạy trên WSL, có Docker Desktop nhưng chưa test full luồng `install.sh` → icon → app lên trên máy Linux thật (không có sẵn máy đó trong phiên). Chỉ kiểm chứng được: `docker compose config` hợp lệ, cú pháp `run_docker.sh`/`install.sh` đúng (`bash -n`). Cần người dùng tự chạy `install.sh` trên máy Linux thật và xác nhận icon hoạt động.
+3. Image tag đổi từ `jacondv/jacon-pps-noetic:v2.1` (cũ, dùng trong `run_docker.sh` gốc) / `:compose` (bản dev tạm) → `:latest` (thống nhất 1 tag duy nhất cho bản build tại chỗ qua `install.sh`). Nếu sau này cần pull image dựng sẵn từ registry thay vì build tại chỗ, sẽ cần đặt lại tag rõ ràng hơn (vd theo version).
