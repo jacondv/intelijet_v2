@@ -34,8 +34,14 @@ class CompareBaseClient:
             CompareCloudAction
         )
         rospy.loginfo("Waiting for /compare_cloud action server...")
-        if not self.client.wait_for_server(rospy.Duration(5.0)):
-            rospy.logerr("compare_cloud action server not available")
+        # No timeout here: at container startup this node can come up
+        # before the action server node has finished initializing (ROS
+        # master + several nodes starting together), so a short deadline
+        # (e.g. 5s) logs a false "not available" error even though the
+        # server appears moments later and later send_goal() calls work
+        # fine anyway. Blocking here just means the UI waits a bit longer
+        # once at startup instead of showing a misleading error.
+        self.client.wait_for_server()
         rospy.loginfo("Connected to /compare_cloud")
 
     def set_prescan_path(self, path: str):
