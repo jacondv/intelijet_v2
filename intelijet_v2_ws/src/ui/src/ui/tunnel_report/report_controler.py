@@ -1,4 +1,5 @@
 import os
+import traceback
 from weasyprint import HTML
 from ui.tunnel_report.template_manager import render_template
 from ui.tunnel_report.report_data_model import ReportData
@@ -57,7 +58,23 @@ class ReportGenerator:
                 print(f"[ReportGenerator] Saved intermediate HTML to: {debug_path}")
 
         except Exception as e:
-            print(f"[ReportGenerator] Failed to create PDF at {output_path}: {e}")
+            # Re-raise instead of swallowing: export() below only returns
+            # True unconditionally after calling this - if the real
+            # write_pdf() failure stopped here, export() would report
+            # success (and log "Report exported successfully") for a PDF
+            # that was never actually written, and the caller
+            # (ReportService.export -> shutil.copy) would then fail with a
+            # confusing FileNotFoundError on the "successfully exported"
+            # file instead of the real cause.
+            # Full traceback, not just str(e) - "__init__() takes 1
+            # positional argument but 3 were given" alone doesn't say
+            # WHICH __init__ (write_pdf()'s internals? something in
+            # render_template()?), and guessing from the message alone
+            # already turned out wrong once (checked OffscreenRenderer's
+            # actual open3d==0.19.0 signature directly - it takes
+            # width/height fine, so the real culprit is elsewhere).
+            print(f"[ReportGenerator] Failed to create PDF at {output_path}: {e}\n{traceback.format_exc()}")
+            raise
 
 
     def export(self,pcd,output_path=None):

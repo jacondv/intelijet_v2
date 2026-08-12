@@ -122,7 +122,7 @@ RUN python3 -m pip install --upgrade pip \
     && python3 -m pip install --ignore-installed "setuptools==65.5.1" "wheel==0.38.4" \
     && python3 -m pip install --ignore-installed "numpy==1.23.5" \
     && python3 -m pip install --ignore-installed open3d==0.19.0 opencv-contrib-python rosnumpy \
-    && python3 -m pip install --ignore-installed Pillow jinja2 weasyprint matplotlib scipy python-box \
+    && python3 -m pip install --ignore-installed Pillow jinja2 weasyprint "pydyf==0.9.0" matplotlib scipy python-box \
     && python3 -m pip install --ignore-installed torch --index-url https://download.pytorch.org/whl/cpu \
     && python3 -m pip install --ignore-installed kornia kornia-rs kornia_moons \
     && apt-get update \
@@ -162,6 +162,18 @@ RUN python3 -m pip install --upgrade pip \
 # uninstall it to "upgrade" (uninstall-distutils-installed-package error).
 # Pillow: ui/ (PIL, thumbnail/preview handling).
 # jinja2 + weasyprint: ui/src/ui/tunnel_report/ (HTML template -> PDF report export).
+# pydyf==0.9.0: weasyprint's own PDF-object dependency, pinned because
+# latest (0.11.0) is a breaking change - pydyf.PDF.__init__ dropped its
+# version/identifier positional args entirely, but weasyprint (up to at
+# least 61.2, latest as of writing) still calls
+# pydyf.PDF((version or '1.7'), identifier) internally
+# (weasyprint/pdf/__init__.py generate_pdf()), so every PDF export failed
+# with "PDF.__init__() takes 1 positional argument but 3 were given".
+# weasyprint's own declared dependency (pydyf>=0.8.0, no upper bound)
+# doesn't protect against this - confirmed by diffing pydyf's PDF.__init__
+# source across 0.8.0/0.9.0 (2 args, fine) vs 0.10.0 (2 args + deprecation
+# warning) vs 0.11.0 (no args - broken). 0.9.0 chosen over 0.8.0 to skip
+# straight to the last clean (no-warning) release.
 # matplotlib: pps/, ui/, encoder_process/ (chart plots for the report).
 # scipy: pps/, encoder_process/.
 # python-box: pps/src/pps/utils.py (`from box import Box`).
