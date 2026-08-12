@@ -121,7 +121,7 @@ RUN apt-get update && apt-get install -y \
 RUN python3 -m pip install --upgrade pip \
     && python3 -m pip install --ignore-installed "setuptools==65.5.1" "wheel==0.38.4" \
     && python3 -m pip install --ignore-installed "numpy==1.23.5" \
-    && python3 -m pip install --ignore-installed open3d==0.13.0 opencv-contrib-python rosnumpy \
+    && python3 -m pip install --ignore-installed open3d==0.19.0 opencv-contrib-python rosnumpy \
     && python3 -m pip install --ignore-installed Pillow jinja2 weasyprint matplotlib scipy python-box \
     && python3 -m pip install --ignore-installed torch --index-url https://download.pytorch.org/whl/cpu \
     && python3 -m pip install --ignore-installed kornia kornia-rs kornia_moons \
@@ -129,6 +129,17 @@ RUN python3 -m pip install --upgrade pip \
     && apt-get install -y ros-noetic-can-msgs \
     && rm -rf /var/lib/apt/lists/* \
     && rm -rf /root/.cache/pip
+# open3d==0.19.0 (was 0.13.0): the pps/ point-cloud code was written
+# against the newer o3d.t.geometry.PointCloud API (to_legacy()/
+# from_legacy(), the "positions" tensor attribute key) throughout - 0.13.0
+# used different names for both (to_legacy_pointcloud()/
+# from_legacy_pointcloud(), a "points" key) and, worse, that surface
+# turned out inconsistent even across builds self-reporting the same
+# "0.13.0" version string in the field. Rather than keep patching around
+# every naming difference one at a time, pinned to the version the code
+# actually matches. Confirmed before switching: a cp38 (Python 3.8, same
+# as ROS Noetic here) wheel exists on PyPI, and its only numpy constraint
+# is >=1.18.0 - no conflict with numpy==1.23.5 pinned below.
 # torch installed from the CPU-only wheel index: the default PyPI torch
 # bundles the full NVIDIA CUDA runtime (cublas/cudnn/cusolver/cufft/...),
 # several GB, which is dead weight here since this container has no GPU
