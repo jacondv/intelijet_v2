@@ -38,6 +38,16 @@ services:
       # (keeps all persistent state in one place, independent of which
       # Linux user runs the icon).
       - ./intelijet_v2_ws/src/config/.config:/root/.config/JaconEquipment
+      # kornia's LoFTR (ai_core_pkg image_matcher_service, used for compare
+      # keypoint matching) downloads its pretrained weights from the
+      # internet into ~/.cache/torch/hub on first use - i.e.
+      # /root/.cache in the container. Without this mount, the desktop
+      # icon's down+up-every-click restart (see run_docker.sh) would
+      # re-download it on every single launch, which also just fails
+      # outright on a kiosk machine with no internet access. Kept under
+      # data/ (already gitignored, **/data/) rather than config/ since
+      # it's a large download cache, not small app settings.
+      - ./data/.cache:/root/.cache
       - /tmp/.X11-unix:/tmp/.X11-unix:rw
       - /etc/localtime:/etc/localtime:ro
       - /etc/timezone:/etc/timezone:ro
