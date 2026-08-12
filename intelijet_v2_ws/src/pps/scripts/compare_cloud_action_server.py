@@ -2,6 +2,7 @@
 import rospy
 import actionlib
 import threading
+import traceback
 import uuid
 
 from sensor_msgs.msg import PointCloud2
@@ -123,8 +124,13 @@ class CompareCloudServer:
             self.post_cloud_event.clear()
 
         except Exception as e:
-            rospy.logerr(str(e))
-            self.server.set_aborted(CompareCloudResult(), str(e))
+            # str(e) alone loses the exception type and, for some errors
+            # (e.g. KeyError - str() is just repr() of the missing key,
+            # so KeyError('') logs as the unhelpful ''), the real cause.
+            # Full traceback makes every future failure here actually
+            # diagnosable from the log instead of a bare message.
+            rospy.logerr(f"{type(e).__name__}: {e}\n{traceback.format_exc()}")
+            self.server.set_aborted(CompareCloudResult(), f"{type(e).__name__}: {e}")
 
 
 if __name__ == "__main__":
