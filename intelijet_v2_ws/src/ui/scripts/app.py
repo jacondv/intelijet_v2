@@ -13,7 +13,7 @@ import sys, subprocess
 import rospy
 
 from PyQt5.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QLabel, QWidget, QPushButton, QComboBox
-from PyQt5.QtCore import pyqtSignal, QTimer
+from PyQt5.QtCore import pyqtSignal, QTimer, Qt
 from PyQt5.QtWidgets import QMessageBox, QDialog
 from PyQt5.QtCore import QSettings
 
@@ -216,6 +216,14 @@ class App(QMainWindow):
         # --- Status bar / notifications ---
         self.lblNotification = QLabel("Ready")
         self.lblNotification.setStyleSheet("margin-left: 5px;")
+        # A long message (e.g. a full error string) makes this QLabel's
+        # sizeHint() grow past the window width, since it's added directly
+        # to the QStatusBar layout with no cap - that widens the status
+        # bar (and with it the whole window) past the screen, breaking
+        # full-screen mode. Cap it and elide instead; full text is still
+        # available via the tooltip and via clicking through to
+        # NotificationHistoryDialog (_open_notification_history below).
+        self.lblNotification.setMaximumWidth(600)
         self.ui.statusbar.addWidget(self.lblNotification)
 
         self._prev_device_state = {}
@@ -568,7 +576,11 @@ class App(QMainWindow):
     def _on_notification_label_changed(self, text, level):
         color = LEVEL_COLORS.get(level, LEVEL_COLORS["info"])
         self.lblNotification.setStyleSheet(f"margin-left: 5px; color: {color}; font-weight: bold;")
-        self.lblNotification.setText(text)
+        elided = self.lblNotification.fontMetrics().elidedText(
+            text, Qt.ElideRight, self.lblNotification.maximumWidth()
+        )
+        self.lblNotification.setText(elided)
+        self.lblNotification.setToolTip(text)
 
     def _open_notification_history(self, event):
         dlg = NotificationHistoryDialog(self.notification_center, parent=self)
