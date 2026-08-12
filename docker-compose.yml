@@ -16,11 +16,19 @@ services:
     network_mode: host
     environment:
       DISPLAY: ${DISPLAY}
+      # Container runs as root (HOME=/root) - point it at the Xauthority
+      # bind-mounted below instead of the (nonexistent) /root/.Xauthority.
+      # Without this, X11 access relies entirely on run_docker.sh's
+      # `xhost +local:docker`, which some X server/session setups reject
+      # even with that granted ("Authorization required, but no
+      # authorization protocol specified").
+      XAUTHORITY: /root/.Xauthority
       QT_X11_NO_MITSHM: "1"
       XDG_RUNTIME_DIR: /tmp/runtime-root
       DISABLE_ROS1_EOL_WARNINGS: "1"
     volumes:
       - .:/root/intelijet_v2
+      - ${XAUTHORITY:-~/.Xauthority}:/root/.Xauthority:ro
       # QSettings("JaconEquipment", "Intelijet") in ui/scripts/app.py (e.g.
       # last_prescan_path) writes to ~/.config/JaconEquipment by Qt's own
       # default - that's /root/.config/JaconEquipment in the container,
