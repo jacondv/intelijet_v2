@@ -248,7 +248,7 @@ def keep_largest_cluster(
     is_tensor = isinstance(pcd, o3d.t.geometry.PointCloud)
 
     # --- Convert sang legacy nếu cần ---
-    legacy = pcd.to_legacy() if is_tensor else pcd
+    legacy = cloudconverter.tensor_to_o3d_legacy(pcd) if is_tensor else pcd
 
     # --- DBSCAN ---
     labels = np.array(

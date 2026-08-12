@@ -212,10 +212,11 @@ class PLYProcessor:
         import numpy as np
         import open3d as o3d
         from PIL import Image
+        from pps.data_converter import cloudconverter
 
         # --- Convert to tensor pointcloud ---
         if isinstance(pcd, o3d.geometry.PointCloud):
-            tpc = o3d.t.geometry.PointCloud.from_legacy(pcd)
+            tpc = cloudconverter.o3d_legacy_to_tensor(pcd)
         elif isinstance(pcd, o3d.t.geometry.PointCloud):
             tpc = pcd
         else:
@@ -245,7 +246,7 @@ class PLYProcessor:
             renderer = o3d.visualization.rendering.OffscreenRenderer(width, height)
             renderer.scene.set_background(np.array(background, dtype=np.float32))
 
-            legacy_pc = tpc.to_legacy()
+            legacy_pc = cloudconverter.tensor_to_o3d_legacy(tpc)
             renderer.scene.add_geometry("pc", legacy_pc, mat)
 
             # --- Auto-fit camera ---

@@ -116,9 +116,10 @@ class TunnelProcessing:
         """
 
         import open3d as o3d
+        from pps.data_converter import cloudconverter
 
         if not isinstance(pcd, o3d.t.geometry.PointCloud):
-            pcd = o3d.t.geometry.PointCloud.from_legacy(pcd)
+            pcd = cloudconverter.o3d_legacy_to_tensor(pcd)
         
         # Lấy points và colors
         points = pcd.point.positions.cpu().numpy()
@@ -429,12 +430,13 @@ class TunnelProcessing:
             Centroid of ground points.
         """
         import open3d as o3d
+        from pps.data_converter import cloudconverter
 
         # --- Step 0: Crop point cloud if crop_box provided ---
         crop_box = o3d.geometry.AxisAlignedBoundingBox(min_bound, max_bound)
 
         if isinstance(pcd, o3d.t.geometry.PointCloud):
-            pcd = pcd.to_legacy() 
+            pcd = cloudconverter.tensor_to_o3d_legacy(pcd)
 
         if crop_box is not None:
             pcd_cropped = pcd.crop(crop_box)
