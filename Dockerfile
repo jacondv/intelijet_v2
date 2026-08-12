@@ -61,7 +61,7 @@ RUN apt-get update && apt-get install -y \
     fonts-liberation \
     onboard \
     dbus-x11 \
-    evince \
+    qpdfview \
     && rm -rf /var/lib/apt/lists/*
 # ros-noetic-laser-assembler / robot-state-publisher: used by pps.launch
 # (point_cloud2_assembler, robot_state_publisher nodes) - came for free with
@@ -92,8 +92,15 @@ RUN apt-get update && apt-get install -y \
 # onboard to the bottom edge) to have anywhere to connect to. Without it,
 # show_keyboard() silently no-ops (see the try/except around it) and
 # onboard never appears at all.
-# evince: PDF viewer, for opening the tunnel report PDFs the app exports
-# (ui/src/ui/tunnel_report/) directly on the kiosk screen.
+# qpdfview: PDF viewer, for opening the tunnel report PDFs the app exports
+# (ui/src/ui/tunnel_report/) directly on the kiosk screen - launched with
+# --unique from report_view_dlg_manager.py's on_file_opened(). Chosen over
+# evince: no CLI flag exists for "start maximized with a title bar" (only
+# --fullscreen, which hides the title bar/close button entirely), and
+# unlike evince/okular, qpdfview persists its own window geometry
+# (maximized or not) across restarts on its own via QSettings - no need
+# to force it with a window-manager tool (xdotool/wmctrl) after launch.
+# Also much lighter than Okular (no KDE Frameworks dependency chain).
 #
 # If a package still fails to build with "missing dependency" after this,
 # the general fix is running (inside the container, from intelijet_v2_ws):

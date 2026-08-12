@@ -584,6 +584,14 @@ class ReportViewManager(QDialog, Ui_frm_MainForm):
         import subprocess
         print(filepath)
         if os.path.exists(filepath):
-            subprocess.Popen(["evince", filepath])
+            # qpdfview, not evince: keeps its own window geometry (size,
+            # position, maximized or not) in ~/.config/qpdfview across
+            # restarts - the first ever open won't be maximized, but every
+            # one after that reopens exactly however the window was last
+            # left, title bar/close button included (unlike evince
+            # --fullscreen). --unique reuses a single already-open
+            # qpdfview window (new tab) instead of piling up new windows
+            # each time a report is viewed.
+            subprocess.Popen(["qpdfview", "--unique", filepath])
         else:
             print(f"File not found: {filepath}")
