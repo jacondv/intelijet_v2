@@ -40,7 +40,8 @@ class KeyPointProject:
         pcd_copy = self.rotate_cloud(pcd_copy, rot_x=rot_x, rot_y=rot_y, rot_z=rot_z)
         
         if isinstance(pcd_copy, o3d.t.geometry.PointCloud):
-            pcd_copy = pcd_copy.to_legacy()
+            from pps.data_converter import cloudconverter
+            pcd_copy = cloudconverter.tensor_to_o3d_legacy(pcd_copy)
 
         if not pcd_copy.has_normals():
             pcd_copy.estimate_normals(search_param=o3d.geometry.KDTreeSearchParamKNN(knn=30))

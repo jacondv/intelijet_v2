@@ -59,9 +59,10 @@ def smooth_cloud(tcloud, k=8, m=3, threshold=20.0):
     """
 
     import open3d as o3d
+    from pps.data_converter import cloudconverter
 
     # Convert to legacy geometry
-    legacy_pc = tcloud.to_legacy()
+    legacy_pc = cloudconverter.tensor_to_o3d_legacy(tcloud)
     distances = tcloud.point['distances'].cpu().numpy()
     distances = np.abs(distances)
     colors = tcloud.point['colors'].cpu().numpy()
@@ -115,12 +116,13 @@ def surface_area(
     """
     import open3d as o3d
     import copy
+    from pps.data_converter import cloudconverter
 
     pcd = copy.deepcopy(pcd)
 
     if isinstance(pcd, o3d.t.geometry.PointCloud):
-        pcd = pcd.to_legacy()
-    
+        pcd = cloudconverter.tensor_to_o3d_legacy(pcd)
+
 
     pcd = pcd.voxel_down_sample(voxel_size=min(radii) / 2)
 
