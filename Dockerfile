@@ -7,6 +7,13 @@
 # of relying on desktop-full's huge bundled package set.
 FROM ros:noetic-ros-base-focal
 
+# Without this, installing onboard below pulls in keyboard-configuration/
+# console-setup as a dependency, which runs an interactive debconf prompt
+# ("Country of origin for the keyboard") during apt-get install - with no
+# TTY attached during `docker build`, this just hangs forever instead of
+# failing. noninteractive makes debconf silently take the package's
+# default answer instead of prompting.
+ENV DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update && apt-get install -y \
     python3-catkin-tools \
