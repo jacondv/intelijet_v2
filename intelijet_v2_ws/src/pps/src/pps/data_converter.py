@@ -354,15 +354,7 @@ class CloudConverter:
         import open3d as o3d
 
         if isinstance(pcd_legacy, o3d.geometry.PointCloud):
-            # Open3D renamed this method between versions/builds -
-            # to_legacy_pointcloud() on some (open3d==0.13.0 CPU wheel,
-            # confirmed directly), to_legacy() on others (seen on a CUDA
-            # build reported in the field, same pinned version) - use
-            # whichever this particular install actually has instead of
-            # hardcoding one and breaking on the other.
-            cls = o3d.t.geometry.PointCloud
-            fn = getattr(cls, "from_legacy", None) or getattr(cls, "from_legacy_pointcloud")
-            return fn(pcd_legacy)
+            return o3d.t.geometry.PointCloud.from_legacy(pcd_legacy)
         elif isinstance(pcd_legacy, o3d.t.geometry.PointCloud):
             return pcd_legacy
         else:
@@ -376,10 +368,7 @@ class CloudConverter:
         import open3d as o3d
 
         if isinstance(pcd_t, o3d.t.geometry.PointCloud):
-            # See o3d_legacy_to_tensor() above - same method-name split
-            # across Open3D builds, same fix.
-            fn = getattr(pcd_t, "to_legacy", None) or getattr(pcd_t, "to_legacy_pointcloud")
-            return fn()
+            return pcd_t.to_legacy()
         elif isinstance(pcd_t, o3d.geometry.PointCloud):
             return pcd_t
         else:
@@ -452,7 +441,7 @@ class CloudConverter:
         if pcd.is_empty():
             raise RuntimeError("Loaded point cloud is empty")
         if as_legacy:
-            pcd = CloudConverter.tensor_to_o3d_legacy(pcd)
+            pcd = pcd.to_legacy()
         
         return pcd
 
@@ -755,7 +744,7 @@ class CloudConverter:
             pcd = copy.deepcopy(pcd)
 
             if isinstance(pcd, o3d.t.geometry.PointCloud):
-                pcd = CloudConverter.tensor_to_o3d_legacy(pcd)
+                pcd = pcd.to_legacy()
 
             # ---- tính normal nếu chưa có ----
             if not pcd.has_normals():
