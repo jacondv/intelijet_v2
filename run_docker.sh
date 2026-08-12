@@ -20,8 +20,17 @@ if ! id -nG "$USER" | grep -qw docker; then
     exit 1
 fi
 
-# Let the container connect to this session's X server.
-xhost +local:docker >/dev/null 2>&1
+# Let the container connect to this session's X server. Belt-and-suspenders
+# alongside docker-compose.yml's Xauthority mount (the main mechanism) -
+# some X server/session setups need this too. Not swallowed silently
+# anymore: if DISPLAY isn't set or xhost fails, that's exactly why the app
+# would fail with "Authorization required, but no authorization protocol
+# specified" / "could not connect to display", so it needs to be visible.
+if [ -z "$DISPLAY" ]; then
+    echo "WARNING: \$DISPLAY is not set in this shell - the app will likely fail to show its window." >&2
+elif ! xhost +local:docker; then
+    echo "WARNING: 'xhost +local:docker' failed - the app may fail to connect to the X server." >&2
+fi
 
 # Tablet screen rotation - no-op (harmless) on machines/monitors without a
 # DSI-1 output.
