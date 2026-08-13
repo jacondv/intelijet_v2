@@ -390,10 +390,16 @@ class App(QMainWindow):
 
     def _on_scan_report_done(self, final_path):
         self.notification_center.push("report", f"Report exported: {os.path.basename(final_path)}", "info")
+        if getattr(self, "_compare_done_pending_report", False):
+            self._compare_done_pending_report = False
+            self.notification_center.push("compare", "✅COMPARE DONE ", "info")
 
     def _on_scan_report_failed(self, error_message):
         rospy.logerr(f"[App] Failed to export report: {error_message}")
         self.notification_center.push("report", f"Report export failed: {error_message}", "error")
+        if getattr(self, "_compare_done_pending_report", False):
+            self._compare_done_pending_report = False
+            self.notification_center.push("compare", "⚠️COMPARE DONE (report export failed) ", "warning")
 
 
     def toggle_full_screen(self):
@@ -564,14 +570,26 @@ class App(QMainWindow):
 
     def on_compare_done(self, success, job_id):
 
-        if success:
-            print("✅COMPARE DONE ",job_id)
-            _string = "✅COMPARE DONE "
-        else:
+        if not success:
             print("❌COMPARE FAILED ", job_id)
-            _string = "❌COMPARE FAILED "
+            self.notification_center.push("compare", "❌COMPARE FAILED ", "error")
+            return
 
-        self.notification_center.push("compare", _string, "info" if success else "error")
+        print("✅COMPARE DONE ", job_id)
+
+        if self.ui.cbbAutoReport.currentText().lower() == 'off':
+            # No PDF export coming for this compare (scan_worker's report
+            # step is skipped when auto-report is off) - nothing to wait
+            # on, show the status right away like before.
+            self.notification_center.push("compare", "✅COMPARE DONE ", "info")
+        else:
+            # A report export is about to run (scan_worker._process(),
+            # triggered once the compared-cloud ROS message arrives) -
+            # hold off on "Compare Done" until that actually finishes, so
+            # the status bar doesn't say "done" while the PDF is still
+            # being generated. _on_scan_report_done/_on_scan_report_failed
+            # push the deferred message once the real outcome is known.
+            self._compare_done_pending_report = True
 
     def _on_notification_label_changed(self, text, level):
         color = LEVEL_COLORS.get(level, LEVEL_COLORS["info"])
