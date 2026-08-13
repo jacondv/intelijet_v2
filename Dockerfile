@@ -118,25 +118,40 @@ RUN apt-get update && apt-get install -y \
 #        numpy
 
 
-# No opencv-contrib-python here: ros-noetic-cv-bridge (apt, above) already
-# pulls in python3-opencv, and cv_bridge_boost.so (its compiled C++ half)
-# is built against that exact apt OpenCV. Installing opencv-contrib-python
-# via pip on top makes plain `import cv2` in application code resolve to
-# a second, different OpenCV build. cv_bridge.CvBridge then computes one
-# type code via its C++ extension (compiled against apt's OpenCV) and
-# looks it up in a dict built from attributes of the OTHER cv2 module
-# (pip's) - the two disagree, so `cv2_to_imgmsg(img, encoding="bgr8")`
-# fails with a bare `KeyError: 16` (real message: no such key in
-# cv_bridge's cvtype_to_name dict). No code in this repo uses
-# contrib-only modules (xfeatures2d/SIFT/aruco/ml), so there's nothing
-# lost by relying on apt's python3-opencv alone.
+# No opencv-contrib-python/opencv-python here: ros-noetic-cv-bridge (apt,
+# above) already pulls in python3-opencv, and cv_bridge_boost.so (its
+# compiled C++ half) is built against that exact apt OpenCV. A second,
+# different OpenCV build installed via pip on top makes plain `import
+# cv2` in application code resolve to it instead. cv_bridge.CvBridge then
+# computes one type code via its C++ extension (compiled against apt's
+# OpenCV) and looks it up in a dict built from attributes of the OTHER
+# cv2 module (pip's) - the two disagree, so
+# `cv2_to_imgmsg(img, encoding="bgr8")` fails with a bare `KeyError: 16`
+# (real message: no such key in cv_bridge's cvtype_to_name dict).
+# No code in this repo uses contrib-only modules (xfeatures2d/SIFT/aruco/
+# ml), so there's nothing lost by relying on apt's python3-opencv alone.
+# kornia_moons hard-depends on opencv-python and pip silently pulls it in
+# as a transitive dependency even though it's never named directly here
+# - confirmed via `pip3 show kornia_moons` -> "Requires: kornia,
+# matplotlib, opencv-python, torch" on the real deployment, and
+# reproducing/fixing the resulting KeyError live. --no-deps on just that
+# one package skips it; kornia_moons's other actual deps (kornia,
+# matplotlib, torch) are already installed by the lines below/above.
+# (open3d itself is installed with its full normal deps here - a
+# previous attempt at --no-deps on open3d too, to trim its unused
+# pandas/scikit-learn/dash/etc, broke `import open3d._ml3d.datasets`
+# at runtime with `ModuleNotFoundError: sklearn` - the eager-import
+# chain there turned out deeper than a static source read caught, so
+# that one was reverted and is not worth retrying without much more
+# thorough testing.)
 RUN python3 -m pip install --upgrade pip \
     && python3 -m pip install --ignore-installed "setuptools==65.5.1" "wheel==0.38.4" \
     && python3 -m pip install --ignore-installed "numpy==1.23.5" \
     && python3 -m pip install --ignore-installed open3d==0.19.0 rosnumpy \
     && python3 -m pip install --ignore-installed Pillow jinja2 weasyprint "pydyf==0.9.0" matplotlib scipy python-box \
     && python3 -m pip install --ignore-installed torch --index-url https://download.pytorch.org/whl/cpu \
-    && python3 -m pip install --ignore-installed kornia kornia-rs kornia_moons \
+    && python3 -m pip install --ignore-installed kornia kornia-rs \
+    && python3 -m pip install --ignore-installed --no-deps kornia_moons \
     && apt-get update \
     && apt-get install -y ros-noetic-can-msgs \
     && rm -rf /var/lib/apt/lists/* \
