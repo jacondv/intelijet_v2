@@ -70,7 +70,6 @@ class CloudComparePipeline:
             if kpm.is_ready():
                 target_patch, source_patch, T = kpm.get_result()
                 import cv2
-                import time
                 image_out = kpm.draw_result()
                 folder_path = f"{cfg.BASE_DIR}/{cfg.DATA_DIR}/log/{datetime.now().strftime('%Y%m%d')}/images"
                 os.makedirs(folder_path, exist_ok=True)
