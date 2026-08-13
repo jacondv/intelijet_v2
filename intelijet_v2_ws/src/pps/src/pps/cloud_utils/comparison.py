@@ -13,68 +13,6 @@ from pps.data_converter import cloudconverter
 from pps.cloud_utils.coloring import map_distances_to_colors
 
 
-def compute_heatmap_to_plane(source, target, k=6,target_thickness=0.03, tolerance_thickness=0.01):
-    # Tính trước normal cho target
-    # start_time = time.time()
-    import open3d as o3d
-    rospy.loginfo("Computing heatmap to plane...")
-    source = cloudconverter.tensor_to_o3d_legacy(source)
-    target = cloudconverter.tensor_to_o3d_legacy(target)
-
-    def __orient_normals_inward(pcd, sensor_pos=np.array([0, 0, 0], dtype=np.float32)):
-        points = np.asarray(pcd.points)
-        normals = np.asarray(pcd.normals)
-
-        vec = sensor_pos - points
-
-        dot = np.sum(normals * vec, axis=1)
-
-        normals[dot < 0] *= -1
-
-        pcd.normals = o3d.utility.Vector3dVector(normals)
-
-        return pcd
-
-    target.estimate_normals(
-        search_param=o3d.geometry.KDTreeSearchParamKNN(knn=k)
-    )
-    target.orient_normals_consistent_tangent_plane(k=3*k)
-    target = __orient_normals_inward(target)
-
-    target_points = np.asarray(target.points)
-    target_normals = np.asarray(target.normals)
-    target_tree = cKDTree(target_points)
-    source_points = np.asarray(source.points)
-
-    distances = []
-
-    distances_nn, indices = target_tree.query(source_points, k=1) # We don't need distances_nn here because we compute point-to-plane distance
-
-    centroids = target_points[indices] 
-    normals   = target_normals[indices] 
-    diff = source_points - centroids 
-    distances = np.sum(diff * normals, axis=1)  # (N,)
-    distances = distances.astype(np.float32)
-    
-    _min = (target_thickness - tolerance_thickness)    
-    _max = target_thickness + tolerance_thickness
-    colors = map_distances_to_colors(distances,highlight_range=[_min,_max],clip_max=0.15)
-
-    source.colors = o3d.utility.Vector3dVector(colors)
-
-    source = cloudconverter.o3d_legacy_to_tensor(source)
-    distances_mm = np.round(distances * 1000).astype(np.float32)
-    distances_mm = distances_mm.reshape(-1, 1)
-
-    n_points = source.point["positions"]
-    if len(distances) != len(n_points):
-        raise ValueError(f"Number of element distances ({len(distances)}) does not match number of point clouds ({n_points})")
-
-    source.point["distances"] = o3d.core.Tensor(distances_mm, dtype=o3d.core.Dtype.Float32)
-
-    return source, distances
-
-
 def run_compare(source, target,k=6):
     # Tính trước normal cho target
     # start_time = time.time()
@@ -100,7 +38,12 @@ def run_compare(source, target,k=6):
     target.estimate_normals(
         search_param=o3d.geometry.KDTreeSearchParamKNN(knn=k)
     )
-    # target.orient_normals_consistent_tangent_plane(k=3*k)
+    # orient_normals_consistent_tangent_plane() used to run here - dropped,
+    # ~10s of run_compare's runtime on real scan sizes, and its result was
+    # immediately overwritten anyway: __orient_normals_inward() below
+    # re-derives every normal's sign per-point from the sensor position,
+    # independent of whatever direction the tangent-plane propagation had
+    # settled on.
     target = __orient_normals_inward(target)
 
     target_points = np.asarray(target.points)
@@ -108,9 +51,10 @@ def run_compare(source, target,k=6):
     target_tree = cKDTree(target_points)
     source_points = np.asarray(source.points)
 
-    distances = []
     # Với moi diem trong source, tim diem gan nhat trong target.
-    distances_nn, indices = target_tree.query(source_points, k=1) # We don't need distances_nn here because we compute point-to-plane distance
+    # (query's own distance output unused - point-to-plane distance below
+    # uses the neighbor's normal instead)
+    _, indices = target_tree.query(source_points, k=1)
 
     centroids = target_points[indices] 
     normals   = target_normals[indices] 
