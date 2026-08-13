@@ -118,35 +118,25 @@ RUN apt-get update && apt-get install -y \
 #        numpy
 
 
-# No opencv-contrib-python/opencv-python here: ros-noetic-cv-bridge (apt,
-# above) already pulls in python3-opencv, and cv_bridge_boost.so (its
-# compiled C++ half) is built against that exact apt OpenCV. A second,
-# different OpenCV build installed via pip on top makes plain `import
-# cv2` in application code resolve to it instead. cv_bridge.CvBridge then
-# computes one type code via its C++ extension (compiled against apt's
-# OpenCV) and looks it up in a dict built from attributes of the OTHER
-# cv2 module (pip's) - the two disagree, so
-# `cv2_to_imgmsg(img, encoding="bgr8")` fails with a bare `KeyError: 16`
-# (real message: no such key in cv_bridge's cvtype_to_name dict).
-# No code in this repo uses contrib-only modules (xfeatures2d/SIFT/aruco/
-# ml), so there's nothing lost by relying on apt's python3-opencv alone.
-# Caught this once by dropping opencv-contrib-python (explicit line
-# below), but the error came back later: kornia_moons hard-depends on
-# opencv-python and pip silently pulls it in as a transitive dependency
-# even though it's never named directly here - confirmed via
-# `pip3 show kornia_moons` -> "Requires: kornia, matplotlib,
-# opencv-python, torch" on the real deployment. --no-deps on just that
-# one package skips it; kornia_moons's other actual deps (kornia,
-# matplotlib, torch) are already installed by the lines above/below.
+# No opencv-contrib-python here: ros-noetic-cv-bridge (apt, above) already
+# pulls in python3-opencv, and cv_bridge_boost.so (its compiled C++ half)
+# is built against that exact apt OpenCV. Installing opencv-contrib-python
+# via pip on top makes plain `import cv2` in application code resolve to
+# a second, different OpenCV build. cv_bridge.CvBridge then computes one
+# type code via its C++ extension (compiled against apt's OpenCV) and
+# looks it up in a dict built from attributes of the OTHER cv2 module
+# (pip's) - the two disagree, so `cv2_to_imgmsg(img, encoding="bgr8")`
+# fails with a bare `KeyError: 16` (real message: no such key in
+# cv_bridge's cvtype_to_name dict). No code in this repo uses
+# contrib-only modules (xfeatures2d/SIFT/aruco/ml), so there's nothing
+# lost by relying on apt's python3-opencv alone.
 RUN python3 -m pip install --upgrade pip \
     && python3 -m pip install --ignore-installed "setuptools==65.5.1" "wheel==0.38.4" \
     && python3 -m pip install --ignore-installed "numpy==1.23.5" \
-    && python3 -m pip install --ignore-installed --no-deps open3d==0.19.0 \
-    && python3 -m pip install --ignore-installed dash rosnumpy \
+    && python3 -m pip install --ignore-installed open3d==0.19.0 rosnumpy \
     && python3 -m pip install --ignore-installed Pillow jinja2 weasyprint "pydyf==0.9.0" matplotlib scipy python-box \
     && python3 -m pip install --ignore-installed torch --index-url https://download.pytorch.org/whl/cpu \
-    && python3 -m pip install --ignore-installed kornia kornia-rs \
-    && python3 -m pip install --ignore-installed --no-deps kornia_moons \
+    && python3 -m pip install --ignore-installed kornia kornia-rs kornia_moons \
     && apt-get update \
     && apt-get install -y ros-noetic-can-msgs \
     && rm -rf /var/lib/apt/lists/* \
@@ -162,18 +152,6 @@ RUN python3 -m pip install --upgrade pip \
 # actually matches. Confirmed before switching: a cp38 (Python 3.8, same
 # as ROS Noetic here) wheel exists on PyPI, and its only numpy constraint
 # is >=1.18.0 - no conflict with numpy==1.23.5 pinned below.
-# open3d installed with --no-deps: its declared deps (checked via PyPI's
-# requires_dist for 0.19.0) include pandas, scikit-learn, nbformat,
-# ipywidgets, configargparse, addict, pyquaternion, tqdm - all unused by
-# this app, and a major contributor to image size (image was ~17GB).
-# Confirmed by downloading the wheel and reading source: a plain
-# `import open3d` eagerly imports open3d.visualization ->
-# draw_plotly.py, which does `from dash import ...` at module level -
-# that one IS required or `import open3d` itself fails. dash pulls in
-# its own real deps (flask, werkzeug, plotly) on its own, so installing
-# it separately below is enough; nothing else in that skipped list is
-# imported eagerly (only from inside open3d.ml.torch/tf, never touched
-# by this app's point-cloud code).
 # torch installed from the CPU-only wheel index: the default PyPI torch
 # bundles the full NVIDIA CUDA runtime (cublas/cudnn/cusolver/cufft/...),
 # several GB, which is dead weight here since this container has no GPU
