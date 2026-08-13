@@ -100,7 +100,7 @@ def run_compare(source, target,k=6):
     target.estimate_normals(
         search_param=o3d.geometry.KDTreeSearchParamKNN(knn=k)
     )
-    target.orient_normals_consistent_tangent_plane(k=3*k)
+    # target.orient_normals_consistent_tangent_plane(k=3*k)
     target = __orient_normals_inward(target)
 
     target_points = np.asarray(target.points)
