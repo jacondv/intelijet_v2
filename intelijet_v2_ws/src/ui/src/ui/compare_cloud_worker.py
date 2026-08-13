@@ -2,7 +2,7 @@
 import os
 import threading
 from PyQt5.QtCore import QTimer, QObject, pyqtSignal
-from pps.helper import compute_heatmap_to_plane, load_ply,smooth_cloud,assign_colors
+from pps.helper import load_ply,smooth_cloud,assign_colors
 
 from pps.data_converter import cloudconverter
 from pps.tunnel_processing import TunnelProcessing

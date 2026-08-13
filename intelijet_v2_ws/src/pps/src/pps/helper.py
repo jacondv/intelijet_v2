@@ -4,7 +4,7 @@ It has been split into pps/cloud_utils/ by concern - import from there in
 new code:
 
   pps.cloud_utils.geometry     - crop_pointcloud_by_box, smooth_cloud, surface_area
-  pps.cloud_utils.comparison   - compute_heatmap_to_plane, run_compare, check_transform,
+  pps.cloud_utils.comparison   - run_compare, check_transform,
                                   filter_pcd_by_distance, keep_largest_cluster
   pps.cloud_utils.coloring     - assign_colors, map_distances_to_colors
   pps.cloud_utils.io_utils     - load_ply, notify_one
@@ -13,7 +13,9 @@ This shim only re-exports the functions that still have real callers
 in the codebase (verified via repo-wide grep, see
 docs/plan/phase_06_pps_cleanup.md) so existing `from pps.helper import ...`
 call sites keep working unchanged. Everything else that used to live here
-(compute_distance_histogram, crop, process_cloud,
+(compute_heatmap_to_plane - was imported by ui/compare_cloud_worker.py
+but never actually called there, verified dead when re-checked during
+dev/v3.1 cleanup; compute_distance_histogram, crop, process_cloud,
 remove_points_outside_radius, remove_points_inside_box, run_compare_m3c2,
 assign_colors_by_threshold, color_voxel_majority,
 convert_pointcloud2_to_o3d, convert_open3d_to_pointcloud2_v2,
@@ -30,7 +32,6 @@ pps.cloud_utils.* directly.
 """
 from pps.cloud_utils.geometry import crop_pointcloud_by_box, smooth_cloud, surface_area
 from pps.cloud_utils.comparison import (
-    compute_heatmap_to_plane,
     run_compare,
     check_transform,
     filter_pcd_by_distance,
@@ -43,7 +44,6 @@ __all__ = [
     "crop_pointcloud_by_box",
     "smooth_cloud",
     "surface_area",
-    "compute_heatmap_to_plane",
     "run_compare",
     "check_transform",
     "filter_pcd_by_distance",
