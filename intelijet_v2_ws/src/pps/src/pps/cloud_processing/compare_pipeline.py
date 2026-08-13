@@ -1,4 +1,5 @@
 import os
+import time
 
 import numpy as np
 import rospy
@@ -120,11 +121,21 @@ class CloudComparePipeline:
         max_cluster_size_pass1 = _cfg("compare_pipeline", "clustering", "max_cluster_size_pass1", default=100)
         max_cluster_size_pass2 = _cfg("compare_pipeline", "clustering", "max_cluster_size_pass2", default=0)
 
+        t0 = time.perf_counter()
         post_cloud = keep_largest_cluster(post_cloud, eps=eps, min_points=min_points, max_cluster_size=max_cluster_size_pass1)
+        t1 = time.perf_counter()
+        rospy.loginfo("[COMPARE] keep_largest_cluster pass1: %.2fs", t1 - t0)
+
         post_cloud = keep_largest_cluster(post_cloud, eps=eps, min_points=min_points, max_cluster_size=max_cluster_size_pass2)
+        t2 = time.perf_counter()
+        rospy.loginfo("[COMPARE] keep_largest_cluster pass2: %.2fs", t2 - t1)
+
         cloud_compared, distance = run_compare(
             source=post_cloud,
             target=pre_cloud
         )
+        t3 = time.perf_counter()
+        rospy.loginfo("[COMPARE] run_compare: %.2fs", t3 - t2)
+        rospy.loginfo("[COMPARE] total: %.2fs", t3 - t0)
 
         return cloud_compared, distance
