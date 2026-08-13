@@ -18,12 +18,17 @@ from ai_core_pkg.matchers.efficientloftr import (
 # from torch.hub): EfficientLoFTR's checkpoints are only distributed via
 # the authors' Google Drive, not a stable URL pip/torch.hub can fetch.
 # Download eloftr_outdoor.ckpt manually from
-# https://github.com/zju3dv/EfficientLoFTR and place it here (this path
-# is under the docker-compose data/.cache mount, so it survives the
-# desktop icon's down+up-every-click container restart the same way the
-# kornia LoFTR download cache does).
+# https://github.com/zju3dv/EfficientLoFTR, then convert it once with
+# scripts/strip_efficientloftr_checkpoint.py and place the *.stripped.ckpt
+# result here (this path is under the docker-compose data/.cache mount,
+# so it survives the desktop icon's down+up-every-click container
+# restart the same way the kornia LoFTR download cache does). The
+# original .ckpt is a pytorch_lightning training checkpoint - torch.load
+# on it directly needs pytorch_lightning importable just to unpickle,
+# even though only the plain-tensor state_dict is actually used here;
+# the stripped version drops that dependency entirely.
 DEFAULT_CHECKPOINT_PATH = os.path.expanduser(
-    "~/.cache/efficientloftr/eloftr_outdoor.ckpt"
+    "~/.cache/efficientloftr/eloftr_outdoor.stripped.ckpt"
 )
 
 
