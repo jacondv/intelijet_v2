@@ -1,14 +1,21 @@
 <launch>
-    <!-- Đặt biến môi trường PYTHONPATH và PATH để dùng venv -->
-    <env name="PATH" value="$(find ai_core_pkg)/venv/bin:$(env PATH)" />
-    <!-- Note catkin_python_setup() to help python search for packages -->
-    <!-- <env name="PYTHONPATH" value="$(find ai_core_pkg)/venv/lib/python3.8/site-packages:$(env PYTHONPATH)" /> -->
-    <!-- <env name="PYTHONPATH" value="$(find ai_core_pkg)/src:$(find ai_core_pkg)/venv/lib/python3.10/site-packages:$(env PYTHONPATH)" /> -->
-    <!-- Chạy node service -->
+    <!-- No venv PATH/PYTHONPATH override here anymore - that was for the
+         old standalone-venv workflow (see ai_core_pkg/README.md), since
+         superseded by installing all Python deps straight into the
+         Docker image's system Python (see Dockerfile). A leftover
+         ai_core_pkg/venv/ directory on a real deployment machine (from
+         before this switch) combined with this override made roslaunch
+         silently resolve `#!/usr/bin/env python3` to that stale venv's
+         python3 instead of the container's - so newly pip-installed
+         packages (einops, etc.) were invisible to this node even though
+         they were correctly installed system-wide, producing a
+         ModuleNotFoundError that only reproduced through roslaunch, not
+         through a plain `python3 -c "import ..."` or `rosrun`. -->
     <node pkg="ai_core_pkg"
         type="image_matcher_service.py"
         name="image_matcher_service_node"
         output="screen"
+        respawn="true"
         />
 </launch>
 
