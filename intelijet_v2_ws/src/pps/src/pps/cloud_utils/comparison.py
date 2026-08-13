@@ -21,6 +21,18 @@ def run_compare(source, target,k=6):
     source = cloudconverter.tensor_to_o3d_legacy(source)
     target = cloudconverter.tensor_to_o3d_legacy(target)
 
+    # A degenerate cloud here (empty scan, or a target crop with fewer
+    # points than the neighbor count normal estimation needs) would
+    # otherwise fail deep inside estimate_normals/cKDTree with a cryptic
+    # error - surface it clearly and early instead.
+    if len(source.points) == 0:
+        raise ValueError("run_compare: source cloud is empty")
+    if len(target.points) < k:
+        raise ValueError(
+            f"run_compare: target cloud has {len(target.points)} points, "
+            f"fewer than k={k} needed for normal estimation"
+        )
+
     def __orient_normals_inward(pcd, sensor_pos=np.array([0, 0, 0], dtype=np.float32)):
         points = np.asarray(pcd.points)
         normals = np.asarray(pcd.normals)
