@@ -152,10 +152,22 @@ RUN python3 -m pip install --upgrade pip \
     && python3 -m pip install --ignore-installed torch --index-url https://download.pytorch.org/whl/cpu \
     && python3 -m pip install --ignore-installed kornia kornia-rs \
     && python3 -m pip install --ignore-installed --no-deps kornia_moons \
+    && python3 -m pip install --ignore-installed einops loguru yacs \
+    && python3 -m pip uninstall -y opencv-python opencv-contrib-python opencv-python-headless \
     && apt-get update \
     && apt-get install -y ros-noetic-can-msgs \
     && rm -rf /var/lib/apt/lists/* \
     && rm -rf /root/.cache/pip
+# Safety net after all the above: `--no-deps` on kornia_moons should
+# already keep opencv-python out (see the KeyError: 16 comment above),
+# but that fix silently stopped applying on a real rebuild once - turned
+# out to be a stale Docker layer cache, not a wrong Dockerfile, but the
+# failure mode (kornia-moons dependency resolution quietly reinstalling
+# opencv-python) is easy to reintroduce by accident later (e.g. adding a
+# new pip package here that itself depends on opencv-python). This
+# explicit uninstall makes the end state correct regardless of how any
+# of the above wanted to pull it back in - `|| true` isn't used here on
+# purpose: if this ever errors, that's worth noticing, not swallowing.
 # open3d==0.19.0 (was 0.13.0): the pps/ point-cloud code was written
 # against the newer o3d.t.geometry.PointCloud API (to_legacy()/
 # from_legacy(), the "positions" tensor attribute key) throughout - 0.13.0
@@ -207,6 +219,14 @@ RUN python3 -m pip install --upgrade pip \
 # torch/kornia/kornia-rs/kornia_moons: ai_core_pkg (LoFTR image matcher) -
 # kept in sync with intelijet_v2_ws/src/ai_core_pkg/requirements.txt, minus
 # opencv-python/pyyaml/rospkg there (already covered above / via ROS).
+# einops/loguru/yacs: ai_core_pkg/matchers/efficientloftr/ (vendored
+# https://github.com/zju3dv/EfficientLoFTR inference code, an
+# experimental alternative to kornia's LoFTR - see
+# ai_core_pkg/matchers/efficientloftr_matcher.py). Only these three -
+# the upstream repo's own requirements.txt is for training and pulls in
+# pytorch-lightning/ray/albumentations/h5py/opencv==4.4.0.46/
+# kornia==0.4.1, none of which the vendored inference-only subset here
+# actually imports (verified by reading each vendored file's imports).
 
 # RUN python3 -m pip install open3d
 # RUN python3 -m pip install opencv-contrib-python
