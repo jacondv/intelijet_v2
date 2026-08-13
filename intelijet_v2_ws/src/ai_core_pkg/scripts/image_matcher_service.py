@@ -13,7 +13,7 @@ class MatcherServiceNode:
         # Khởi tạo matcher từ factory
         # matcher_name = rospy.get_param("~matcher_name", "LoFTR")
         # device = rospy.get_param("~device", "cpu")
-        matcher_name = "LoFTR"
+        matcher_name = "efficientloftr"  # was "LoFTR" - temporary, for benchmarking
         device = "cpu"
         self.matcher = MatcherFactory.create(matcher_name, device)
 
