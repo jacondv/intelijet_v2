@@ -48,6 +48,14 @@ services:
       # data/ (already gitignored, **/data/) rather than config/ since
       # it's a large download cache, not small app settings.
       - ./data/.cache:/root/.cache
+      # qpdfview (report_view_dlg_manager.py's PDF viewer) keeps its own
+      # window geometry/zoom-mode state in ~/.config/qpdfview
+      # (qpdfview.conf) - same problem as JaconEquipment above, wiped on
+      # every `docker compose down` without this. Kept under data/ rather
+      # than config/ since it's throwaway UI state (maximize/fit-width),
+      # not versioned app config - set it once via the qpdfview UI after
+      # first launch and it persists from then on.
+      - ./data/.config/qpdfview:/root/.config/qpdfview
       - /tmp/.X11-unix:/tmp/.X11-unix:rw
       - /etc/localtime:/etc/localtime:ro
       - /etc/timezone:/etc/timezone:ro
