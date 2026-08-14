@@ -32,6 +32,7 @@ ENCODER01_DATA:     "/encoder01/data"
 # SYSTEM MSG ID 
 # This defined to show messagers to User interface
 NOTIFICATION: "notification"
+NOTIFICATION_TOPIC: "/notification"
 PLC_HEARTBEAT_MSG: "/plc/heatbeat"
 
 # On-screen keyboard window size, remembered across restarts (ui/keyboard.py)

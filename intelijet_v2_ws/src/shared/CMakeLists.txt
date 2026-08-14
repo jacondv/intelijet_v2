@@ -51,6 +51,7 @@ add_message_files(
   FILES
   PPSCommand.msg
   DeviceStatus.msg
+  Notification.msg
   # Message2.msg
 )
 

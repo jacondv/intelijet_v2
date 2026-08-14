@@ -13,7 +13,7 @@ from pps.image_processing.keypoint_processing_v3 import KeypointCloudAlignManage
 from pps.helper import crop_pointcloud_by_box, check_transform
 from pps.cloud_processing.utils_align import align_cloud, pre_align_cloud
 from shared.config_loader import CONFIG as cfg
-from shared.log_status import log_status
+from shared.notify import notify
 
 
 def _cfg(*names, default=None):
@@ -106,8 +106,7 @@ class CloudComparePipeline:
                 post_cloud = cloudconverter.crop_cloud_by_hull(pre_cloud, post_cloud)
             except Exception as e:
                 rospy.logerr(f"post-process failed: {e}")
-                log_status(
-                    name=cfg.NOTIFICATION,
+                notify(
                     message=f"[WARN] Post-process crop skipped (using uncropped cloud): {e}",
                     level="warning",
                 )

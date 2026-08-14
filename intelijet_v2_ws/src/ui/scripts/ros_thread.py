@@ -9,10 +9,9 @@ from std_msgs.msg import Int32
 import threading
 from shared.config_loader import CONFIG as cfg
 
-from shared.device_monitor import  StatusReader 
+from shared.device_monitor import  StatusReader
 from shared.pps_command import PPSCommand
-from shared.log_status import unpack_log_status
-from rosgraph_msgs.msg import Log
+from shared.msg import Notification
 
 HMI_CMD_TOPIC = cfg.HMI_CMD_TOPIC
 PRE_SCAN_CLOUD_TOPIC = cfg.PRE_SCAN_CLOUD_TOPIC
@@ -25,12 +24,14 @@ CLOUD_COMPARED_UPSAMPLE_TOPIC_MANUAL = f"{CLOUD_COMPARED_TOPIC_MANUAL}/upsample"
 ENCODER_DATA_TOPIC =  cfg.ENCODER01_DATA
 
 class RosThread(threading.Thread):
-    def __init__(self, cloud_received_signal, ui_send_cmd_signal, ui_data_update):
+    def __init__(self, cloud_received_signal, ui_send_cmd_signal, ui_data_update,
+                 notification_received_signal=None):
         super(RosThread, self).__init__()
-        self.daemon = True  
+        self.daemon = True
         self.cloud_received_signal = cloud_received_signal
         self.ui_send_cmd_signal = ui_send_cmd_signal
         self.ui_data_update = ui_data_update # Data update to UI
+        self.notification_received_signal = notification_received_signal
         self.data_store = {}
 
     def run(self):
@@ -52,8 +53,11 @@ class RosThread(threading.Thread):
         # listening topic update infomation for UI.
         rospy.Subscriber("/joint_states", JointState, self.update_joint_states_status)
 
-        rospy.Subscriber('/rosout', Log, self.rosout_callback)
-        
+        # Typed notification channel - see shared/notify.py. Replaces the
+        # old /rosout-JSON "notification" hack (log_status(name=cfg.NOTIFICATION,
+        # ...) parsed back out of the global debug-log topic).
+        rospy.Subscriber(cfg.NOTIFICATION_TOPIC, Notification, self.notification_callback)
+
         rospy.Timer(rospy.Duration(1.0), self.emit_ui_data_update) # Update data 1Hz
         # rospy.Subscriber(HMI_CMD_TOPIC,Int32, self.update_hmi_cmd)
 
@@ -87,15 +91,9 @@ class RosThread(threading.Thread):
         self.data_store["encoder_value_raw"] = msg.data
 
 
-    def rosout_callback(self,msg):
-        # Lọc theo mức INFO
-        data = unpack_log_status(msg)
-        if data is not None:
-            name = data.get("name")
-            self.data_store[name] = {
-                "message": data.get("message"),
-                "level": data.get("level", "info"),
-            }
+    def notification_callback(self, msg):
+        if self.notification_received_signal is not None:
+            self.notification_received_signal.emit(msg.source, msg.message, msg.level)
 
 
     def emit_ui_data_update(self, msg):

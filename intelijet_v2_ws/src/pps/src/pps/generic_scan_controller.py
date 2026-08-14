@@ -7,7 +7,7 @@ from std_msgs.msg import String, Int32
 from sensor_msgs.msg import PointCloud2
 
 from shared.config_loader import CONFIG as cfg
-from shared.log_status import log_status
+from shared.notify import notify
 from shared.pps_command import PPSCommand
 from shared.msg import PPSCommand as PPSCommandMsg
 from shared.msg import DeviceStatus
@@ -169,10 +169,10 @@ class GenericScanController(ABC):
         try:
             target = cfg.housing_end_position if direction else cfg.housing_start_position
             if direction:
-                log_status(name=cfg.NOTIFICATION, message="[INFO] Opening Housing")
+                notify("[INFO] Opening Housing")
                 self.housing.open('fast')
             else:
-                log_status(name=cfg.NOTIFICATION, message="[INFO] Closing Housing")
+                notify("[INFO] Closing Housing")
                 self.housing.close('fast')
 
             if not self.wait_until_target(target, direction=direction):
@@ -207,25 +207,25 @@ class GenericScanController(ABC):
 
     # ----- Cancel job -----
     def on_cancel(self):
-        log_status(name=cfg.NOTIFICATION, message="[INFO] Job canceling...")
+        notify("[INFO] Job canceling...")
         self.cancel_job = True
         rospy.sleep(1)
         if self._thread is None or not self._thread.is_alive():
-            log_status(name=cfg.NOTIFICATION, message="Job canceled")
+            notify("Job canceled")
             rospy.sleep(2)
-            log_status(name=cfg.NOTIFICATION, message="...")
+            notify("...")
             return True
         else:
-            log_status(name=cfg.NOTIFICATION, message="Job canceling failed")
+            notify("Job canceling failed")
             return False
         
 
     # ----- Set home position -----
     def set_home_position(self):
         try:
-            log_status(name=cfg.NOTIFICATION, message="[INFO] Setting home position...")
+            notify("[INFO] Setting home position...")
             self.housing.set_home_position()
             rospy.sleep(1)
-            log_status(name=cfg.NOTIFICATION, message="[INFO] Home position set.")
+            notify("[INFO] Home position set.")
         except Exception as e:
             rospy.logerr(f"Error setting home position: {e}")

@@ -26,7 +26,6 @@ from history_page_manager import HistoryPageManager
 from project_dlg_manager import ProjectManager 
 from setting_page_manager import SettingPageManager
 
-# from data_binder import DataBinder
 from ui.update_data_utils import DataBinder, load_config_to_ui, load_ui_to_config
 
 from shared.pps_command import PPSCommand
@@ -76,6 +75,9 @@ class App(QMainWindow):
     cloud_received_signal = pyqtSignal(object, str)
     ui_send_cmd_signal = pyqtSignal(int)
     ui_data_update = pyqtSignal(dict)
+    # (source, message, level) - see shared/notify.py. Replaces the old
+    # /rosout-JSON "notification" key inside ui_data_update's dict.
+    notification_received = pyqtSignal(str, str, str)
 
     def __init__(self):
         super().__init__()
@@ -140,7 +142,8 @@ class App(QMainWindow):
         # --- ROS Thread ---
         self.ros_thread = RosThread(self.cloud_received_signal,
                                     self.ui_send_cmd_signal,
-                                    self.ui_data_update)
+                                    self.ui_data_update,
+                                    self.notification_received)
         self.ros_thread.start()
 
         # if not rospy.core.is_initialized():
@@ -229,6 +232,9 @@ class App(QMainWindow):
         self._prev_device_state = {}
         self.notification_center = NotificationCenter(parent=self)
         self.notification_center.label_changed.connect(self._on_notification_label_changed)
+        self.notification_received.connect(
+            lambda source, message, level: self.notification_center.push(source, message, level)
+        )
         self.lblNotification.mousePressEvent = self._open_notification_history
 
         # --- Scan pipeline worker (runs convert/color/VTK/save/report off the GUI thread) ---
@@ -455,12 +461,6 @@ class App(QMainWindow):
         self.data_binder.update_ui_from_status(data)
         if "encoder_value_in_deg" in data:
             self.ui.lblEncoder.setText(f"{data['encoder_value_in_deg']:.2f}")
-        if "notification" in data:
-            notif = data["notification"]
-            if isinstance(notif, dict):
-                self.notification_center.push("rosout", notif.get("message", ""), notif.get("level", "info"))
-            elif notif:
-                self.notification_center.push("rosout", notif, "info")
         if "encoder_value_raw" in data:
             value = str(data["encoder_value_raw"])
             self.ui.lblEncoderRawValue.setText(value)

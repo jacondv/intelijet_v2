@@ -6,7 +6,9 @@ import time
 from pps.msg import CompareCloudAction, CompareCloudGoal
 from shared.config_loader import CONFIG as cfg
 
-from shared.log_status import log_status
+from shared.notify import notify
+
+
 class CompareBaseClient:
     def __init__(self,
                  prescan_path="",
@@ -85,7 +87,7 @@ class CompareBaseClient:
         # fb.progress: float [0-100]
         rospy.loginfo("COMPARE [%-12s] %3.0f%%", fb.stage, fb.progress*100)
         msg = f"[INFO] COMPARE [{fb.stage:<12}] {fb.progress*100:3.0f}%"
-        log_status(name=cfg.NOTIFICATION, message=msg)
+        notify(msg)
 
 
     def _on_done(self, state, result):
@@ -95,7 +97,7 @@ class CompareBaseClient:
         state_str = actionlib.GoalStatus.to_string(state)
         rospy.loginfo("COMPARE DONE [%s] success=%s", state_str, result.success)   
         msg = "[INFO] COMPARE DONE [%s] success=%s" % (state_str, result.success)
-        log_status(name=cfg.NOTIFICATION, message=msg)
+        notify(msg)
 
     def _check_timeout(self, event):
         if self._start_time is None:
@@ -117,7 +119,7 @@ class CompareBaseClient:
         if elapsed > self.timeout:
             rospy.logerr("COMPARE TIMEOUT after %.1f seconds", elapsed)
             msg = f"[INFO] COMPARE TIMEOUT after {elapsed} seconds"
-            log_status(name=cfg.NOTIFICATION, message=msg)
+            notify(msg)
             self._timeout_timer.shutdown()
             self.client.cancel_goal()  
 

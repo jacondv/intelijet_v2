@@ -11,7 +11,7 @@ from laser_assembler.srv import AssembleScans2
 from sensor_msgs.msg import PointCloud2
 
 from shared.config_loader import CONFIG as cfg
-from shared.log_status import log_status
+from shared.notify import notify
 from shared.msg import DeviceStatus
 
 from pps.scan_strategies.base import ScanStrategy
@@ -33,8 +33,7 @@ class Sick2DAssembleStrategy(ScanStrategy):
     def acquire(self, controller, publisher=None) -> PointCloud2:
         #This function run the workflow of scanning process and return cloud data
         topic_name = publisher.name if publisher else "Unknown"
-        log_status(name=cfg.NOTIFICATION,
-                   message=f"[INFO] Starting {'Pre-Scan' if topic_name==cfg.PRE_SCAN_TOPIC else 'Post-Scan'}")
+        notify(message=f"[INFO] Starting {'Pre-Scan' if topic_name==cfg.PRE_SCAN_TOPIC else 'Post-Scan'}")
 
         # ---- Start collect data ----
         start_time = rospy.Time.now()
@@ -60,7 +59,7 @@ class Sick2DAssembleStrategy(ScanStrategy):
         if point_cloud and publisher:
             publisher.publish(point_cloud)
             point_cloud = None
-            log_status(name=cfg.NOTIFICATION, message="[INFO] Scan completed")
+            notify(message="[INFO] Scan completed")
 
         # ---- Close housing back ----
         if not self._close_housing_sequence(controller):
@@ -90,8 +89,7 @@ class Sick2DAssembleStrategy(ScanStrategy):
         for speed, target, timeout in speeds_targets:
             controller.housing.open(speed)
             if not controller.wait_until_target(target, direction=True, timeout=timeout):
-                log_status(name=cfg.NOTIFICATION,
-                        message=f"[WARN] Encoder did not reach target {target}° for speed {speed} after {timeout}s")
+                notify(message=f"[WARN] Encoder did not reach target {target}° for speed {speed} after {timeout}s")
                 controller.housing.stop()
                 return False
         return True
@@ -111,8 +109,7 @@ class Sick2DAssembleStrategy(ScanStrategy):
                 if speed == 'slow':
                     return True  # cho phép không đạt chính xác vị trí start khi đóng chậm
 
-                log_status(name=cfg.NOTIFICATION,
-                        message=f"[WARN] Encoder did not reach target {target}° while closing at speed {speed}")
+                notify(message=f"[WARN] Encoder did not reach target {target}° while closing at speed {speed}")
                 controller.housing.stop()
                 return False
 
