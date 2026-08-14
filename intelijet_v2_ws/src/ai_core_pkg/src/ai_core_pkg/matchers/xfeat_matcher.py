@@ -13,6 +13,15 @@ class XFeatMatcher(BaseMatcher):
     lighter/faster than LoFTR/EfficientLoFTR; use mode="sparse" for the
     standard top-k keypoint matching or mode="semi-dense" for XFeat*'s
     denser (but slower) matching.
+
+    NOT USABLE in this repo's Docker image as-is: kornia.feature.XFeat
+    needs kornia>=0.8.3, which needs Python>=3.11, but the image
+    (ros:noetic-ros-base-focal) ships Python 3.8 - the newest kornia
+    installable there is 0.7.3, which predates XFeat entirely
+    (AttributeError: module 'kornia.feature' has no attribute 'XFeat').
+    Use DiskLightGlueMatcher instead (disk_lightglue_matcher.py) - same
+    "fast, LoFTR-comparable quality" goal, works on kornia 0.7.3. This
+    class is kept for whenever the base image's Python gets upgraded.
     """
 
     def __init__(self, device="cpu", mode="sparse", top_k=4096, verbose=False):

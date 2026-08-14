@@ -13,7 +13,10 @@ class MatcherServiceNode:
         # Khởi tạo matcher từ factory
         # matcher_name = rospy.get_param("~matcher_name", "LoFTR")
         # device = rospy.get_param("~device", "cpu")
-        matcher_name = "xfeat"  # was "efficientloftr"/"LoFTR" - temporary, for benchmarking
+        # "xfeat" NOT usable here - kornia.feature.XFeat needs kornia>=0.8.3
+        # which needs Python>=3.11, but this image is Python 3.8 (see
+        # xfeat_matcher.py docstring). "disk_lightglue" works instead.
+        matcher_name = "disk_lightglue"  # was "efficientloftr"/"LoFTR" - temporary, for benchmarking
         device = "cpu"
         self.matcher = MatcherFactory.create(matcher_name, device)
 
