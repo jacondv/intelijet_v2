@@ -54,6 +54,7 @@ RUN apt-get update && apt-get install -y \
     libffi-dev \
     shared-mime-info \
     fonts-liberation \
+    fonts-dejavu-core \
     onboard \
     dbus-x11 \
     qpdfview \
@@ -61,6 +62,11 @@ RUN apt-get update && apt-get install -y \
 # python3-vtk7: libvtk7-dev alone is C++ headers only, no Python bindings.
 # libjsoncpp-dev/libboost-*-dev/diagnostic-updater/dynamic-reconfigure:
 # build deps of the sick_scan package.
+# fonts-dejavu-core: fonts-liberation only covers Latin text glyphs - it
+# has no glyph for the Unicode Arrows block (U+2190-U+21FF) onboard's
+# Shift (U+21E7)/Caps Lock (U+21EA) key icons use, so without a fallback
+# font Pango renders the raw codepoint as a "21 E7"/"21 EA" tofu box
+# instead of an arrow glyph. DejaVu Sans covers that block.
 # libpango/libpangocairo/libgdk-pixbuf/libffi-dev/shared-mime-info/
 # fonts-liberation: native rendering deps of WeasyPrint (PDF report export).
 # onboard: on-screen keyboard, controlled via its D-Bus Show/Hide service
@@ -129,6 +135,12 @@ RUN python3 -m pip install --ignore-installed Pillow jinja2 weasyprint "pydyf==0
 # without this pin.
 # python-box: pps/src/pps/utils.py (`from box import Box`).
 # torch/kornia/kornia-rs/kornia_moons: ai_core_pkg (LoFTR image matcher).
+# Pinned to no specific version deliberately - kornia.feature.XFeat
+# needs kornia>=0.8.3, which needs Python>=3.11; this image's Python is
+# 3.8 (ros:noetic-ros-base-focal), so the newest installable kornia here
+# is 0.7.3 and XFeat is NOT available - use
+# ai_core_pkg/matchers/disk_lightglue_matcher.py (DISK+LightGlue, both
+# already in kornia 0.7.3) instead. See xfeat_matcher.py's docstring.
 # einops/loguru/yacs: ai_core_pkg/matchers/efficientloftr/ (vendored
 # EfficientLoFTR inference code, https://github.com/zju3dv/EfficientLoFTR -
 # only these three; its own requirements.txt is for training and pulls in
