@@ -45,11 +45,13 @@
 | P7 | `phase_07_scanner_abstraction.md` | Trừu tượng hoá scanner (chuẩn bị thay SickScan bằng scanner 3D) | P6 | Vừa |
 | P8 | `phase_08_docker_compose.md` | Docker Compose, icon desktop, nút Exit | — (độc lập) | Thấp |
 | P9 | `phase_09_ux_polish.md` | Giảm dialog xác nhận, sửa các điểm khó thao tác | P3, P5 | Thấp |
+| P10 | `phase_10_notification_channel.md` | Kênh Notification riêng (thay hack `/rosout`-JSON) + `SystemStatus` đánh kiểu + `StatusBinder` hợp nhất 3 cơ chế push widget | P2, P3 | Vừa |
 
 Ghi chú thứ tự:
 - P1 làm **đầu tiên** (khác kế hoạch sơ bộ): giảm ~4000 dòng nhiễu trước khi đụng vào phần khó, giúp các phiên sau đỡ tốn token và đỡ nhầm lẫn giữa code sống/chết.
 - P2→P3 và P4→P5 là hai chuỗi bắt buộc đúng thứ tự. P8 độc lập, có thể chen bất cứ lúc nào.
 - P6→P7: interface scanner (P7) đã được thiết kế sẵn trong file phase — P6 chỉ dọn dẹp, không cần biết trước P7.
+- P10 **không nằm trong kế hoạch gốc** (`optimization_plan_overview.md`) — phát sinh sau, làm trên branch `dev/v3.2`. Phụ thuộc P2 (`device_monitor.py`) + P3 (`NotificationCenter`).
 
 ## Trạng thái
 
@@ -64,6 +66,7 @@ Ghi chú thứ tự:
 | P7 | ✅ Xong (code), ⚠️ CHƯA chạy prescan/postscan thật | `ScanStrategy` interface + `Sick2DAssembleStrategy` (di chuyển thuần, đối chiếu diff khớp 100%) + `Direct3DScanStrategy` skeleton. `hmi_scan_command_handler.py` không đổi giao diện. Commit `78d8daa`. Quyết định có chủ đích: KHÔNG thêm try/finally ép đóng housing (giữ đúng hành vi cơ khí gốc) — xem Ghi chú phát sinh #1 trong phase_07. |
 | P8 | 🟡 Một phần | Việc 1-3 xong (chưa test thật trên máy Linux có Docker): `docker-compose.yml` chính thức, `run_docker.sh` launcher mỏng, `install.sh` mới (tự cài Docker + build image 1 lần + sinh icon desktop đúng đường dẫn máy đó), `docs/INSTALL.md`. Lệch có chủ đích so với plan gốc: icon bấm lần nào cũng `down` rồi `up -d` lại (restart sạch), KHÔNG tái sử dụng container đang chạy như Việc 2 gốc đề xuất — quyết định của người dùng. Việc 4 (nút Exit tắt toàn bộ container từ trong app) CHƯA làm — ngoài phạm vi yêu cầu lần này. |
 | P9 | ⬜ Chưa làm | |
+| P10 | ✅ Xong (code + test thật qua roscore) | Branch `dev/v3.2`. Commit `750362b`/`eae49ae`/`925b1eb`. **Chưa chạy prescan/postscan/compare thật trên phần cứng** — xem "Chưa kiểm chứng được" trong phase_10. Máy kiosk có sẵn `config/last_used.yaml` cũ cần thêm thủ công `NOTIFICATION_TOPIC` (file này gitignore, không nằm trong commit). |
 
 ## Quyết định đã chốt (Sonnet không cần hỏi lại)
 
