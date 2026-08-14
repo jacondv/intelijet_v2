@@ -13,7 +13,7 @@ class MatcherServiceNode:
         # Khởi tạo matcher từ factory
         # matcher_name = rospy.get_param("~matcher_name", "LoFTR")
         # device = rospy.get_param("~device", "cpu")
-        matcher_name = "efficientloftr"  # was "LoFTR" - temporary, for benchmarking
+        matcher_name = "xfeat"  # was "efficientloftr"/"LoFTR" - temporary, for benchmarking
         device = "cpu"
         self.matcher = MatcherFactory.create(matcher_name, device)
 
@@ -39,8 +39,11 @@ class MatcherServiceNode:
         mkpts1 = matches["keypoints1"].cpu().numpy()
         kpts1 = mkpts1.astype("float32").reshape(-1).tolist()
 
-        mconf = matches["confidence"].cpu().numpy()
-        conf = mconf.astype("float32").reshape(-1).tolist()
+        if matches.get("confidence") is not None:
+            mconf = matches["confidence"].cpu().numpy()
+            conf = mconf.astype("float32").reshape(-1).tolist()
+        else:
+            conf = []
 
         # rospy.loginfo(f"type(matches) = {type(matches)}")
         # print(matches)
@@ -49,7 +52,7 @@ class MatcherServiceNode:
         # resp.matcher = MatcherMsg()
         resp.keypoints0 = kpts0
         resp.keypoints1 = kpts1
-        resp.confidence = conf if matches.get("confidence") is not None else []
+        resp.confidence = conf
         t1 = time.perf_counter()
         print(f"Inference time: {(t1 - t0)*1000:.2f} ms")
         rospy.logwarn(f"Inference time: {(t1 - t0)*1000:.2f} ms")
