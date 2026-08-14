@@ -74,7 +74,7 @@ class App(QMainWindow):
 
     cloud_received_signal = pyqtSignal(object, str)
     ui_send_cmd_signal = pyqtSignal(int)
-    ui_data_update = pyqtSignal(dict)
+    ui_data_update = pyqtSignal(object)  # ui.system_status.SystemStatus
     # (source, message, level) - see shared/notify.py. Replaces the old
     # /rosout-JSON "notification" key inside ui_data_update's dict.
     notification_received = pyqtSignal(str, str, str)
@@ -229,7 +229,6 @@ class App(QMainWindow):
         self.lblNotification.setMaximumWidth(600)
         self.ui.statusbar.addWidget(self.lblNotification)
 
-        self._prev_device_state = {}
         self.notification_center = NotificationCenter(parent=self)
         self.notification_center.label_changed.connect(self._on_notification_label_changed)
         self.notification_received.connect(
@@ -456,17 +455,19 @@ class App(QMainWindow):
 
 
     # 1.1--- Update commond data from ROS ---
-    def update_data(self, data):
-
-        self.data_binder.update_ui_from_status(data)
-        if "encoder_value_in_deg" in data:
-            self.ui.lblEncoder.setText(f"{data['encoder_value_in_deg']:.2f}")
-        if "encoder_value_raw" in data:
-            value = str(data["encoder_value_raw"])
+    def update_data(self, status):
+        # status: ui.system_status.SystemStatus - see ros_thread.py's
+        # emit_ui_data_update(). Device-state-change notifications are
+        # published from the ROS side now (device_monitor.py's on_transition
+        # hook), not diffed here.
+        self.data_binder.update_ui_from_status(status)
+        if status.encoder_deg is not None:
+            self.ui.lblEncoder.setText(f"{status.encoder_deg:.2f}")
+        if status.encoder_raw is not None:
+            value = str(status.encoder_raw)
             self.ui.lblEncoderRawValue.setText(value)
             self.setting_page.txtEncodeValueRaw.setText(value)
 
-        devices = data['devices']
         device_labels = {
             "encoder": self.ui.lblEncoderStatus,
             "lidar": self.ui.lblLidarStatus,
@@ -474,14 +475,8 @@ class App(QMainWindow):
             "plc": self.ui.lblPLCStatus,
         }
         for name, label in device_labels.items():
-            state = devices[name]['device_state'] if name in devices else None
-            set_device_label(label, state)
-
-            prev_state = self._prev_device_state.get(name)
-            if prev_state is not None and prev_state != state:
-                level = "info" if state == "Connected" else "error"
-                self.notification_center.push(name, f"{name}: {state or 'UNKNOWN'}", level)
-            self._prev_device_state[name] = state
+            device = status.devices.get(name)
+            set_device_label(label, device.device_state if device else None)
 
     # 3.--- Update pointcloud from available data---
     def update_pointcloud_from_data(self, data, filename=None):

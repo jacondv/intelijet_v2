@@ -11,7 +11,18 @@ from shared.config_loader import CONFIG as cfg
 
 from shared.device_monitor import  StatusReader
 from shared.pps_command import PPSCommand
-from shared.msg import Notification
+from shared.msg import Notification, DeviceStatus
+from shared.notify import notify
+from ui.system_status import build_system_status
+
+# device_state values that should read as an error notification rather
+# than a plain info one when transitioned into (see _publish_device_transition).
+_ERROR_DEVICE_STATES = {
+    DeviceStatus.DISCONNECTED,
+    DeviceStatus.ERROR,
+    DeviceStatus.PRESCAN_ERROR,
+    DeviceStatus.POSTSCAN_ERROR,
+}
 
 HMI_CMD_TOPIC = cfg.HMI_CMD_TOPIC
 PRE_SCAN_CLOUD_TOPIC = cfg.PRE_SCAN_CLOUD_TOPIC
@@ -32,13 +43,20 @@ class RosThread(threading.Thread):
         self.ui_send_cmd_signal = ui_send_cmd_signal
         self.ui_data_update = ui_data_update # Data update to UI
         self.notification_received_signal = notification_received_signal
-        self.data_store = {}
+        self.encoder_deg = None
+        self.encoder_raw = None
 
     def run(self):
         # Run when thread .start() called
         rospy.init_node("gui_node", anonymous=True, disable_signals=True)
         self.cmd_pub = rospy.Publisher(HMI_CMD_TOPIC, Int32, queue_size=1)
-        self.device_status_reader = StatusReader() # Autoload device config from devices.yaml
+        # Autoload device config from devices.yaml. on_transition fires
+        # only on an actual device_state change (see Monitor.update_status
+        # in device_monitor.py), not every poll tick - this is what used
+        # to be app.py's manual _prev_device_state diffing, moved to the
+        # ROS side where the fact ("device X disconnected") actually
+        # originates.
+        self.device_status_reader = StatusReader(on_transition=self._publish_device_transition)
 
         rospy.Subscriber(PRE_SCAN_CLOUD_TOPIC, PointCloud2, self.cloud_received_signal_callback,callback_args=PRE_SCAN_CLOUD_TOPIC,queue_size=1)
         rospy.Subscriber(POST_SCAN_CLOUD_TOPIC, PointCloud2, self.cloud_received_signal_callback,callback_args=POST_SCAN_CLOUD_TOPIC,queue_size=1)
@@ -76,19 +94,15 @@ class RosThread(threading.Thread):
     def update_joint_states_status(self, msg):
         try:
             idx = msg.name.index(cfg.ENCODER_JOINT_NAME)
-            current_encoder_value_in_degree = msg.position[idx] * 180 / 3.14
-
-            self.data_store["encoder_value_in_deg"] = current_encoder_value_in_degree
-
+            self.encoder_deg = msg.position[idx] * 180 / 3.14
         except ValueError:
-
             rospy.logwarn(f"Joint {cfg.ENCODER_JOINT_NAME} not found in JointState")
 
 
     def update_encoder_raw_value(self,msg):
         if msg is None or not hasattr(msg, "data"):
             return
-        self.data_store["encoder_value_raw"] = msg.data
+        self.encoder_raw = msg.data
 
 
     def notification_callback(self, msg):
@@ -96,10 +110,17 @@ class RosThread(threading.Thread):
             self.notification_received_signal.emit(msg.source, msg.message, msg.level)
 
 
-    def emit_ui_data_update(self, msg):
-        # print(self.data_store["devices"])
-        self.data_store["devices"] = self.device_status_reader.get_status()
-        # print("Emitting ui_data_update", self.data_store["devices"])
-        self.ui_data_update.emit(self.data_store)
+    def _publish_device_transition(self, name, old_state, new_state):
+        level = "error" if new_state in _ERROR_DEVICE_STATES else "info"
+        notify(f"{name}: {new_state}", level=level, source=name)
+
+
+    def emit_ui_data_update(self, event):
+        status = build_system_status(
+            self.device_status_reader.get_status(),
+            encoder_deg=self.encoder_deg,
+            encoder_raw=self.encoder_raw,
+        )
+        self.ui_data_update.emit(status)
 
 

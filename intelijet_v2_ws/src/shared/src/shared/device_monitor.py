@@ -59,7 +59,7 @@ def ros_msg_to_dict(msg):
 
 
 class Monitor:
-    def __init__(self, cfg):
+    def __init__(self, cfg, on_transition=None):
         # Khởi tạo DeviceStatus từ config
         self.status = DeviceStatus()
         self.status.name = cfg.name
@@ -70,6 +70,16 @@ class Monitor:
 
         self.timeout = cfg.timeout
         self.check_interval = max(self.timeout / 2.0, 0.5)
+        # Called with (device_name, old_device_state, new_device_state) only
+        # when device_state actually changes (not on every poll tick) - see
+        # update_status() below. Lets a composition root (StatusReader)
+        # react to real transitions without every Monitor subclass needing
+        # to know how/whether that gets surfaced to the user.
+        self._on_transition = on_transition
+        # Suppress the transition fired by the very first check_status()
+        # call (constructor default DISCONNECTED -> whatever's actually
+        # observed) - that's an initial observation, not a real transition.
+        self._first_update = True
 
         self._setup(cfg)
         rospy.Timer(rospy.Duration(self.check_interval), self.check_status)
@@ -86,6 +96,7 @@ class Monitor:
         return self.status
 
     def update_status(self, dev_state, proc_state=None, detail=None):
+        old_state = self.status.device_state
         self.status.device_state = dev_state
         if proc_state is not None:
             self.status.process_state = proc_state
@@ -93,6 +104,10 @@ class Monitor:
             self.status.detail = detail
         # giữ timestamp local
         self.status.last_update = rospy.Time.now()
+
+        if self._on_transition is not None and not self._first_update and dev_state != old_state:
+            self._on_transition(self.status.name, old_state, dev_state)
+        self._first_update = False
 
 
 class TopicAliveMonitor(Monitor):
@@ -223,7 +238,7 @@ class StatusReader:
             cls._instance = super(StatusReader, cls).__new__(cls)
         return cls._instance
 
-    def __init__(self, config_file="devices.yaml"):
+    def __init__(self, config_file="devices.yaml", on_transition=None):
 
         if hasattr(self, "_initialized") and self._initialized:
             return  # đã khởi tạo rồi, không làm gì nữa
@@ -241,7 +256,7 @@ class StatusReader:
                               f"invalid type [{dev.type}]")
                 continue
             try:
-                monitor = cls(dev)
+                monitor = cls(dev, on_transition=on_transition)
             except Exception as e:
                 rospy.logerr(f"[device_monitor] Failed to start monitor "
                               f"[{dev.name}]: {e}")
