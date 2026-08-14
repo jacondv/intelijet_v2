@@ -188,14 +188,12 @@ class DataBinder:
                 self._widget_cache[name] = child
 
 
-    def _update_control_button_style(self, status: dict):
-
-        if "devices" not in status:
-            return
-        for key, values in status["devices"].items():
+    def _update_control_button_style(self, status):
+        # status: ui.system_status.SystemStatus
+        for key, device in status.devices.items():
 
             if key.lower() in ['pps']:
-                value = values['device_state']
+                value = device.device_state
                 if value == DeviceStatus.PRESCAN:
                     for btn_name in ['btnPreScan', 'btnPostScan', 'btnCompare', 'btnCancel', 'btnOpenScanner', 'btnCloseScanner']:
                         widget = self._widget_cache.get(btn_name)
@@ -256,5 +254,5 @@ class DataBinder:
                 return
 
                 
-    def update_ui_from_status(self, status: dict):
+    def update_ui_from_status(self, status):
         self._update_control_button_style(status)
