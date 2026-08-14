@@ -26,14 +26,15 @@ from history_page_manager import HistoryPageManager
 from project_dlg_manager import ProjectManager 
 from setting_page_manager import SettingPageManager
 
-from ui.update_data_utils import DataBinder, load_config_to_ui, load_ui_to_config
+from ui.update_data_utils import load_config_to_ui, load_ui_to_config
+from ui.status_binder import StatusBinder
 
 from shared.pps_command import PPSCommand
 
 from ui.intelijet_ui import Ui_MainWindow 
 from ui.keyboard import TouchKeyboard
 
-from ui.notification_center import NotificationCenter, set_device_label, LEVEL_COLORS
+from ui.notification_center import NotificationCenter, LEVEL_COLORS
 from ui.notification_history_dialog import NotificationHistoryDialog
 
 from ui.services.job_store import JobStore
@@ -265,7 +266,7 @@ class App(QMainWindow):
         )
 
         # --- Data binder ---
-        self.data_binder = DataBinder(self.ui.centralFrame)
+        self.status_binder = StatusBinder(self.ui.centralFrame)
         load_config_to_ui(self.ui.tab_setting)
 
         self.setting_page.txtEncodeValueRaw.setText("NaN")
@@ -459,24 +460,9 @@ class App(QMainWindow):
         # status: ui.system_status.SystemStatus - see ros_thread.py's
         # emit_ui_data_update(). Device-state-change notifications are
         # published from the ROS side now (device_monitor.py's on_transition
-        # hook), not diffed here.
-        self.data_binder.update_ui_from_status(status)
-        if status.encoder_deg is not None:
-            self.ui.lblEncoder.setText(f"{status.encoder_deg:.2f}")
-        if status.encoder_raw is not None:
-            value = str(status.encoder_raw)
-            self.ui.lblEncoderRawValue.setText(value)
-            self.setting_page.txtEncodeValueRaw.setText(value)
-
-        device_labels = {
-            "encoder": self.ui.lblEncoderStatus,
-            "lidar": self.ui.lblLidarStatus,
-            "pcan": self.ui.lblPCANStatus,
-            "plc": self.ui.lblPLCStatus,
-        }
-        for name, label in device_labels.items():
-            device = status.devices.get(name)
-            set_device_label(label, device.device_state if device else None)
+        # hook), not diffed here. All widget pushes live in status_binder.py's
+        # declarative STATUS_BINDINGS/PPS_BUTTON_STAGE_TABLE tables.
+        self.status_binder.apply(status)
 
     # 3.--- Update pointcloud from available data---
     def update_pointcloud_from_data(self, data, filename=None):
