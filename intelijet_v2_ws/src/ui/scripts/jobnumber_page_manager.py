@@ -4,6 +4,7 @@ from PyQt5.QtWidgets import QWidget, QHBoxLayout, QLineEdit, QPushButton, QListW
 from PyQt5.QtCore import pyqtSignal
 from ui.jobsetting_page_ui import Ui_frmJobSetting
 from ui.job_item_widget import JobItemWidget
+from ui.models.file_name import is_sync_junk
 from shared.config_loader import CONFIG as cfg
 
 BASE_DIR = cfg.BASE_DIR
@@ -36,6 +37,8 @@ class JobNumberPageManager(QWidget):
         self.ui.lstJobnumber.clear()
         mode=self.view_mode
         for job_name in os.listdir(self.jobs_root):
+            if is_sync_junk(job_name):
+                continue
             job_path = os.path.join(self.jobs_root, job_name)
             if os.path.isdir(job_path):
                 item = QListWidgetItem(self.ui.lstJobnumber)

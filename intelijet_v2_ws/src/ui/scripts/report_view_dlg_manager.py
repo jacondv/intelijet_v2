@@ -12,6 +12,7 @@ from ui.compare_dlg_ui import Ui_frm_MainForm
 from shared.config_loader import CONFIG as cfg
 
 from ui.models.job_info import JobInfo
+from ui.models.file_name import is_sync_junk
 from ui.job_item_widget import FileItemWidget
 
 BASE_DIR = cfg.BASE_DIR
@@ -471,7 +472,7 @@ class ReportViewManager(QDialog, Ui_frm_MainForm):
 
         try:
             job_path = os.path.join(PROJECT_DIR, self.current_project, self.current_job)
-            files = sorted([f for f in os.listdir(job_path) if f.lower().endswith(".pdf")])
+            files = sorted([f for f in os.listdir(job_path) if f.lower().endswith(".pdf") and not is_sync_junk(f)])
         except Exception as e:
             QMessageBox.critical(self, "Error", f"Error while retrieving files:\n{str(e)}")
             return
@@ -502,11 +503,11 @@ class ReportViewManager(QDialog, Ui_frm_MainForm):
             return
 
         for project_name in sorted(os.listdir(PROJECT_DIR)):
-            if project_name.lower() == ".stfolder":
+            if is_sync_junk(project_name):
                 continue
             project_path = os.path.join(PROJECT_DIR, project_name)
             if os.path.isdir(project_path):
-                jobs = [j for j in sorted(os.listdir(project_path)) if os.path.isdir(os.path.join(project_path, j))]
+                jobs = [j for j in sorted(os.listdir(project_path)) if os.path.isdir(os.path.join(project_path, j)) and not is_sync_junk(j)]
                 self.projects[project_name] = {"jobs": jobs}
 
 

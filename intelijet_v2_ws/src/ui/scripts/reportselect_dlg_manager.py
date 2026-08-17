@@ -5,6 +5,7 @@ from PyQt5.QtCore import pyqtSignal
 from PyQt5.QtWidgets import QWidget, QHBoxLayout, QLineEdit, QPushButton, QListWidgetItem, QMessageBox
 from ui.reportselect_dlg_ui import Ui_ReportSelect
 from ui.job_item_widget import JobItemWidget, FileItemWidget
+from ui.models.file_name import is_sync_junk
 
 from shared.config_loader import CONFIG as cfg
 
@@ -39,6 +40,8 @@ class ReportSelectManager(QDialog):
         self.ui.lstJobs.clear()
         mode=self.view_mode
         for job_name in os.listdir(self.jobs_root):
+            if is_sync_junk(job_name):
+                continue
             job_path = os.path.join(self.jobs_root, job_name)
             if os.path.isdir(job_path):
                 item = QListWidgetItem(self.ui.lstJobs)
@@ -56,7 +59,7 @@ class ReportSelectManager(QDialog):
         self.ui.lstJobItems.clear()        
         try:
             files = [
-                f for f in os.listdir(job_path) if f.lower().endswith(".pdf")
+                f for f in os.listdir(job_path) if f.lower().endswith(".pdf") and not is_sync_junk(f)
             ]
         except Exception as e:
             return
