@@ -5,6 +5,7 @@ from PyQt5.QtCore import pyqtSignal, Qt
 from ui.historyview_page_ui import Ui_frmHistoryView
 from ui.job_item_widget import JobItemWidget, FileItemWidget
 from ui.utils import load_ply_as_polydata
+from ui.models.file_name import is_sync_junk
 
 from shared.config_loader import CONFIG as cfg
 
@@ -72,7 +73,7 @@ class HistoryPageManager(QWidget):
         self.ui.lstJobDetail.clear()        
         
         try:
-            files = sorted([f for f in os.listdir(job_path) if f.lower().endswith(".ply")],reverse=True)
+            files = sorted([f for f in os.listdir(job_path) if f.lower().endswith(".ply") and not is_sync_junk(f)],reverse=True)
         except Exception as e:
             return
         

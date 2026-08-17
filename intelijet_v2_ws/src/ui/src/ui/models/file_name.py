@@ -4,6 +4,22 @@ import time
 
 FILENAME_TEMPLATE = "{job}#{timestamp_str}#{type}_{index}#SCAN{scan_id}.{ext}"
 # example: job1#20240601_153000#prescan#01#SCAN01.ply
+
+_SYNC_JUNK_RE = re.compile(r"\.sync-conflict-\d{8}-\d{6}-[A-Z0-9]+", re.IGNORECASE)
+
+
+def is_sync_junk(name: str) -> bool:
+    """True nếu name là file/thư mục rác do Syncthing tạo ra (conflict copy, marker
+    folder, hoặc file tạm), cần loại khỏi mọi danh sách hiển thị/xử lý.
+    """
+    lname = name.lower()
+    if lname in (".stfolder", ".stversions", ".stignore"):
+        return True
+    if _SYNC_JUNK_RE.search(name):
+        return True
+    if lname.startswith("~syncthing~") or lname.endswith(".tmp"):
+        return True
+    return False
 # def generate_filename(folder: str, job: str, scan_type: str, ext="ply"):
 #     """
 #     scan_type: 'pre_scan' | 'post_scan' | 'compared'
@@ -150,7 +166,7 @@ def generate_filename(folder: str, job: str, scan_type: str, ext="ply", filepath
     # --- Tạo filename mới như bình thường ---
     os.makedirs(folder, exist_ok=True)
 
-    files = [f for f in os.listdir(folder) if f.endswith(f".{ext}")]
+    files = [f for f in os.listdir(folder) if f.endswith(f".{ext}") and not is_sync_junk(f)]
 
     # --- 1. Tìm scan_id hiện tại ---
     scan_ids = []
