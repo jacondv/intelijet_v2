@@ -85,3 +85,5 @@ Thumbs.db
 intelijet_v2_ws/src/config/.config/
 # Container logs saved by run_docker.sh before each restart, under
 # data/logs/ - already covered by **/data/ above, kept only as a pointer.
+# Overlapping-launch guard (flock) - see run_docker.sh
+.run_docker.lock
