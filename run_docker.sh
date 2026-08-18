@@ -9,18 +9,6 @@ set -e
 REPO_DIR="$(cd "$(dirname "$(readlink -f "$0")")" && pwd)"
 cd "$REPO_DIR"
 
-# Guard against overlapping runs - e.g. the user taps the desktop icon
-# again while a previous `down`/`up` is still in flight. Without this, two
-# concurrent `compose down`/`up` calls can race and leave the container in
-# a broken half-started state. Held for the whole script (fd 200), released
-# automatically on exit (any exit path, `set -e` included).
-LOCK_FILE="$REPO_DIR/.run_docker.lock"
-exec 200>"$LOCK_FILE"
-if ! flock -n 200; then
-    echo "Intelijet is already starting/restarting in another run - ignoring this launch."
-    exit 0
-fi
-
 if command -v docker-compose >/dev/null 2>&1 && ! docker compose version >/dev/null 2>&1; then
     COMPOSE_CMD="docker-compose"
 else
@@ -86,16 +74,11 @@ echo "Previous run's log saved to: $LOG_DIR/last_run.log"
 # never-arriving marker (timeout) just means no progress terminal, not a
 # failed launch - the app itself doesn't depend on any of this.
 if command -v x-terminal-emulator >/dev/null 2>&1; then
-    # 200>&- on both background jobs: without it they'd inherit the lock fd
-    # (opened at the top of this script) and keep holding it for as long as
-    # they run, blocking any relaunch of this script until the 120s timeout
-    # - the lock only needs to cover the down/up section above.
     x-terminal-emulator -T "Intelijet - đang khởi động..." \
-        -e bash -c "$COMPOSE_CMD logs -f" 200>&- &
+        -e bash -c "$COMPOSE_CMD logs -f" &
     LOGS_TERM_PID=$!
 
     (
-        exec 200>&-
         waited=0
         while [ ! -f "$READY_FILE" ] && [ "$waited" -lt 120 ] && kill -0 "$LOGS_TERM_PID" 2>/dev/null; do
             sleep 1
