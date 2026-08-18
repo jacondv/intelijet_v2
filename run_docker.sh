@@ -9,6 +9,18 @@ set -e
 REPO_DIR="$(cd "$(dirname "$(readlink -f "$0")")" && pwd)"
 cd "$REPO_DIR"
 
+# Guard against overlapping runs - e.g. the user taps the desktop icon
+# again while a previous `down`/`up` is still in flight. Without this, two
+# concurrent `compose down`/`up` calls can race and leave the container in
+# a broken half-started state. Held for the whole script (fd 200), released
+# automatically on exit (any exit path, `set -e` included).
+LOCK_FILE="$REPO_DIR/.run_docker.lock"
+exec 200>"$LOCK_FILE"
+if ! flock -n 200; then
+    echo "Intelijet is already starting/restarting in another run - ignoring this launch."
+    exit 0
+fi
+
 if command -v docker-compose >/dev/null 2>&1 && ! docker compose version >/dev/null 2>&1; then
     COMPOSE_CMD="docker-compose"
 else
@@ -53,7 +65,44 @@ if docker inspect intelijet >/dev/null 2>&1; then
 fi
 
 $COMPOSE_CMD down
+
+# Cleared before `up` so a leftover marker from the previous run can't be
+# mistaken for this run's readiness signal below - see app.py's
+# _mark_ui_ready(), which touches this file (over the repo bind mount)
+# right before the main window shows.
+READY_FILE="$REPO_DIR/data/.ui_ready"
+rm -f "$READY_FILE"
+
 $COMPOSE_CMD up -d
 
 echo "Intelijet container restarted. Live logs: $COMPOSE_CMD logs -f"
 echo "Previous run's log saved to: $LOG_DIR/last_run.log"
+
+# Startup (ROS master + all nodes coming up) can take a while with nothing
+# visible on screen - open a terminal tailing the container's logs so the
+# user sees it's progressing, then close that terminal automatically once
+# the UI's actually up (READY_FILE appears) instead of leaving it sitting
+# on top of the app. Best-effort: a missing terminal emulator or a
+# never-arriving marker (timeout) just means no progress terminal, not a
+# failed launch - the app itself doesn't depend on any of this.
+if command -v x-terminal-emulator >/dev/null 2>&1; then
+    # 200>&- on both background jobs: without it they'd inherit the lock fd
+    # (opened at the top of this script) and keep holding it for as long as
+    # they run, blocking any relaunch of this script until the 120s timeout
+    # - the lock only needs to cover the down/up section above.
+    x-terminal-emulator -T "Intelijet - đang khởi động..." \
+        -e bash -c "$COMPOSE_CMD logs -f" 200>&- &
+    LOGS_TERM_PID=$!
+
+    (
+        exec 200>&-
+        waited=0
+        while [ ! -f "$READY_FILE" ] && [ "$waited" -lt 120 ] && kill -0 "$LOGS_TERM_PID" 2>/dev/null; do
+            sleep 1
+            waited=$((waited + 1))
+        done
+        kill "$LOGS_TERM_PID" 2>/dev/null
+    ) &
+else
+    echo "WARNING: no x-terminal-emulator found - skipping the startup progress terminal." >&2
+fi

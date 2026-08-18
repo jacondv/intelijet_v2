@@ -134,12 +134,12 @@ class App(QMainWindow):
         
 
         # --- VTK Viewer ---
-        
+
         self.vtk_viewer = VTKViewer(self.ui.cloudFrame)
         self.ui.btnZoomCenter.released.connect(self.vtk_viewer.restore_initial_view)
 
         #TODO
-        
+
         # --- ROS Thread ---
         self.ros_thread = RosThread(self.cloud_received_signal,
                                     self.ui_send_cmd_signal,
@@ -278,6 +278,20 @@ class App(QMainWindow):
 
         # Load last prescan path to runtime param
         self._load_last_prescan()
+
+        self._mark_ui_ready()
+
+    def _mark_ui_ready(self):
+        """Touch a marker file the moment the main window is about to show.
+        run_docker.sh watches for this (via the host bind mount at
+        data/.ui_ready) to know when to close the startup terminal - see
+        run_docker.sh. Best-effort: startup must never fail because of this."""
+        try:
+            ready_file = os.path.join(BASE_DIR, DATA_DIR, ".ui_ready")
+            os.makedirs(os.path.dirname(ready_file), exist_ok=True)
+            Path(ready_file).touch()
+        except OSError as e:
+            rospy.logwarn(f"Could not write UI-ready marker: {e}")
 
     # Setting parameter
     def save_ui_state(self):
