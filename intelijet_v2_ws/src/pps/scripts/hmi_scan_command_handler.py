@@ -15,6 +15,7 @@ from pps.sick_scan_eRob_controller import SickScanErobController
 from shared.pps_command import PPSCommand
 # from shared.log_status import log_status
 from shared.msg import DeviceStatus
+from shared.notify import notify
 
 from shared.config_loader import CONFIG as cfg
 
@@ -28,10 +29,12 @@ def get_scanner_controller(status_callback=None, active_lidar=cfg.active_lidar):
         controller = SickScanErobController(status_callback=status_callback)
         return controller
 
-    raise ValueError(
+    message = (
         f"Unsupported active_lidar '{active_lidar}' in lidar.yaml "
         f"(expected: 'lms511')"
     )
+    notify(message=f"[ERROR] {message}", level="error")
+    raise ValueError(message)
 
 
 class ScanManagerNode:

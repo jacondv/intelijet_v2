@@ -5,11 +5,13 @@
 from pps.helper import crop_pointcloud_by_box
 # from pps.tunnel_processing import TunnelProcessing
 # from std_msgs.msg import Empty
+import traceback
 import rospy
 from sensor_msgs.msg import PointCloud2
 import open3d as o3d
 import ros_numpy
 from shared.config_loader import CONFIG as cfg
+from shared.notify import notify
 
 PRE_SCAN_RAW_TOPIC = "/pre_scan_0"
 POST_SCAN_RAW_TOPIC = "/post_scan_0"
@@ -66,23 +68,37 @@ class CloudProcessorNode:
 
     def callback_pres(self, msg):
         rospy.loginfo("Received /pre_scan_0")
-        processed = self.process_cloud(msg, rgb=[255,255,255])
+        try:
+            processed = self.process_cloud(msg, rgb=[255,255,255])
+        except Exception as e:
+            rospy.logerr(f"{type(e).__name__}: {e}\n{traceback.format_exc()}")
+            notify(message=f"[ERROR] Pre-scan cloud preprocessing failed: {e}", level="error")
+            return
         if isinstance(processed, PointCloud2):
             rospy.loginfo("processed is a PointCloud2 message and sent --> pre_scan_0")
         else:
             rospy.logerr("processed is NOT a PointCloud2 message.")
+            notify(message="[ERROR] Pre-scan cloud preprocessing returned invalid data", level="error")
+            return
 
         self.pub_pre.publish(processed)
 
 
     def callback_post(self, msg):
         rospy.loginfo("Received /post_scan_0")
-        processed = self.process_cloud(msg, rgb=[255,255,0])
+        try:
+            processed = self.process_cloud(msg, rgb=[255,255,0])
+        except Exception as e:
+            rospy.logerr(f"{type(e).__name__}: {e}\n{traceback.format_exc()}")
+            notify(message=f"[ERROR] Post-scan cloud preprocessing failed: {e}", level="error")
+            return
         if isinstance(processed, PointCloud2):
             rospy.loginfo("processed is a PointCloud2 message and sent --> post_scan_0")
         else:
             rospy.logerr("processed is NOT a PointCloud2 message.")
-            
+            notify(message="[ERROR] Post-scan cloud preprocessing returned invalid data", level="error")
+            return
+
         self.pub_post.publish(processed)
 
 def main():

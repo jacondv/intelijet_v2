@@ -152,6 +152,7 @@ class GenericScanController(ABC):
             #     publisher.publish(cloud)
         except Exception as e:
             rospy.logerr(f"Error during scan workflow: {e}")
+            notify(message=f"[ERROR] Scan failed: {e}", level="error")
         finally:
             # if self.status_callback:
             #     self.status_callback(DeviceStatus.IDLE)
@@ -185,7 +186,8 @@ class GenericScanController(ABC):
 
         except Exception as e:
             rospy.logerr(f"Error during housing move: {e}")
-        
+            notify(message=f"[ERROR] Housing move failed: {e}", level="error")
+
         finally:
             self.status_callback(DeviceStatus.IDLE) if self.status_callback else None
             self.housing.stop()
