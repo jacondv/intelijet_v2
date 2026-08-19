@@ -14,15 +14,15 @@ class Ui_frm_MainForm(object):
     def setupUi(self, frm_MainForm):
         frm_MainForm.setObjectName("frm_MainForm")
         frm_MainForm.setWindowModality(QtCore.Qt.WindowModal)
-        frm_MainForm.resize(1277, 822)
+        frm_MainForm.resize(1660, 1069)
         frm_MainForm.setStyleSheet("* {\n"
-"    font-size: 18pt;\n"
+"    font-size: 24pt;\n"
 "}\n"
 "QPushButton {\n"
 "    background-color: #5C87C9;     /* xanh sáng hơn */\n"
 "    color: white;\n"
 "    border: 0px solid #3c6382;\n"
-"    border-radius: 15px;\n"
+"    border-radius: 20px;\n"
 "    padding: 6px 10px;\n"
 "}\n"
 "\n"
@@ -109,10 +109,10 @@ class Ui_frm_MainForm(object):
 "\n"
 "/* --- Indicator (ô vuông) --- */\n"
 "QCheckBox::indicator {\n"
-"    width: 18px;\n"
-"    height: 18px;\n"
-"    border: 1px solid #B0C4DE; /* viền nhẹ như TextEdit */\n"
-"    border-radius: 4px;         /* bo góc nhẹ */\n"
+"    width: 40px;\n"
+"    height: 40px;\n"
+"    border: 2px solid #B0C4DE; /* viền nhẹ như TextEdit */\n"
+"    border-radius: 6px;         /* bo góc nhẹ */\n"
 "    background: #FFFFFF;        /* nền trắng */\n"
 "    margin: 0;\n"
 "}\n"
@@ -149,14 +149,14 @@ class Ui_frm_MainForm(object):
 "\n"
 "/* ==================== SCROLLBAR ==================== */\n"
 "QScrollBar:vertical {\n"
-"    width: 30px;\n"
+"    width: 40px;\n"
 "    background: #f0f0f0;\n"
 "    margin: 0;\n"
 "    border-radius: 0px;\n"
 "}\n"
 "QScrollBar::handle:vertical {\n"
 "    background: #b0b0b0;\n"
-"    min-height: 20px;\n"
+"    min-height: 27px;\n"
 "    border-radius: 0px;\n"
 "}\n"
 "QScrollBar::handle:vertical:hover {\n"
@@ -178,7 +178,7 @@ class Ui_frm_MainForm(object):
 "    background-color: #FFFFFF;      /* nền trắng */\n"
 "    color: #2F4F6E;                /* chữ xanh đậm */\n"
 "    border: 1px solid #B0C4DE;     /* viền nhẹ */\n"
-"    font-size: 24px;\n"
+"    font-size: 32px;\n"
 "    font-weight: bold;\n"
 "    padding: 2px;\n"
 "}\n"
@@ -198,7 +198,7 @@ class Ui_frm_MainForm(object):
 "QListWidget::item {\n"
 "    padding: 5px;             /* Khoảng đệm bên trong item */\n"
 "    border-bottom: 1px solid #eeeeee; /* Đường kẻ mờ phân chia các item */\n"
-"    min-height: 70px;\n"
+"    min-height: 94px;\n"
 "}\n"
 "\n"
 "\n"
@@ -225,7 +225,7 @@ class Ui_frm_MainForm(object):
         self.horizontalLayout_5.setObjectName("horizontalLayout_5")
         self.groupBox = QtWidgets.QGroupBox(self.widget_7)
         font = QtGui.QFont()
-        font.setPointSize(18)
+        font.setPointSize(24)
         font.setBold(True)
         font.setWeight(75)
         self.groupBox.setFont(font)
@@ -240,7 +240,7 @@ class Ui_frm_MainForm(object):
         self.horizontalLayout.setObjectName("horizontalLayout")
         self.lblProjectName = QtWidgets.QLabel(self.widget_2)
         font = QtGui.QFont()
-        font.setPointSize(18)
+        font.setPointSize(24)
         font.setBold(True)
         font.setWeight(75)
         self.lblProjectName.setFont(font)
@@ -252,19 +252,19 @@ class Ui_frm_MainForm(object):
         self.verticalLayout_5 = QtWidgets.QVBoxLayout(self.widget_3)
         self.verticalLayout_5.setObjectName("verticalLayout_5")
         self.widget_5 = QtWidgets.QWidget(self.widget_3)
-        self.widget_5.setMinimumSize(QtCore.QSize(0, 50))
-        self.widget_5.setMaximumSize(QtCore.QSize(16777215, 50))
+        self.widget_5.setMinimumSize(QtCore.QSize(0, 68))
+        self.widget_5.setMaximumSize(QtCore.QSize(16777215, 68))
         self.widget_5.setStyleSheet("background-color: rgb(255, 255, 255);\n"
 "border: 1px solid rgb(200, 200, 200);\n"
-"border-radius: 20px; ")
+"border-radius: 27px; ")
         self.widget_5.setObjectName("widget_5")
         self.horizontalLayout_3 = QtWidgets.QHBoxLayout(self.widget_5)
         self.horizontalLayout_3.setContentsMargins(6, 2, 6, 2)
         self.horizontalLayout_3.setSpacing(6)
         self.horizontalLayout_3.setObjectName("horizontalLayout_3")
         self.btnSearchProject = QtWidgets.QPushButton(self.widget_5)
-        self.btnSearchProject.setMinimumSize(QtCore.QSize(30, 30))
-        self.btnSearchProject.setMaximumSize(QtCore.QSize(30, 30))
+        self.btnSearchProject.setMinimumSize(QtCore.QSize(40, 40))
+        self.btnSearchProject.setMaximumSize(QtCore.QSize(40, 40))
         self.btnSearchProject.setStyleSheet(" border: none;\n"
 "")
         self.btnSearchProject.setText("")
@@ -275,7 +275,7 @@ class Ui_frm_MainForm(object):
         self.horizontalLayout_3.addWidget(self.btnSearchProject)
         self.txtSearchProject = QtWidgets.QLineEdit(self.widget_5)
         font = QtGui.QFont()
-        font.setPointSize(18)
+        font.setPointSize(24)
         font.setBold(True)
         font.setWeight(75)
         self.txtSearchProject.setFont(font)
@@ -290,8 +290,8 @@ class Ui_frm_MainForm(object):
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.menu1.sizePolicy().hasHeightForWidth())
         self.menu1.setSizePolicy(sizePolicy)
-        self.menu1.setMinimumSize(QtCore.QSize(0, 70))
-        self.menu1.setMaximumSize(QtCore.QSize(16777215, 70))
+        self.menu1.setMinimumSize(QtCore.QSize(0, 94))
+        self.menu1.setMaximumSize(QtCore.QSize(16777215, 94))
         self.menu1.setObjectName("menu1")
         self.horizontalLayout_2 = QtWidgets.QHBoxLayout(self.menu1)
         self.horizontalLayout_2.setContentsMargins(6, 0, 6, 0)
@@ -303,8 +303,8 @@ class Ui_frm_MainForm(object):
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.btnNewProject.sizePolicy().hasHeightForWidth())
         self.btnNewProject.setSizePolicy(sizePolicy)
-        self.btnNewProject.setMinimumSize(QtCore.QSize(60, 60))
-        self.btnNewProject.setMaximumSize(QtCore.QSize(70, 70))
+        self.btnNewProject.setMinimumSize(QtCore.QSize(81, 81))
+        self.btnNewProject.setMaximumSize(QtCore.QSize(94, 94))
         icon1 = QtGui.QIcon()
         icon1.addPixmap(QtGui.QPixmap(":/icon/icon/add-folder.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.btnNewProject.setIcon(icon1)
@@ -317,8 +317,8 @@ class Ui_frm_MainForm(object):
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.btnRenameProject.sizePolicy().hasHeightForWidth())
         self.btnRenameProject.setSizePolicy(sizePolicy)
-        self.btnRenameProject.setMinimumSize(QtCore.QSize(60, 60))
-        self.btnRenameProject.setMaximumSize(QtCore.QSize(70, 70))
+        self.btnRenameProject.setMinimumSize(QtCore.QSize(81, 81))
+        self.btnRenameProject.setMaximumSize(QtCore.QSize(94, 94))
         icon2 = QtGui.QIcon()
         icon2.addPixmap(QtGui.QPixmap(":/icon/icon/rename.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.btnRenameProject.setIcon(icon2)
@@ -331,8 +331,8 @@ class Ui_frm_MainForm(object):
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.btnDeleteProject.sizePolicy().hasHeightForWidth())
         self.btnDeleteProject.setSizePolicy(sizePolicy)
-        self.btnDeleteProject.setMinimumSize(QtCore.QSize(60, 60))
-        self.btnDeleteProject.setMaximumSize(QtCore.QSize(70, 70))
+        self.btnDeleteProject.setMinimumSize(QtCore.QSize(81, 81))
+        self.btnDeleteProject.setMaximumSize(QtCore.QSize(94, 94))
         icon3 = QtGui.QIcon()
         icon3.addPixmap(QtGui.QPixmap(":/icon/icon/delete.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.btnDeleteProject.setIcon(icon3)
@@ -349,7 +349,7 @@ class Ui_frm_MainForm(object):
         self.horizontalLayout_5.addWidget(self.groupBox)
         self.groupBox_2 = QtWidgets.QGroupBox(self.widget_7)
         font = QtGui.QFont()
-        font.setPointSize(18)
+        font.setPointSize(24)
         font.setBold(True)
         font.setWeight(75)
         self.groupBox_2.setFont(font)
@@ -364,7 +364,7 @@ class Ui_frm_MainForm(object):
         self.horizontalLayout_6.setObjectName("horizontalLayout_6")
         self.lblJobName = QtWidgets.QLabel(self.widget_12)
         font = QtGui.QFont()
-        font.setPointSize(18)
+        font.setPointSize(24)
         font.setBold(True)
         font.setWeight(75)
         self.lblJobName.setFont(font)
@@ -376,19 +376,19 @@ class Ui_frm_MainForm(object):
         self.verticalLayout_4 = QtWidgets.QVBoxLayout(self.widget_8)
         self.verticalLayout_4.setObjectName("verticalLayout_4")
         self.widget_6 = QtWidgets.QWidget(self.widget_8)
-        self.widget_6.setMinimumSize(QtCore.QSize(0, 50))
-        self.widget_6.setMaximumSize(QtCore.QSize(16777215, 50))
+        self.widget_6.setMinimumSize(QtCore.QSize(0, 68))
+        self.widget_6.setMaximumSize(QtCore.QSize(16777215, 68))
         self.widget_6.setStyleSheet("background-color: rgb(255, 255, 255);\n"
 "border: 1px solid rgb(200, 200, 200);\n"
-"border-radius: 20px; ")
+"border-radius: 27px; ")
         self.widget_6.setObjectName("widget_6")
         self.horizontalLayout_4 = QtWidgets.QHBoxLayout(self.widget_6)
         self.horizontalLayout_4.setContentsMargins(6, 2, 6, 2)
         self.horizontalLayout_4.setSpacing(6)
         self.horizontalLayout_4.setObjectName("horizontalLayout_4")
         self.btnSearchProject_2 = QtWidgets.QPushButton(self.widget_6)
-        self.btnSearchProject_2.setMinimumSize(QtCore.QSize(30, 30))
-        self.btnSearchProject_2.setMaximumSize(QtCore.QSize(30, 30))
+        self.btnSearchProject_2.setMinimumSize(QtCore.QSize(40, 40))
+        self.btnSearchProject_2.setMaximumSize(QtCore.QSize(40, 40))
         self.btnSearchProject_2.setStyleSheet(" border: none;\n"
 "")
         self.btnSearchProject_2.setText("")
@@ -397,7 +397,7 @@ class Ui_frm_MainForm(object):
         self.horizontalLayout_4.addWidget(self.btnSearchProject_2)
         self.txtSearchJob = QtWidgets.QLineEdit(self.widget_6)
         font = QtGui.QFont()
-        font.setPointSize(18)
+        font.setPointSize(24)
         font.setBold(True)
         font.setWeight(75)
         self.txtSearchJob.setFont(font)
@@ -412,8 +412,8 @@ class Ui_frm_MainForm(object):
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.menu2.sizePolicy().hasHeightForWidth())
         self.menu2.setSizePolicy(sizePolicy)
-        self.menu2.setMinimumSize(QtCore.QSize(0, 70))
-        self.menu2.setMaximumSize(QtCore.QSize(16777215, 70))
+        self.menu2.setMinimumSize(QtCore.QSize(0, 94))
+        self.menu2.setMaximumSize(QtCore.QSize(16777215, 94))
         self.menu2.setObjectName("menu2")
         self.horizontalLayout_9 = QtWidgets.QHBoxLayout(self.menu2)
         self.horizontalLayout_9.setContentsMargins(-1, 0, -1, 0)
@@ -425,8 +425,8 @@ class Ui_frm_MainForm(object):
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.btnNewJob.sizePolicy().hasHeightForWidth())
         self.btnNewJob.setSizePolicy(sizePolicy)
-        self.btnNewJob.setMinimumSize(QtCore.QSize(60, 60))
-        self.btnNewJob.setMaximumSize(QtCore.QSize(70, 70))
+        self.btnNewJob.setMinimumSize(QtCore.QSize(81, 81))
+        self.btnNewJob.setMaximumSize(QtCore.QSize(94, 94))
         icon4 = QtGui.QIcon()
         icon4.addPixmap(QtGui.QPixmap(":/icon/icon/add-file.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.btnNewJob.setIcon(icon4)
@@ -439,8 +439,8 @@ class Ui_frm_MainForm(object):
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.btnEditJob.sizePolicy().hasHeightForWidth())
         self.btnEditJob.setSizePolicy(sizePolicy)
-        self.btnEditJob.setMinimumSize(QtCore.QSize(60, 60))
-        self.btnEditJob.setMaximumSize(QtCore.QSize(70, 70))
+        self.btnEditJob.setMinimumSize(QtCore.QSize(81, 81))
+        self.btnEditJob.setMaximumSize(QtCore.QSize(94, 94))
         icon5 = QtGui.QIcon()
         icon5.addPixmap(QtGui.QPixmap(":/icon/icon/note.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.btnEditJob.setIcon(icon5)
@@ -453,8 +453,8 @@ class Ui_frm_MainForm(object):
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.btnDeleteJob.sizePolicy().hasHeightForWidth())
         self.btnDeleteJob.setSizePolicy(sizePolicy)
-        self.btnDeleteJob.setMinimumSize(QtCore.QSize(60, 60))
-        self.btnDeleteJob.setMaximumSize(QtCore.QSize(70, 70))
+        self.btnDeleteJob.setMinimumSize(QtCore.QSize(81, 81))
+        self.btnDeleteJob.setMaximumSize(QtCore.QSize(94, 94))
         self.btnDeleteJob.setIcon(icon3)
         self.btnDeleteJob.setIconSize(QtCore.QSize(50, 50))
         self.btnDeleteJob.setObjectName("btnDeleteJob")
@@ -464,10 +464,10 @@ class Ui_frm_MainForm(object):
         self.verticalLayout_4.addWidget(self.menu2)
         self.verticalLayout_2.addWidget(self.widget_8)
         self.lstJobInfo = QtWidgets.QListWidget(self.groupBox_2)
-        self.lstJobInfo.setMaximumSize(QtCore.QSize(16777215, 250))
+        self.lstJobInfo.setMaximumSize(QtCore.QSize(16777215, 338))
         self.lstJobInfo.setStyleSheet("/* Item trong list */\n"
 "QListWidget::item {\n"
-"    min-height: 30px;                  /* tăng chiều cao item */\n"
+"    min-height: 40px;                  /* tăng chiều cao item */\n"
 "  border-bottom: none; /* Đường kẻ mờ phân chia các item */\n"
 "}\n"
 "/* Toàn bộ list widget */\n"
@@ -475,7 +475,7 @@ class Ui_frm_MainForm(object):
 "    background-color: #FFFFFF;      /* nền trắng */\n"
 "    color: #2F4F6E;                /* chữ xanh đậm */\n"
 "    border: 1px solid #B0C4DE;     /* viền nhẹ */\n"
-"    font-size: 18px;\n"
+"    font-size: 24px;\n"
 "    font-weight: bold;\n"
 "    padding: 2px;\n"
 "}")
@@ -499,7 +499,7 @@ class Ui_frm_MainForm(object):
         self.horizontalLayout_5.addWidget(self.groupBox_2)
         self.groupBox_3 = QtWidgets.QGroupBox(self.widget_7)
         font = QtGui.QFont()
-        font.setPointSize(18)
+        font.setPointSize(24)
         font.setBold(True)
         font.setWeight(75)
         self.groupBox_3.setFont(font)
@@ -518,8 +518,8 @@ class Ui_frm_MainForm(object):
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.widget_18.sizePolicy().hasHeightForWidth())
         self.widget_18.setSizePolicy(sizePolicy)
-        self.widget_18.setMinimumSize(QtCore.QSize(0, 70))
-        self.widget_18.setMaximumSize(QtCore.QSize(16777215, 70))
+        self.widget_18.setMinimumSize(QtCore.QSize(0, 94))
+        self.widget_18.setMaximumSize(QtCore.QSize(16777215, 94))
         self.widget_18.setObjectName("widget_18")
         self.horizontalLayout_10 = QtWidgets.QHBoxLayout(self.widget_18)
         self.horizontalLayout_10.setContentsMargins(-1, 0, -1, 0)
@@ -531,8 +531,8 @@ class Ui_frm_MainForm(object):
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.btnAsc.sizePolicy().hasHeightForWidth())
         self.btnAsc.setSizePolicy(sizePolicy)
-        self.btnAsc.setMinimumSize(QtCore.QSize(60, 60))
-        self.btnAsc.setMaximumSize(QtCore.QSize(70, 70))
+        self.btnAsc.setMinimumSize(QtCore.QSize(81, 81))
+        self.btnAsc.setMaximumSize(QtCore.QSize(94, 94))
         icon6 = QtGui.QIcon()
         icon6.addPixmap(QtGui.QPixmap(":/icon/icon/sort-asc-1.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.btnAsc.setIcon(icon6)
@@ -545,8 +545,8 @@ class Ui_frm_MainForm(object):
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.btnDesc.sizePolicy().hasHeightForWidth())
         self.btnDesc.setSizePolicy(sizePolicy)
-        self.btnDesc.setMinimumSize(QtCore.QSize(60, 60))
-        self.btnDesc.setMaximumSize(QtCore.QSize(70, 70))
+        self.btnDesc.setMinimumSize(QtCore.QSize(81, 81))
+        self.btnDesc.setMaximumSize(QtCore.QSize(94, 94))
         icon7 = QtGui.QIcon()
         icon7.addPixmap(QtGui.QPixmap(":/icon/icon/sort-desc-1.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.btnDesc.setIcon(icon7)
@@ -559,8 +559,8 @@ class Ui_frm_MainForm(object):
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.btnOpenItem.sizePolicy().hasHeightForWidth())
         self.btnOpenItem.setSizePolicy(sizePolicy)
-        self.btnOpenItem.setMinimumSize(QtCore.QSize(60, 60))
-        self.btnOpenItem.setMaximumSize(QtCore.QSize(70, 70))
+        self.btnOpenItem.setMinimumSize(QtCore.QSize(81, 81))
+        self.btnOpenItem.setMaximumSize(QtCore.QSize(94, 94))
         icon8 = QtGui.QIcon()
         icon8.addPixmap(QtGui.QPixmap(":/icon/icon/view.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.btnOpenItem.setIcon(icon8)
@@ -573,8 +573,8 @@ class Ui_frm_MainForm(object):
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.btnDeleteItem.sizePolicy().hasHeightForWidth())
         self.btnDeleteItem.setSizePolicy(sizePolicy)
-        self.btnDeleteItem.setMinimumSize(QtCore.QSize(60, 60))
-        self.btnDeleteItem.setMaximumSize(QtCore.QSize(70, 70))
+        self.btnDeleteItem.setMinimumSize(QtCore.QSize(81, 81))
+        self.btnDeleteItem.setMaximumSize(QtCore.QSize(94, 94))
         self.btnDeleteItem.setIcon(icon3)
         self.btnDeleteItem.setIconSize(QtCore.QSize(50, 50))
         self.btnDeleteItem.setObjectName("btnDeleteItem")
@@ -588,8 +588,8 @@ class Ui_frm_MainForm(object):
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.widget_13.sizePolicy().hasHeightForWidth())
         self.widget_13.setSizePolicy(sizePolicy)
-        self.widget_13.setMinimumSize(QtCore.QSize(0, 40))
-        self.widget_13.setMaximumSize(QtCore.QSize(16777215, 40))
+        self.widget_13.setMinimumSize(QtCore.QSize(0, 54))
+        self.widget_13.setMaximumSize(QtCore.QSize(16777215, 54))
         self.widget_13.setObjectName("widget_13")
         self.horizontalLayout_11 = QtWidgets.QHBoxLayout(self.widget_13)
         self.horizontalLayout_11.setContentsMargins(-1, 0, -1, 0)
@@ -600,20 +600,20 @@ class Ui_frm_MainForm(object):
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.chkShowPreScan.sizePolicy().hasHeightForWidth())
         self.chkShowPreScan.setSizePolicy(sizePolicy)
-        self.chkShowPreScan.setMinimumSize(QtCore.QSize(0, 40))
-        self.chkShowPreScan.setMaximumSize(QtCore.QSize(16777215, 40))
+        self.chkShowPreScan.setMinimumSize(QtCore.QSize(0, 54))
+        self.chkShowPreScan.setMaximumSize(QtCore.QSize(16777215, 54))
         self.chkShowPreScan.setChecked(True)
         self.chkShowPreScan.setObjectName("chkShowPreScan")
         self.horizontalLayout_11.addWidget(self.chkShowPreScan)
         self.chkShowPostScan = QtWidgets.QCheckBox(self.widget_13)
-        self.chkShowPostScan.setMinimumSize(QtCore.QSize(0, 40))
-        self.chkShowPostScan.setMaximumSize(QtCore.QSize(16777215, 40))
+        self.chkShowPostScan.setMinimumSize(QtCore.QSize(0, 54))
+        self.chkShowPostScan.setMaximumSize(QtCore.QSize(16777215, 54))
         self.chkShowPostScan.setChecked(True)
         self.chkShowPostScan.setObjectName("chkShowPostScan")
         self.horizontalLayout_11.addWidget(self.chkShowPostScan)
         self.chkShowCompared = QtWidgets.QCheckBox(self.widget_13)
-        self.chkShowCompared.setMinimumSize(QtCore.QSize(0, 40))
-        self.chkShowCompared.setMaximumSize(QtCore.QSize(16777215, 40))
+        self.chkShowCompared.setMinimumSize(QtCore.QSize(0, 54))
+        self.chkShowCompared.setMaximumSize(QtCore.QSize(16777215, 54))
         self.chkShowCompared.setObjectName("chkShowCompared")
         self.horizontalLayout_11.addWidget(self.chkShowCompared)
         spacerItem3 = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
@@ -629,8 +629,8 @@ class Ui_frm_MainForm(object):
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.widget.sizePolicy().hasHeightForWidth())
         self.widget.setSizePolicy(sizePolicy)
-        self.widget.setMinimumSize(QtCore.QSize(0, 70))
-        self.widget.setMaximumSize(QtCore.QSize(16777215, 70))
+        self.widget.setMinimumSize(QtCore.QSize(0, 94))
+        self.widget.setMaximumSize(QtCore.QSize(16777215, 94))
         self.widget.setObjectName("widget")
         self.horizontalLayout_7 = QtWidgets.QHBoxLayout(self.widget)
         self.horizontalLayout_7.setContentsMargins(-1, 0, -1, 0)
@@ -644,7 +644,7 @@ class Ui_frm_MainForm(object):
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.btnOk.sizePolicy().hasHeightForWidth())
         self.btnOk.setSizePolicy(sizePolicy)
-        self.btnOk.setMinimumSize(QtCore.QSize(200, 45))
+        self.btnOk.setMinimumSize(QtCore.QSize(270, 61))
         self.btnOk.setObjectName("btnOk")
         self.horizontalLayout_7.addWidget(self.btnOk)
         self.btnCancel = QtWidgets.QPushButton(self.widget)
@@ -653,7 +653,7 @@ class Ui_frm_MainForm(object):
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.btnCancel.sizePolicy().hasHeightForWidth())
         self.btnCancel.setSizePolicy(sizePolicy)
-        self.btnCancel.setMinimumSize(QtCore.QSize(200, 45))
+        self.btnCancel.setMinimumSize(QtCore.QSize(270, 61))
         self.btnCancel.setObjectName("btnCancel")
         self.horizontalLayout_7.addWidget(self.btnCancel)
         self.verticalLayout_3.addWidget(self.widget)

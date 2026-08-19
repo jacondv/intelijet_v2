@@ -12,7 +12,7 @@ import time
 import sys, subprocess
 import rospy
 
-from PyQt5.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QLabel, QWidget, QPushButton, QComboBox
+from PyQt5.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QLabel, QWidget, QPushButton, QComboBox, QSizePolicy
 from PyQt5.QtCore import pyqtSignal, QTimer, Qt
 from PyQt5.QtWidgets import QMessageBox, QDialog
 from PyQt5.QtCore import QSettings
@@ -93,6 +93,16 @@ class App(QMainWindow):
 
         self.ui.tab_mainview.setCurrentIndex(0)
         # self.ui.btnCompare.setVisible(False) # hide compare button in main view, only show compare button in compare dialog.
+
+        # QTabWidget sizes itself to fit the LARGEST page among all tabs,
+        # not just the visible one - tab_jobnumber/tab_setting/tab_system
+        # are each wider/taller than the default 3D-view tab, which was
+        # forcing the whole window to never fit on-screen at any host
+        # display scale that shrinks the available resolution. Ignoring
+        # the size hint of every non-current page makes tab_mainview size
+        # itself to whatever tab is actually showing.
+        self.ui.tab_mainview.currentChanged.connect(self._sync_tab_size_policies)
+        self._sync_tab_size_policies(self.ui.tab_mainview.currentIndex())
 
         # --- Tab Setting ---
         self.setting_page = SettingPageManager()
@@ -227,7 +237,10 @@ class App(QMainWindow):
         # full-screen mode. Cap it and elide instead; full text is still
         # available via the tooltip and via clicking through to
         # NotificationHistoryDialog (_open_notification_history below).
-        self.lblNotification.setMaximumWidth(600)
+        # Nothing else shares the status bar, so this can safely take most
+        # of the screen width instead of the old 600px (which elided/lost
+        # normal-length messages on this 2560px-wide screen).
+        self.lblNotification.setMaximumWidth(2000)
         self.ui.statusbar.addWidget(self.lblNotification)
 
         self.notification_center = NotificationCenter(parent=self)
@@ -422,13 +435,20 @@ class App(QMainWindow):
             self.notification_center.push("compare", "⚠️COMPARE DONE (report export failed) ", "warning")
 
 
+    def _sync_tab_size_policies(self, current_index):
+        for i in range(self.ui.tab_mainview.count()):
+            page = self.ui.tab_mainview.widget(i)
+            policy = QSizePolicy.Preferred if i == current_index else QSizePolicy.Ignored
+            page.setSizePolicy(policy, policy)
+        self.ui.tab_mainview.updateGeometry()
+
     def toggle_full_screen(self):
         if not self.isFullScreen():
             self.showFullScreen()
-            self.ui.btnFullScreen.setText("Exit Full Screen")   # đổi text khi full
+            self.ui.btnFullScreen.setToolTip("Exit Full Screen")
         else:
             self.showMaximized()
-            self.ui.btnFullScreen.setText("Full Screen")
+            self.ui.btnFullScreen.setToolTip("Full Screen")
 
     def on_login_clicked(self):
         
@@ -551,14 +571,8 @@ class App(QMainWindow):
        
 
     def on_compare_process(self, progress, stage):
-
-        def make_progress_bar(progress, width=20):
-            progress = max(0.0, min(1.0, progress))  # clamp
-            filled = int(progress * width)
-            bar = "=" * filled + " " * (width - filled)
-            return f"COMPARE [{bar}] {int(progress * 100):3d}%"
-
-        _string = make_progress_bar(progress)
+        progress = max(0.0, min(1.0, progress))  # clamp
+        _string = f"COMPARE {int(progress * 100)}%"
         print(_string)
         self.notification_center.push_transient(_string, "info")
 
@@ -618,7 +632,7 @@ class App(QMainWindow):
     # 8.--- Shutdown handler ---
     def on_shutdown(self):
         msg = QMessageBox()
-        msg.setWindowTitle("Confirmation")
+        msg.setWindowTitle("")
         msg.setText("Are you sure you want to quit?")
         self.save_ui_state()
         msg.setStandardButtons(QMessageBox.Yes | QMessageBox.No)

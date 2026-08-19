@@ -2,9 +2,30 @@
 echo ">>> Setup container ..."
 cd /root/intelijet_v2/intelijet_v2_ws || exit 1
 export DISABLE_ROS1_EOL_WARNINGS=1
+# This is a fixed kiosk touchscreen, not a general desktop app - it must
+# always fill whatever real screen it's given rather than growing/shrinking
+# its own widget geometry with the host's accessibility scale setting.
+# GNOME's Display scale slider on this hardware genuinely changes the RandR
+# screen size Qt fullscreens into (confirmed via `xrandr`: e.g. 1920x1200 at
+# one scale vs 2560x1600 at another - it's a real CRTC transform, not just a
+# DPI hint), and app.py's showFullScreen() already tracks that correctly on
+# its own now that the UI's fixed-pixel layout (see intelijet_ui.py) no
+# longer forces a minimum size bigger than the screen (fixed in app.py's
+# _sync_tab_size_policies). QT_AUTO_SCREEN_SCALE_FACTOR/QT_SCALE_FACTOR are
+# left off/1.0 here so Qt doesn't ALSO apply its own widget-geometry
+# multiplier on top of that already-real screen size (would double-scale).
 export QT_AUTO_SCREEN_SCALE_FACTOR=0
 export QT_SCREEN_SCALE_FACTORS=1.0
 export QT_SCALE_FACTOR=1.0
+# Independent of the above: Qt still converts the app's `pt`-based
+# stylesheet font sizes (see intelijet_ui.py's many `font-size: ...pt`
+# rules) to pixels using the host's font DPI (Xft.dpi), which GNOME also
+# raises with the scale slider (e.g. 96 -> 144 at 150%, -> 192 at 200%).
+# Left alone, that made text render up to 2x its designed pixel size and
+# overflow the UI's fixed-width buttons/panels/labels at higher host
+# scale. Pinning the font DPI to the standard 96 makes text render at a
+# consistent, designed-for size regardless of the host's scale setting.
+export QT_FONT_DPI=96
 
 if [ ! -f devel/setup.bash ]; then
     echo ">>> No devel/ yet, building workspace (first run only)..."
