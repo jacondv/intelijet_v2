@@ -21,4 +21,23 @@ source devel/setup.bash
 # methods instead of killing/relaunching the process (see comment there),
 # and for the one-time `gsettings` calls that dock it to the bottom edge.
 # Without a bus, both silently no-op and onboard never appears.
-dbus-run-session -- bash -c "roslaunch pps pps.launch; exec bash"
+#
+# `docker compose down`/`docker stop` sends SIGTERM to this script (PID 1
+# in the container), then SIGKILLs everything left after its ~10s grace
+# period - too abrupt for onboard/qpdfview to save anything not already
+# flushed to their mounted config dirs (see docker-compose.yml). Plain bash
+# doesn't forward signals to child processes on its own, so without the
+# trap below they'd always hit that SIGKILL mid-write. Backgrounding the
+# session + `wait` (instead of running it as a plain foreground command)
+# is what lets the trap fire right away instead of only after the session
+# exits.
+_shutdown() {
+    pkill -TERM -x qpdfview 2>/dev/null
+    pkill -TERM -x onboard 2>/dev/null
+    sleep 1
+    exit 0
+}
+trap _shutdown TERM INT
+
+dbus-run-session -- bash -c "roslaunch pps pps.launch; exec bash" &
+wait "$!"
