@@ -10,6 +10,7 @@ from pps.msg import CompareCloudAction, CompareCloudResult, CompareCloudFeedback
 
 from pps.data_converter import cloudconverter
 from shared.config_loader import CONFIG as cfg
+from shared.notify import notify
 from pps.cloud_processing.compare_pipeline import CloudComparePipeline
 
 from pps.tunnel_processing import TunnelProcessing
@@ -130,6 +131,7 @@ class CompareCloudServer:
             # Full traceback makes every future failure here actually
             # diagnosable from the log instead of a bare message.
             rospy.logerr(f"{type(e).__name__}: {e}\n{traceback.format_exc()}")
+            notify(message=f"[ERROR] Compare failed: {type(e).__name__}: {e}", level="error")
             self.server.set_aborted(CompareCloudResult(), f"{type(e).__name__}: {e}")
 
 

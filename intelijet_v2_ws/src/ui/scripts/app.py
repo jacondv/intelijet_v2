@@ -36,6 +36,7 @@ from ui.keyboard import TouchKeyboard
 
 from ui.notification_center import NotificationCenter, LEVEL_COLORS
 from ui.notification_history_dialog import NotificationHistoryDialog
+from ui.diagnostics_tab import DiagnosticsTab
 
 from ui.services.job_store import JobStore
 from ui.services.cloud_pipeline import CloudPipelineService
@@ -68,6 +69,10 @@ CURRENT_JOB_FILE = os.path.join(PROJECT_DIR, CURRENT_JOB_FILE_NAME)
 
 THICKNESS_DEFAULT = cfg.thickness.target  # Target thickness in meter -> convert mm to m
 TOLERANCE_DEFAULT = cfg.thickness.tolerance  # Allowable tolerance in meter of thickness
+
+# NotificationCenter history cap - shared by lblNotification, NotificationHistoryDialog,
+# and the DIAGNOSTICS tab (DiagnosticsTab), so all three read from the same store.
+DIAGNOSTICS_HISTORY_CAP = 500
 
 settings = QSettings("JaconEquipment", "Intelijet")
 
@@ -243,12 +248,16 @@ class App(QMainWindow):
         self.lblNotification.setMaximumWidth(2000)
         self.ui.statusbar.addWidget(self.lblNotification)
 
-        self.notification_center = NotificationCenter(parent=self)
+        self.notification_center = NotificationCenter(max_history=DIAGNOSTICS_HISTORY_CAP, parent=self)
         self.notification_center.label_changed.connect(self._on_notification_label_changed)
         self.notification_received.connect(
             lambda source, message, level: self.notification_center.push(source, message, level)
         )
         self.lblNotification.mousePressEvent = self._open_notification_history
+
+        # --- Tab Diagnostics (HMI-style alarm log, read-only) ---
+        self.diagnostics_tab = DiagnosticsTab(self.notification_center, parent=self.ui.tab_mainview)
+        self.ui.tab_mainview.addTab(self.diagnostics_tab, "DIAGNOSTICS")
 
         # --- Scan pipeline worker (runs convert/color/VTK/save/report off the GUI thread) ---
         self.scan_worker = ScanPipelineWorker(
