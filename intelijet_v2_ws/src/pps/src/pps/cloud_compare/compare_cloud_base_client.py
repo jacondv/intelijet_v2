@@ -95,9 +95,11 @@ class CompareBaseClient:
             self._timeout_timer.shutdown()
 
         state_str = actionlib.GoalStatus.to_string(state)
-        rospy.loginfo("COMPARE DONE [%s] success=%s", state_str, result.success)   
-        msg = "[INFO] COMPARE DONE [%s] success=%s" % (state_str, result.success)
-        notify(msg)
+        rospy.loginfo("COMPARE DONE [%s] success=%s", state_str, result.success)
+        level = "info" if result.success else "error"
+        prefix = "[INFO]" if result.success else "[ERROR]"
+        msg = f"{prefix} COMPARE DONE [{state_str}] success={result.success}"
+        notify(msg, level=level)
 
     def _check_timeout(self, event):
         if self._start_time is None:
@@ -118,8 +120,8 @@ class CompareBaseClient:
 
         if elapsed > self.timeout:
             rospy.logerr("COMPARE TIMEOUT after %.1f seconds", elapsed)
-            msg = f"[INFO] COMPARE TIMEOUT after {elapsed} seconds"
-            notify(msg)
+            msg = f"[ERROR] COMPARE TIMEOUT after {elapsed:.1f} seconds"
+            notify(msg, level="error")
             self._timeout_timer.shutdown()
             self.client.cancel_goal()  
 

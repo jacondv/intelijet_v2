@@ -56,7 +56,19 @@ class Sick2DAssembleStrategy(ScanStrategy):
         point_cloud = assemble_cloud_client(start_time=start_time, end_time=end_time)
         rospy.sleep(2)
 
-        if point_cloud and publisher:
+        assemble_failed = point_cloud is None
+        if assemble_failed:
+            notify(
+                message="[ERROR] Failed to assemble point cloud (assemble_scans2 "
+                        "service call failed or returned no data)",
+                level="error",
+            )
+            if controller.status_callback:
+                if topic_name == cfg.PRE_SCAN_TOPIC:
+                    controller.status_callback(DeviceStatus.PRESCAN_ERROR)
+                else:
+                    controller.status_callback(DeviceStatus.POSTSCAN_ERROR)
+        elif publisher:
             publisher.publish(point_cloud)
             point_cloud = None
             notify(message="[INFO] Scan completed")
@@ -71,7 +83,10 @@ class Sick2DAssembleStrategy(ScanStrategy):
 
             return point_cloud  # vẫn trả về cloud nếu có
 
-        if controller.status_callback:
+        # Don't let a successful housing close overwrite the *_ERROR status
+        # just set above when assemble failed - otherwise the error
+        # disappears from the UI as soon as the housing finishes closing.
+        if controller.status_callback and not assemble_failed:
             controller.status_callback(DeviceStatus.IDLE)
 
         return point_cloud
