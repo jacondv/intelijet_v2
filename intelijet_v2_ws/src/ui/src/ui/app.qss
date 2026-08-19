@@ -1,13 +1,13 @@
 QMessageBox {
-    font-size: 24px;
+    font-size: 32px;
     min-width: 500px;
 }
 QMessageBox QLabel {
-    font-size: 24px;
+    font-size: 32px;
     min-height: 40px;
 }
 QMessageBox QPushButton {
-    font-size: 20px;
+    font-size: 27px;
     padding: 10px 20px;
     min-height: 45px;
     min-width: 120px;

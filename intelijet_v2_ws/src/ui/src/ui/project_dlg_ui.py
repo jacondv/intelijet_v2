@@ -15,13 +15,13 @@ class Ui_frm_ProjectPage(object):
         frm_ProjectPage.setObjectName("frm_ProjectPage")
         frm_ProjectPage.resize(1133, 748)
         frm_ProjectPage.setStyleSheet("* {\n"
-"font-size:18pt;\n"
+"font-size: 24pt;\n"
 "}\n"
 "QPushButton {\n"
 "    background-color: #5C87C9;     /* xanh sáng hơn */\n"
 "    color: white;\n"
 "    border: 0px solid #3c6382;\n"
-"    border-radius: 15px;\n"
+"    border-radius: 20px;\n"
 "    padding: 6px 10px;\n"
 "}\n"
 "\n"
@@ -109,10 +109,10 @@ class Ui_frm_ProjectPage(object):
 "\n"
 "/* --- Indicator (ô vuông) --- */\n"
 "QCheckBox::indicator {\n"
-"    width: 18px;\n"
-"    height: 18px;\n"
+"    width: 24px;\n"
+"    height: 24px;\n"
 "    border: 1px solid #B0C4DE; /* viền nhẹ như TextEdit */\n"
-"    border-radius: 4px;         /* bo góc nhẹ */\n"
+"    border-radius: 5px;         /* bo góc nhẹ */\n"
 "    background: #FFFFFF;        /* nền trắng */\n"
 "    margin: 0;\n"
 "    transition: all 0.2s;\n"
@@ -149,20 +149,20 @@ class Ui_frm_ProjectPage(object):
 "QListWidget::item {\n"
 "    padding: 5px;             /* Khoảng đệm bên trong item */\n"
 "    border-bottom: 1px solid #eeeeee; /* Đường kẻ mờ phân chia các item */\n"
-"    min-height: 60px;\n"
+"    min-height: 81px;\n"
 "}\n"
 "\n"
 "\n"
 "/* ==================== SCROLLBAR ==================== */\n"
 "QScrollBar:vertical {\n"
-"    width: 30px;\n"
+"    width: 40px;\n"
 "    background: #f0f0f0;\n"
 "    margin: 0;\n"
 "    border-radius: 0px;\n"
 "}\n"
 "QScrollBar::handle:vertical {\n"
 "    background: #b0b0b0;\n"
-"    min-height: 20px;\n"
+"    min-height: 27px;\n"
 "    border-radius: 0px;\n"
 "}\n"
 "QScrollBar::handle:vertical:hover {\n"
@@ -184,7 +184,7 @@ class Ui_frm_ProjectPage(object):
 "    background-color: #FFFFFF;      /* nền trắng */\n"
 "    color: #2F4F6E;                /* chữ xanh đậm */\n"
 "    border: 1px solid #B0C4DE;     /* viền nhẹ */\n"
-"    font-size: 24px;\n"
+"    font-size: 32px;\n"
 "    font-weight: bold;\n"
 "    padding: 2px;\n"
 "}\n"
@@ -204,7 +204,7 @@ class Ui_frm_ProjectPage(object):
 "QListWidget::item {\n"
 "    padding: 5px;             /* Khoảng đệm bên trong item */\n"
 "    border-bottom: 1px solid #eeeeee; /* Đường kẻ mờ phân chia các item */\n"
-"    min-height: 70px;\n"
+"    min-height: 94px;\n"
 "}\n"
 "\n"
 "\n"
@@ -231,7 +231,7 @@ class Ui_frm_ProjectPage(object):
         self.horizontalLayout_5.setObjectName("horizontalLayout_5")
         self.groupBox = QtWidgets.QGroupBox(self.widget_7)
         font = QtGui.QFont()
-        font.setPointSize(18)
+        font.setPointSize(24)
         font.setBold(True)
         font.setWeight(75)
         self.groupBox.setFont(font)
@@ -246,7 +246,7 @@ class Ui_frm_ProjectPage(object):
         self.horizontalLayout.setObjectName("horizontalLayout")
         self.lblProjectName = QtWidgets.QLabel(self.widget_2)
         font = QtGui.QFont()
-        font.setPointSize(18)
+        font.setPointSize(24)
         font.setBold(True)
         font.setWeight(75)
         self.lblProjectName.setFont(font)
@@ -261,15 +261,15 @@ class Ui_frm_ProjectPage(object):
         self.widget_5 = QtWidgets.QWidget(self.widget_3)
         self.widget_5.setStyleSheet("background-color: rgb(255, 255, 255);\n"
 "border: 1px solid rgb(200, 200, 200);\n"
-"border-radius: 20px; ")
+"border-radius: 27px; ")
         self.widget_5.setObjectName("widget_5")
         self.horizontalLayout_3 = QtWidgets.QHBoxLayout(self.widget_5)
         self.horizontalLayout_3.setContentsMargins(6, 2, 6, 2)
         self.horizontalLayout_3.setSpacing(6)
         self.horizontalLayout_3.setObjectName("horizontalLayout_3")
         self.btnSearchProject = QtWidgets.QPushButton(self.widget_5)
-        self.btnSearchProject.setMinimumSize(QtCore.QSize(30, 30))
-        self.btnSearchProject.setMaximumSize(QtCore.QSize(30, 30))
+        self.btnSearchProject.setMinimumSize(QtCore.QSize(40, 40))
+        self.btnSearchProject.setMaximumSize(QtCore.QSize(40, 40))
         self.btnSearchProject.setStyleSheet(" border: none;\n"
 "")
         self.btnSearchProject.setText("")
@@ -279,9 +279,9 @@ class Ui_frm_ProjectPage(object):
         self.btnSearchProject.setObjectName("btnSearchProject")
         self.horizontalLayout_3.addWidget(self.btnSearchProject)
         self.txtSearchProject = QtWidgets.QLineEdit(self.widget_5)
-        self.txtSearchProject.setMinimumSize(QtCore.QSize(150, 40))
+        self.txtSearchProject.setMinimumSize(QtCore.QSize(202, 54))
         font = QtGui.QFont()
-        font.setPointSize(18)
+        font.setPointSize(24)
         font.setBold(True)
         font.setWeight(75)
         self.txtSearchProject.setFont(font)
@@ -297,8 +297,8 @@ class Ui_frm_ProjectPage(object):
         self.horizontalLayout_2.setSpacing(12)
         self.horizontalLayout_2.setObjectName("horizontalLayout_2")
         self.btnNewProject = QtWidgets.QPushButton(self.widget_4)
-        self.btnNewProject.setMinimumSize(QtCore.QSize(60, 60))
-        self.btnNewProject.setMaximumSize(QtCore.QSize(60, 60))
+        self.btnNewProject.setMinimumSize(QtCore.QSize(81, 81))
+        self.btnNewProject.setMaximumSize(QtCore.QSize(81, 81))
         icon1 = QtGui.QIcon()
         icon1.addPixmap(QtGui.QPixmap(":/icon/icon/add-folder.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.btnNewProject.setIcon(icon1)
@@ -306,8 +306,8 @@ class Ui_frm_ProjectPage(object):
         self.btnNewProject.setObjectName("btnNewProject")
         self.horizontalLayout_2.addWidget(self.btnNewProject)
         self.btnRenameProject = QtWidgets.QPushButton(self.widget_4)
-        self.btnRenameProject.setMinimumSize(QtCore.QSize(60, 60))
-        self.btnRenameProject.setMaximumSize(QtCore.QSize(60, 60))
+        self.btnRenameProject.setMinimumSize(QtCore.QSize(81, 81))
+        self.btnRenameProject.setMaximumSize(QtCore.QSize(81, 81))
         icon2 = QtGui.QIcon()
         icon2.addPixmap(QtGui.QPixmap(":/icon/icon/rename.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.btnRenameProject.setIcon(icon2)
@@ -315,8 +315,8 @@ class Ui_frm_ProjectPage(object):
         self.btnRenameProject.setObjectName("btnRenameProject")
         self.horizontalLayout_2.addWidget(self.btnRenameProject)
         self.btnDeleteProject = QtWidgets.QPushButton(self.widget_4)
-        self.btnDeleteProject.setMinimumSize(QtCore.QSize(60, 60))
-        self.btnDeleteProject.setMaximumSize(QtCore.QSize(60, 60))
+        self.btnDeleteProject.setMinimumSize(QtCore.QSize(81, 81))
+        self.btnDeleteProject.setMaximumSize(QtCore.QSize(81, 81))
         icon3 = QtGui.QIcon()
         icon3.addPixmap(QtGui.QPixmap(":/icon/icon/delete.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.btnDeleteProject.setIcon(icon3)
@@ -333,7 +333,7 @@ class Ui_frm_ProjectPage(object):
         self.horizontalLayout_5.addWidget(self.groupBox)
         self.groupBox_2 = QtWidgets.QGroupBox(self.widget_7)
         font = QtGui.QFont()
-        font.setPointSize(18)
+        font.setPointSize(24)
         font.setBold(True)
         font.setWeight(75)
         self.groupBox_2.setFont(font)
@@ -348,7 +348,7 @@ class Ui_frm_ProjectPage(object):
         self.horizontalLayout_6.setObjectName("horizontalLayout_6")
         self.lblJobName = QtWidgets.QLabel(self.widget_12)
         font = QtGui.QFont()
-        font.setPointSize(18)
+        font.setPointSize(24)
         font.setBold(True)
         font.setWeight(75)
         self.lblJobName.setFont(font)
@@ -369,15 +369,15 @@ class Ui_frm_ProjectPage(object):
         self.widget_6 = QtWidgets.QWidget(self.widget_8)
         self.widget_6.setStyleSheet("background-color: rgb(255, 255, 255);\n"
 "border: 1px solid rgb(200, 200, 200);\n"
-"border-radius: 20px; ")
+"border-radius: 27px; ")
         self.widget_6.setObjectName("widget_6")
         self.horizontalLayout_4 = QtWidgets.QHBoxLayout(self.widget_6)
         self.horizontalLayout_4.setContentsMargins(6, 2, 6, 2)
         self.horizontalLayout_4.setSpacing(6)
         self.horizontalLayout_4.setObjectName("horizontalLayout_4")
         self.btnSearchProject_2 = QtWidgets.QPushButton(self.widget_6)
-        self.btnSearchProject_2.setMinimumSize(QtCore.QSize(30, 30))
-        self.btnSearchProject_2.setMaximumSize(QtCore.QSize(30, 30))
+        self.btnSearchProject_2.setMinimumSize(QtCore.QSize(40, 40))
+        self.btnSearchProject_2.setMaximumSize(QtCore.QSize(40, 40))
         self.btnSearchProject_2.setStyleSheet(" border: none;\n"
 "")
         self.btnSearchProject_2.setText("")
@@ -385,7 +385,7 @@ class Ui_frm_ProjectPage(object):
         self.btnSearchProject_2.setObjectName("btnSearchProject_2")
         self.horizontalLayout_4.addWidget(self.btnSearchProject_2)
         self.txtSearchJob = QtWidgets.QLineEdit(self.widget_6)
-        self.txtSearchJob.setMinimumSize(QtCore.QSize(150, 40))
+        self.txtSearchJob.setMinimumSize(QtCore.QSize(202, 54))
         self.txtSearchJob.setStyleSheet("border: none;")
         self.txtSearchJob.setClearButtonEnabled(True)
         self.txtSearchJob.setObjectName("txtSearchJob")
@@ -398,8 +398,8 @@ class Ui_frm_ProjectPage(object):
         self.horizontalLayout_9.setSpacing(12)
         self.horizontalLayout_9.setObjectName("horizontalLayout_9")
         self.btnNewJob = QtWidgets.QPushButton(self.widget_10)
-        self.btnNewJob.setMinimumSize(QtCore.QSize(60, 60))
-        self.btnNewJob.setMaximumSize(QtCore.QSize(60, 60))
+        self.btnNewJob.setMinimumSize(QtCore.QSize(81, 81))
+        self.btnNewJob.setMaximumSize(QtCore.QSize(81, 81))
         icon4 = QtGui.QIcon()
         icon4.addPixmap(QtGui.QPixmap(":/icon/icon/add-file.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.btnNewJob.setIcon(icon4)
@@ -407,8 +407,8 @@ class Ui_frm_ProjectPage(object):
         self.btnNewJob.setObjectName("btnNewJob")
         self.horizontalLayout_9.addWidget(self.btnNewJob)
         self.btnEditJob = QtWidgets.QPushButton(self.widget_10)
-        self.btnEditJob.setMinimumSize(QtCore.QSize(60, 60))
-        self.btnEditJob.setMaximumSize(QtCore.QSize(60, 60))
+        self.btnEditJob.setMinimumSize(QtCore.QSize(81, 81))
+        self.btnEditJob.setMaximumSize(QtCore.QSize(81, 81))
         icon5 = QtGui.QIcon()
         icon5.addPixmap(QtGui.QPixmap(":/icon/icon/note.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.btnEditJob.setIcon(icon5)
@@ -416,8 +416,8 @@ class Ui_frm_ProjectPage(object):
         self.btnEditJob.setObjectName("btnEditJob")
         self.horizontalLayout_9.addWidget(self.btnEditJob)
         self.btnDeleteJob = QtWidgets.QPushButton(self.widget_10)
-        self.btnDeleteJob.setMinimumSize(QtCore.QSize(60, 60))
-        self.btnDeleteJob.setMaximumSize(QtCore.QSize(60, 60))
+        self.btnDeleteJob.setMinimumSize(QtCore.QSize(81, 81))
+        self.btnDeleteJob.setMaximumSize(QtCore.QSize(81, 81))
         self.btnDeleteJob.setIcon(icon3)
         self.btnDeleteJob.setIconSize(QtCore.QSize(32, 32))
         self.btnDeleteJob.setObjectName("btnDeleteJob")
@@ -428,8 +428,8 @@ class Ui_frm_ProjectPage(object):
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.cbbFilterJob.sizePolicy().hasHeightForWidth())
         self.cbbFilterJob.setSizePolicy(sizePolicy)
-        self.cbbFilterJob.setMinimumSize(QtCore.QSize(0, 40))
-        self.cbbFilterJob.setMaximumSize(QtCore.QSize(16777215, 40))
+        self.cbbFilterJob.setMinimumSize(QtCore.QSize(0, 54))
+        self.cbbFilterJob.setMaximumSize(QtCore.QSize(16777215, 54))
         self.cbbFilterJob.setObjectName("cbbFilterJob")
         self.cbbFilterJob.addItem("")
         self.cbbFilterJob.addItem("")
@@ -446,7 +446,7 @@ class Ui_frm_ProjectPage(object):
         self.horizontalLayout_5.addWidget(self.groupBox_2)
         self.groupBox_3 = QtWidgets.QGroupBox(self.widget_7)
         font = QtGui.QFont()
-        font.setPointSize(18)
+        font.setPointSize(24)
         font.setBold(True)
         font.setWeight(75)
         self.groupBox_3.setFont(font)
@@ -456,7 +456,7 @@ class Ui_frm_ProjectPage(object):
         self.verticalLayout_9.setSpacing(9)
         self.verticalLayout_9.setObjectName("verticalLayout_9")
         self.widget_11 = QtWidgets.QWidget(self.groupBox_3)
-        self.widget_11.setMaximumSize(QtCore.QSize(16777215, 320))
+        self.widget_11.setMaximumSize(QtCore.QSize(16777215, 432))
         self.widget_11.setObjectName("widget_11")
         self.verticalLayout_8 = QtWidgets.QVBoxLayout(self.widget_11)
         self.verticalLayout_8.setContentsMargins(0, 0, 0, 0)
@@ -464,7 +464,7 @@ class Ui_frm_ProjectPage(object):
         self.lstJobDetail = QtWidgets.QListWidget(self.widget_11)
         self.lstJobDetail.setStyleSheet("/* Item trong list */\n"
 "QListWidget::item {\n"
-"    min-height: 30px;                  /* tăng chiều cao item */\n"
+"    min-height: 40px;                  /* tăng chiều cao item */\n"
 "  border-bottom: none; /* Đường kẻ mờ phân chia các item */\n"
 "}\n"
 "/* Toàn bộ list widget */\n"
@@ -472,7 +472,7 @@ class Ui_frm_ProjectPage(object):
 "    background-color: #FFFFFF;      /* nền trắng */\n"
 "    color: #2F4F6E;                /* chữ xanh đậm */\n"
 "    border: 1px solid #B0C4DE;     /* viền nhẹ */\n"
-"    font-size: 18px;\n"
+"    font-size: 24px;\n"
 "    font-weight: bold;\n"
 "    padding: 2px;\n"
 "}")
@@ -495,7 +495,7 @@ class Ui_frm_ProjectPage(object):
         sizePolicy.setHeightForWidth(self.label_6.sizePolicy().hasHeightForWidth())
         self.label_6.setSizePolicy(sizePolicy)
         font = QtGui.QFont()
-        font.setPointSize(18)
+        font.setPointSize(24)
         font.setBold(True)
         font.setWeight(75)
         self.label_6.setFont(font)
@@ -514,9 +514,9 @@ class Ui_frm_ProjectPage(object):
         self.horizontalLayout_7.setSpacing(12)
         self.horizontalLayout_7.setObjectName("horizontalLayout_7")
         self.btnAdd = QtWidgets.QPushButton(self.widget_13)
-        self.btnAdd.setMinimumSize(QtCore.QSize(0, 60))
+        self.btnAdd.setMinimumSize(QtCore.QSize(0, 81))
         font = QtGui.QFont()
-        font.setPointSize(18)
+        font.setPointSize(24)
         self.btnAdd.setFont(font)
         icon6 = QtGui.QIcon()
         icon6.addPixmap(QtGui.QPixmap(":/icon/icon/check.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
@@ -524,9 +524,9 @@ class Ui_frm_ProjectPage(object):
         self.btnAdd.setObjectName("btnAdd")
         self.horizontalLayout_7.addWidget(self.btnAdd)
         self.btnRemove = QtWidgets.QPushButton(self.widget_13)
-        self.btnRemove.setMinimumSize(QtCore.QSize(0, 60))
+        self.btnRemove.setMinimumSize(QtCore.QSize(0, 81))
         font = QtGui.QFont()
-        font.setPointSize(18)
+        font.setPointSize(24)
         self.btnRemove.setFont(font)
         icon7 = QtGui.QIcon()
         icon7.addPixmap(QtGui.QPixmap(":/icon/icon/multiplication.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)

@@ -15,23 +15,30 @@ class Ui_frmFileItemDetail(object):
         frmFileItemDetail.setObjectName("frmFileItemDetail")
         frmFileItemDetail.resize(577, 98)
         frmFileItemDetail.setStyleSheet("#lblRow1 {\n"
-"    font-size: 13pt;\n"
+"    font-size: 18pt;\n"
 "}\n"
 "#lblRow2 {\n"
-"    font-size: 15pt;\n"
+"    font-size: 20pt;\n"
 "}\n"
 "#lblRow3 {\n"
-"    font-size: 12pt;\n"
+"    font-size: 16pt;\n"
 "}\n"
 "#chkChooseCloud::indicator {\n"
-"        width: 30px;\n"
-"        height: 30px;\n"
+"        width: 40px;\n"
+"        height: 40px;\n"
+"        border: 2px solid #B0C4DE;\n"
+"        border-radius: 6px;\n"
+"        background: #FFFFFF;\n"
+"    }\n"
+"#chkChooseCloud::indicator:checked {\n"
+"        border: 2px solid #2F4F6E;\n"
+"        background: #2F4F6E;\n"
 "    }")
         self.horizontalLayout_4 = QtWidgets.QHBoxLayout(frmFileItemDetail)
         self.horizontalLayout_4.setContentsMargins(0, 0, 0, 0)
         self.horizontalLayout_4.setObjectName("horizontalLayout_4")
         self.widget = QtWidgets.QWidget(frmFileItemDetail)
-        self.widget.setMinimumSize(QtCore.QSize(0, 80))
+        self.widget.setMinimumSize(QtCore.QSize(0, 108))
         self.widget.setObjectName("widget")
         self.horizontalLayout_3 = QtWidgets.QHBoxLayout(self.widget)
         self.horizontalLayout_3.setContentsMargins(9, 0, 50, 0)
@@ -51,7 +58,7 @@ class Ui_frmFileItemDetail(object):
         self.verticalLayout.addWidget(self.lblRow3)
         self.horizontalLayout_3.addWidget(self.widget_2)
         self.widget_4 = QtWidgets.QWidget(self.widget)
-        self.widget_4.setMaximumSize(QtCore.QSize(50, 16777215))
+        self.widget_4.setMaximumSize(QtCore.QSize(68, 16777215))
         self.widget_4.setObjectName("widget_4")
         self.horizontalLayout = QtWidgets.QHBoxLayout(self.widget_4)
         self.horizontalLayout.setObjectName("horizontalLayout")
@@ -61,13 +68,13 @@ class Ui_frmFileItemDetail(object):
         self.horizontalLayout.addWidget(self.chkChooseCloud)
         self.horizontalLayout_3.addWidget(self.widget_4)
         self.widget_3 = QtWidgets.QWidget(self.widget)
-        self.widget_3.setMaximumSize(QtCore.QSize(50, 16777215))
+        self.widget_3.setMaximumSize(QtCore.QSize(68, 16777215))
         self.widget_3.setObjectName("widget_3")
         self.horizontalLayout_2 = QtWidgets.QHBoxLayout(self.widget_3)
         self.horizontalLayout_2.setObjectName("horizontalLayout_2")
         self.btnOpen = QtWidgets.QPushButton(self.widget_3)
-        self.btnOpen.setMinimumSize(QtCore.QSize(40, 40))
-        self.btnOpen.setMaximumSize(QtCore.QSize(40, 40))
+        self.btnOpen.setMinimumSize(QtCore.QSize(54, 54))
+        self.btnOpen.setMaximumSize(QtCore.QSize(54, 54))
         icon = QtGui.QIcon()
         icon.addPixmap(QtGui.QPixmap(":/icon/icon/view.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.btnOpen.setIcon(icon)

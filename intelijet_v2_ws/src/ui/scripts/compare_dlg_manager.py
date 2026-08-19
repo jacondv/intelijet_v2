@@ -33,7 +33,7 @@ class JobInfoDialog(QDialog):
     """Dialog để nhập tất cả thông tin cho JobInfo"""
     def __init__(self, parent=None, default_name=""):
         super().__init__(parent)
-        self.setWindowTitle("New Job Info")
+        self.setWindowTitle("")
         self.resize(300, 200)
 
         # ===== Set font chung =====
@@ -84,8 +84,9 @@ class CompareManager(QDialog, Ui_frm_MainForm):
     def __init__(self):
         super().__init__()
         self.setupUi(self)
-        self.resize(1500, 1000)
-        self.setWindowTitle("Compare Cloud Manager")
+        self.setWindowFlags(self.windowFlags() | QtCore.Qt.FramelessWindowHint)
+        self.resize(2210, 1560)
+        self.setWindowTitle("")
         os.makedirs(PROJECT_DIR, exist_ok=True)
 
         # Biến dữ liệu

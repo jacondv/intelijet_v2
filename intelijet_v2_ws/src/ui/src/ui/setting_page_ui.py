@@ -15,15 +15,15 @@ class Ui_setting_page(object):
         setting_page.setObjectName("setting_page")
         setting_page.resize(982, 944)
         setting_page.setStyleSheet("* {\n"
-"    font-size: 24px;\n"
+"    font-size: 32px;\n"
 "}\n"
 "QPushButton {\n"
 "    background-color: #5C87C9;     /* xanh sáng hơn */\n"
 "    color: white;\n"
 "    border: 0px solid #3c6382;\n"
-"    border-radius: 15px;\n"
+"    border-radius: 20px;\n"
 "    padding: 6px 10px;\n"
-"    min-height: 50px;\n"
+"    min-height: 68px;\n"
 "}\n"
 "\n"
 "QPushButton:hover {\n"
@@ -110,10 +110,10 @@ class Ui_setting_page(object):
 "\n"
 "/* --- Indicator (ô vuông) --- */\n"
 "QCheckBox::indicator {\n"
-"    width: 18px;\n"
-"    height: 18px;\n"
+"    width: 24px;\n"
+"    height: 24px;\n"
 "    border: 1px solid #B0C4DE; /* viền nhẹ như TextEdit */\n"
-"    border-radius: 4px;         /* bo góc nhẹ */\n"
+"    border-radius: 5px;         /* bo góc nhẹ */\n"
 "    background: #FFFFFF;        /* nền trắng */\n"
 "    margin: 0;\n"
 "\n"
@@ -151,14 +151,14 @@ class Ui_setting_page(object):
 "\n"
 "/* ==================== SCROLLBAR ==================== */\n"
 "QScrollBar:vertical {\n"
-"    width: 30px;\n"
+"    width: 40px;\n"
 "    background: #f0f0f0;\n"
 "    margin: 0;\n"
 "    border-radius: 0px;\n"
 "}\n"
 "QScrollBar::handle:vertical {\n"
 "    background: #b0b0b0;\n"
-"    min-height: 20px;\n"
+"    min-height: 27px;\n"
 "    border-radius: 0px;\n"
 "}\n"
 "QScrollBar::handle:vertical:hover {\n"
@@ -202,11 +202,11 @@ class Ui_setting_page(object):
         self.horizontalLayout_9.setContentsMargins(0, 0, 0, 0)
         self.horizontalLayout_9.setObjectName("horizontalLayout_9")
         self.label_14 = QtWidgets.QLabel(self.widget_3)
-        self.label_14.setMinimumSize(QtCore.QSize(0, 60))
+        self.label_14.setMinimumSize(QtCore.QSize(0, 81))
         self.label_14.setObjectName("label_14")
         self.horizontalLayout_9.addWidget(self.label_14)
         self.txtHousingClosedPosition = QtWidgets.QLineEdit(self.widget_3)
-        self.txtHousingClosedPosition.setMinimumSize(QtCore.QSize(0, 60))
+        self.txtHousingClosedPosition.setMinimumSize(QtCore.QSize(0, 81))
         self.txtHousingClosedPosition.setObjectName("txtHousingClosedPosition")
         self.horizontalLayout_9.addWidget(self.txtHousingClosedPosition)
         self.verticalLayout_9.addWidget(self.widget_3)
@@ -216,12 +216,12 @@ class Ui_setting_page(object):
         self.horizontalLayout_12.setContentsMargins(0, 0, 0, 0)
         self.horizontalLayout_12.setObjectName("horizontalLayout_12")
         self.label_17 = QtWidgets.QLabel(self.widget_17)
-        self.label_17.setMinimumSize(QtCore.QSize(0, 60))
+        self.label_17.setMinimumSize(QtCore.QSize(0, 81))
         self.label_17.setObjectName("label_17")
         self.horizontalLayout_12.addWidget(self.label_17)
         self.txtEncodeValueRaw = QtWidgets.QLineEdit(self.widget_17)
         self.txtEncodeValueRaw.setEnabled(False)
-        self.txtEncodeValueRaw.setMinimumSize(QtCore.QSize(0, 60))
+        self.txtEncodeValueRaw.setMinimumSize(QtCore.QSize(0, 81))
         self.txtEncodeValueRaw.setObjectName("txtEncodeValueRaw")
         self.horizontalLayout_12.addWidget(self.txtEncodeValueRaw)
         self.verticalLayout_9.addWidget(self.widget_17)
@@ -231,8 +231,8 @@ class Ui_setting_page(object):
         self.horizontalLayout_10.setContentsMargins(-1, 0, -1, 0)
         self.horizontalLayout_10.setObjectName("horizontalLayout_10")
         self.btnSetClosedPosition = QtWidgets.QPushButton(self.widget_15)
-        self.btnSetClosedPosition.setMinimumSize(QtCore.QSize(0, 62))
-        self.btnSetClosedPosition.setMaximumSize(QtCore.QSize(150, 16777215))
+        self.btnSetClosedPosition.setMinimumSize(QtCore.QSize(0, 84))
+        self.btnSetClosedPosition.setMaximumSize(QtCore.QSize(202, 16777215))
         self.btnSetClosedPosition.setObjectName("btnSetClosedPosition")
         self.horizontalLayout_10.addWidget(self.btnSetClosedPosition)
         self.verticalLayout_9.addWidget(self.widget_15)
@@ -255,11 +255,11 @@ class Ui_setting_page(object):
         self.horizontalLayout_2.setContentsMargins(0, 0, 0, 0)
         self.horizontalLayout_2.setObjectName("horizontalLayout_2")
         self.label = QtWidgets.QLabel(self.widget_8)
-        self.label.setMinimumSize(QtCore.QSize(0, 60))
+        self.label.setMinimumSize(QtCore.QSize(0, 81))
         self.label.setObjectName("label")
         self.horizontalLayout_2.addWidget(self.label)
         self.txtTargetThickness = QtWidgets.QLineEdit(self.widget_8)
-        self.txtTargetThickness.setMinimumSize(QtCore.QSize(0, 60))
+        self.txtTargetThickness.setMinimumSize(QtCore.QSize(0, 81))
         self.txtTargetThickness.setInputMethodHints(QtCore.Qt.ImhSensitiveData)
         self.txtTargetThickness.setObjectName("txtTargetThickness")
         self.horizontalLayout_2.addWidget(self.txtTargetThickness)
@@ -270,11 +270,11 @@ class Ui_setting_page(object):
         self.horizontalLayout_3.setContentsMargins(0, 0, 0, 0)
         self.horizontalLayout_3.setObjectName("horizontalLayout_3")
         self.label_2 = QtWidgets.QLabel(self.widget_7)
-        self.label_2.setMinimumSize(QtCore.QSize(0, 60))
+        self.label_2.setMinimumSize(QtCore.QSize(0, 81))
         self.label_2.setObjectName("label_2")
         self.horizontalLayout_3.addWidget(self.label_2)
         self.txtThicknessTolerance = QtWidgets.QLineEdit(self.widget_7)
-        self.txtThicknessTolerance.setMinimumSize(QtCore.QSize(0, 60))
+        self.txtThicknessTolerance.setMinimumSize(QtCore.QSize(0, 81))
         self.txtThicknessTolerance.setObjectName("txtThicknessTolerance")
         self.horizontalLayout_3.addWidget(self.txtThicknessTolerance)
         self.verticalLayout_10.addWidget(self.widget_7)
@@ -308,15 +308,15 @@ class Ui_setting_page(object):
         self.label_4.setObjectName("label_4")
         self.verticalLayout_8.addWidget(self.label_4)
         self.label_11 = QtWidgets.QLabel(self.widget_2)
-        self.label_11.setMinimumSize(QtCore.QSize(0, 60))
+        self.label_11.setMinimumSize(QtCore.QSize(0, 81))
         self.label_11.setObjectName("label_11")
         self.verticalLayout_8.addWidget(self.label_11)
         self.label_10 = QtWidgets.QLabel(self.widget_2)
-        self.label_10.setMinimumSize(QtCore.QSize(0, 60))
+        self.label_10.setMinimumSize(QtCore.QSize(0, 81))
         self.label_10.setObjectName("label_10")
         self.verticalLayout_8.addWidget(self.label_10)
         self.label_9 = QtWidgets.QLabel(self.widget_2)
-        self.label_9.setMinimumSize(QtCore.QSize(0, 60))
+        self.label_9.setMinimumSize(QtCore.QSize(0, 81))
         self.label_9.setObjectName("label_9")
         self.verticalLayout_8.addWidget(self.label_9)
         self.horizontalLayout_5.addWidget(self.widget_2)
@@ -326,19 +326,19 @@ class Ui_setting_page(object):
         self.verticalLayout_4.setContentsMargins(-1, -1, 0, -1)
         self.verticalLayout_4.setObjectName("verticalLayout_4")
         self.label_7 = QtWidgets.QLabel(self.widget_11)
-        self.label_7.setMinimumSize(QtCore.QSize(0, 60))
+        self.label_7.setMinimumSize(QtCore.QSize(0, 81))
         self.label_7.setObjectName("label_7")
         self.verticalLayout_4.addWidget(self.label_7)
         self.txtHousingOpenSlow = QtWidgets.QLineEdit(self.widget_11)
-        self.txtHousingOpenSlow.setMinimumSize(QtCore.QSize(0, 60))
+        self.txtHousingOpenSlow.setMinimumSize(QtCore.QSize(0, 81))
         self.txtHousingOpenSlow.setObjectName("txtHousingOpenSlow")
         self.verticalLayout_4.addWidget(self.txtHousingOpenSlow)
         self.txtHousingOpenMedium = QtWidgets.QLineEdit(self.widget_11)
-        self.txtHousingOpenMedium.setMinimumSize(QtCore.QSize(0, 60))
+        self.txtHousingOpenMedium.setMinimumSize(QtCore.QSize(0, 81))
         self.txtHousingOpenMedium.setObjectName("txtHousingOpenMedium")
         self.verticalLayout_4.addWidget(self.txtHousingOpenMedium)
         self.txtHousingOpenFast = QtWidgets.QLineEdit(self.widget_11)
-        self.txtHousingOpenFast.setMinimumSize(QtCore.QSize(0, 60))
+        self.txtHousingOpenFast.setMinimumSize(QtCore.QSize(0, 81))
         self.txtHousingOpenFast.setObjectName("txtHousingOpenFast")
         self.verticalLayout_4.addWidget(self.txtHousingOpenFast)
         self.horizontalLayout_5.addWidget(self.widget_11)
@@ -348,19 +348,19 @@ class Ui_setting_page(object):
         self.verticalLayout_7.setContentsMargins(0, -1, -1, -1)
         self.verticalLayout_7.setObjectName("verticalLayout_7")
         self.label_8 = QtWidgets.QLabel(self.widget_12)
-        self.label_8.setMinimumSize(QtCore.QSize(0, 60))
+        self.label_8.setMinimumSize(QtCore.QSize(0, 81))
         self.label_8.setObjectName("label_8")
         self.verticalLayout_7.addWidget(self.label_8)
         self.txtHousingCloseSlow = QtWidgets.QLineEdit(self.widget_12)
-        self.txtHousingCloseSlow.setMinimumSize(QtCore.QSize(0, 60))
+        self.txtHousingCloseSlow.setMinimumSize(QtCore.QSize(0, 81))
         self.txtHousingCloseSlow.setObjectName("txtHousingCloseSlow")
         self.verticalLayout_7.addWidget(self.txtHousingCloseSlow)
         self.txtHousingCloseMedium = QtWidgets.QLineEdit(self.widget_12)
-        self.txtHousingCloseMedium.setMinimumSize(QtCore.QSize(0, 60))
+        self.txtHousingCloseMedium.setMinimumSize(QtCore.QSize(0, 81))
         self.txtHousingCloseMedium.setObjectName("txtHousingCloseMedium")
         self.verticalLayout_7.addWidget(self.txtHousingCloseMedium)
         self.txtHousingCloseFast = QtWidgets.QLineEdit(self.widget_12)
-        self.txtHousingCloseFast.setMinimumSize(QtCore.QSize(0, 60))
+        self.txtHousingCloseFast.setMinimumSize(QtCore.QSize(0, 81))
         self.txtHousingCloseFast.setObjectName("txtHousingCloseFast")
         self.verticalLayout_7.addWidget(self.txtHousingCloseFast)
         self.horizontalLayout_5.addWidget(self.widget_12)
@@ -371,11 +371,11 @@ class Ui_setting_page(object):
         self.horizontalLayout_7.setContentsMargins(-1, 0, -1, 0)
         self.horizontalLayout_7.setObjectName("horizontalLayout_7")
         self.label_12 = QtWidgets.QLabel(self.widget_5)
-        self.label_12.setMinimumSize(QtCore.QSize(0, 60))
+        self.label_12.setMinimumSize(QtCore.QSize(0, 81))
         self.label_12.setObjectName("label_12")
         self.horizontalLayout_7.addWidget(self.label_12)
         self.txtHousingStartPosition = QtWidgets.QLineEdit(self.widget_5)
-        self.txtHousingStartPosition.setMinimumSize(QtCore.QSize(0, 60))
+        self.txtHousingStartPosition.setMinimumSize(QtCore.QSize(0, 81))
         self.txtHousingStartPosition.setObjectName("txtHousingStartPosition")
         self.horizontalLayout_7.addWidget(self.txtHousingStartPosition)
         self.verticalLayout_6.addWidget(self.widget_5)
@@ -385,11 +385,11 @@ class Ui_setting_page(object):
         self.horizontalLayout_8.setContentsMargins(-1, 0, -1, 0)
         self.horizontalLayout_8.setObjectName("horizontalLayout_8")
         self.label_13 = QtWidgets.QLabel(self.widget_14)
-        self.label_13.setMinimumSize(QtCore.QSize(0, 60))
+        self.label_13.setMinimumSize(QtCore.QSize(0, 81))
         self.label_13.setObjectName("label_13")
         self.horizontalLayout_8.addWidget(self.label_13)
         self.txtHousingEndPosition = QtWidgets.QLineEdit(self.widget_14)
-        self.txtHousingEndPosition.setMinimumSize(QtCore.QSize(0, 60))
+        self.txtHousingEndPosition.setMinimumSize(QtCore.QSize(0, 81))
         self.txtHousingEndPosition.setObjectName("txtHousingEndPosition")
         self.horizontalLayout_8.addWidget(self.txtHousingEndPosition)
         self.verticalLayout_6.addWidget(self.widget_14)
@@ -415,17 +415,17 @@ class Ui_setting_page(object):
         self.label_3.setObjectName("label_3")
         self.verticalLayout_5.addWidget(self.label_3)
         self.label_49 = QtWidgets.QLabel(self.widget_10)
-        self.label_49.setMinimumSize(QtCore.QSize(0, 60))
+        self.label_49.setMinimumSize(QtCore.QSize(0, 81))
         self.label_49.setAlignment(QtCore.Qt.AlignCenter)
         self.label_49.setObjectName("label_49")
         self.verticalLayout_5.addWidget(self.label_49)
         self.label_51 = QtWidgets.QLabel(self.widget_10)
-        self.label_51.setMinimumSize(QtCore.QSize(0, 60))
+        self.label_51.setMinimumSize(QtCore.QSize(0, 81))
         self.label_51.setAlignment(QtCore.Qt.AlignCenter)
         self.label_51.setObjectName("label_51")
         self.verticalLayout_5.addWidget(self.label_51)
         self.label_50 = QtWidgets.QLabel(self.widget_10)
-        self.label_50.setMinimumSize(QtCore.QSize(0, 60))
+        self.label_50.setMinimumSize(QtCore.QSize(0, 81))
         self.label_50.setAlignment(QtCore.Qt.AlignCenter)
         self.label_50.setObjectName("label_50")
         self.verticalLayout_5.addWidget(self.label_50)
@@ -436,19 +436,19 @@ class Ui_setting_page(object):
         self.verticalLayout_2.setContentsMargins(0, 0, 0, 0)
         self.verticalLayout_2.setObjectName("verticalLayout_2")
         self.label_15 = QtWidgets.QLabel(self.widget_6)
-        self.label_15.setMinimumSize(QtCore.QSize(0, 60))
+        self.label_15.setMinimumSize(QtCore.QSize(0, 81))
         self.label_15.setObjectName("label_15")
         self.verticalLayout_2.addWidget(self.label_15)
         self.txtTunnelMinBoundX = QtWidgets.QLineEdit(self.widget_6)
-        self.txtTunnelMinBoundX.setMinimumSize(QtCore.QSize(0, 60))
+        self.txtTunnelMinBoundX.setMinimumSize(QtCore.QSize(0, 81))
         self.txtTunnelMinBoundX.setObjectName("txtTunnelMinBoundX")
         self.verticalLayout_2.addWidget(self.txtTunnelMinBoundX)
         self.txtTunnelMinBoundY = QtWidgets.QLineEdit(self.widget_6)
-        self.txtTunnelMinBoundY.setMinimumSize(QtCore.QSize(0, 60))
+        self.txtTunnelMinBoundY.setMinimumSize(QtCore.QSize(0, 81))
         self.txtTunnelMinBoundY.setObjectName("txtTunnelMinBoundY")
         self.verticalLayout_2.addWidget(self.txtTunnelMinBoundY)
         self.txtTunnelMinBoundZ = QtWidgets.QLineEdit(self.widget_6)
-        self.txtTunnelMinBoundZ.setMinimumSize(QtCore.QSize(0, 60))
+        self.txtTunnelMinBoundZ.setMinimumSize(QtCore.QSize(0, 81))
         self.txtTunnelMinBoundZ.setObjectName("txtTunnelMinBoundZ")
         self.verticalLayout_2.addWidget(self.txtTunnelMinBoundZ)
         self.horizontalLayout_13.addWidget(self.widget_6)
@@ -458,19 +458,19 @@ class Ui_setting_page(object):
         self.verticalLayout_3.setContentsMargins(0, 0, 0, 0)
         self.verticalLayout_3.setObjectName("verticalLayout_3")
         self.label_16 = QtWidgets.QLabel(self.widget_9)
-        self.label_16.setMinimumSize(QtCore.QSize(0, 60))
+        self.label_16.setMinimumSize(QtCore.QSize(0, 81))
         self.label_16.setObjectName("label_16")
         self.verticalLayout_3.addWidget(self.label_16)
         self.txtTunnelMaxBoundX = QtWidgets.QLineEdit(self.widget_9)
-        self.txtTunnelMaxBoundX.setMinimumSize(QtCore.QSize(0, 60))
+        self.txtTunnelMaxBoundX.setMinimumSize(QtCore.QSize(0, 81))
         self.txtTunnelMaxBoundX.setObjectName("txtTunnelMaxBoundX")
         self.verticalLayout_3.addWidget(self.txtTunnelMaxBoundX)
         self.txtTunnelMaxBoundY = QtWidgets.QLineEdit(self.widget_9)
-        self.txtTunnelMaxBoundY.setMinimumSize(QtCore.QSize(0, 60))
+        self.txtTunnelMaxBoundY.setMinimumSize(QtCore.QSize(0, 81))
         self.txtTunnelMaxBoundY.setObjectName("txtTunnelMaxBoundY")
         self.verticalLayout_3.addWidget(self.txtTunnelMaxBoundY)
         self.txtTunnelMaxBoundZ = QtWidgets.QLineEdit(self.widget_9)
-        self.txtTunnelMaxBoundZ.setMinimumSize(QtCore.QSize(0, 60))
+        self.txtTunnelMaxBoundZ.setMinimumSize(QtCore.QSize(0, 81))
         self.txtTunnelMaxBoundZ.setObjectName("txtTunnelMaxBoundZ")
         self.verticalLayout_3.addWidget(self.txtTunnelMaxBoundZ)
         self.horizontalLayout_13.addWidget(self.widget_9)
@@ -485,11 +485,11 @@ class Ui_setting_page(object):
         spacerItem4 = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
         self.horizontalLayout.addItem(spacerItem4)
         self.btnUpdateHousingParam = QtWidgets.QPushButton(self.widget_4)
-        self.btnUpdateHousingParam.setMinimumSize(QtCore.QSize(0, 62))
+        self.btnUpdateHousingParam.setMinimumSize(QtCore.QSize(0, 84))
         self.btnUpdateHousingParam.setObjectName("btnUpdateHousingParam")
         self.horizontalLayout.addWidget(self.btnUpdateHousingParam)
         self.btnCancelHousingParam = QtWidgets.QPushButton(self.widget_4)
-        self.btnCancelHousingParam.setMinimumSize(QtCore.QSize(0, 62))
+        self.btnCancelHousingParam.setMinimumSize(QtCore.QSize(0, 84))
         self.btnCancelHousingParam.setObjectName("btnCancelHousingParam")
         self.horizontalLayout.addWidget(self.btnCancelHousingParam)
         self.verticalLayout_13.addWidget(self.widget_4)
