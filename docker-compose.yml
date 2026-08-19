@@ -56,6 +56,12 @@ services:
       # not versioned app config - set it once via the qpdfview UI after
       # first launch and it persists from then on.
       - ./data/.config/qpdfview:/root/.config/qpdfview
+      # onboard (on-screen keyboard, see ui/src/ui/keyboard.py) stores its
+      # window position/size/docking settings via gsettings, backed by
+      # dconf - which writes its database to ~/.config/dconf, same problem
+      # as qpdfview above, wiped on every `docker compose down` without
+      # this.
+      - ./data/.config/dconf:/root/.config/dconf
       - /tmp/.X11-unix:/tmp/.X11-unix:rw
       - /etc/localtime:/etc/localtime:ro
       - /etc/timezone:/etc/timezone:ro
