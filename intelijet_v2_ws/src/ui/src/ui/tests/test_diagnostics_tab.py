@@ -1,5 +1,7 @@
-from PyQt5.QtWidgets import QApplication
+import pytest
+from PyQt5.QtWidgets import QApplication, QLabel
 
+import ui.notification_center as notification_center
 from ui.notification_center import NotificationCenter
 from ui.diagnostics_tab import DiagnosticsTab
 
@@ -8,12 +10,34 @@ from ui.diagnostics_tab import DiagnosticsTab
 _app = QApplication.instance() or QApplication([])
 
 
+@pytest.fixture(autouse=True)
+def isolated_log_dir(tmp_path, monkeypatch):
+    # NotificationCenter.__init__ restores today's already-persisted log on
+    # startup (see notification_center.py) - point it at a throwaway
+    # directory per test so real data/logs/<today>.jsonl entries (from
+    # actually running the app) don't leak into these tests.
+    monkeypatch.setattr(notification_center, "LOG_DIR", str(tmp_path))
+
+
+def _level_badge_text(table, row):
+    # Level column (1) is rendered as a QLabel badge inside a cell widget,
+    # not a plain QTableWidgetItem - see DiagnosticsTab._make_level_badge.
+    wrapper = table.cellWidget(row, 1)
+    label = wrapper.findChild(QLabel)
+    return label.text()
+
+
 def _row_texts(tab):
     table = tab._table
-    return [
-        [table.item(row, col).text() for col in range(table.columnCount())]
-        for row in range(table.rowCount())
-    ]
+    rows = []
+    for row in range(table.rowCount()):
+        rows.append([
+            table.item(row, 0).text(),
+            _level_badge_text(table, row),
+            table.item(row, 2).text(),
+            table.item(row, 3).text(),
+        ])
+    return rows
 
 
 def _select(combo, text):
@@ -55,7 +79,7 @@ def test_level_filter_hides_non_matching_rows():
     assert tab._table.rowCount() == 1
     assert _row_texts(tab)[0][2] == "lidar"
 
-    _select(tab._level_filter, "All")
+    _select(tab._level_filter, "All Levels")
     assert tab._table.rowCount() == 2
 
 

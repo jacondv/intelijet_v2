@@ -16,14 +16,69 @@ Pin rule: an "error" push pins the label for PIN_SECONDS - an "info" arriving
 during that window is dropped (label unchanged); a "warning" or another
 "error" can still override it immediately.
 """
+import json
+import os
 import time
 from collections import deque
+from datetime import datetime
 
 from PyQt5.QtCore import QObject, pyqtSignal
+
+from shared.config_loader import CONFIG as cfg
 
 MAX_HISTORY = 50
 DEDUP_WINDOW_SECONDS = 5
 PIN_SECONDS = 10
+
+LOG_DIR = os.path.join(cfg.BASE_DIR, cfg.DATA_DIR, "logs")
+LOG_DATE_FORMAT = "%Y%m%d"
+MAX_LOG_FILES = 365
+
+
+def log_path_for(date):
+    """date: a datetime.date/datetime, or a string already in LOG_DATE_FORMAT."""
+    if not isinstance(date, str):
+        date = date.strftime(LOG_DATE_FORMAT)
+    return os.path.join(LOG_DIR, f"{date}.jsonl")
+
+
+def list_log_dates():
+    """Dates (LOG_DATE_FORMAT strings) with an alarm log on disk, newest first."""
+    if not os.path.isdir(LOG_DIR):
+        return []
+    dates = []
+    for name in os.listdir(LOG_DIR):
+        if name.endswith(".jsonl") and len(name) == len(LOG_DATE_FORMAT) + 2 + 6:
+            dates.append(name[: -len(".jsonl")])
+    return sorted(dates, reverse=True)
+
+
+def _prune_old_logs():
+    """Keep only the MAX_LOG_FILES most recent daily log files."""
+    dates = list_log_dates()  # newest first
+    for stale in dates[MAX_LOG_FILES:]:
+        try:
+            os.remove(log_path_for(stale))
+        except OSError:
+            pass
+
+
+def read_log(date):
+    """Items (oldest-first) persisted for one date. Empty list if none/unreadable."""
+    path = log_path_for(date)
+    items = []
+    if not os.path.isfile(path):
+        return items
+    with open(path, "r", encoding="utf-8") as f:
+        for line in f:
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                items.append(json.loads(line))
+            except ValueError:
+                continue
+    return items
 
 LEVEL_COLORS = {
     "info": "#2ecc71",     # green
@@ -63,6 +118,13 @@ class NotificationCenter(QObject):
         self._pinned_until = 0.0
         self._pinned_level = None
 
+        # Restore today's already-persisted notifications so a restart
+        # (e.g. after the desktop icon's down+up relaunch) doesn't blank
+        # out the ALARM tab / notification history mid-day.
+        today = datetime.now().strftime(LOG_DATE_FORMAT)
+        for item in read_log(today)[-max_history:]:
+            self._history.append(item)
+
     def history(self):
         """Return items oldest-first."""
         return list(self._history)
@@ -82,9 +144,23 @@ class NotificationCenter(QObject):
 
         item = {"timestamp": now, "level": level, "source": source, "message": message}
         self._history.append(item)
+        self._append_to_log(item)
         self.notification_added.emit(item)
         self._try_update_label(message, level, now)
         return item
+
+    def _append_to_log(self, item):
+        """Persist one notification to today's data/logs/<YYYYMMDD>.jsonl file."""
+        try:
+            os.makedirs(LOG_DIR, exist_ok=True)
+            path = log_path_for(datetime.fromtimestamp(item["timestamp"]).date())
+            is_new_file = not os.path.isfile(path)
+            with open(path, "a", encoding="utf-8") as f:
+                f.write(json.dumps(item) + "\n")
+            if is_new_file:
+                _prune_old_logs()
+        except OSError:
+            pass  # logging to disk must never break the live notification flow
 
     def push_transient(self, message, level="info"):
         """Update the current label without touching history."""

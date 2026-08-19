@@ -257,7 +257,7 @@ class App(QMainWindow):
 
         # --- Tab Diagnostics (HMI-style alarm log, read-only) ---
         self.diagnostics_tab = DiagnosticsTab(self.notification_center, parent=self.ui.tab_mainview)
-        self.ui.tab_mainview.addTab(self.diagnostics_tab, "DIAGNOSTICS")
+        self.ui.tab_mainview.addTab(self.diagnostics_tab, "ALARM")
 
         # --- Scan pipeline worker (runs convert/color/VTK/save/report off the GUI thread) ---
         self.scan_worker = ScanPipelineWorker(
