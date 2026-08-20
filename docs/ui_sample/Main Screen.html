@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HMI 3D System - Dark Green & Yellow Theme</title>
+    <style>
+        :root {
+            /* Main Theme: Dark Green & Industrial Yellow */
+            --bg-main: #00221c;
+            --panel-bg: #00332c;
+            --panel-header: #004d40;
+            --panel-border: #005b4d;
+            
+            --text-light: #e0f2f1;
+            --text-muted: #80cbc4;
+            
+            --accent-yellow: #fbc02d;
+            --accent-yellow-hover: #f57f17;
+            --accent-green: #2e7d32;
+            --accent-red: #c62828;
+            --btn-neutral: #004d40;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-main);
+            color: var(--text-light);
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Top Header */
+        .header {
+            height: 54px;
+            background: var(--panel-header);
+            border-bottom: 2px solid var(--accent-yellow);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            z-index: 10;
+        }
+
+        .brand {
+            font-weight: 800;
+            font-size: 1.2rem;
+            color: var(--accent-yellow);
+            letter-spacing: 1px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .job-selector {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: var(--bg-main);
+            padding: 6px 14px;
+            border-radius: 6px;
+            border: 1px solid var(--panel-border);
+        }
+
+        .job-selector label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            font-weight: 700;
+        }
+
+        .job-selector select {
+            background: transparent;
+            border: none;
+            color: var(--accent-yellow);
+            font-weight: 700;
+            outline: none;
+            cursor: pointer;
+        }
+
+        /* Workspace Grid: 3 Columns */
+        .workspace {
+            flex: 1;
+            display: grid;
+            grid-template-columns: 64px 1fr 280px;
+            height: calc(100vh - 86px);
+        }
+
+        /* Column 1: Left Navigation Bar */
+        .side-nav {
+            background: var(--panel-bg);
+            border-right: 1px solid var(--panel-border);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 16px 0;
+            gap: 16px;
+        }
+
+        .nav-item {
+            width: 48px;
+            height: 48px;
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: 0.75rem;
+            font-weight: 700;
+            gap: 4px;
+            border: 1px solid transparent;
+            transition: all 0.2s;
+        }
+
+        .nav-item:hover, .nav-item.active {
+            background: var(--panel-header);
+            color: var(--accent-yellow);
+            border-color: var(--accent-yellow);
+        }
+
+        /* Column 2: 3D Viewport (Center) */
+        .viewport-3d {
+            position: relative;
+            background: #000000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            border-right: 1px solid var(--panel-border);
+        }
+
+        .viewport-canvas-mock {
+            color: var(--accent-yellow);
+            font-size: 1.1rem;
+            font-family: 'Consolas', monospace;
+            text-align: center;
+            border: 2px dashed rgba(251, 192, 45, 0.4);
+            padding: 60px;
+            border-radius: 12px;
+            background: rgba(0, 34, 28, 0.6);
+        }
+
+        .axis-indicator {
+            position: absolute;
+            bottom: 16px;
+            left: 16px;
+            background: rgba(0, 51, 44, 0.85);
+            border: 1px solid var(--panel-border);
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            font-family: monospace;
+            font-weight: 700;
+        }
+
+        /* Column 3: Independent Control Panel Frame (Right) */
+        .right-control-column {
+            background: var(--panel-bg);
+            display: flex;
+            flex-direction: column;
+            padding: 20px 16px;
+            gap: 20px;
+            overflow-y: auto;
+        }
+
+        .panel-title {
+            font-size: 1rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--accent-yellow);
+            padding-bottom: 10px;
+            border-bottom: 2px solid var(--panel-border);
+        }
+
+        .section-label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .btn-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 14px;
+            border-radius: 8px;
+            border: none;
+            font-weight: 800;
+            font-size: 0.9rem;
+            letter-spacing: 0.5px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: all 0.15s;
+        }
+
+        .btn:active { transform: scale(0.98); }
+
+        /* Yellow Primary Buttons */
+        .btn-yellow {
+            background: var(--accent-yellow);
+            color: #000000;
+            box-shadow: 0 4px 10px rgba(251, 192, 45, 0.2);
+        }
+        .btn-yellow:hover {
+            background: var(--accent-yellow-hover);
+        }
+
+        /* Dark Green Secondary Buttons */
+        .btn-neutral {
+            background: var(--btn-neutral);
+            color: var(--text-light);
+            border: 1px solid var(--panel-border);
+        }
+        .btn-neutral:hover {
+            background: var(--panel-header);
+            border-color: var(--accent-yellow);
+        }
+
+        /* Danger Red Button */
+        .btn-danger {
+            background: var(--accent-red);
+            color: #ffffff;
+        }
+        .btn-danger:hover {
+            background: #b71c1c;
+        }
+
+        .btn-outline-yellow {
+            background: transparent;
+            border: 1px solid var(--accent-yellow);
+            color: var(--accent-yellow);
+        }
+        .btn-outline-yellow:hover {
+            background: var(--accent-yellow);
+            color: #000;
+        }
+
+        /* Bottom Status Bar */
+        .status-bar {
+            height: 32px;
+            background: var(--bg-main);
+            border-top: 1px solid var(--panel-border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 16px;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--accent-yellow);
+            font-weight: 700;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            background: var(--accent-yellow);
+            border-radius: 50%;
+            box-shadow: 0 0 8px var(--accent-yellow);
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Header -->
+    <div class="header">
+        <div class="brand">
+            <span>JACON EQUIPMENT</span>
+        </div>
+        <div class="job-selector">
+            <label>CURRENT JOB:</label>
+            <select>
+                <option>Test20260811 / 2m engine off</option>
+                <option>TEST260819 / Scan Job 1</option>
+            </select>
+        </div>
+        <div>
+            <button class="btn btn-outline-yellow" style="padding: 6px 14px; font-size: 0.8rem;">Compare & Reports</button>
+        </div>
+    </div>
+
+    <!-- Workspace -->
+    <div class="workspace">
+        
+        <!-- Column 1: Navigation -->
+        <div class="side-nav">
+            <div class="nav-item active">
+                <span>🧊</span>
+                <span>3D</span>
+            </div>
+            <div class="nav-item">
+                <span>📋</span>
+                <span>JOB</span>
+            </div>
+            <div class="nav-item">
+                <span>⚙️</span>
+                <span>SETTING</span>
+            </div>
+            <div class="nav-item">
+                <span>🖥️</span>
+                <span>SYSTEM</span>
+            </div>
+            <div class="nav-item">
+                <span>🔔</span>
+                <span>ALARM</span>
+            </div>
+        </div>
+
+        <!-- Column 2: 3D Viewport -->
+        <div class="viewport-3d">
+            <div class="viewport-canvas-mock">
+                [ 3D POINT CLOUD CANVAS ]
+            </div>
+            <div class="axis-indicator">
+                <span style="color: #ef4444;">X</span> 
+                <span style="color: #22c55e;">Y</span> 
+                <span style="color: #3b82f6;">Z</span>
+            </div>
+        </div>
+
+        <!-- Column 3: Control Panel -->
+        <div class="right-control-column">
+            <div class="panel-title">CONTROL PANEL</div>
+
+            <div>
+                <div class="section-label">Scanning Process</div>
+                <div class="btn-group">
+                    <button class="btn btn-yellow">PRE-SCAN</button>
+                    <button class="btn btn-yellow">POST-SCAN</button>
+                    <button class="btn btn-danger">CANCEL JOB</button>
+                </div>
+            </div>
+
+            <hr style="border: 0; border-top: 1px solid var(--panel-border);">
+
+            <div>
+                <div class="section-label">Manual Operator</div>
+                <div class="btn-group">
+                    <button class="btn btn-neutral">OPEN HOUSING</button>
+                    <button class="btn btn-neutral">CLOSE HOUSING</button>
+                </div>
+            </div>
+
+            <div style="margin-top: auto;">
+                <button class="btn btn-danger">EXIT SYSTEM</button>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Status Bar -->
+    <div class="status-bar">
+        <div class="status-indicator">
+            <div class="status-dot"></div>
+            <span>SYSTEM READY</span>
+        </div>
+        <div>Mode: Automatic | System Version: 2.4.0</div>
+    </div>
+
+</body>
+</html>
