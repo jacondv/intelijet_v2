@@ -933,6 +933,22 @@ class Ui_MainWindow(object):
         self.btnCancel.setFlat(True)
         self.btnCancel.setObjectName("btnCancel")
         self.verticalLayout_14.addWidget(self.btnCancel)
+        self.lblManualOperator = QtWidgets.QLabel(self.control_panel)
+        self.lblManualOperator.setMinimumSize(QtCore.QSize(0, 52))
+        self.lblManualOperator.setAlignment(QtCore.Qt.AlignCenter)
+        self.lblManualOperator.setStyleSheet("#lblManualOperator {\n"
+"    background-color: rgba(0, 0, 0, 0);\n"
+"    color: #F8D40F;\n"
+"    font-size: 26px;\n"
+"    font-weight: bold;\n"
+"    letter-spacing: 1px;\n"
+"    border: none;\n"
+"    border-top: 2px solid rgba(255, 255, 255, 90);\n"
+"    padding-top: 10px;\n"
+"    margin-top: 6px;\n"
+"}")
+        self.lblManualOperator.setObjectName("lblManualOperator")
+        self.verticalLayout_14.addWidget(self.lblManualOperator)
         self.btnOpenScanner = QtWidgets.QPushButton(self.control_panel)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding)
         sizePolicy.setHorizontalStretch(0)
@@ -1066,6 +1082,7 @@ class Ui_MainWindow(object):
         self.btnPreScan.setText(_translate("MainWindow", "PRE-SCAN"))
         self.btnPostScan.setText(_translate("MainWindow", "POST-SCAN"))
         self.btnCancel.setText(_translate("MainWindow", "CANCEL JOB"))
+        self.lblManualOperator.setText(_translate("MainWindow", "Manual Operator"))
         self.btnOpenScanner.setText(_translate("MainWindow", "OPEN\n"
 "HOUSING"))
         self.btnCloseScanner.setText(_translate("MainWindow", "CLOSE\n"
