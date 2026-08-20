@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """Device connectivity monitoring.
 
-Three monitor types, chosen per device via the `type:` field in devices.yaml:
+Monitor types, chosen per device/process via the `type:` field in
+devices.yaml:
   - TopicAliveMonitor: CONNECTED while a message keeps arriving on `topic`
     within `timeout` seconds. Used for CAN-based devices (encoder, pcan, plc).
   - PingMonitor: CONNECTED while periodic ICMP ping to `ip` succeeds. Runs
@@ -11,12 +12,18 @@ Three monitor types, chosen per device via the `type:` field in devices.yaml:
   - StateEchoMonitor: device_state mirrors the last message payload (e.g.
     /pps/state), but still goes DISCONNECTED if no message arrives within
     `timeout` seconds (prevents getting stuck on a stale state forever).
+  - RosnodeAliveMonitor: CONNECTED while the named ROS node process answers
+    an XML-RPC ping (rosnode_ping) - i.e. the process itself is still
+    running, regardless of whether it happens to publish anything. Used to
+    catch a crashed/hung node that TopicAliveMonitor wouldn't notice (no
+    topic to watch, or the topic just stops being published on its own).
 
-To add a new device: add an entry to devices.yaml with a `type:` matching one
-of the classes registered in MONITOR_CLASSES below, then add/extend a monitor
-class here if none of the three existing types fit.
+To add a new device/process: add an entry to devices.yaml with a `type:`
+matching one of the classes registered in MONITOR_CLASSES below, then
+add/extend a monitor class here if none of the existing types fit.
 """
 import rospy
+import rosnode
 import importlib
 import subprocess
 import threading
@@ -136,41 +143,40 @@ class TopicAliveMonitor(Monitor):
             self.update_status(DeviceStatus.CONNECTED)
 
 
-class PingMonitor(Monitor):
-    """CONNECTED while periodic ICMP ping to `ip` succeeds. Ping runs in a
-    dedicated background thread so subprocess calls never block the ROS
-    timer/spin loop. Requires 2 consecutive failed pings before flipping to
-    DISCONNECTED, to avoid flapping on a single dropped packet."""
+class _BackgroundPollMonitor(Monitor):
+    """Base for monitors whose liveness probe can block (subprocess/network
+    call) and therefore must not run on the ROS timer thread. Subclasses
+    just implement `_probe()` -> bool; this handles the polling thread,
+    locking, and the "N consecutive failures before DISCONNECTED" flap
+    guard. check_status() (called by the ROS timer) only ever reads the
+    last-known result, never blocks."""
 
     FAIL_THRESHOLD = 2
+    thread_name_prefix = "BackgroundPollMonitor"
 
     def _setup(self, cfg):
-        self.ip = cfg.ip
         self._connected = False
         self._consecutive_failures = 0
         self._lock = threading.Lock()
         self._stop_event = threading.Event()
+        self._setup_probe(cfg)
 
-        self._ping_thread = threading.Thread(
-            target=self._ping_loop, daemon=True,
-            name=f"PingMonitor-{cfg.name}"
+        self._poll_thread = threading.Thread(
+            target=self._poll_loop, daemon=True,
+            name=f"{self.thread_name_prefix}-{cfg.name}"
         )
-        self._ping_thread.start()
+        self._poll_thread.start()
 
-    def _ping_once(self):
-        try:
-            result = subprocess.run(
-                ["ping", "-c", "1", "-W", "1", self.ip],
-                stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
-            )
-            return result.returncode == 0
-        except Exception as e:
-            rospy.logwarn(f"[PingMonitor] ping to {self.ip} failed to run: {e}")
-            return False
+    def _setup_probe(self, cfg):
+        """Override to stash whatever _probe() needs from cfg (ip, node name...)."""
+        pass
 
-    def _ping_loop(self):
+    def _probe(self):
+        raise NotImplementedError("Override me in subclass")
+
+    def _poll_loop(self):
         while not self._stop_event.is_set():
-            ok = self._ping_once()
+            ok = self._probe()
             with self._lock:
                 if ok:
                     self._consecutive_failures = 0
@@ -188,6 +194,50 @@ class PingMonitor(Monitor):
             self.update_status(DeviceStatus.CONNECTED)
         else:
             self.update_status(DeviceStatus.DISCONNECTED)
+
+
+class PingMonitor(_BackgroundPollMonitor):
+    """CONNECTED while periodic ICMP ping to `ip` succeeds. Ping runs in a
+    dedicated background thread so subprocess calls never block the ROS
+    timer/spin loop. Requires 2 consecutive failed pings before flipping to
+    DISCONNECTED, to avoid flapping on a single dropped packet."""
+
+    thread_name_prefix = "PingMonitor"
+
+    def _setup_probe(self, cfg):
+        self.ip = cfg.ip
+
+    def _probe(self):
+        try:
+            result = subprocess.run(
+                ["ping", "-c", "1", "-W", "1", self.ip],
+                stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
+            )
+            return result.returncode == 0
+        except Exception as e:
+            rospy.logwarn(f"[PingMonitor] ping to {self.ip} failed to run: {e}")
+            return False
+
+
+class RosnodeAliveMonitor(_BackgroundPollMonitor):
+    """CONNECTED while the named ROS node process answers an XML-RPC ping
+    (rosnode_ping) - i.e. the process itself is still running. Unlike
+    TopicAliveMonitor this doesn't depend on the node publishing anything,
+    so it also catches a node that's alive-but-hung as long as its XML-RPC
+    server still responds; a node that has actually crashed/exited stops
+    responding entirely and reads DISCONNECTED here."""
+
+    thread_name_prefix = "RosnodeAliveMonitor"
+
+    def _setup_probe(self, cfg):
+        self.node_name = cfg.node
+
+    def _probe(self):
+        try:
+            return rosnode.rosnode_ping(self.node_name, max_count=1, verbose=False)
+        except Exception as e:
+            rospy.logwarn(f"[RosnodeAliveMonitor] ping to {self.node_name} failed: {e}")
+            return False
 
 
 class StateEchoMonitor(Monitor):
@@ -219,6 +269,7 @@ MONITOR_CLASSES = {
     "TopicAliveMonitor": TopicAliveMonitor,
     "PingMonitor": PingMonitor,
     "StateEchoMonitor": StateEchoMonitor,
+    "RosnodeAliveMonitor": RosnodeAliveMonitor,
 }
 
 
