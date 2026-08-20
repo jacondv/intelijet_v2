@@ -1,558 +1,226 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file './project_dlg.ui'
-#
-# Created by: PyQt5 UI code generator 5.14.1
-#
-# WARNING! All changes made in this file will be lost!
+# Form implementation - HAND-MAINTAINED (feature/new_ui redesign, JOB tab).
+# Replaces the old pyuic5-generated 3-column layout (Project list / Job
+# list+filter / Active Work Orders) with the 2-column layout from
+# docs/ui_sample/App.html's TAB 2 (JOB MANAGEMENT): a "Projects & Jobs
+# List" card (search + always-expanded project blocks, no collapse) and
+# a "Work Schedule" card. Project/job cards are built dynamically by
+# ProjectManager (project_dlg_manager.py), not here - this file only
+# lays out the static shell (top bar, the two card containers, search
+# box) since the row content changes with the data.
 
+from PyQt5 import QtCore, QtWidgets
 
-from PyQt5 import QtCore, QtGui, QtWidgets
+# ---- Light-card palette, matching the SYSTEM tab (docs/ui_sample/App.html) ----
+LIGHT_BG = "#f4f5f8"
+CARD_BG = "#ffffff"
+BORDER = "#e2e8f0"
+TEXT = "#1e293b"
+TEXT_MUTED = "#64748b"
+ACCENT_YELLOW = "#fbc02d"
+ACCENT_YELLOW_HOVER = "#f57f17"
+ACCENT_RED = "#c62828"
+ROW_BG = "#f8fafc"
 
 
 class Ui_frm_ProjectPage(object):
     def setupUi(self, frm_ProjectPage):
         frm_ProjectPage.setObjectName("frm_ProjectPage")
-        frm_ProjectPage.resize(1133, 748)
-        frm_ProjectPage.setStyleSheet("* {\n"
-"font-size: 24pt;\n"
-"}\n"
-"QPushButton {\n"
-"    background-color: #5C87C9;     /* xanh sáng hơn */\n"
-"    color: white;\n"
-"    border: 0px solid #3c6382;\n"
-"    border-radius: 20px;\n"
-"    padding: 6px 10px;\n"
-"}\n"
-"\n"
-"QPushButton:hover {\n"
-"    background-color: #3c6382;\n"
-"}\n"
-"\n"
-"QPushButton:pressed {\n"
-"    background-color: #3c6382;\n"
-"    border: 1px solid #355A8A;\n"
-"}\n"
-"\n"
-"\n"
-"/* --- Text editor (QLineEdit & QTextEdit) --- */\n"
-"/* Text box chung */\n"
-"QLineEdit, QTextEdit {\n"
-"    background-color: #FFFFFF;        /* nền trắng */\n"
-"    color: #2F4F6E;                  /* chữ xanh đậm */\n"
-"    border: 1px solid #B0C4DE;       /* viền nhẹ */\n"
-"    padding: 4px 8px;                /* khoảng cách chữ và viền */\n"
-"    font-weight: bold;\n"
-"}\n"
-"\n"
-"/* Khi focus */\n"
-"QLineEdit:focus, QTextEdit:focus {\n"
-"    border: 1px solid #5C87C9;       /* viền xanh khi focus */\n"
-"    background-color: #F9FBFF;        /* nền sáng hơn khi focus */\n"
-"}\n"
-"\n"
-"/* Khi hover (chuột vào) */\n"
-"QLineEdit:hover, QTextEdit:hover {\n"
-"    border: 1px solid #74A9D8;       /* viền hover nhẹ */\n"
-"}\n"
-"\n"
-"\n"
-"QComboBox {\n"
-"    background-color: #FFFFFF;       /* nền sáng */\n"
-"    color: #2F4F6E;                 /* chữ xanh đậm */\n"
-"    border: 1px solid #B0C4DE;      /* viền nhẹ */\n"
-"    padding: 4px 8px;\n"
-"    font-weight: bold;\n"
-"    selection-background-color: #D0E4F5; /* khi chọn item */\n"
-"}\n"
-"\n"
-"/* Drop-down list */\n"
-"QComboBox QAbstractItemView {\n"
-"    background-color: #FFFFFF;\n"
-"    color: #2F4F6E;\n"
-"    border: 1px solid #B0C4DE;\n"
-"    selection-background-color: #D0E4F5;\n"
-"}\n"
-"\n"
-"/* Hover khi trỏ vào QComboBox */\n"
-"QComboBox:hover {\n"
-"    border: 1px solid #5C87C9;\n"
-"}\n"
-"\n"
-"/* Khi mở drop-down */\n"
-"QComboBox:focus {\n"
-"    border: 1px solid #5C87C9;\n"
-"}\n"
-"QGroupBox {\n"
-"    border: 1px solid #B0C4DE;   /* viền nhẹ */\n"
-"    background-color: #FFFFFF;    /* nền trắng */\n"
-"    margin-top: 10px;\n"
-"    padding: 8px;\n"
-"    font-weight: bold;\n"
-"\n"
-"}\n"
-"\n"
-"QGroupBox::title {\n"
-"    subcontrol-origin: margin;\n"
-"    left: 8px;                   /* khoảng cách từ viền trái */\n"
-"    padding: 0 4px;\n"
-"    color: #2F4F6E;              /* chữ xanh đậm */\n"
-"}\n"
-"\n"
-"\n"
-"/* --- Checkbox chung --- */\n"
-"QCheckBox {\n"
-"    spacing: 8px;             /* khoảng cách giữa ô và text */\n"
-"    color: #2F4F6E;           /* chữ giống TextEdit */\n"
-"    font-weight: bold;\n"
-"}\n"
-"\n"
-"/* --- Indicator (ô vuông) --- */\n"
-"QCheckBox::indicator {\n"
-"    width: 24px;\n"
-"    height: 24px;\n"
-"    border: 1px solid #B0C4DE; /* viền nhẹ như TextEdit */\n"
-"    border-radius: 5px;         /* bo góc nhẹ */\n"
-"    background: #FFFFFF;        /* nền trắng */\n"
-"    margin: 0;\n"
-"    transition: all 0.2s;\n"
-"}\n"
-"\n"
-"/* Hover: viền xanh nhạt */\n"
-"QCheckBox::indicator:hover {\n"
-"    border: 1px solid #74A9D8; /* giống hover TextEdit */\n"
-"}\n"
-"\n"
-"/* Focus: viền xanh đậm, nền sáng */\n"
-"QCheckBox::indicator:focus {\n"
-"    border: 1px solid #5C87C9; /* giống focus TextEdit */\n"
-"    background-color: #F9FBFF;\n"
-"}\n"
-"\n"
-"/* Checked: tick hiện mặc định, nền vẫn trắng, viền xanh đậm */\n"
-"QCheckBox::indicator:checked {\n"
-"    border: 1px solid #5C87C9;   /* giống focus */\n"
-"    background-color: #2F4F6E;    /* nền trắng, tick hiện */\n"
-"}\n"
-"\n"
-"/* Disabled: mờ */\n"
-"QCheckBox::indicator:disabled {\n"
-"    border: 1px solid #D3D3D3;\n"
-"    background: #F5F5F5;\n"
-"    color: #A0A0A0;\n"
-"}\n"
-"\n"
-"\n"
-"\n"
-"\n"
-"/* Định kiểu cho mỗi item trong List */\n"
-"QListWidget::item {\n"
-"    padding: 5px;             /* Khoảng đệm bên trong item */\n"
-"    border-bottom: 1px solid #eeeeee; /* Đường kẻ mờ phân chia các item */\n"
-"    min-height: 81px;\n"
-"}\n"
-"\n"
-"\n"
-"/* ==================== SCROLLBAR ==================== */\n"
-"QScrollBar:vertical {\n"
-"    width: 40px;\n"
-"    background: #f0f0f0;\n"
-"    margin: 0;\n"
-"    border-radius: 0px;\n"
-"}\n"
-"QScrollBar::handle:vertical {\n"
-"    background: #b0b0b0;\n"
-"    min-height: 27px;\n"
-"    border-radius: 0px;\n"
-"}\n"
-"QScrollBar::handle:vertical:hover {\n"
-"    background: #909090;\n"
-"}\n"
-"QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {\n"
-"    height: 0;\n"
-"}\n"
-"\n"
-"")
-        self.verticalLayout_7 = QtWidgets.QVBoxLayout(frm_ProjectPage)
-        self.verticalLayout_7.setContentsMargins(0, 0, 0, 0)
-        self.verticalLayout_7.setSpacing(0)
-        self.verticalLayout_7.setObjectName("verticalLayout_7")
-        self.ftm_ProjectManager = QtWidgets.QWidget(frm_ProjectPage)
-        self.ftm_ProjectManager.setStyleSheet("\n"
-"/* Toàn bộ list widget */\n"
-"QListWidget {\n"
-"    background-color: #FFFFFF;      /* nền trắng */\n"
-"    color: #2F4F6E;                /* chữ xanh đậm */\n"
-"    border: 1px solid #B0C4DE;     /* viền nhẹ */\n"
-"    font-size: 32px;\n"
-"    font-weight: bold;\n"
-"    padding: 2px;\n"
-"}\n"
-"\n"
-"/* Khi hover trên widget */\n"
-"QListWidget:hover {\n"
-"    border: 1px solid #74A9D8;\n"
-"}\n"
-"\n"
-"/* Khi focus widget */\n"
-"QListWidget:focus {\n"
-"    border: 1px solid #5C87C9;\n"
-"    background-color: #F9FBFF;\n"
-"}\n"
-"\n"
-"/* Định kiểu cho mỗi item trong List */\n"
-"QListWidget::item {\n"
-"    padding: 5px;             /* Khoảng đệm bên trong item */\n"
-"    border-bottom: 1px solid #eeeeee; /* Đường kẻ mờ phân chia các item */\n"
-"    min-height: 94px;\n"
-"}\n"
-"\n"
-"\n"
-"/* Item được chọn */\n"
-"QListWidget::item:selected {\n"
-"    background-color: #D0E4F5;      /* màu chọn */\n"
-"    color: #2F4F6E;\n"
-"}\n"
-"\n"
-"/* Item hover */\n"
-"QListWidget::item:hover {\n"
-"    background-color: #E4F0FA;      /* màu hover */\n"
-"}\n"
-"")
-        self.ftm_ProjectManager.setObjectName("ftm_ProjectManager")
-        self.verticalLayout_6 = QtWidgets.QVBoxLayout(self.ftm_ProjectManager)
-        self.verticalLayout_6.setContentsMargins(0, 0, 0, 0)
-        self.verticalLayout_6.setSpacing(0)
-        self.verticalLayout_6.setObjectName("verticalLayout_6")
-        self.widget_7 = QtWidgets.QWidget(self.ftm_ProjectManager)
-        self.widget_7.setObjectName("widget_7")
-        self.horizontalLayout_5 = QtWidgets.QHBoxLayout(self.widget_7)
-        self.horizontalLayout_5.setContentsMargins(-1, -1, -1, 20)
-        self.horizontalLayout_5.setObjectName("horizontalLayout_5")
-        self.groupBox = QtWidgets.QGroupBox(self.widget_7)
-        font = QtGui.QFont()
-        font.setPointSize(24)
-        font.setBold(True)
-        font.setWeight(75)
-        self.groupBox.setFont(font)
-        self.groupBox.setObjectName("groupBox")
-        self.verticalLayout = QtWidgets.QVBoxLayout(self.groupBox)
-        self.verticalLayout.setContentsMargins(0, -1, 0, 0)
-        self.verticalLayout.setObjectName("verticalLayout")
-        self.widget_2 = QtWidgets.QWidget(self.groupBox)
-        self.widget_2.setObjectName("widget_2")
-        self.horizontalLayout = QtWidgets.QHBoxLayout(self.widget_2)
-        self.horizontalLayout.setContentsMargins(-1, 20, -1, -1)
-        self.horizontalLayout.setObjectName("horizontalLayout")
-        self.lblProjectName = QtWidgets.QLabel(self.widget_2)
-        font = QtGui.QFont()
-        font.setPointSize(24)
-        font.setBold(True)
-        font.setWeight(75)
-        self.lblProjectName.setFont(font)
-        self.lblProjectName.setObjectName("lblProjectName")
-        self.horizontalLayout.addWidget(self.lblProjectName)
-        self.verticalLayout.addWidget(self.widget_2)
-        self.widget_3 = QtWidgets.QWidget(self.groupBox)
-        self.widget_3.setObjectName("widget_3")
-        self.verticalLayout_5 = QtWidgets.QVBoxLayout(self.widget_3)
-        self.verticalLayout_5.setContentsMargins(-1, 0, -1, 0)
-        self.verticalLayout_5.setObjectName("verticalLayout_5")
-        self.widget_5 = QtWidgets.QWidget(self.widget_3)
-        self.widget_5.setStyleSheet("background-color: rgb(255, 255, 255);\n"
-"border: 1px solid rgb(200, 200, 200);\n"
-"border-radius: 27px; ")
-        self.widget_5.setObjectName("widget_5")
-        self.horizontalLayout_3 = QtWidgets.QHBoxLayout(self.widget_5)
-        self.horizontalLayout_3.setContentsMargins(6, 2, 6, 2)
-        self.horizontalLayout_3.setSpacing(6)
-        self.horizontalLayout_3.setObjectName("horizontalLayout_3")
-        self.btnSearchProject = QtWidgets.QPushButton(self.widget_5)
-        self.btnSearchProject.setMinimumSize(QtCore.QSize(40, 40))
-        self.btnSearchProject.setMaximumSize(QtCore.QSize(40, 40))
-        self.btnSearchProject.setStyleSheet(" border: none;\n"
-"")
-        self.btnSearchProject.setText("")
-        icon = QtGui.QIcon()
-        icon.addPixmap(QtGui.QPixmap(":/icon/icon/search-3-48.ico"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-        self.btnSearchProject.setIcon(icon)
-        self.btnSearchProject.setObjectName("btnSearchProject")
-        self.horizontalLayout_3.addWidget(self.btnSearchProject)
-        self.txtSearchProject = QtWidgets.QLineEdit(self.widget_5)
-        self.txtSearchProject.setMinimumSize(QtCore.QSize(202, 54))
-        font = QtGui.QFont()
-        font.setPointSize(24)
-        font.setBold(True)
-        font.setWeight(75)
-        self.txtSearchProject.setFont(font)
-        self.txtSearchProject.setStyleSheet("border: none;")
-        self.txtSearchProject.setClearButtonEnabled(True)
-        self.txtSearchProject.setObjectName("txtSearchProject")
-        self.horizontalLayout_3.addWidget(self.txtSearchProject)
-        self.verticalLayout_5.addWidget(self.widget_5)
-        self.widget_4 = QtWidgets.QWidget(self.widget_3)
-        self.widget_4.setObjectName("widget_4")
-        self.horizontalLayout_2 = QtWidgets.QHBoxLayout(self.widget_4)
-        self.horizontalLayout_2.setContentsMargins(6, 0, 6, 0)
-        self.horizontalLayout_2.setSpacing(12)
-        self.horizontalLayout_2.setObjectName("horizontalLayout_2")
-        self.btnNewProject = QtWidgets.QPushButton(self.widget_4)
-        self.btnNewProject.setMinimumSize(QtCore.QSize(81, 81))
-        self.btnNewProject.setMaximumSize(QtCore.QSize(81, 81))
-        icon1 = QtGui.QIcon()
-        icon1.addPixmap(QtGui.QPixmap(":/icon/icon/add-folder.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-        self.btnNewProject.setIcon(icon1)
-        self.btnNewProject.setIconSize(QtCore.QSize(40, 40))
+        frm_ProjectPage.setStyleSheet(f"""
+#frm_ProjectPage {{ background-color: {LIGHT_BG}; }}
+
+#jobTopBar, #jobCard {{
+    background-color: {CARD_BG};
+    border: 1px solid {BORDER};
+    border-radius: 10px;
+}}
+#jobTitle {{
+    background: transparent; border: none;
+    color: {TEXT}; font-size: 22px; font-weight: 800;
+}}
+#jobCardTitle {{
+    background: transparent; border: none;
+    color: {TEXT}; font-size: 20px; font-weight: 800;
+    padding-bottom: 8px; border-bottom: 2px solid {BORDER};
+}}
+#txtSearch {{
+    background-color: {ROW_BG};
+    color: {TEXT};
+    border: 1px solid {BORDER};
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-size: 16px;
+    font-weight: 600;
+}}
+QScrollArea {{ background: transparent; border: none; }}
+QScrollArea > QWidget > QWidget {{ background: transparent; }}
+
+#jobTopBar QPushButton {{
+    background-color: {ACCENT_YELLOW};
+    color: #153E42;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 18px;
+    font-size: 16px;
+    font-weight: 800;
+}}
+#jobTopBar QPushButton:hover {{ background-color: {ACCENT_YELLOW_HOVER}; color: white; }}
+
+#projectCard {{
+    background-color: {ROW_BG};
+    border: 1px solid {BORDER};
+    border-radius: 8px;
+}}
+#projectHeaderLabel {{
+    background: transparent; border: none;
+    color: {TEXT}; font-size: 18px; font-weight: 800;
+}}
+#jobRow {{
+    background-color: {CARD_BG};
+    border: 1px solid {BORDER};
+    border-radius: 6px;
+}}
+#jobRowTitle {{
+    background: transparent; border: none;
+    color: {TEXT}; font-size: 16px; font-weight: 700;
+}}
+#jobRowSubtext, #scheduleSubtext {{
+    background: transparent; border: none;
+    color: {TEXT_MUTED}; font-size: 13px; font-weight: 600;
+}}
+#scheduleCard {{
+    background-color: {ROW_BG};
+    border: 1px solid {BORDER};
+    border-radius: 8px;
+}}
+#scheduleTitle {{
+    background: transparent; border: none;
+    color: {TEXT}; font-size: 17px; font-weight: 800;
+}}
+#emptyStateLabel {{
+    background: transparent; border: none;
+    color: {TEXT_MUTED}; font-size: 15px; font-weight: 600;
+    padding: 20px;
+}}
+
+/* Row action buttons are tagged via setProperty("cssClass", ...) at
+   construction time (Qt Style Sheets have no CSS ".class" selector -
+   only #id, type, and [attribute] selectors are supported). */
+QPushButton[cssClass="rowActionBtn"] {{
+    background-color: {CARD_BG};
+    color: {TEXT};
+    border: 1px solid {BORDER};
+    border-radius: 6px;
+    padding: 6px 12px;
+    font-size: 13px;
+    font-weight: 700;
+}}
+QPushButton[cssClass="rowActionBtn"]:hover {{ border-color: {ACCENT_YELLOW}; }}
+QPushButton[cssClass="rowDangerBtn"] {{
+    background-color: {CARD_BG};
+    color: {ACCENT_RED};
+    border: 1px solid {ACCENT_RED};
+    border-radius: 6px;
+    padding: 6px 12px;
+    font-size: 13px;
+    font-weight: 700;
+}}
+QPushButton[cssClass="rowDangerBtn"]:hover {{ background-color: {ACCENT_RED}; color: white; }}
+QPushButton[cssClass="rowPrimaryBtn"] {{
+    background-color: {ACCENT_YELLOW};
+    color: #153E42;
+    border: none;
+    border-radius: 6px;
+    padding: 6px 14px;
+    font-size: 13px;
+    font-weight: 800;
+}}
+QPushButton[cssClass="rowPrimaryBtn"]:hover {{ background-color: {ACCENT_YELLOW_HOVER}; color: white; }}
+""")
+        self.rootLayout = QtWidgets.QVBoxLayout(frm_ProjectPage)
+        self.rootLayout.setContentsMargins(20, 20, 20, 20)
+        self.rootLayout.setSpacing(16)
+
+        # ---- Top bar ----
+        self.jobTopBar = QtWidgets.QWidget(frm_ProjectPage)
+        self.jobTopBar.setObjectName("jobTopBar")
+        self.jobTopBarLayout = QtWidgets.QHBoxLayout(self.jobTopBar)
+        self.jobTopBarLayout.setContentsMargins(20, 14, 20, 14)
+        self.jobTitle = QtWidgets.QLabel("HMI Execution Management", self.jobTopBar)
+        self.jobTitle.setObjectName("jobTitle")
+        self.jobTopBarLayout.addWidget(self.jobTitle)
+        self.jobTopBarLayout.addStretch(1)
+        self.btnNewProject = QtWidgets.QPushButton("+ New Project", self.jobTopBar)
         self.btnNewProject.setObjectName("btnNewProject")
-        self.horizontalLayout_2.addWidget(self.btnNewProject)
-        self.btnRenameProject = QtWidgets.QPushButton(self.widget_4)
-        self.btnRenameProject.setMinimumSize(QtCore.QSize(81, 81))
-        self.btnRenameProject.setMaximumSize(QtCore.QSize(81, 81))
-        icon2 = QtGui.QIcon()
-        icon2.addPixmap(QtGui.QPixmap(":/icon/icon/rename.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-        self.btnRenameProject.setIcon(icon2)
-        self.btnRenameProject.setIconSize(QtCore.QSize(40, 40))
-        self.btnRenameProject.setObjectName("btnRenameProject")
-        self.horizontalLayout_2.addWidget(self.btnRenameProject)
-        self.btnDeleteProject = QtWidgets.QPushButton(self.widget_4)
-        self.btnDeleteProject.setMinimumSize(QtCore.QSize(81, 81))
-        self.btnDeleteProject.setMaximumSize(QtCore.QSize(81, 81))
-        icon3 = QtGui.QIcon()
-        icon3.addPixmap(QtGui.QPixmap(":/icon/icon/delete.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-        self.btnDeleteProject.setIcon(icon3)
-        self.btnDeleteProject.setIconSize(QtCore.QSize(40, 40))
-        self.btnDeleteProject.setObjectName("btnDeleteProject")
-        self.horizontalLayout_2.addWidget(self.btnDeleteProject)
-        spacerItem = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
-        self.horizontalLayout_2.addItem(spacerItem)
-        self.verticalLayout_5.addWidget(self.widget_4)
-        self.verticalLayout.addWidget(self.widget_3)
-        self.lstProject = QtWidgets.QListWidget(self.groupBox)
-        self.lstProject.setObjectName("lstProject")
-        self.verticalLayout.addWidget(self.lstProject)
-        self.horizontalLayout_5.addWidget(self.groupBox)
-        self.groupBox_2 = QtWidgets.QGroupBox(self.widget_7)
-        font = QtGui.QFont()
-        font.setPointSize(24)
-        font.setBold(True)
-        font.setWeight(75)
-        self.groupBox_2.setFont(font)
-        self.groupBox_2.setObjectName("groupBox_2")
-        self.verticalLayout_2 = QtWidgets.QVBoxLayout(self.groupBox_2)
-        self.verticalLayout_2.setContentsMargins(0, -1, 0, 0)
-        self.verticalLayout_2.setObjectName("verticalLayout_2")
-        self.widget_12 = QtWidgets.QWidget(self.groupBox_2)
-        self.widget_12.setObjectName("widget_12")
-        self.horizontalLayout_6 = QtWidgets.QHBoxLayout(self.widget_12)
-        self.horizontalLayout_6.setContentsMargins(-1, 20, -1, -1)
-        self.horizontalLayout_6.setObjectName("horizontalLayout_6")
-        self.lblJobName = QtWidgets.QLabel(self.widget_12)
-        font = QtGui.QFont()
-        font.setPointSize(24)
-        font.setBold(True)
-        font.setWeight(75)
-        self.lblJobName.setFont(font)
-        self.lblJobName.setObjectName("lblJobName")
-        self.horizontalLayout_6.addWidget(self.lblJobName)
-        self.verticalLayout_2.addWidget(self.widget_12)
-        self.widget_8 = QtWidgets.QWidget(self.groupBox_2)
-        self.widget_8.setObjectName("widget_8")
-        self.verticalLayout_4 = QtWidgets.QVBoxLayout(self.widget_8)
-        self.verticalLayout_4.setContentsMargins(-1, 0, -1, 0)
-        self.verticalLayout_4.setObjectName("verticalLayout_4")
-        self.widget_9 = QtWidgets.QWidget(self.widget_8)
-        self.widget_9.setObjectName("widget_9")
-        self.horizontalLayout_8 = QtWidgets.QHBoxLayout(self.widget_9)
-        self.horizontalLayout_8.setContentsMargins(-1, 0, -1, 0)
-        self.horizontalLayout_8.setObjectName("horizontalLayout_8")
-        self.verticalLayout_4.addWidget(self.widget_9)
-        self.widget_6 = QtWidgets.QWidget(self.widget_8)
-        self.widget_6.setStyleSheet("background-color: rgb(255, 255, 255);\n"
-"border: 1px solid rgb(200, 200, 200);\n"
-"border-radius: 27px; ")
-        self.widget_6.setObjectName("widget_6")
-        self.horizontalLayout_4 = QtWidgets.QHBoxLayout(self.widget_6)
-        self.horizontalLayout_4.setContentsMargins(6, 2, 6, 2)
-        self.horizontalLayout_4.setSpacing(6)
-        self.horizontalLayout_4.setObjectName("horizontalLayout_4")
-        self.btnSearchProject_2 = QtWidgets.QPushButton(self.widget_6)
-        self.btnSearchProject_2.setMinimumSize(QtCore.QSize(40, 40))
-        self.btnSearchProject_2.setMaximumSize(QtCore.QSize(40, 40))
-        self.btnSearchProject_2.setStyleSheet(" border: none;\n"
-"")
-        self.btnSearchProject_2.setText("")
-        self.btnSearchProject_2.setIcon(icon)
-        self.btnSearchProject_2.setObjectName("btnSearchProject_2")
-        self.horizontalLayout_4.addWidget(self.btnSearchProject_2)
-        self.txtSearchJob = QtWidgets.QLineEdit(self.widget_6)
-        self.txtSearchJob.setMinimumSize(QtCore.QSize(202, 54))
-        self.txtSearchJob.setStyleSheet("border: none;")
-        self.txtSearchJob.setClearButtonEnabled(True)
-        self.txtSearchJob.setObjectName("txtSearchJob")
-        self.horizontalLayout_4.addWidget(self.txtSearchJob)
-        self.verticalLayout_4.addWidget(self.widget_6)
-        self.widget_10 = QtWidgets.QWidget(self.widget_8)
-        self.widget_10.setObjectName("widget_10")
-        self.horizontalLayout_9 = QtWidgets.QHBoxLayout(self.widget_10)
-        self.horizontalLayout_9.setContentsMargins(-1, 0, -1, 0)
-        self.horizontalLayout_9.setSpacing(12)
-        self.horizontalLayout_9.setObjectName("horizontalLayout_9")
-        self.btnNewJob = QtWidgets.QPushButton(self.widget_10)
-        self.btnNewJob.setMinimumSize(QtCore.QSize(81, 81))
-        self.btnNewJob.setMaximumSize(QtCore.QSize(81, 81))
-        icon4 = QtGui.QIcon()
-        icon4.addPixmap(QtGui.QPixmap(":/icon/icon/add-file.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-        self.btnNewJob.setIcon(icon4)
-        self.btnNewJob.setIconSize(QtCore.QSize(32, 32))
+        self.btnNewProject.setMinimumHeight(52)
+        self.jobTopBarLayout.addWidget(self.btnNewProject)
+        self.btnNewJob = QtWidgets.QPushButton("+ New Job", self.jobTopBar)
         self.btnNewJob.setObjectName("btnNewJob")
-        self.horizontalLayout_9.addWidget(self.btnNewJob)
-        self.btnEditJob = QtWidgets.QPushButton(self.widget_10)
-        self.btnEditJob.setMinimumSize(QtCore.QSize(81, 81))
-        self.btnEditJob.setMaximumSize(QtCore.QSize(81, 81))
-        icon5 = QtGui.QIcon()
-        icon5.addPixmap(QtGui.QPixmap(":/icon/icon/note.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-        self.btnEditJob.setIcon(icon5)
-        self.btnEditJob.setIconSize(QtCore.QSize(32, 32))
-        self.btnEditJob.setObjectName("btnEditJob")
-        self.horizontalLayout_9.addWidget(self.btnEditJob)
-        self.btnDeleteJob = QtWidgets.QPushButton(self.widget_10)
-        self.btnDeleteJob.setMinimumSize(QtCore.QSize(81, 81))
-        self.btnDeleteJob.setMaximumSize(QtCore.QSize(81, 81))
-        self.btnDeleteJob.setIcon(icon3)
-        self.btnDeleteJob.setIconSize(QtCore.QSize(32, 32))
-        self.btnDeleteJob.setObjectName("btnDeleteJob")
-        self.horizontalLayout_9.addWidget(self.btnDeleteJob)
-        self.cbbFilterJob = QtWidgets.QComboBox(self.widget_10)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
-        sizePolicy.setHorizontalStretch(0)
-        sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.cbbFilterJob.sizePolicy().hasHeightForWidth())
-        self.cbbFilterJob.setSizePolicy(sizePolicy)
-        self.cbbFilterJob.setMinimumSize(QtCore.QSize(0, 54))
-        self.cbbFilterJob.setMaximumSize(QtCore.QSize(16777215, 54))
-        self.cbbFilterJob.setObjectName("cbbFilterJob")
-        self.cbbFilterJob.addItem("")
-        self.cbbFilterJob.addItem("")
-        self.cbbFilterJob.addItem("")
-        self.cbbFilterJob.addItem("")
-        self.horizontalLayout_9.addWidget(self.cbbFilterJob)
-        spacerItem1 = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
-        self.horizontalLayout_9.addItem(spacerItem1)
-        self.verticalLayout_4.addWidget(self.widget_10)
-        self.verticalLayout_2.addWidget(self.widget_8)
-        self.lstJob = QtWidgets.QListWidget(self.groupBox_2)
-        self.lstJob.setObjectName("lstJob")
-        self.verticalLayout_2.addWidget(self.lstJob)
-        self.horizontalLayout_5.addWidget(self.groupBox_2)
-        self.groupBox_3 = QtWidgets.QGroupBox(self.widget_7)
-        font = QtGui.QFont()
-        font.setPointSize(24)
-        font.setBold(True)
-        font.setWeight(75)
-        self.groupBox_3.setFont(font)
-        self.groupBox_3.setObjectName("groupBox_3")
-        self.verticalLayout_9 = QtWidgets.QVBoxLayout(self.groupBox_3)
-        self.verticalLayout_9.setContentsMargins(0, -1, 0, 0)
-        self.verticalLayout_9.setSpacing(9)
-        self.verticalLayout_9.setObjectName("verticalLayout_9")
-        self.widget_11 = QtWidgets.QWidget(self.groupBox_3)
-        self.widget_11.setMaximumSize(QtCore.QSize(16777215, 432))
-        self.widget_11.setObjectName("widget_11")
-        self.verticalLayout_8 = QtWidgets.QVBoxLayout(self.widget_11)
-        self.verticalLayout_8.setContentsMargins(0, 0, 0, 0)
-        self.verticalLayout_8.setObjectName("verticalLayout_8")
-        self.lstJobDetail = QtWidgets.QListWidget(self.widget_11)
-        self.lstJobDetail.setStyleSheet("/* Item trong list */\n"
-"QListWidget::item {\n"
-"    min-height: 40px;                  /* tăng chiều cao item */\n"
-"  border-bottom: none; /* Đường kẻ mờ phân chia các item */\n"
-"}\n"
-"/* Toàn bộ list widget */\n"
-"QListWidget {\n"
-"    background-color: #FFFFFF;      /* nền trắng */\n"
-"    color: #2F4F6E;                /* chữ xanh đậm */\n"
-"    border: 1px solid #B0C4DE;     /* viền nhẹ */\n"
-"    font-size: 24px;\n"
-"    font-weight: bold;\n"
-"    padding: 2px;\n"
-"}")
-        self.lstJobDetail.setObjectName("lstJobDetail")
-        self.verticalLayout_8.addWidget(self.lstJobDetail)
-        self.verticalLayout_9.addWidget(self.widget_11)
-        self.widget = QtWidgets.QWidget(self.groupBox_3)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Expanding)
-        sizePolicy.setHorizontalStretch(0)
-        sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.widget.sizePolicy().hasHeightForWidth())
-        self.widget.setSizePolicy(sizePolicy)
-        self.widget.setObjectName("widget")
-        self.verticalLayout_3 = QtWidgets.QVBoxLayout(self.widget)
-        self.verticalLayout_3.setObjectName("verticalLayout_3")
-        self.label_6 = QtWidgets.QLabel(self.widget)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Fixed)
-        sizePolicy.setHorizontalStretch(0)
-        sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.label_6.sizePolicy().hasHeightForWidth())
-        self.label_6.setSizePolicy(sizePolicy)
-        font = QtGui.QFont()
-        font.setPointSize(24)
-        font.setBold(True)
-        font.setWeight(75)
-        self.label_6.setFont(font)
-        self.label_6.setStyleSheet("padding-left:10px;")
-        self.label_6.setObjectName("label_6")
-        self.verticalLayout_3.addWidget(self.label_6)
-        self.widget_13 = QtWidgets.QWidget(self.widget)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Fixed)
-        sizePolicy.setHorizontalStretch(0)
-        sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.widget_13.sizePolicy().hasHeightForWidth())
-        self.widget_13.setSizePolicy(sizePolicy)
-        self.widget_13.setObjectName("widget_13")
-        self.horizontalLayout_7 = QtWidgets.QHBoxLayout(self.widget_13)
-        self.horizontalLayout_7.setContentsMargins(-1, 0, -1, 0)
-        self.horizontalLayout_7.setSpacing(12)
-        self.horizontalLayout_7.setObjectName("horizontalLayout_7")
-        self.btnAdd = QtWidgets.QPushButton(self.widget_13)
-        self.btnAdd.setMinimumSize(QtCore.QSize(0, 81))
-        font = QtGui.QFont()
-        font.setPointSize(24)
-        self.btnAdd.setFont(font)
-        icon6 = QtGui.QIcon()
-        icon6.addPixmap(QtGui.QPixmap(":/icon/icon/check.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-        self.btnAdd.setIcon(icon6)
-        self.btnAdd.setObjectName("btnAdd")
-        self.horizontalLayout_7.addWidget(self.btnAdd)
-        self.btnRemove = QtWidgets.QPushButton(self.widget_13)
-        self.btnRemove.setMinimumSize(QtCore.QSize(0, 81))
-        font = QtGui.QFont()
-        font.setPointSize(24)
-        self.btnRemove.setFont(font)
-        icon7 = QtGui.QIcon()
-        icon7.addPixmap(QtGui.QPixmap(":/icon/icon/multiplication.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-        self.btnRemove.setIcon(icon7)
-        self.btnRemove.setObjectName("btnRemove")
-        self.horizontalLayout_7.addWidget(self.btnRemove)
-        spacerItem2 = QtWidgets.QSpacerItem(0, 0, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
-        self.horizontalLayout_7.addItem(spacerItem2)
-        self.verticalLayout_3.addWidget(self.widget_13)
-        self.lstJobActive = QtWidgets.QListWidget(self.widget)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Preferred)
-        sizePolicy.setHorizontalStretch(0)
-        sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.lstJobActive.sizePolicy().hasHeightForWidth())
-        self.lstJobActive.setSizePolicy(sizePolicy)
-        self.lstJobActive.setObjectName("lstJobActive")
-        self.verticalLayout_3.addWidget(self.lstJobActive)
-        self.verticalLayout_9.addWidget(self.widget)
-        self.verticalLayout_9.setStretch(0, 1)
-        self.verticalLayout_9.setStretch(1, 1)
-        self.horizontalLayout_5.addWidget(self.groupBox_3)
-        self.horizontalLayout_5.setStretch(0, 2)
-        self.horizontalLayout_5.setStretch(1, 2)
-        self.horizontalLayout_5.setStretch(2, 3)
-        self.verticalLayout_6.addWidget(self.widget_7)
-        self.verticalLayout_7.addWidget(self.ftm_ProjectManager)
+        self.btnNewJob.setMinimumHeight(52)
+        self.jobTopBarLayout.addWidget(self.btnNewJob)
+        self.rootLayout.addWidget(self.jobTopBar)
+
+        # ---- Main grid: Projects&Jobs (left) / Work Schedule (right) ----
+        self.mainGrid = QtWidgets.QHBoxLayout()
+        self.mainGrid.setSpacing(16)
+        self.rootLayout.addLayout(self.mainGrid, 1)
+
+        # Left card
+        self.projectsCard = QtWidgets.QFrame(frm_ProjectPage)
+        self.projectsCard.setObjectName("jobCard")
+        self.projectsCardLayout = QtWidgets.QVBoxLayout(self.projectsCard)
+        self.projectsCardLayout.setContentsMargins(18, 18, 18, 18)
+        self.projectsCardLayout.setSpacing(10)
+
+        self.projectsHeaderRow = QtWidgets.QHBoxLayout()
+        self.projectsCardTitle = QtWidgets.QLabel("Projects & Jobs List", self.projectsCard)
+        self.projectsCardTitle.setObjectName("jobCardTitle")
+        self.projectsHeaderRow.addWidget(self.projectsCardTitle)
+        self.projectsHeaderRow.addStretch(1)
+        self.txtSearchProject = QtWidgets.QLineEdit(self.projectsCard)
+        self.txtSearchProject.setObjectName("txtSearch")
+        self.txtSearchProject.setPlaceholderText("Search...")
+        self.txtSearchProject.setMinimumHeight(44)
+        self.txtSearchProject.setMaximumWidth(240)
+        self.txtSearchProject.setClearButtonEnabled(True)
+        self.projectsHeaderRow.addWidget(self.txtSearchProject)
+        self.projectsCardLayout.addLayout(self.projectsHeaderRow)
+
+        self.projectsScroll = QtWidgets.QScrollArea(self.projectsCard)
+        self.projectsScroll.setWidgetResizable(True)
+        self.projectsScrollContent = QtWidgets.QWidget()
+        self.projectsListLayout = QtWidgets.QVBoxLayout(self.projectsScrollContent)
+        self.projectsListLayout.setContentsMargins(0, 0, 0, 0)
+        self.projectsListLayout.setSpacing(10)
+        self.projectsListLayout.addStretch(1)
+        self.projectsScroll.setWidget(self.projectsScrollContent)
+        self.projectsCardLayout.addWidget(self.projectsScroll, 1)
+
+        self.mainGrid.addWidget(self.projectsCard, 1)
+
+        # Right card
+        self.scheduleCardOuter = QtWidgets.QFrame(frm_ProjectPage)
+        self.scheduleCardOuter.setObjectName("jobCard")
+        self.scheduleCardOuterLayout = QtWidgets.QVBoxLayout(self.scheduleCardOuter)
+        self.scheduleCardOuterLayout.setContentsMargins(18, 18, 18, 18)
+        self.scheduleCardOuterLayout.setSpacing(10)
+
+        self.scheduleCardTitle = QtWidgets.QLabel("Work Schedule", self.scheduleCardOuter)
+        self.scheduleCardTitle.setObjectName("jobCardTitle")
+        self.scheduleCardOuterLayout.addWidget(self.scheduleCardTitle)
+
+        self.scheduleScroll = QtWidgets.QScrollArea(self.scheduleCardOuter)
+        self.scheduleScroll.setWidgetResizable(True)
+        self.scheduleScrollContent = QtWidgets.QWidget()
+        self.scheduleListLayout = QtWidgets.QVBoxLayout(self.scheduleScrollContent)
+        self.scheduleListLayout.setContentsMargins(0, 0, 0, 0)
+        self.scheduleListLayout.setSpacing(10)
+        self.scheduleListLayout.addStretch(1)
+        self.scheduleScroll.setWidget(self.scheduleScrollContent)
+        self.scheduleCardOuterLayout.addWidget(self.scheduleScroll, 1)
+
+        self.mainGrid.addWidget(self.scheduleCardOuter, 1)
 
         self.retranslateUi(frm_ProjectPage)
         QtCore.QMetaObject.connectSlotsByName(frm_ProjectPage)
@@ -560,21 +228,6 @@ class Ui_frm_ProjectPage(object):
     def retranslateUi(self, frm_ProjectPage):
         _translate = QtCore.QCoreApplication.translate
         frm_ProjectPage.setWindowTitle(_translate("frm_ProjectPage", "Form"))
-        self.groupBox.setTitle(_translate("frm_ProjectPage", "Project"))
-        self.lblProjectName.setText(_translate("frm_ProjectPage", "#CurrnetProject"))
-        self.txtSearchProject.setPlaceholderText(_translate("frm_ProjectPage", "Search"))
-        self.groupBox_2.setTitle(_translate("frm_ProjectPage", "Job Number"))
-        self.lblJobName.setText(_translate("frm_ProjectPage", "#CurrnetJob"))
-        self.txtSearchJob.setPlaceholderText(_translate("frm_ProjectPage", "Search"))
-        self.cbbFilterJob.setItemText(0, _translate("frm_ProjectPage", "All"))
-        self.cbbFilterJob.setItemText(1, _translate("frm_ProjectPage", "Pending"))
-        self.cbbFilterJob.setItemText(2, _translate("frm_ProjectPage", "Activate"))
-        self.cbbFilterJob.setItemText(3, _translate("frm_ProjectPage", "Finish"))
-        self.groupBox_3.setTitle(_translate("frm_ProjectPage", "Work Order"))
-        self.label_6.setText(_translate("frm_ProjectPage", "Active Work Orders"))
-        self.btnAdd.setText(_translate("frm_ProjectPage", "Schedule"))
-        self.btnRemove.setText(_translate("frm_ProjectPage", "Unschedule"))
-from ui import resource_rc
 
 
 if __name__ == "__main__":
@@ -583,5 +236,6 @@ if __name__ == "__main__":
     frm_ProjectPage = QtWidgets.QWidget()
     ui = Ui_frm_ProjectPage()
     ui.setupUi(frm_ProjectPage)
+    frm_ProjectPage.resize(1400, 900)
     frm_ProjectPage.show()
     sys.exit(app.exec_())

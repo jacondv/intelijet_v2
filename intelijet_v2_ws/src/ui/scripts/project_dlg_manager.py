@@ -1,9 +1,11 @@
 # -*- coding: utf-8 -*-
 from datetime import datetime
-from PyQt5 import QtCore
-from PyQt5.QtCore import QEvent
 
-from PyQt5.QtWidgets import QWidget, QInputDialog, QMessageBox, QListWidgetItem, QHBoxLayout, QPushButton, QVBoxLayout,QTextEdit, QLineEdit, QPlainTextEdit
+from PyQt5 import QtCore
+from PyQt5.QtWidgets import (
+    QWidget, QFrame, QInputDialog, QMessageBox, QHBoxLayout, QVBoxLayout,
+    QLabel, QPushButton, QLineEdit,
+)
 
 from ui.project_dlg_ui import Ui_frm_ProjectPage
 
@@ -15,7 +17,7 @@ PROJECT_DIR = repo.PROJECT_DIR
 ACTIVE_JOB_FILE = repo.ACTIVE_JOB_FILE
 
 
-from PyQt5.QtWidgets import QDialog, QFormLayout, QLineEdit, QSpinBox, QComboBox, QDialogButtonBox
+from PyQt5.QtWidgets import QDialog, QFormLayout, QSpinBox, QComboBox, QDialogButtonBox
 
 class NewProjectDlg(QDialog):
     def __init__(self, parent=None):
@@ -114,50 +116,183 @@ class JobInfoDialog(QDialog):
 
 
 class ProjectManager(QWidget, Ui_frm_ProjectPage):
+    """2-column JOB tab (docs/ui_sample/App.html TAB 2): 'Projects & Jobs
+    List' (left, always-expanded project cards - no collapse, matching
+    the mockup) and 'Work Schedule' (right). Project/job rows are plain
+    widgets built and rebuilt in render_projects()/render_schedule() -
+    there's no QListWidget selection model here, every row carries its
+    own project/job directly via closures on its buttons."""
+
     def __init__(self, job_store=None):
         super().__init__()
         self.setupUi(self)
         self.setWindowTitle("Project Manager")
 
-        # All Projects/Jobs filesystem access goes through project_repository
-        # (single source of truth for PROJECT_DIR's layout - see that
-        # module's docstring). active_jobs.json goes through JobStore
-        # (atomic writes) - accept an existing instance so this shares
-        # the same cache App uses for cbbJobSelect instead of each
-        # keeping an out-of-sync copy of the same file.
+        # Shared with App (same active_jobs.json cache) instead of each
+        # opening an independent JobStore - see project_repository.py.
         self.job_store = job_store or JobStore(repo.ACTIVE_JOB_FILE, repo.CURRENT_JOB_FILE)
 
-        self.current_project = None
-        self.current_job = None
-
-        # ====== CONNECT SIGNALS ======
         self.btnNewProject.clicked.connect(self.new_project)
-        self.btnRenameProject.clicked.connect(self.rename_project)
-        self.btnDeleteProject.clicked.connect(self.delete_project)
-        self.lstProject.itemClicked.connect(self.select_project)
-        self.txtSearchProject.textChanged.connect(self.filter_projects)
+        self.btnNewJob.clicked.connect(lambda: self.new_job())
+        self.txtSearchProject.textChanged.connect(lambda _text: self.render_projects())
 
-        self.btnNewJob.clicked.connect(self.new_job)
-        self.btnEditJob.clicked.connect(self.edit_job)
-        self.btnDeleteJob.clicked.connect(self.delete_job)
-        self.lstJob.itemClicked.connect(self.select_job)
-        self.txtSearchJob.textChanged.connect(self.filter_jobs)
-
-
-        self.btnAdd.clicked.connect(self.add_job_to_active)
-        self.btnRemove.clicked.connect(self.remove_job_from_active)
-
-        self.update_project_list()
-        self.load_active_jobs()
-
+        self.render_projects()
+        self.render_schedule()
 
     # =========================
-    #      PROJECT SECTION
+    #        RENDERING
+    # =========================
+    def _clear_dynamic_rows(self, layout):
+        """Remove every item except the trailing stretch (always last -
+        every insert in this file uses insertWidget(count()-1, ...))."""
+        while layout.count() > 1:
+            item = layout.takeAt(0)
+            widget = item.widget()
+            if widget:
+                widget.deleteLater()
+
+    def _empty_label(self, text):
+        lbl = QLabel(text)
+        lbl.setObjectName("emptyStateLabel")
+        lbl.setAlignment(QtCore.Qt.AlignCenter)
+        return lbl
+
+    def render_projects(self):
+        layout = self.projectsListLayout
+        self._clear_dynamic_rows(layout)
+
+        search = self.txtSearchProject.text().strip().lower()
+        any_shown = False
+        for project in repo.list_projects():
+            jobs = repo.list_jobs(project)
+            project_matches = not search or search in project.lower()
+            jobs_to_show = jobs if project_matches else [j for j in jobs if search in j.lower()]
+            if search and not project_matches and not jobs_to_show:
+                continue
+            any_shown = True
+            layout.insertWidget(layout.count() - 1, self._build_project_card(project, jobs_to_show))
+
+        if not any_shown:
+            text = "No projects found." if search else "No projects yet - create one with \"+ New Project\"."
+            layout.insertWidget(0, self._empty_label(text))
+
+    def _build_project_card(self, project, jobs):
+        card = QFrame()
+        card.setObjectName("projectCard")
+        v = QVBoxLayout(card)
+        v.setContentsMargins(14, 12, 14, 12)
+        v.setSpacing(8)
+
+        header = QHBoxLayout()
+        title = QLabel(f"Project: {project}")
+        title.setObjectName("projectHeaderLabel")
+        header.addWidget(title)
+        header.addStretch(1)
+
+        btn_add_job = QPushButton("+ Add Job")
+        btn_add_job.setProperty("cssClass", "rowPrimaryBtn")
+        btn_add_job.clicked.connect(lambda _checked, p=project: self.new_job(p))
+        header.addWidget(btn_add_job)
+
+        btn_rename = QPushButton("Rename")
+        btn_rename.setProperty("cssClass", "rowActionBtn")
+        btn_rename.clicked.connect(lambda _checked, p=project: self.rename_project(p))
+        header.addWidget(btn_rename)
+
+        btn_delete = QPushButton("Delete")
+        btn_delete.setProperty("cssClass", "rowDangerBtn")
+        btn_delete.clicked.connect(lambda _checked, p=project: self.delete_project(p))
+        header.addWidget(btn_delete)
+
+        v.addLayout(header)
+
+        if not jobs:
+            v.addWidget(self._empty_label("No jobs yet."))
+        for job in jobs:
+            v.addWidget(self._build_job_row(project, job))
+
+        return card
+
+    def _build_job_row(self, project, job):
+        row = QFrame()
+        row.setObjectName("jobRow")
+        h = QHBoxLayout(row)
+        h.setContentsMargins(12, 8, 12, 8)
+
+        info = QVBoxLayout()
+        info.setSpacing(2)
+        title = QLabel(job)
+        title.setObjectName("jobRowTitle")
+        info.addWidget(title)
+
+        job_info = repo.load_job_info(project, job)
+        created = job_info.created if job_info else "--"
+        subtext = QLabel(f"Created: {created}")
+        subtext.setObjectName("jobRowSubtext")
+        info.addWidget(subtext)
+        h.addLayout(info)
+        h.addStretch(1)
+
+        btn_schedule = QPushButton("Schedule")
+        btn_schedule.setProperty("cssClass", "rowPrimaryBtn")
+        btn_schedule.clicked.connect(lambda _checked, p=project, j=job: self.add_job_to_active(p, j))
+        h.addWidget(btn_schedule)
+
+        btn_edit = QPushButton("Edit")
+        btn_edit.setProperty("cssClass", "rowActionBtn")
+        btn_edit.clicked.connect(lambda _checked, p=project, j=job: self.edit_job(p, j))
+        h.addWidget(btn_edit)
+
+        btn_delete = QPushButton("Delete")
+        btn_delete.setProperty("cssClass", "rowDangerBtn")
+        btn_delete.clicked.connect(lambda _checked, p=project, j=job: self.delete_job(p, j))
+        h.addWidget(btn_delete)
+
+        return row
+
+    def render_schedule(self):
+        layout = self.scheduleListLayout
+        self._clear_dynamic_rows(layout)
+
+        jobs = self.job_store.list_active_jobs()
+        if not jobs:
+            layout.insertWidget(0, self._empty_label("No scheduled jobs."))
+            return
+        for j in jobs:
+            layout.insertWidget(layout.count() - 1, self._build_schedule_card(j["project"], j["job"]))
+
+    def _build_schedule_card(self, project, job):
+        card = QFrame()
+        card.setObjectName("scheduleCard")
+        h = QHBoxLayout(card)
+        h.setContentsMargins(14, 12, 14, 12)
+
+        info = QVBoxLayout()
+        info.setSpacing(2)
+        title = QLabel(f"{project} / {job}")
+        title.setObjectName("scheduleTitle")
+        info.addWidget(title)
+
+        job_info = repo.load_job_info(project, job)
+        status = job_info.status.capitalize() if job_info else "Unknown"
+        subtext = QLabel(f"Status: {status}")
+        subtext.setObjectName("scheduleSubtext")
+        info.addWidget(subtext)
+        h.addLayout(info)
+        h.addStretch(1)
+
+        btn_pause = QPushButton("Pause")
+        btn_pause.setProperty("cssClass", "rowDangerBtn")
+        btn_pause.clicked.connect(lambda _checked, p=project, j=job: self.remove_job_from_active(p, j))
+        h.addWidget(btn_pause)
+
+        return card
+
+    # =========================
+    #      PROJECT ACTIONS
     # =========================
     def new_project(self):
-        """Tạo mới project (thư mục con trong ROOT_DIR)."""
         dlg = NewProjectDlg(self)
-
         if dlg.exec_() != QDialog.Accepted:
             return
 
@@ -171,21 +306,9 @@ class ProjectManager(QWidget, Ui_frm_ProjectPage):
             QMessageBox.warning(self, "Exists", str(e))
             return
 
-        self.update_project_list()
+        self.render_projects()
 
-        # Alway select new Item
-        items = self.lstProject.findItems(name, QtCore.Qt.MatchExactly)
-        if items:
-            self.lstProject.setCurrentItem(items[0])
-
-    def rename_project(self):
-        """Đổi tên thư mục project."""
-        item = self.lstProject.currentItem()
-        if not item:
-            QMessageBox.warning(self, "No selection", "Please select a project to rename.")
-            return
-
-        old_name = item.text()
+    def rename_project(self, old_name):
         for job in self.job_store.list_active_jobs():
             if job["project"] == old_name:
                 QMessageBox.warning(self, "Active Job", "Cannot rename a project with active jobs. Please remove its jobs from active jobs first.")
@@ -194,24 +317,19 @@ class ProjectManager(QWidget, Ui_frm_ProjectPage):
         new_name, ok = QInputDialog.getText(self, "Rename Project", "Enter new name:", text=old_name)
         if not ok or not new_name.strip() or new_name == old_name:
             return
-
         new_name = new_name.strip()
+
         try:
             repo.rename_project(old_name, new_name)
         except repo.ProjectError as e:
             QMessageBox.warning(self, "Exists", str(e))
             return
 
-        self.update_project_list()
+        self.job_store.rename_active_job_project(old_name, new_name)
+        self.render_projects()
+        self.render_schedule()
 
-    def delete_project(self):
-        """Xóa project (thư mục + job con)."""
-        item = self.lstProject.currentItem()
-        if not item:
-            QMessageBox.warning(self, "No selection", "Please select a project to delete.")
-            return
-
-        name = item.text()
+    def delete_project(self, name):
         for job in self.job_store.list_active_jobs():
             if job["project"] == name:
                 QMessageBox.warning(self, "Active Job", "Cannot delete a project with active jobs. Please remove its jobs from [Active Work Orders].")
@@ -226,30 +344,24 @@ class ProjectManager(QWidget, Ui_frm_ProjectPage):
             QMessageBox.critical(self, "Error", f"Failed to delete project folder, some files may have already been removed : {e}")
             return
 
-        self.update_project_list()
-        self.lstJob.clear()
-        self.lblProjectName.setText("#CurrentProject")
-        self.lblJobName.setText("#CurrentJob")
-
-    def select_project(self, item):
-        """Chọn 1 project để hiển thị job bên phải."""
-        name = item.text()
-        self.current_project = name
-        self.lblProjectName.setText(name)
-        self.update_job_list()
+        self.render_projects()
 
     # =========================
-    #         JOB SECTION
+    #        JOB ACTIONS
     # =========================
+    def new_job(self, project=None):
+        """project=None -> triggered from the top-bar "+ New Job" button,
+        which has no implicit project context (no row is "selected" in
+        this card layout), so ask which project via a picker instead."""
+        if project is None:
+            projects = repo.list_projects()
+            if not projects:
+                QMessageBox.warning(self, "No Project", "Please create a project first.")
+                return
+            project, ok = QInputDialog.getItem(self, "New Job", "Project:", projects, 0, False)
+            if not ok or not project:
+                return
 
-    def new_job(self):
-        """Tạo job mới trong project hiện tại và tạo file job_info.json."""
-
-        if not self.current_project:
-            QMessageBox.warning(self, "No Project", "Please select a project first.")
-            return
-
-        # Hiển thị dialog nhập thông tin job
         dlg = JobInfoDialog(self)
         if dlg.exec() != QDialog.Accepted:
             return  # user cancel
@@ -269,86 +381,24 @@ class ProjectManager(QWidget, Ui_frm_ProjectPage):
         )
 
         try:
-            repo.create_job(self.current_project, job_info)
+            repo.create_job(project, job_info)
         except repo.ProjectError as e:
             QMessageBox.warning(self, "Exists", str(e))
             return
 
-        self.update_job_list()
+        self.render_projects()
 
-
-    def rename_job(self):
-        """Đổi tên thư mục job."""
-        if not self.current_project:
-            QMessageBox.warning(self, "No Project", "Please select a project first.")
-            return
-
-        item = self.lstJob.currentItem()
-        if not item:
-            QMessageBox.warning(self, "No selection", "Please select a job to rename.")
-            return
-
-        old_name = item.text()
-        new_name, ok = QInputDialog.getText(self, "Rename Job", "Enter new name:", text=old_name)
-        if not ok or not new_name.strip() or new_name == old_name:
-            return
-
-        new_name = new_name.strip()
-        try:
-            repo.rename_job(self.current_project, old_name, new_name)
-        except repo.ProjectError as e:
-            QMessageBox.warning(self, "Exists", str(e))
-            return
-
-        self.job_store.rename_active_job(self.current_project, old_name, new_name)
-        if self.current_job == old_name:
-            self.current_job = new_name
-        self.update_job_list()
-
-
-    def delete_job(self):
-        """Xóa job khỏi project."""
-        if not self.current_project:
-            QMessageBox.warning(self, "No Project", "Please select a project first.")
-            return
-
-        item = self.lstJob.currentItem()
-        if not item:
-            QMessageBox.warning(self, "No selection", "Please select a job to delete.")
-            return
-
-        name = item.text()
-        for job in self.job_store.list_active_jobs():
-            if job["project"] == self.current_project and job["job"] == name:
-                QMessageBox.warning(self, "Active Job", f"⚠️ Cannot delete {name}.\nPlease cancel it from Active Work Orders first.")
-                return
-
-        if QMessageBox.question(self, "Confirm", f"⚠️ Do you really want to delete '{name}'?") != QMessageBox.Yes:
-            return
-
-        repo.delete_job(self.current_project, name)
-
-        self.update_job_list()
-        self.lblJobName.setText("#CurrentJob")
-
-
-    def edit_job(self):
-        """Chỉnh sửa thông tin job hiện tại"""
-        if not self.current_project or not self.current_job:
-            QMessageBox.warning(self, "No selection", "Please select a job to edit.")
-            return
-
-        for job in self.job_store.list_active_jobs():
-            if job["project"] == self.current_project and job["job"] == self.current_job:
+    def edit_job(self, project, job):
+        for j in self.job_store.list_active_jobs():
+            if j["project"] == project and j["job"] == job:
                 QMessageBox.warning(self, "Active Job", "Cannot edit an active job. Please remove it from active jobs first.")
                 return
 
-        job_info = repo.load_job_info(self.current_project, self.current_job)
+        job_info = repo.load_job_info(project, job)
         if not job_info:
-            QMessageBox.critical(self, "Error", f"Cannot load job_info.json for {self.current_job}")
+            QMessageBox.critical(self, "Error", f"Cannot load job_info.json for {job}")
             return
 
-        # Tạo dialog, load dữ liệu hiện tại
         dlg = JobInfoDialog(self, default_name=job_info.name)
         dlg.name_edit.setText(job_info.name)
         dlg.status_combo.setCurrentText(job_info.status)
@@ -362,142 +412,49 @@ class ProjectManager(QWidget, Ui_frm_ProjectPage):
         data = dlg.get_data()
         new_name = data["name"]
 
-        # Nếu đổi tên folder
-        if new_name != self.current_job:
+        if new_name != job:
             try:
-                repo.rename_job(self.current_project, self.current_job, new_name)
+                repo.rename_job(project, job, new_name)
             except repo.ProjectError as e:
                 QMessageBox.warning(self, "Exists", str(e))
                 return
-            self.job_store.rename_active_job(self.current_project, self.current_job, new_name)
-            self.current_job = new_name
+            self.job_store.rename_active_job(project, job, new_name)
+            job = new_name
 
-        # Update thông tin job_info
         job_info.name = new_name
         job_info.status = data["status"]
         job_info.description = data["description"]
         job_info.parameters = data["parameters"]
 
         try:
-            repo.save_job_info(self.current_project, job_info)
+            repo.save_job_info(project, job_info)
         except OSError as e:
             QMessageBox.critical(self, "Error", f"Unable to save job info:\n{e}")
             return
 
-        self.update_job_list()
-        item = self.lstJob.findItems(self.current_job, QtCore.Qt.MatchExactly)[0]
-        self.select_job(item)  # reload detail
+        self.render_projects()
 
+    def delete_job(self, project, job):
+        for j in self.job_store.list_active_jobs():
+            if j["project"] == project and j["job"] == job:
+                QMessageBox.warning(self, "Active Job", f"Cannot delete {job}.\nPlease cancel it from Active Work Orders first.")
+                return
 
-    def select_job(self, item: QListWidgetItem):
-        """Hiển thị chi tiết job khi người dùng click chọn."""
-        if not item:
-            return
-        name = item.text()
-        self.current_job = name
-        self.lblJobName.setText(name)
-        self.lstJobDetail.clear()
-
-        job_info = repo.load_job_info(self.current_project, self.current_job)
-        if not job_info:
-            QMessageBox.warning(self, "Error", "job_info.json not found or invalid")
+        if QMessageBox.question(self, "Confirm", f"Do you really want to delete '{job}'?") != QMessageBox.Yes:
             return
 
-        # Hiển thị nội dung ra lstJobDetail từ job_info
-        self.lstJobDetail.addItem(f"• Job: {job_info.name}")
-        self.lstJobDetail.addItem(f"• Created: {job_info.created}")
-        self.lstJobDetail.addItem(f"• Status: {job_info.status}")
-        self.lstJobDetail.addItem(f"• Description: {job_info.description}")
-
-        # Hiển thị parameters
-        if job_info.parameters:
-            self.lstJobDetail.addItem("⚙️ Parameters:")
-            for key, value in job_info.parameters.items():
-                self.lstJobDetail.addItem(f"    • {key}: {value}")
-
-
-    # =========================
-    #      LOAD / UPDATE
-    # =========================
-    def update_project_list(self):
-        """Cập nhật danh sách project (luôn đọc trực tiếp từ filesystem,
-        không giữ cache riêng - project_repository.list_projects() đã
-        rẻ vừa đủ để gọi lại mỗi lần thay vì tự đồng bộ tay một bản sao)."""
-        self.lstProject.clear()
-        for name in repo.list_projects():
-            self.lstProject.addItem(name)
-
-
-    def update_job_list(self):
-        """Cập nhật danh sách job theo project đang chọn."""
-        self.lstJob.clear()
-        if self.current_project:
-            for job in repo.list_jobs(self.current_project):
-                self.lstJob.addItem(job)
-
-
-    def filter_projects(self, text):
-        text = text.lower().strip()
-        self.lstProject.clear()
-        for name in repo.list_projects():
-            if text in name.lower():
-                self.lstProject.addItem(name)
-
-
-    def filter_jobs(self, text):
-        text = text.lower().strip()
-        self.lstJob.clear()
-        if self.current_project:
-            for name in repo.list_jobs(self.current_project):
-                if text in name.lower():
-                    self.lstJob.addItem(name)
+        repo.delete_job(project, job)
+        self.render_projects()
 
     # =========================
     #     ACTIVE JOB SECTION
     # =========================
-    def load_active_jobs(self, data_only=False):
-        """Đọc danh sách job đang active (qua JobStore - atomic, cached)."""
-        jobs = self.job_store.list_active_jobs()
-
-        if data_only:
-            return jobs
-
-        self.lstJobActive.clear()
-        for job in jobs:
-            job_name = f"{job['project']} / {job['job']}"
-            self.lstJobActive.addItem(job_name)
-
-        return jobs
-
-    def add_job_to_active(self):
-        """Thêm job hiện tại vào danh sách active."""
-        if not self.current_project:
-            QMessageBox.warning(self, "No Project", "Please select a project first.")
+    def add_job_to_active(self, project, job):
+        if not self.job_store.add_active_job(project, job):
+            QMessageBox.information(self, "Exists", f"Job '{job}' is already active.")
             return
+        self.render_schedule()
 
-        item = self.lstJob.currentItem()
-        if not item:
-            QMessageBox.warning(self, "No Job", "Please select a job to add.")
-            return
-
-        job_name = item.text()
-        if not self.job_store.add_active_job(self.current_project, job_name):
-            QMessageBox.information(self, "Exists", f"Job '{job_name}' is already active.")
-            return
-
-        self.load_active_jobs()
-
-    def remove_job_from_active(self):
-        """Xóa job khỏi danh sách active."""
-        item = self.lstJobActive.currentItem()
-        if not item:
-            QMessageBox.warning(self, "No selection", "Please select an active job to remove.")
-            return
-
-        project_name, job_name = repo.parse_job_ref(item.text())
-        if not job_name:
-            QMessageBox.warning(self, "Invalid", "Invalid job format.")
-            return
-
-        self.job_store.remove_active_job(project_name, job_name)
-        self.load_active_jobs()
+    def remove_job_from_active(self, project, job):
+        self.job_store.remove_active_job(project, job)
+        self.render_schedule()
