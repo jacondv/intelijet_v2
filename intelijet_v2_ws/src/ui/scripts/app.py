@@ -35,6 +35,7 @@ from ui.notification_history_dialog import NotificationHistoryDialog
 from ui.diagnostics_tab import DiagnosticsTab
 
 from ui.services.job_store import JobStore
+from ui.services import project_repository
 from ui.services.cloud_pipeline import CloudPipelineService
 from ui.services.report_service import ReportService
 from ui.scan_pipeline_worker import ScanPipelineWorker
@@ -53,15 +54,13 @@ CLOUD_COMPARED_UPSAMPLE_TOPIC_MANUAL = f"{CLOUD_COMPARED_TOPIC_MANUAL}/upsample"
 PRE_SCAN_CLOUD_TOPIC = cfg.PRE_SCAN_CLOUD_TOPIC
 POST_SCAN_CLOUD_TOPIC = cfg.POST_SCAN_CLOUD_TOPIC
 
-CURRENT_JOB_FILE_NAME = "current_job.json"
-ACTIVE_JOB_FILE_NAME = "active_jobs.json"
-PROJECT_FOLDER_NAME = "Projects"
-JOBINFO_FILE_NAME = "job_info.json"
-
 DATA_DIR = cfg.DATA_DIR
-PROJECT_DIR = os.path.join(BASE_DIR, DATA_DIR, PROJECT_FOLDER_NAME)
-ACTIVE_JOB_FILE = os.path.join(PROJECT_DIR, ACTIVE_JOB_FILE_NAME)
-CURRENT_JOB_FILE = os.path.join(PROJECT_DIR, CURRENT_JOB_FILE_NAME)
+# PROJECT_DIR/ACTIVE_JOB_FILE/CURRENT_JOB_FILE: single source of truth is
+# ui.services.project_repository - see that module's docstring for why
+# (this used to be redeclared independently in 5 different files).
+PROJECT_DIR = project_repository.PROJECT_DIR
+ACTIVE_JOB_FILE = project_repository.ACTIVE_JOB_FILE
+CURRENT_JOB_FILE = project_repository.CURRENT_JOB_FILE
 
 THICKNESS_DEFAULT = cfg.thickness.target  # Target thickness in meter -> convert mm to m
 TOLERANCE_DEFAULT = cfg.thickness.tolerance  # Allowable tolerance in meter of thickness
@@ -101,7 +100,11 @@ class App(QMainWindow):
         self.ui.btnNavAlarm.clicked.connect(lambda: self.ui.stacked.setCurrentWidget(self.diagnostics_tab))
 
         # ------Tab JobSetting ---
-        self.project_manager = ProjectManager()
+        # JobStore built here (not at its previous spot further down) so
+        # ProjectManager can share this exact instance/cache instead of
+        # opening a second independent JobStore on the same active_jobs.json.
+        self.job_store = JobStore(ACTIVE_JOB_FILE, CURRENT_JOB_FILE)
+        self.project_manager = ProjectManager(job_store=self.job_store)
         if self.ui.tab_jobnumber.layout() is None:
             self.ui.tab_jobnumber.setLayout(QVBoxLayout())
         self.ui.tab_jobnumber.layout().addWidget(self.project_manager)
@@ -177,7 +180,6 @@ class App(QMainWindow):
         self.ui.btnSetHome.released.connect(self.confirm_and_send_sethome)
 
         # --- Select Job to work process ---
-        self.job_store = JobStore(ACTIVE_JOB_FILE, CURRENT_JOB_FILE)
         self._populate_job_combobox()
         self.load_current_job()
         # self.ui.cbbJobSelect.currentIndexChanged.connect(self.on_job_changed)
@@ -473,8 +475,7 @@ class App(QMainWindow):
         from report_view_dlg_manager import ReportViewManager
         dlg = ReportViewManager()
 
-        parts = [p.strip() for p in self.ui.cbbJobSelect.currentText().split("/")]
-        project, job = (parts + [None]*2)[:2]  # Nếu thiếu phần, job = None
+        project, job = project_repository.parse_job_ref(self.ui.cbbJobSelect.currentText())
         dlg.initialize(project,job)
 
         if dlg.exec_() == QDialog.Rejected:
@@ -487,8 +488,7 @@ class App(QMainWindow):
         from compare_dlg_manager import CompareManager
         jobcompare_dlg = CompareManager()
         # Initialize dialog with current selected project and job
-        parts = [p.strip() for p in self.ui.cbbJobSelect.currentText().split("/")]
-        project, job = (parts + [None]*2)[:2]  # Nếu thiếu phần, job = None
+        project, job = project_repository.parse_job_ref(self.ui.cbbJobSelect.currentText())
         jobcompare_dlg.initialize(project,job)
         jobcompare_dlg.polydataSignal.connect(self.update_pointcloud_from_data)
 

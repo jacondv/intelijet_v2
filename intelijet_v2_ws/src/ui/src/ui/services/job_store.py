@@ -51,6 +51,53 @@ class JobStore:
         """Return the cached list of {'project': ..., 'job': ...} dicts."""
         return list(self._active_jobs_cache)
 
+    def add_active_job(self, project, job):
+        """Add {'project': project, 'job': job} if not already present.
+        Returns False (no-op) if that project/job was already active."""
+        for j in self._active_jobs_cache:
+            if j.get("project") == project and j.get("job") == job:
+                return False
+        self._active_jobs_cache.append({"project": project, "job": job})
+        _atomic_write_json(self._active_job_file, self._active_jobs_cache)
+        return True
+
+    def remove_active_job(self, project, job):
+        """Remove the {project, job} entry if present. Returns False
+        (no-op) if it wasn't active."""
+        before = len(self._active_jobs_cache)
+        self._active_jobs_cache = [
+            j for j in self._active_jobs_cache
+            if not (j.get("project") == project and j.get("job") == job)
+        ]
+        if len(self._active_jobs_cache) == before:
+            return False
+        _atomic_write_json(self._active_job_file, self._active_jobs_cache)
+        return True
+
+    def rename_active_job(self, project, old_job, new_job):
+        """Update the job name on a matching active entry (called after
+        a job folder rename), if that job was active."""
+        changed = False
+        for j in self._active_jobs_cache:
+            if j.get("project") == project and j.get("job") == old_job:
+                j["job"] = new_job
+                changed = True
+        if changed:
+            _atomic_write_json(self._active_job_file, self._active_jobs_cache)
+        return changed
+
+    def rename_active_job_project(self, old_project, new_project):
+        """Update the project name on every active entry that referenced
+        old_project (called after a project folder rename)."""
+        changed = False
+        for j in self._active_jobs_cache:
+            if j.get("project") == old_project:
+                j["project"] = new_project
+                changed = True
+        if changed:
+            _atomic_write_json(self._active_job_file, self._active_jobs_cache)
+        return changed
+
     def get_current_job(self):
         """Return the 'project/job' string of the currently selected job,
         or None if unset/unreadable."""

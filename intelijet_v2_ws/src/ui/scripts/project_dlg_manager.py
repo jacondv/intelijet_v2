@@ -1,9 +1,4 @@
 # -*- coding: utf-8 -*-
-import os
-import shutil
-import json
-import re
-
 from datetime import datetime
 from PyQt5 import QtCore
 from PyQt5.QtCore import QEvent
@@ -11,18 +6,13 @@ from PyQt5.QtCore import QEvent
 from PyQt5.QtWidgets import QWidget, QInputDialog, QMessageBox, QListWidgetItem, QHBoxLayout, QPushButton, QVBoxLayout,QTextEdit, QLineEdit, QPlainTextEdit
 
 from ui.project_dlg_ui import Ui_frm_ProjectPage
-from shared.config_loader import CONFIG as cfg
 
 from ui.models.job_info import JobInfo
-from ui.models.file_name import is_sync_junk
+from ui.services import project_repository as repo
+from ui.services.job_store import JobStore
 
-
-
-
-BASE_DIR = cfg.BASE_DIR
-DATA_DIR = cfg.DATA_DIR
-PROJECT_DIR = os.path.join(BASE_DIR, DATA_DIR, "Projects")
-ACTIVE_JOB_FILE = os.path.join(PROJECT_DIR, "active_jobs.json")
+PROJECT_DIR = repo.PROJECT_DIR
+ACTIVE_JOB_FILE = repo.ACTIVE_JOB_FILE
 
 
 from PyQt5.QtWidgets import QDialog, QFormLayout, QLineEdit, QSpinBox, QComboBox, QDialogButtonBox
@@ -106,10 +96,10 @@ class JobInfoDialog(QDialog):
         self.buttons.accepted.connect(self.accept)
         self.buttons.rejected.connect(self.reject)
         layout.addRow(self.buttons)
-        
+
 
         self.setLayout(layout)
-    
+
     def get_data(self):
         """Trả về dict chứa tất cả dữ liệu"""
         return {
@@ -124,20 +114,21 @@ class JobInfoDialog(QDialog):
 
 
 class ProjectManager(QWidget, Ui_frm_ProjectPage):
-    def __init__(self):
+    def __init__(self, job_store=None):
         super().__init__()
         self.setupUi(self)
         self.setWindowTitle("Project Manager")
 
-        os.makedirs(PROJECT_DIR, exist_ok=True)
+        # All Projects/Jobs filesystem access goes through project_repository
+        # (single source of truth for PROJECT_DIR's layout - see that
+        # module's docstring). active_jobs.json goes through JobStore
+        # (atomic writes) - accept an existing instance so this shares
+        # the same cache App uses for cbbJobSelect instead of each
+        # keeping an out-of-sync copy of the same file.
+        self.job_store = job_store or JobStore(repo.ACTIVE_JOB_FILE, repo.CURRENT_JOB_FILE)
 
-        # Biến dữ liệu
-        self.projects = {}
         self.current_project = None
         self.current_job = None
-
-        # Nạp danh sách
-        self.load_projects()
 
         # ====== CONNECT SIGNALS ======
         self.btnNewProject.clicked.connect(self.new_project)
@@ -165,23 +156,21 @@ class ProjectManager(QWidget, Ui_frm_ProjectPage):
     # =========================
     def new_project(self):
         """Tạo mới project (thư mục con trong ROOT_DIR)."""
-        from PyQt5.QtCore import QTimer
         dlg = NewProjectDlg(self)
 
         if dlg.exec_() != QDialog.Accepted:
             return
-        
+
         name = dlg.get_text().strip()
         if not name:
             return
-        
-        project_path = os.path.join(PROJECT_DIR, name)
-        if os.path.exists(project_path):
-                QMessageBox.warning(self, "Exists", f"Project '{name}' already exists.")
-                return
-        os.makedirs(project_path)
 
-        self.projects[name] = {"jobs": [], "created": datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
+        try:
+            repo.create_project(name)
+        except repo.ProjectError as e:
+            QMessageBox.warning(self, "Exists", str(e))
+            return
+
         self.update_project_list()
 
         # Alway select new Item
@@ -197,9 +186,8 @@ class ProjectManager(QWidget, Ui_frm_ProjectPage):
             return
 
         old_name = item.text()
-        activate_jobs = self.load_active_jobs(data_only=True)
-        for job in activate_jobs:
-            if job["project"] == self.current_project:
+        for job in self.job_store.list_active_jobs():
+            if job["project"] == old_name:
                 QMessageBox.warning(self, "Active Job", "Cannot rename a project with active jobs. Please remove its jobs from active jobs first.")
                 return
 
@@ -208,15 +196,12 @@ class ProjectManager(QWidget, Ui_frm_ProjectPage):
             return
 
         new_name = new_name.strip()
-        old_path = os.path.join(PROJECT_DIR, old_name)
-        new_path = os.path.join(PROJECT_DIR, new_name)
-
-        if os.path.exists(new_path):
-            QMessageBox.warning(self, "Exists", f"Project '{new_name}' already exists.")
+        try:
+            repo.rename_project(old_name, new_name)
+        except repo.ProjectError as e:
+            QMessageBox.warning(self, "Exists", str(e))
             return
 
-        os.rename(old_path, new_path)
-        self.projects[new_name] = self.projects.pop(old_name)
         self.update_project_list()
 
     def delete_project(self):
@@ -227,27 +212,19 @@ class ProjectManager(QWidget, Ui_frm_ProjectPage):
             return
 
         name = item.text()
-        activate_jobs = self.load_active_jobs(data_only=True)
-        for job in activate_jobs:
+        for job in self.job_store.list_active_jobs():
             if job["project"] == name:
                 QMessageBox.warning(self, "Active Job", "Cannot delete a project with active jobs. Please remove its jobs from [Active Work Orders].")
                 return
-            
+
         if QMessageBox.question(self, "Confirm", f"Delete project '{name}' and all its jobs?") != QMessageBox.Yes:
             return
 
-        # Xóa thư mục thật
-        project_path = os.path.join(PROJECT_DIR, name)
-        if os.path.exists(project_path):
-            try:
-                shutil.rmtree(project_path)
-            except Exception as e:
-                QMessageBox.critical(self, "Error", f"Failed to delete project folder, some files may have already been removed : {e}")
-                return
-
-        # Cập nhật bộ nhớ
-        if name in self.projects and not os.path.exists(project_path):
-            del self.projects[name]
+        try:
+            repo.delete_project(name)
+        except OSError as e:
+            QMessageBox.critical(self, "Error", f"Failed to delete project folder, some files may have already been removed : {e}")
+            return
 
         self.update_project_list()
         self.lstJob.clear()
@@ -267,12 +244,10 @@ class ProjectManager(QWidget, Ui_frm_ProjectPage):
 
     def new_job(self):
         """Tạo job mới trong project hiện tại và tạo file job_info.json."""
-        
+
         if not self.current_project:
             QMessageBox.warning(self, "No Project", "Please select a project first.")
             return
-
-        project_path = os.path.join(PROJECT_DIR, self.current_project)
 
         # Hiển thị dialog nhập thông tin job
         dlg = JobInfoDialog(self)
@@ -285,14 +260,6 @@ class ProjectManager(QWidget, Ui_frm_ProjectPage):
             QMessageBox.warning(self, "Invalid Name", "Job name cannot be empty.")
             return
 
-        job_path = os.path.join(project_path, name)
-        if os.path.exists(job_path):
-            QMessageBox.warning(self, "Exists", f"Job '{name}' already exists.")
-            return
-
-        os.makedirs(job_path)
-
-        # Tạo JobInfo từ dữ liệu dialog
         job_info = JobInfo(
             name=name,
             created=datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
@@ -301,12 +268,12 @@ class ProjectManager(QWidget, Ui_frm_ProjectPage):
             parameters=data["parameters"]
         )
 
-        if not job_info.save(job_path):
-            QMessageBox.critical(self, "Error", f"Unable to save job info:\n{JobInfo.INFO_FILE}")
+        try:
+            repo.create_job(self.current_project, job_info)
+        except repo.ProjectError as e:
+            QMessageBox.warning(self, "Exists", str(e))
             return
 
-        # Cập nhật bộ nhớ
-        self.projects[self.current_project]["jobs"].append(name)
         self.update_job_list()
 
 
@@ -327,24 +294,17 @@ class ProjectManager(QWidget, Ui_frm_ProjectPage):
             return
 
         new_name = new_name.strip()
-        old_path = os.path.join(PROJECT_DIR, self.current_project, old_name)
-        new_path = os.path.join(PROJECT_DIR, self.current_project, new_name)
-
-        if os.path.exists(new_path):
-            QMessageBox.warning(self, "Exists", f"Job '{new_name}' already exists.")
+        try:
+            repo.rename_job(self.current_project, old_name, new_name)
+        except repo.ProjectError as e:
+            QMessageBox.warning(self, "Exists", str(e))
             return
 
-        os.rename(old_path, new_path)
-        jobs = self.projects[self.current_project]["jobs"]
-        idx = jobs.index(old_name)
-        jobs[idx] = new_name
-
-        job_info = JobInfo.load(new_path)
-        job_info.name = new_name
-        job_info.save(new_path)
-
+        self.job_store.rename_active_job(self.current_project, old_name, new_name)
+        if self.current_job == old_name:
+            self.current_job = new_name
         self.update_job_list()
-    
+
 
     def delete_job(self):
         """Xóa job khỏi project."""
@@ -358,22 +318,16 @@ class ProjectManager(QWidget, Ui_frm_ProjectPage):
             return
 
         name = item.text()
-        activate_jobs = self.load_active_jobs(data_only=True)
-        for job in activate_jobs:
-            if job["project"] == self.current_project and job["job"] == self.current_job:
-                QMessageBox.warning(self, "Active Job", f"⚠️ Cannot delete {self.current_job}.\nPlease cancel it from Active Work Orders first.")
+        for job in self.job_store.list_active_jobs():
+            if job["project"] == self.current_project and job["job"] == name:
+                QMessageBox.warning(self, "Active Job", f"⚠️ Cannot delete {name}.\nPlease cancel it from Active Work Orders first.")
                 return
-            
+
         if QMessageBox.question(self, "Confirm", f"⚠️ Do you really want to delete '{name}'?") != QMessageBox.Yes:
             return
 
-        # Xóa thư mục
-        job_path = os.path.join(PROJECT_DIR, self.current_project, name)
-        if os.path.exists(job_path):
-            shutil.rmtree(job_path)
+        repo.delete_job(self.current_project, name)
 
-        # Cập nhật bộ nhớ
-        self.projects[self.current_project]["jobs"].remove(name)
         self.update_job_list()
         self.lblJobName.setText("#CurrentJob")
 
@@ -383,17 +337,15 @@ class ProjectManager(QWidget, Ui_frm_ProjectPage):
         if not self.current_project or not self.current_job:
             QMessageBox.warning(self, "No selection", "Please select a job to edit.")
             return
-        
-        activate_jobs = self.load_active_jobs(data_only=True)
-        for job in activate_jobs:
+
+        for job in self.job_store.list_active_jobs():
             if job["project"] == self.current_project and job["job"] == self.current_job:
                 QMessageBox.warning(self, "Active Job", "Cannot edit an active job. Please remove it from active jobs first.")
                 return
 
-        job_path = os.path.join(PROJECT_DIR, self.current_project, self.current_job)
-        job_info = JobInfo.load(job_path)
+        job_info = repo.load_job_info(self.current_project, self.current_job)
         if not job_info:
-            QMessageBox.critical(self, "Error", f"Cannot load job_info.json in {job_path}")
+            QMessageBox.critical(self, "Error", f"Cannot load job_info.json for {self.current_job}")
             return
 
         # Tạo dialog, load dữ liệu hiện tại
@@ -412,15 +364,13 @@ class ProjectManager(QWidget, Ui_frm_ProjectPage):
 
         # Nếu đổi tên folder
         if new_name != self.current_job:
-            new_job_path = os.path.join(PROJECT_DIR, self.current_project, new_name)
-            if os.path.exists(new_job_path):
-                QMessageBox.warning(self, "Exists", f"Job '{new_name}' already exists.")
+            try:
+                repo.rename_job(self.current_project, self.current_job, new_name)
+            except repo.ProjectError as e:
+                QMessageBox.warning(self, "Exists", str(e))
                 return
-            os.rename(job_path, new_job_path)
-            self.projects[self.current_project]["jobs"].remove(self.current_job)
-            self.projects[self.current_project]["jobs"].append(new_name)
+            self.job_store.rename_active_job(self.current_project, self.current_job, new_name)
             self.current_job = new_name
-            job_path = new_job_path
 
         # Update thông tin job_info
         job_info.name = new_name
@@ -428,8 +378,10 @@ class ProjectManager(QWidget, Ui_frm_ProjectPage):
         job_info.description = data["description"]
         job_info.parameters = data["parameters"]
 
-        if not job_info.save(job_path):
-            QMessageBox.critical(self, "Error", f"Unable to save job info:\n{JobInfo.INFO_FILE}")
+        try:
+            repo.save_job_info(self.current_project, job_info)
+        except OSError as e:
+            QMessageBox.critical(self, "Error", f"Unable to save job info:\n{e}")
             return
 
         self.update_job_list()
@@ -446,114 +398,79 @@ class ProjectManager(QWidget, Ui_frm_ProjectPage):
         self.lblJobName.setText(name)
         self.lstJobDetail.clear()
 
-        job_info_file = os.path.join(PROJECT_DIR, self.current_project, self.current_job, "job_info.json") 
-        if not os.path.exists(job_info_file):
-            QMessageBox.warning(self, "Error", "active_job.json not found")
+        job_info = repo.load_job_info(self.current_project, self.current_job)
+        if not job_info:
+            QMessageBox.warning(self, "Error", "job_info.json not found or invalid")
             return
 
-        with open(job_info_file, "r") as f:
-            try:
-                job_info = json.load(f)
-            except json.JSONDecodeError:
-                QMessageBox.warning(self, "Error", "active_job.json bị lỗi hoặc trống")
-                return
-
-
-        # Hiển thị nội dung ra lstJobDetail từ job_info.json
-        self.lstJobDetail.addItem(f"• Job: {job_info.get('name', '')}")
-        self.lstJobDetail.addItem(f"• Created: {job_info.get('created', '')}")
-        self.lstJobDetail.addItem(f"• Status: {job_info.get('status', '')}")
-        self.lstJobDetail.addItem(f"• Description: {job_info.get('description', '')}")
+        # Hiển thị nội dung ra lstJobDetail từ job_info
+        self.lstJobDetail.addItem(f"• Job: {job_info.name}")
+        self.lstJobDetail.addItem(f"• Created: {job_info.created}")
+        self.lstJobDetail.addItem(f"• Status: {job_info.status}")
+        self.lstJobDetail.addItem(f"• Description: {job_info.description}")
 
         # Hiển thị parameters
-        params = job_info.get("parameters", {})
-        if params:
+        if job_info.parameters:
             self.lstJobDetail.addItem("⚙️ Parameters:")
-            for key, value in params.items():
+            for key, value in job_info.parameters.items():
                 self.lstJobDetail.addItem(f"    • {key}: {value}")
 
 
     # =========================
     #      LOAD / UPDATE
     # =========================
-    def load_projects(self):
-        """Đọc danh sách project và job trực tiếp từ thư mục."""
-        self.projects = {}
-
-        if not os.path.exists(PROJECT_DIR):
-            os.makedirs(PROJECT_DIR)
-            return
-
-        for project_name in sorted(os.listdir(PROJECT_DIR)):
-            if is_sync_junk(project_name):
-                continue
-            project_path = os.path.join(PROJECT_DIR, project_name)
-            if os.path.isdir(project_path):
-                jobs = [j for j in sorted(os.listdir(project_path)) if os.path.isdir(os.path.join(project_path, j)) and not is_sync_junk(j)]
-                self.projects[project_name] = {"jobs": jobs}
-
-
     def update_project_list(self):
-        """Cập nhật danh sách project."""
+        """Cập nhật danh sách project (luôn đọc trực tiếp từ filesystem,
+        không giữ cache riêng - project_repository.list_projects() đã
+        rẻ vừa đủ để gọi lại mỗi lần thay vì tự đồng bộ tay một bản sao)."""
         self.lstProject.clear()
-        for name in sorted(self.projects.keys()):
+        for name in repo.list_projects():
             self.lstProject.addItem(name)
 
 
     def update_job_list(self):
         """Cập nhật danh sách job theo project đang chọn."""
         self.lstJob.clear()
-        if self.current_project and self.current_project in self.projects:
-            for job in sorted(self.projects[self.current_project]["jobs"]):
+        if self.current_project:
+            for job in repo.list_jobs(self.current_project):
                 self.lstJob.addItem(job)
 
 
     def filter_projects(self, text):
         text = text.lower().strip()
         self.lstProject.clear()
-        for item in self.projects.keys():
-            if text in item.lower():
-                self.lstProject.addItem(item)
+        for name in repo.list_projects():
+            if text in name.lower():
+                self.lstProject.addItem(name)
 
 
     def filter_jobs(self, text):
         text = text.lower().strip()
         self.lstJob.clear()
-        if self.current_project and self.current_project in self.projects:
-            for item in sorted(self.projects[self.current_project]["jobs"]):
-                if text in item.lower():
-                    self.lstJob.addItem(item)
+        if self.current_project:
+            for name in repo.list_jobs(self.current_project):
+                if text in name.lower():
+                    self.lstJob.addItem(name)
+
     # =========================
     #     ACTIVE JOB SECTION
     # =========================
-    def load_active_jobs(self,data_only=False):
-        """Đọc danh sách job đang active từ file JSON."""
+    def load_active_jobs(self, data_only=False):
+        """Đọc danh sách job đang active (qua JobStore - atomic, cached)."""
+        jobs = self.job_store.list_active_jobs()
 
-        # Tạo file nếu chưa có
-        if not os.path.exists(ACTIVE_JOB_FILE):
-            with open(ACTIVE_JOB_FILE, "w") as f:
-                json.dump([], f, indent=4)
-
-        try:
-            with open(ACTIVE_JOB_FILE, "r") as f:
-                jobs = json.load(f)
-        except Exception as e:
-            QMessageBox.critical(self, "Error", f"Failed to load active jobs:\n{e}")
-            return
-        
         if data_only:
             return jobs
 
         self.lstJobActive.clear()
-        # Cập nhật danh sách hiển thị
         for job in jobs:
             job_name = f"{job['project']} / {job['job']}"
             self.lstJobActive.addItem(job_name)
-        
+
         return jobs
 
     def add_job_to_active(self):
-        """Thêm job hiện tại vào danh sách active (file ACTIVATE_JOB)."""
+        """Thêm job hiện tại vào danh sách active."""
         if not self.current_project:
             QMessageBox.warning(self, "No Project", "Please select a project first.")
             return
@@ -564,34 +481,9 @@ class ProjectManager(QWidget, Ui_frm_ProjectPage):
             return
 
         job_name = item.text()
-        project_name = self.current_project
-        job_path = os.path.join(PROJECT_DIR, project_name, job_name)
-        job_info = {
-            "project": project_name,
-            "job": job_name,
-            "path": job_path,
-        }        
-        
-
-        # Đọc danh sách hiện tại
-        if os.path.exists(ACTIVE_JOB_FILE):
-            with open(ACTIVE_JOB_FILE, "r") as f:
-                jobs = json.load(f)
-        else:
-            jobs = []
-
-        # Kiểm tra xem đã có chưa
-        for j in jobs:
-            if j["project"] == project_name and j["job"] == job_name:
-                QMessageBox.information(self, "Exists", f"Job '{job_name}' is already active.")
-                return
-
-        # Thêm job mới
-        jobs.append(job_info)
-
-        # Ghi lại file
-        with open(ACTIVE_JOB_FILE, "w") as f:
-            json.dump(jobs, f, indent=4)
+        if not self.job_store.add_active_job(self.current_project, job_name):
+            QMessageBox.information(self, "Exists", f"Job '{job_name}' is already active.")
+            return
 
         self.load_active_jobs()
 
@@ -602,25 +494,10 @@ class ProjectManager(QWidget, Ui_frm_ProjectPage):
             QMessageBox.warning(self, "No selection", "Please select an active job to remove.")
             return
 
-        text = item.text()
-        # Dạng "Project / Job"
-        try:
-            project_name, job_name = [x.strip() for x in text.split("/", 1)]
-        except ValueError:
+        project_name, job_name = repo.parse_job_ref(item.text())
+        if not job_name:
             QMessageBox.warning(self, "Invalid", "Invalid job format.")
             return
 
-        # Đọc danh sách hiện tại
-        if not os.path.exists(ACTIVE_JOB_FILE):
-            return
-        with open(ACTIVE_JOB_FILE, "r") as f:
-            jobs = json.load(f)
-
-        # Lọc bỏ job cần xóa
-        jobs = [j for j in jobs if not (j["project"] == project_name and j["job"] == job_name)]
-
-        # Ghi lại
-        with open(ACTIVE_JOB_FILE, "w") as f:
-            json.dump(jobs, f, indent=4)
-
+        self.job_store.remove_active_job(project_name, job_name)
         self.load_active_jobs()
