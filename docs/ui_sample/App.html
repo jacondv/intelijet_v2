@@ -1,0 +1,879 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HMI System Integrated Interface</title>
+    <style>
+        :root {
+            /* Main Dashboard Theme (Dark Green & Yellow) */
+            --bg-main: #00221c;
+            --panel-bg: #00332c;
+            --panel-header: #004d40;
+            --panel-border: #005b4d;
+            --text-light: #e0f2f1;
+            --text-muted: #80cbc4;
+            --accent-yellow: #fbc02d;
+            --accent-yellow-hover: #f57f17;
+            --accent-green: #2e7d32;
+            --accent-red: #c62828;
+            --btn-neutral: #004d40;
+
+            /* Light Sub-themes (Job, System, Alarm) */
+            --light-bg: #f4f5f8;
+            --light-card: #ffffff;
+            --light-border: #e2e8f0;
+            --light-text: #1e293b;
+            --light-text-muted: #64748b;
+
+            /* Log & Device Status Colors */
+            --info-bg: #ecfdf5; --info-text: #059669; --info-border: #a7f3d0;
+            --warn-bg: #fffbeb; --warn-text: #d97706; --warn-border: #fde68a;
+            --error-bg: #fef2f2; --error-text: #dc2626; --error-border: #fecaca;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-main);
+            color: var(--text-light);
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Top Header */
+        .header {
+            height: 54px;
+            background: var(--panel-header);
+            border-bottom: 2px solid var(--accent-yellow);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            z-index: 10;
+        }
+
+        .brand {
+            font-weight: 800;
+            font-size: 1.2rem;
+            color: var(--accent-yellow);
+            letter-spacing: 1px;
+        }
+
+        .job-selector {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: var(--bg-main);
+            padding: 6px 14px;
+            border-radius: 6px;
+            border: 1px solid var(--panel-border);
+        }
+
+        .job-selector label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            font-weight: 700;
+        }
+
+        .job-selector select {
+            background: transparent;
+            border: none;
+            color: var(--accent-yellow);
+            font-weight: 700;
+            outline: none;
+            cursor: pointer;
+        }
+
+        /* Workspace Grid */
+        .workspace {
+            flex: 1;
+            display: grid;
+            grid-template-columns: 70px 1fr;
+            height: calc(100vh - 86px);
+            overflow: hidden;
+        }
+
+        /* Left Navigation Bar */
+        .side-nav {
+            background: var(--panel-bg);
+            border-right: 1px solid var(--panel-border);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 16px 0;
+            gap: 12px;
+            z-index: 5;
+        }
+
+        .nav-item {
+            width: 54px;
+            height: 52px;
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: 0.7rem;
+            font-weight: 700;
+            gap: 3px;
+            border: 1px solid transparent;
+            transition: all 0.2s;
+        }
+
+        .nav-item:hover, .nav-item.active {
+            background: var(--panel-header);
+            color: var(--accent-yellow);
+            border-color: var(--accent-yellow);
+        }
+
+        /* Tab Content Area */
+        .content-area {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        .tab-content {
+            display: none;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+        }
+
+        .tab-content.active {
+            display: flex;
+        }
+
+        /* Wrapper dùng chung cho các màn hình dạng Light Mode */
+        .light-wrapper {
+            background: var(--light-bg);
+            color: var(--light-text);
+            width: 100%;
+            height: 100%;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        /* UI COMPONENTS CHUNG */
+        .ui-card {
+            background: var(--light-card);
+            border-radius: 10px;
+            border: 1px solid var(--light-border);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+            padding: 18px;
+            margin-bottom: 16px;
+        }
+
+        .ui-card-title {
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--light-text);
+            margin-bottom: 14px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid var(--light-border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        /* Form & Inputs */
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 16px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .form-group label {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--light-text-muted);
+        }
+
+        .form-control {
+            padding: 8px 12px;
+            border: 1px solid var(--light-border);
+            border-radius: 6px;
+            font-size: 0.9rem;
+            outline: none;
+            background: #f8fafc;
+        }
+
+        .form-control:focus {
+            border-color: #2563eb;
+            background: #fff;
+        }
+
+        /* Toggle Switch UI/UX */
+        .switch-group {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 14px;
+            background: #f8fafc;
+            border: 1px solid var(--light-border);
+            border-radius: 8px;
+        }
+
+        .switch-label {
+            font-size: 0.875rem;
+            font-weight: 600;
+        }
+
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 44px;
+            height: 22px;
+        }
+
+        .switch input { opacity: 0; width: 0; height: 0; }
+
+        .slider {
+            position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0;
+            background-color: #cbd5e1;
+            transition: .3s;
+            border-radius: 22px;
+        }
+
+        .slider:before {
+            position: absolute; content: ""; height: 16px; width: 16px; left: 3px; bottom: 3px;
+            background-color: white;
+            transition: .3s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider { background-color: #059669; }
+        input:checked + .slider:before { transform: translateX(22px); }
+
+        /* Buttons */
+        .btn-ui {
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 0.85rem;
+            cursor: pointer;
+            border: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s;
+        }
+
+        .btn-ui-primary { background: #2563eb; color: white; }
+        .btn-ui-primary:hover { background: #1d4ed8; }
+        .btn-ui-secondary { background: #e2e8f0; color: #334155; }
+        .btn-ui-secondary:hover { background: #cbd5e1; }
+
+        /* Status Badge Indicators */
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 700;
+        }
+
+        .status-badge.disconnected { background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; }
+        .status-badge.connected { background: #ecfdf5; color: #059669; border: 1px solid #a7f3d0; }
+        .status-dot-icon { width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
+
+        /* --- TAB 1: MAIN SCREEN --- */
+        .main-screen-container {
+            display: grid;
+            grid-template-columns: 1fr 280px;
+            width: 100%;
+            height: 100%;
+        }
+
+        .viewport-3d {
+            position: relative;
+            background: #000000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-right: 1px solid var(--panel-border);
+        }
+
+        .viewport-canvas-mock {
+            color: var(--accent-yellow);
+            font-size: 1.1rem;
+            font-family: 'Consolas', monospace;
+            text-align: center;
+            border: 2px dashed rgba(251, 192, 45, 0.4);
+            padding: 60px;
+            border-radius: 12px;
+            background: rgba(0, 34, 28, 0.6);
+        }
+
+        .axis-indicator {
+            position: absolute;
+            bottom: 16px;
+            left: 16px;
+            background: rgba(0, 51, 44, 0.85);
+            border: 1px solid var(--panel-border);
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            font-family: monospace;
+            font-weight: 700;
+        }
+
+        .right-control-column {
+            background: var(--panel-bg);
+            display: flex;
+            flex-direction: column;
+            padding: 20px 16px;
+            gap: 20px;
+            overflow-y: auto;
+        }
+
+        .panel-header-box {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding-bottom: 10px;
+            border-bottom: 2px solid var(--panel-border);
+        }
+
+        .panel-title {
+            font-size: 1rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            color: var(--accent-yellow);
+        }
+
+        /* Mini Exit Button */
+        .btn-exit-mini {
+            background: rgba(198, 40, 40, 0.15);
+            color: #ef4444;
+            border: 1px solid #c62828;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            transition: all 0.2s;
+        }
+
+        .btn-exit-mini:hover {
+            background: var(--accent-red);
+            color: #ffffff;
+        }
+
+        .section-label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .btn-group { display: flex; flex-direction: column; gap: 10px; }
+        
+        .btn {
+            width: 100%;
+            padding: 12px;
+            border-radius: 8px;
+            border: none;
+            font-weight: 800;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+        .btn:active { transform: scale(0.98); }
+        .btn-yellow { background: var(--accent-yellow); color: #000; }
+        .btn-yellow:hover { background: var(--accent-yellow-hover); }
+        .btn-neutral { background: var(--btn-neutral); color: var(--text-light); border: 1px solid var(--panel-border); }
+        .btn-neutral:hover { background: var(--panel-header); border-color: var(--accent-yellow); }
+        .btn-danger { background: var(--accent-red); color: #fff; }
+        .btn-danger:hover { background: #b71c1c; }
+        .btn-outline-yellow { background: transparent; border: 1px solid var(--accent-yellow); color: var(--accent-yellow); }
+
+        /* --- TAB 2: JOB MANAGEMENT --- */
+        .job-container {
+            max-width: 1300px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .top-bar {
+            background: var(--light-card);
+            padding: 16px 24px;
+            border-radius: 12px;
+            border: 1px solid var(--light-border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        .project-item {
+            border: 1px solid var(--light-border);
+            border-radius: 8px;
+            margin-bottom: 12px;
+            overflow: hidden;
+        }
+
+        .project-header {
+            background: #f8fafc;
+            padding: 12px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 600;
+        }
+
+        .job-list { padding: 8px 12px 12px 24px; background: white; border-top: 1px solid var(--light-border); }
+
+        .job-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 12px;
+            border: 1px solid #f1f5f9;
+            border-radius: 6px;
+            margin-top: 8px;
+        }
+
+        .schedule-card {
+            border: 1px dashed var(--light-border);
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            background: #fafafa;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .schedule-card.active { border-style: solid; border-color: #bfdbfe; background: #eff6ff; }
+
+        /* --- TAB 4: ALARM LOG --- */
+        .hmi-container {
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+            background: var(--light-card);
+            border-radius: 10px;
+            border: 1px solid var(--light-border);
+            overflow: hidden;
+        }
+
+        .hmi-header {
+            padding: 16px 24px;
+            border-bottom: 1px solid var(--light-border);
+            background: #f8fafc;
+            font-weight: 700;
+            color: var(--light-text);
+        }
+
+        .filter-toolbar {
+            padding: 16px 24px;
+            background: #ffffff;
+            border-bottom: 1px solid var(--light-border);
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 16px;
+        }
+
+        .table-container { max-height: 480px; overflow-y: auto; }
+
+        .log-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-family: 'Consolas', monospace;
+            font-size: 0.85rem;
+        }
+
+        .log-table th {
+            position: sticky; top: 0;
+            background: #f8fafc;
+            color: var(--light-text-muted);
+            padding: 12px 16px;
+            text-align: left;
+            border-bottom: 1px solid var(--light-border);
+        }
+
+        .log-table td { padding: 10px 16px; border-bottom: 1px solid var(--light-border); }
+
+        .badge { display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 0.75rem; font-weight: 700; }
+        .badge-info { background: var(--info-bg); color: var(--info-text); border: 1px solid var(--info-border); }
+        .badge-warn { background: var(--warn-bg); color: var(--warn-text); border: 1px solid var(--warn-border); }
+        .badge-error { background: var(--error-bg); color: var(--error-text); border: 1px solid var(--error-border); }
+
+        tr.row-warn { background: rgba(254, 243, 199, 0.4); }
+        tr.row-error { background: rgba(254, 226, 226, 0.4); }
+
+        /* Bottom Status Bar */
+        .status-bar {
+            height: 32px;
+            background: var(--bg-main);
+            border-top: 1px solid var(--panel-border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 16px;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            z-index: 10;
+        }
+
+        .status-indicator { display: flex; align-items: center; gap: 8px; color: var(--accent-yellow); font-weight: 700; }
+        .status-dot { width: 8px; height: 8px; background: var(--accent-yellow); border-radius: 50%; box-shadow: 0 0 8px var(--accent-yellow); }
+    </style>
+</head>
+<body>
+
+    <!-- Header Global -->
+    <div class="header">
+        <div class="brand">JACON EQUIPMENT HMI</div>
+        <div class="job-selector">
+            <label>CURRENT JOB:</label>
+            <select>
+                <option>Test20260811 / 2m engine off</option>
+                <option>TEST260819 / Scan Job 1</option>
+            </select>
+        </div>
+        <div>
+            <button class="btn btn-outline-yellow" style="padding: 6px 14px; font-size: 0.8rem;" onclick="switchTab('alarm')">Logs & Reports</button>
+        </div>
+    </div>
+
+    <!-- Workspace -->
+    <div class="workspace">
+        
+        <!-- Navigation Bar (4 Tab) -->
+        <div class="side-nav">
+            <div class="nav-item active" onclick="switchTab('main')">
+                <span>🧊</span>
+                <span>3D MAIN</span>
+            </div>
+            <div class="nav-item" onclick="switchTab('job')">
+                <span>📋</span>
+                <span>JOB</span>
+            </div>
+            <div class="nav-item" onclick="switchTab('system')">
+                <span>🖥️</span>
+                <span>SYSTEM</span>
+            </div>
+            <div class="nav-item" onclick="switchTab('alarm')">
+                <span>🔔</span>
+                <span>ALARM</span>
+            </div>
+        </div>
+
+        <!-- Content Area -->
+        <div class="content-area">
+            
+            <!-- TAB 1: MAIN SCREEN -->
+            <div id="tab-main" class="tab-content active">
+                <div class="main-screen-container">
+                    <div class="viewport-3d">
+                        <div class="viewport-canvas-mock">[ 3D POINT CLOUD CANVAS ]</div>
+                        <div class="axis-indicator">
+                            <span style="color: #ef4444;">X</span> 
+                            <span style="color: #22c55e;">Y</span> 
+                            <span style="color: #3b82f6;">Z</span>
+                        </div>
+                    </div>
+                    <div class="right-control-column">
+                        <div class="panel-header-box">
+                            <div class="panel-title">CONTROL PANEL</div>
+                            <button class="btn-exit-mini" title="Exit System">🚪 Exit</button>
+                        </div>
+                        
+                        <div>
+                            <div class="section-label">Scanning Process</div>
+                            <div class="btn-group">
+                                <button class="btn btn-yellow">PRE-SCAN</button>
+                                <button class="btn btn-yellow">POST-SCAN</button>
+                                <button class="btn btn-danger">CANCEL JOB</button>
+                            </div>
+                        </div>
+                        
+                        <hr style="border: 0; border-top: 1px solid var(--panel-border);">
+                        
+                        <div>
+                            <div class="section-label">Manual Operator</div>
+                            <div class="btn-group">
+                                <button class="btn btn-neutral">OPEN HOUSING</button>
+                                <button class="btn btn-neutral">CLOSE HOUSING</button>
+                                <button class="btn btn-neutral" style="border-color: var(--accent-yellow); color: var(--accent-yellow);">🔍 ZOOM CENTER</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 2: JOB MANAGEMENT -->
+            <div id="tab-job" class="tab-content">
+                <div class="light-wrapper">
+                    <div class="job-container">
+                        <div class="top-bar">
+                            <h2 style="font-size: 1.2rem;">HMI Execution Management</h2>
+                            <div style="display: flex; gap: 10px;">
+                                <button class="btn-ui btn-ui-secondary">➕ New Project</button>
+                                <button class="btn-ui btn-ui-primary">➕ New Job</button>
+                            </div>
+                        </div>
+                        <div class="main-grid">
+                            <div class="ui-card">
+                                <div class="ui-card-title">
+                                    <span>Projects & Jobs List</span>
+                                    <input type="text" class="form-control" placeholder="Search..." style="width: 180px;">
+                                </div>
+                                <div class="project-item">
+                                    <div class="project-header">
+                                        <span>📁 Project: TEST260819</span>
+                                        <button class="btn-ui btn-ui-secondary" style="padding: 4px 8px; font-size: 0.75rem;">+ Add Job</button>
+                                    </div>
+                                    <div class="job-list">
+                                        <div class="job-item">
+                                            <div>
+                                                <div style="font-weight:600;">JOB1 - Check Encoder Sensor</div>
+                                                <div style="font-size:0.75rem; color:#666;">Created: 08/19/2026</div>
+                                            </div>
+                                            <button class="btn-ui btn-ui-primary" style="padding: 4px 10px; font-size: 0.75rem;">📅 Schedule</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="ui-card">
+                                <div class="ui-card-title"><span>Work Schedule</span></div>
+                                <div class="schedule-card active">
+                                    <div>
+                                        <div style="font-weight: 600;">Test20260811 / 2m engine</div>
+                                        <div style="font-size: 0.75rem; color: #666;">Priority: High</div>
+                                    </div>
+                                    <button class="btn-ui btn-ui-secondary" style="color: red; padding: 4px 8px; font-size: 0.75rem;">Pause</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 3: SYSTEM SCREEN -->
+            <div id="tab-system" class="tab-content">
+                <div class="light-wrapper">
+                    <div style="max-width: 1200px; margin: 0 auto;">
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                            
+                            <!-- Device Status Card -->
+                            <div class="ui-card">
+                                <div class="ui-card-title">
+                                    <span>Device Hardware Status</span>
+                                    <button class="btn-ui btn-ui-secondary" style="font-size: 0.75rem; padding: 4px 8px;">🔄 Refresh</button>
+                                </div>
+                                <div style="display: flex; flex-direction: column; gap: 12px;">
+                                    <div class="switch-group">
+                                        <span class="switch-label">PLC Controller</span>
+                                        <span class="status-badge disconnected"><span class="status-dot-icon"></span> DISCONNECTED</span>
+                                    </div>
+                                    <div class="switch-group">
+                                        <span class="switch-label">PCAN Gateway</span>
+                                        <span class="status-badge disconnected"><span class="status-dot-icon"></span> DISCONNECTED</span>
+                                    </div>
+                                    <div class="switch-group">
+                                        <span class="switch-label">Lidar Sensor</span>
+                                        <span class="status-badge disconnected"><span class="status-dot-icon"></span> DISCONNECTED</span>
+                                    </div>
+                                    <div class="switch-group">
+                                        <span class="switch-label">Encoder System</span>
+                                        <span class="status-badge disconnected"><span class="status-dot-icon"></span> DISCONNECTED</span>
+                                    </div>
+                                </div>
+
+                                <hr style="border:0; border-top: 1px solid var(--light-border); margin: 16px 0;">
+
+                                <div class="form-grid">
+                                    <div class="form-group">
+                                        <label>Encoder Value (deg)</label>
+                                        <input type="text" class="form-control" value="--" readonly>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Encoder Value (raw)</label>
+                                        <input type="text" class="form-control" value="--" readonly>
+                                    </div>
+                                </div>
+                                <div style="margin-top: 14px;">
+                                    <button class="btn-ui btn-ui-primary" style="width: 100%; justify-content: center; background: var(--accent-yellow-hover); color: white;">Set Zero Position</button>
+                                </div>
+                            </div>
+
+                            <!-- Processing Stages Card -->
+                            <div class="ui-card">
+                                <div class="ui-card-title">Processing Stages Configuration</div>
+                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                                    
+                                    <div class="switch-group">
+                                        <span class="switch-label">Align Cloud</span>
+                                        <label class="switch">
+                                            <input type="checkbox" checked>
+                                            <span class="slider"></span>
+                                        </label>
+                                    </div>
+
+                                    <div class="switch-group">
+                                        <span class="switch-label">Remove Ground</span>
+                                        <label class="switch">
+                                            <input type="checkbox" checked>
+                                            <span class="slider"></span>
+                                        </label>
+                                    </div>
+
+                                    <div class="switch-group">
+                                        <span class="switch-label">Auto Compare</span>
+                                        <label class="switch">
+                                            <input type="checkbox" checked>
+                                            <span class="slider"></span>
+                                        </label>
+                                    </div>
+
+                                    <div class="switch-group">
+                                        <span class="switch-label">Use Keypoint</span>
+                                        <label class="switch">
+                                            <input type="checkbox" checked>
+                                            <span class="slider"></span>
+                                        </label>
+                                    </div>
+
+                                    <div class="switch-group">
+                                        <span class="switch-label">Auto Export Report</span>
+                                        <label class="switch">
+                                            <input type="checkbox" checked>
+                                            <span class="slider"></span>
+                                        </label>
+                                    </div>
+
+                                    <div class="switch-group">
+                                        <span class="switch-label">Upsample</span>
+                                        <label class="switch">
+                                            <input type="checkbox">
+                                            <span class="slider"></span>
+                                        </label>
+                                    </div>
+
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 4: ALARM LOG -->
+            <div id="tab-alarm" class="tab-content">
+                <div class="light-wrapper">
+                    <div class="hmi-container">
+                        <div class="hmi-header">HMI System Alarm & Event Log</div>
+                        <div class="filter-toolbar">
+                            <div class="filter-group">
+                                <label>Date</label>
+                                <input type="date" class="form-control" value="2026-08-19">
+                            </div>
+                            <div class="filter-group">
+                                <label>Level</label>
+                                <select class="form-control">
+                                    <option>All Levels</option>
+                                    <option>INFO</option>
+                                    <option>WARNING</option>
+                                    <option>ERROR</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="table-container">
+                            <table class="log-table">
+                                <thead>
+                                    <tr>
+                                        <th>Timestamp</th>
+                                        <th>Level</th>
+                                        <th>Source</th>
+                                        <th>Message</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr class="row-error">
+                                        <td>15:26:59</td>
+                                        <td><span class="badge badge-error">ERROR</span></td>
+                                        <td style="color:#6366f1; font-weight:600;">pps</td>
+                                        <td>pps: Disconnected</td>
+                                    </tr>
+                                    <tr class="row-warn">
+                                        <td>15:26:52</td>
+                                        <td><span class="badge badge-warn">WARN</span></td>
+                                        <td style="color:#6366f1; font-weight:600;">/hmi_scan_command_handler</td>
+                                        <td>[WARN] Encoder did not reach target 135°</td>
+                                    </tr>
+                                    <tr>
+                                        <td>15:26:15</td>
+                                        <td><span class="badge badge-info">INFO</span></td>
+                                        <td style="color:#6366f1; font-weight:600;">compare</td>
+                                        <td>COMPARE DONE</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Status Bar Global -->
+    <div class="status-bar">
+        <div class="status-indicator">
+            <div class="status-dot"></div>
+            <span>SYSTEM READY</span>
+        </div>
+        <div>Mode: Automatic | System Version: 2.4.0</div>
+    </div>
+
+    <!-- Script Chuyển Tab -->
+    <script>
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+
+            document.querySelectorAll('.nav-item').forEach(nav => {
+                nav.classList.remove('active');
+            });
+
+            document.getElementById('tab-' + tabName).classList.add('active');
+
+            const navMap = { 'main': 0, 'job': 1, 'system': 2, 'alarm': 3 };
+            document.querySelectorAll('.nav-item')[navMap[tabName]].classList.add('active');
+        }
+    </script>
+</body>
+</html>
