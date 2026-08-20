@@ -1,6 +1,5 @@
 # ros_thread.py
 
-from ui.handlers import *
 import rospy
 from sensor_msgs.msg import PointCloud2, JointState
 

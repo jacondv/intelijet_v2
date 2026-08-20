@@ -22,7 +22,7 @@ import time
 from collections import deque
 from datetime import datetime
 
-from PyQt5.QtCore import QObject, pyqtSignal
+from PyQt5.QtCore import QObject, Qt, pyqtSignal
 
 from shared.config_loader import CONFIG as cfg
 
@@ -90,16 +90,22 @@ LEVEL_COLORS = {
 
 def set_device_label(label, state):
     """Set a device status QLabel's text + color based on its connection
-    state (DeviceStatus.CONNECTED / DISCONNECTED / anything else -> unknown)."""
+    state (DeviceStatus.CONNECTED / DISCONNECTED / anything else -> unknown).
+    Rendered as a pill badge (light bg + colored text/border), matching
+    docs/ui_sample/App.html's .status-badge."""
     state_text = (state or "UNKNOWN").upper()
     if state_text == "CONNECTED":
-        color = LEVEL_COLORS["info"]
+        bg, fg, border = "#ecfdf5", "#059669", "#a7f3d0"
     elif state_text == "DISCONNECTED":
-        color = LEVEL_COLORS["error"]
+        bg, fg, border = "#fef2f2", "#dc2626", "#fecaca"
     else:
-        color = LEVEL_COLORS["unknown"]
+        bg, fg, border = "#f1f5f9", "#64748b", "#e2e8f0"
     label.setText(state_text)
-    label.setStyleSheet(f"color: white; background-color: {color}; padding: 2px 6px; border-radius: 3px;")
+    label.setAlignment(Qt.AlignCenter)
+    label.setStyleSheet(
+        f"color: {fg}; background-color: {bg}; border: 1px solid {border};"
+        "border-radius: 18px; padding: 10px 20px; font-size: 22px; font-weight: 700;"
+    )
 
 
 class NotificationCenter(QObject):

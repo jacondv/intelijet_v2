@@ -12,7 +12,7 @@ import time
 import sys, subprocess
 import rospy
 
-from PyQt5.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QLabel, QWidget, QPushButton, QComboBox, QSizePolicy
+from PyQt5.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QLabel, QWidget
 from PyQt5.QtCore import pyqtSignal, QTimer, Qt
 from PyQt5.QtWidgets import QMessageBox, QDialog
 from PyQt5.QtCore import QSettings
@@ -21,12 +21,8 @@ from PyQt5.QtCore import QSettings
 from vtk_viewer import VTKViewer
 from ros_thread import RosThread
 #Import pages manager
-from jobnumber_page_manager import JobNumberPageManager
-from history_page_manager import HistoryPageManager
-from project_dlg_manager import ProjectManager 
-from setting_page_manager import SettingPageManager
+from project_dlg_manager import ProjectManager
 
-from ui.update_data_utils import load_config_to_ui, load_ui_to_config
 from ui.status_binder import StatusBinder
 
 from shared.pps_command import PPSCommand
@@ -96,25 +92,13 @@ class App(QMainWindow):
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
 
-        self.ui.tab_mainview.setCurrentIndex(0)
-        # self.ui.btnCompare.setVisible(False) # hide compare button in main view, only show compare button in compare dialog.
+        self.show_3d_main_page()
 
-        # QTabWidget sizes itself to fit the LARGEST page among all tabs,
-        # not just the visible one - tab_jobnumber/tab_setting/tab_system
-        # are each wider/taller than the default 3D-view tab, which was
-        # forcing the whole window to never fit on-screen at any host
-        # display scale that shrinks the available resolution. Ignoring
-        # the size hint of every non-current page makes tab_mainview size
-        # itself to whatever tab is actually showing.
-        self.ui.tab_mainview.currentChanged.connect(self._sync_tab_size_policies)
-        self._sync_tab_size_policies(self.ui.tab_mainview.currentIndex())
-
-        # --- Tab Setting ---
-        self.setting_page = SettingPageManager()
-        if self.ui.tab_setting.layout() is None:
-            self.ui.tab_setting.setLayout(QVBoxLayout())
-
-        self.ui.tab_setting.layout().addWidget(self.setting_page)
+        # --- Side-nav -> QStackedWidget page switching ---
+        self.ui.btnNav3DMain.clicked.connect(self.show_3d_main_page)
+        self.ui.btnNavJob.clicked.connect(lambda: self.ui.stacked.setCurrentWidget(self.ui.tab_jobnumber))
+        self.ui.btnNavSystem.clicked.connect(lambda: self.ui.stacked.setCurrentWidget(self.ui.tab_system))
+        self.ui.btnNavAlarm.clicked.connect(lambda: self.ui.stacked.setCurrentWidget(self.diagnostics_tab))
 
         # ------Tab JobSetting ---
         self.project_manager = ProjectManager()
@@ -122,27 +106,6 @@ class App(QMainWindow):
             self.ui.tab_jobnumber.setLayout(QVBoxLayout())
         self.ui.tab_jobnumber.layout().addWidget(self.project_manager)
 
-        #-------ToolBox-----------
-        #Page 1: Jobs view
-        self.jobsetting_page_in_toolbox = JobNumberPageManager(self.ui.tboxPage1, mode="label")
-        self.jobsetting_page_in_toolbox.ui.widget_2.hide()
-        btn_ok = QPushButton("OK", self.jobsetting_page_in_toolbox)
-        btn_cancel = QPushButton("Cancel", self.jobsetting_page_in_toolbox)
-        self.jobsetting_page_in_toolbox.ui.widget_3.layout().addWidget(btn_ok)
-        self.jobsetting_page_in_toolbox.ui.widget_3.layout().addWidget(btn_cancel)
-        self.jobsetting_page_in_toolbox.setVisible(False)
-
-        if self.ui.tboxPage1.layout() is None:
-            self.ui.tboxPage1.setLayout(QVBoxLayout())
-        self.ui.tboxPage1.layout().insertWidget(1,self.jobsetting_page_in_toolbox)
-
-        #Page 2: History view
-        self.history_page_in_toolbox = HistoryPageManager(self.ui.tboxPage2)
-        if self.ui.tboxPage2.layout() is None:
-            self.ui.tboxPage2.setLayout(QVBoxLayout())
-        self.ui.tboxPage2.layout().insertWidget(1,self.history_page_in_toolbox)
-        self.history_page_in_toolbox.polydataSignal.connect(lambda cloud: self.update_pointcloud_from_data(cloud, None))
-        self.ui.toolBox.currentChanged.connect(self.on_toolbox_changed)
         #Page 3: Compare page
         self.ui.btnCompare2.released.connect(self.on_compare)
         self.ui.btnViewReport.released.connect(self.on_viewreport_dlg)
@@ -175,7 +138,7 @@ class App(QMainWindow):
         self.ui_send_cmd_signal.connect(self.ros_thread.send_command)
 
         # Set rntime parameter for ROS
-        combo_boxes = [
+        processing_switches = [
             self.ui.cbbAutoAlign,
             self.ui.cbbAutoCompare,
             self.ui.cbbAutoReport,
@@ -184,14 +147,14 @@ class App(QMainWindow):
             self.ui.cbbUpsample
         ]
 
-        for item in combo_boxes:
+        for item in processing_switches:
             item.setEnabled(False)
-        self.ui.cbbRemoveGround.setEnabled(True) 
+        self.ui.cbbRemoveGround.setEnabled(True)
         self.ui.cbbAutoReport.setEnabled(True)
 
 
-        for cb in combo_boxes:
-            cb.currentIndexChanged.connect(self.update_param)
+        for cb in processing_switches:
+            cb.toggled.connect(self.update_param)
 
         # --- Control Buttons ---
         # self.ui.btnPreScan.released.connect(lambda: self.ui_send_cmd_signal.emit(PPSCommand.START_PRESCAN.value))
@@ -256,8 +219,8 @@ class App(QMainWindow):
         self.lblNotification.mousePressEvent = self._open_notification_history
 
         # --- Tab Diagnostics (HMI-style alarm log, read-only) ---
-        self.diagnostics_tab = DiagnosticsTab(self.notification_center, parent=self.ui.tab_mainview)
-        self.ui.tab_mainview.addTab(self.diagnostics_tab, "ALARM")
+        self.diagnostics_tab = DiagnosticsTab(self.notification_center, parent=self.ui.stacked)
+        self.ui.stacked.addWidget(self.diagnostics_tab)
 
         # --- Scan pipeline worker (runs convert/color/VTK/save/report off the GUI thread) ---
         self.scan_worker = ScanPipelineWorker(
@@ -289,9 +252,6 @@ class App(QMainWindow):
 
         # --- Data binder ---
         self.status_binder = StatusBinder(self.ui.centralFrame)
-        load_config_to_ui(self.ui.tab_setting)
-
-        self.setting_page.txtEncodeValueRaw.setText("NaN")
 
         #Load ui state
         self.load_ui_state()
@@ -317,31 +277,36 @@ class App(QMainWindow):
 
     # Setting parameter
     def save_ui_state(self):
-        settings.setValue("cbbAutoAlign_index", self.ui.cbbAutoAlign.currentIndex())
-        settings.setValue("cbbAutoCompare_index", self.ui.cbbAutoCompare.currentIndex())
-        settings.setValue("cbbAutoReport_index", self.ui.cbbAutoReport.currentIndex())
-        settings.setValue("cbbRemoveGround_index", self.ui.cbbRemoveGround.currentIndex())
-        settings.setValue("cbbUseKeypoint_index", self.ui.cbbUseKeypoint.currentIndex())
-        settings.setValue("cbbUpsample_index", self.ui.cbbUpsample.currentIndex())
+        settings.setValue("cbbAutoAlign_on", self.ui.cbbAutoAlign.isChecked())
+        settings.setValue("cbbAutoCompare_on", self.ui.cbbAutoCompare.isChecked())
+        settings.setValue("cbbAutoReport_on", self.ui.cbbAutoReport.isChecked())
+        settings.setValue("cbbRemoveGround_on", self.ui.cbbRemoveGround.isChecked())
+        settings.setValue("cbbUseKeypoint_on", self.ui.cbbUseKeypoint.isChecked())
+        settings.setValue("cbbUpsample_on", self.ui.cbbUpsample.isChecked())
 
     def load_ui_state(self):
-        self.ui.cbbAutoAlign.setCurrentIndex(settings.value("cbbAutoAlign_index", 0, type=int))
-        self.ui.cbbAutoCompare.setCurrentIndex(settings.value("cbbAutoCompare_index", 0, type=int))
-        self.ui.cbbAutoReport.setCurrentIndex(settings.value("cbbAutoReport_index", 0, type=int))
-        self.ui.cbbRemoveGround.setCurrentIndex(settings.value("cbbRemoveGround_index", 0, type=int))
-        self.ui.cbbUseKeypoint.setCurrentIndex(settings.value("cbbUseKeypoint_index", 0, type=int))
-        self.ui.cbbUpsample.setCurrentIndex(settings.value("cbbUpsample_index", 0, type=int))
+        # New keys (cbb*_on, bool) - deliberately not reusing the old
+        # cbb*_index keys (QComboBox.currentIndex(), 0="On"/1="Off"): a
+        # leftover "0" read back with type=bool via QSettings/QVariant
+        # coerces to False, which would silently flip every switch to OFF
+        # on first run after this combo->checkbox migration.
+        self.ui.cbbAutoAlign.setChecked(settings.value("cbbAutoAlign_on", True, type=bool))
+        self.ui.cbbAutoCompare.setChecked(settings.value("cbbAutoCompare_on", True, type=bool))
+        self.ui.cbbAutoReport.setChecked(settings.value("cbbAutoReport_on", True, type=bool))
+        self.ui.cbbRemoveGround.setChecked(settings.value("cbbRemoveGround_on", True, type=bool))
+        self.ui.cbbUseKeypoint.setChecked(settings.value("cbbUseKeypoint_on", True, type=bool))
+        self.ui.cbbUpsample.setChecked(settings.value("cbbUpsample_on", True, type=bool))
 
 
     # Update runtime param to ROS
     def update_param(self):
         params = {
-            "/runtime/do_align": self.ui.cbbAutoAlign.currentText().lower() == 'on',
-            "/runtime/auto_compare": self.ui.cbbAutoCompare.currentText().lower() == 'on',
-            "/runtime/auto_report": self.ui.cbbAutoReport.currentText().lower() == 'on',
-            "/runtime/do_pre_process": self.ui.cbbRemoveGround.currentText().lower() == 'on',
-            "/runtime/do_2d_keypoint": self.ui.cbbUseKeypoint.currentText().lower() == 'on',
-            "/runtime/do_upsample": self.ui.cbbUpsample.currentText().lower() == 'on',
+            "/runtime/do_align": self.ui.cbbAutoAlign.isChecked(),
+            "/runtime/auto_compare": self.ui.cbbAutoCompare.isChecked(),
+            "/runtime/auto_report": self.ui.cbbAutoReport.isChecked(),
+            "/runtime/do_pre_process": self.ui.cbbRemoveGround.isChecked(),
+            "/runtime/do_2d_keypoint": self.ui.cbbUseKeypoint.isChecked(),
+            "/runtime/do_upsample": self.ui.cbbUpsample.isChecked(),
         }
 
         for key, value in params.items():
@@ -382,22 +347,6 @@ class App(QMainWindow):
             rospy.set_param("/runtime/last_prescan_path", last_prescan_path)
             
 
-    # Reload data for history page when toolbox page 2 is activated
-    def on_toolbox_changed(self, index):
-        page = self.ui.toolBox.widget(index)
-
-        if page is self.ui.tboxPage2:
-            self.history_page_in_toolbox.load_jobs()
-            parts = [p.strip() for p in self.ui.cbbJobSelect.currentText().split("/")]
-            project, job = (parts + [None]*2)[:2] 
-            if job:
-                #Show file on detail view
-                job_folder = os.path.join(PROJECT_DIR, project, job)
-                self.history_page_in_toolbox.on_item_selected(None, job_folder)
-                #Select current job in history view
-                self.history_page_in_toolbox.select_job(job)
-
-
     # 1.0--- Update commond data from ROS (packages the job and hands it to
     # ScanPipelineWorker - the actual convert/color/save/report work runs
     # off the GUI thread, see scan_pipeline_worker.py) ---
@@ -411,15 +360,15 @@ class App(QMainWindow):
             # arrival that might change these before the worker gets to run.
             "is_manual": self.isManualCompare,
             "post_scan_path_snapshot": self.current_post_scan_path,
-            "auto_compare_on": self.ui.cbbAutoCompare.currentIndex() == 0,
-            "auto_compare_off": self.ui.cbbAutoCompare.currentText().lower() == 'off',
-            "auto_report_off": self.ui.cbbAutoReport.currentText().lower() == 'off',
+            "auto_compare_on": self.ui.cbbAutoCompare.isChecked(),
+            "auto_compare_off": not self.ui.cbbAutoCompare.isChecked(),
+            "auto_report_off": not self.ui.cbbAutoReport.isChecked(),
         }
         self.scan_worker.submit(job)
 
     def _on_scan_cloud_ready(self, polydata, metadata):
         self.vtk_viewer.update(polydata)
-        self.ui.tab_mainview.setCurrentIndex(0)
+        self.show_3d_main_page()
 
         if metadata["report_name"] is not None:
             self.report_name = metadata["report_name"]
@@ -444,12 +393,13 @@ class App(QMainWindow):
             self.notification_center.push("compare", "⚠️COMPARE DONE (report export failed) ", "warning")
 
 
-    def _sync_tab_size_policies(self, current_index):
-        for i in range(self.ui.tab_mainview.count()):
-            page = self.ui.tab_mainview.widget(i)
-            policy = QSizePolicy.Preferred if i == current_index else QSizePolicy.Ignored
-            page.setSizePolicy(policy, policy)
-        self.ui.tab_mainview.updateGeometry()
+    def show_3d_main_page(self):
+        """Switch the stacked content to 3D MAIN and keep the side-nav
+        highlight in sync - used both by the nav button click and by
+        code paths that jump here programmatically (a scan/compare cloud
+        becoming ready)."""
+        self.ui.stacked.setCurrentWidget(self.ui.tab_operator)
+        self.ui.btnNav3DMain.setChecked(True)
 
     def toggle_full_screen(self):
         if not self.isFullScreen():
@@ -513,7 +463,7 @@ class App(QMainWindow):
         if filename:
             print("updated polydata from file:", filename)
         self.vtk_viewer.update(polydata)
-        self.ui.tab_mainview.setCurrentIndex(0)
+        self.show_3d_main_page()
 
 
     # 4.--- Show report view dialog---
@@ -595,7 +545,7 @@ class App(QMainWindow):
 
         print("✅COMPARE DONE ", job_id)
 
-        if self.ui.cbbAutoReport.currentText().lower() == 'off':
+        if not self.ui.cbbAutoReport.isChecked():
             # No PDF export coming for this compare (scan_worker's report
             # step is skipped when auto-report is off) - nothing to wait
             # on, show the status right away like before.
