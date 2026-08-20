@@ -115,6 +115,73 @@ def test_reload_picks_up_external_changes():
         assert len(store.list_active_jobs()) == 2
 
 
+def test_add_active_job_appends_and_persists():
+    with TempDir() as tmp:
+        active_file, current_file = _paths(tmp)
+        store = JobStore(active_file, current_file)
+
+        assert store.add_active_job("P1", "J1") is True
+        assert store.list_active_jobs() == [{"project": "P1", "job": "J1"}]
+
+        store2 = JobStore(active_file, current_file)
+        assert store2.list_active_jobs() == [{"project": "P1", "job": "J1"}]
+
+
+def test_add_active_job_is_idempotent():
+    with TempDir() as tmp:
+        active_file, current_file = _paths(tmp)
+        store = JobStore(active_file, current_file)
+
+        assert store.add_active_job("P1", "J1") is True
+        assert store.add_active_job("P1", "J1") is False
+        assert len(store.list_active_jobs()) == 1
+
+
+def test_remove_active_job():
+    with TempDir() as tmp:
+        active_file, current_file = _paths(tmp)
+        store = JobStore(active_file, current_file)
+        store.add_active_job("P1", "J1")
+        store.add_active_job("P1", "J2")
+
+        assert store.remove_active_job("P1", "J1") is True
+        assert store.list_active_jobs() == [{"project": "P1", "job": "J2"}]
+        # Removing again is a no-op, not an error.
+        assert store.remove_active_job("P1", "J1") is False
+
+
+def test_rename_active_job_updates_matching_entry_only():
+    with TempDir() as tmp:
+        active_file, current_file = _paths(tmp)
+        store = JobStore(active_file, current_file)
+        store.add_active_job("P1", "J1")
+        store.add_active_job("P1", "J2")
+
+        assert store.rename_active_job("P1", "J1", "J1-renamed") is True
+        jobs = store.list_active_jobs()
+        assert {"project": "P1", "job": "J1-renamed"} in jobs
+        assert {"project": "P1", "job": "J2"} in jobs
+        assert len(jobs) == 2
+
+        # No matching entry -> no-op, doesn't touch unrelated jobs.
+        assert store.rename_active_job("P1", "does-not-exist", "x") is False
+
+
+def test_rename_active_job_project_updates_all_matching_entries():
+    with TempDir() as tmp:
+        active_file, current_file = _paths(tmp)
+        store = JobStore(active_file, current_file)
+        store.add_active_job("P1", "J1")
+        store.add_active_job("P1", "J2")
+        store.add_active_job("P2", "J3")
+
+        assert store.rename_active_job_project("P1", "P1-renamed") is True
+        jobs = store.list_active_jobs()
+        assert {"project": "P1-renamed", "job": "J1"} in jobs
+        assert {"project": "P1-renamed", "job": "J2"} in jobs
+        assert {"project": "P2", "job": "J3"} in jobs
+
+
 def run_all():
     tests = [v for k, v in globals().items() if k.startswith("test_") and callable(v)]
     for t in tests:
