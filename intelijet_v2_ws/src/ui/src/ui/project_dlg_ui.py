@@ -37,20 +37,20 @@ class Ui_frm_ProjectPage(object):
 }}
 #jobTitle {{
     background: transparent; border: none;
-    color: {TEXT}; font-size: 22px; font-weight: 800;
+    color: {TEXT}; font-size: 40px; font-weight: 800;
 }}
 #jobCardTitle {{
     background: transparent; border: none;
-    color: {TEXT}; font-size: 20px; font-weight: 800;
-    padding-bottom: 8px; border-bottom: 2px solid {BORDER};
+    color: {TEXT}; font-size: 36px; font-weight: 800;
+    padding-bottom: 16px; border-bottom: 3px solid {BORDER};
 }}
 #txtSearch {{
     background-color: {ROW_BG};
     color: {TEXT};
     border: 1px solid {BORDER};
-    border-radius: 8px;
-    padding: 8px 12px;
-    font-size: 16px;
+    border-radius: 10px;
+    padding: 16px 22px;
+    font-size: 28px;
     font-weight: 600;
 }}
 QScrollArea {{ background: transparent; border: none; }}
@@ -60,9 +60,9 @@ QScrollArea > QWidget > QWidget {{ background: transparent; }}
     background-color: {ACCENT_YELLOW};
     color: #153E42;
     border: none;
-    border-radius: 8px;
-    padding: 10px 18px;
-    font-size: 16px;
+    border-radius: 10px;
+    padding: 20px 34px;
+    font-size: 26px;
     font-weight: 800;
 }}
 #jobTopBar QPushButton:hover {{ background-color: {ACCENT_YELLOW_HOVER}; color: white; }}
@@ -70,38 +70,38 @@ QScrollArea > QWidget > QWidget {{ background: transparent; }}
 #projectCard {{
     background-color: {ROW_BG};
     border: 1px solid {BORDER};
-    border-radius: 8px;
+    border-radius: 10px;
 }}
 #projectHeaderLabel {{
     background: transparent; border: none;
-    color: {TEXT}; font-size: 18px; font-weight: 800;
+    color: {TEXT}; font-size: 30px; font-weight: 800;
 }}
 #jobRow {{
     background-color: {CARD_BG};
     border: 1px solid {BORDER};
-    border-radius: 6px;
+    border-radius: 8px;
 }}
 #jobRowTitle {{
     background: transparent; border: none;
-    color: {TEXT}; font-size: 16px; font-weight: 700;
+    color: {TEXT}; font-size: 26px; font-weight: 700;
 }}
 #jobRowSubtext, #scheduleSubtext {{
     background: transparent; border: none;
-    color: {TEXT_MUTED}; font-size: 13px; font-weight: 600;
+    color: {TEXT_MUTED}; font-size: 20px; font-weight: 600;
 }}
 #scheduleCard {{
     background-color: {ROW_BG};
     border: 1px solid {BORDER};
-    border-radius: 8px;
+    border-radius: 10px;
 }}
 #scheduleTitle {{
     background: transparent; border: none;
-    color: {TEXT}; font-size: 17px; font-weight: 800;
+    color: {TEXT}; font-size: 28px; font-weight: 800;
 }}
 #emptyStateLabel {{
     background: transparent; border: none;
-    color: {TEXT_MUTED}; font-size: 15px; font-weight: 600;
-    padding: 20px;
+    color: {TEXT_MUTED}; font-size: 24px; font-weight: 600;
+    padding: 32px;
 }}
 
 /* Row action buttons are tagged via setProperty("cssClass", ...) at
@@ -111,9 +111,9 @@ QPushButton[cssClass="rowActionBtn"] {{
     background-color: {CARD_BG};
     color: {TEXT};
     border: 1px solid {BORDER};
-    border-radius: 6px;
-    padding: 6px 12px;
-    font-size: 13px;
+    border-radius: 8px;
+    padding: 14px 22px;
+    font-size: 20px;
     font-weight: 700;
 }}
 QPushButton[cssClass="rowActionBtn"]:hover {{ border-color: {ACCENT_YELLOW}; }}
@@ -121,9 +121,9 @@ QPushButton[cssClass="rowDangerBtn"] {{
     background-color: {CARD_BG};
     color: {ACCENT_RED};
     border: 1px solid {ACCENT_RED};
-    border-radius: 6px;
-    padding: 6px 12px;
-    font-size: 13px;
+    border-radius: 8px;
+    padding: 14px 22px;
+    font-size: 20px;
     font-weight: 700;
 }}
 QPushButton[cssClass="rowDangerBtn"]:hover {{ background-color: {ACCENT_RED}; color: white; }}
@@ -131,47 +131,47 @@ QPushButton[cssClass="rowPrimaryBtn"] {{
     background-color: {ACCENT_YELLOW};
     color: #153E42;
     border: none;
-    border-radius: 6px;
-    padding: 6px 14px;
-    font-size: 13px;
+    border-radius: 8px;
+    padding: 14px 26px;
+    font-size: 20px;
     font-weight: 800;
 }}
 QPushButton[cssClass="rowPrimaryBtn"]:hover {{ background-color: {ACCENT_YELLOW_HOVER}; color: white; }}
 """)
         self.rootLayout = QtWidgets.QVBoxLayout(frm_ProjectPage)
-        self.rootLayout.setContentsMargins(20, 20, 20, 20)
-        self.rootLayout.setSpacing(16)
+        self.rootLayout.setContentsMargins(40, 40, 40, 40)
+        self.rootLayout.setSpacing(32)
 
         # ---- Top bar ----
         self.jobTopBar = QtWidgets.QWidget(frm_ProjectPage)
         self.jobTopBar.setObjectName("jobTopBar")
         self.jobTopBarLayout = QtWidgets.QHBoxLayout(self.jobTopBar)
-        self.jobTopBarLayout.setContentsMargins(20, 14, 20, 14)
+        self.jobTopBarLayout.setContentsMargins(40, 28, 40, 28)
         self.jobTitle = QtWidgets.QLabel("HMI Execution Management", self.jobTopBar)
         self.jobTitle.setObjectName("jobTitle")
         self.jobTopBarLayout.addWidget(self.jobTitle)
         self.jobTopBarLayout.addStretch(1)
         self.btnNewProject = QtWidgets.QPushButton("+ New Project", self.jobTopBar)
         self.btnNewProject.setObjectName("btnNewProject")
-        self.btnNewProject.setMinimumHeight(52)
+        self.btnNewProject.setMinimumHeight(104)
         self.jobTopBarLayout.addWidget(self.btnNewProject)
         self.btnNewJob = QtWidgets.QPushButton("+ New Job", self.jobTopBar)
         self.btnNewJob.setObjectName("btnNewJob")
-        self.btnNewJob.setMinimumHeight(52)
+        self.btnNewJob.setMinimumHeight(104)
         self.jobTopBarLayout.addWidget(self.btnNewJob)
         self.rootLayout.addWidget(self.jobTopBar)
 
         # ---- Main grid: Projects&Jobs (left) / Work Schedule (right) ----
         self.mainGrid = QtWidgets.QHBoxLayout()
-        self.mainGrid.setSpacing(16)
+        self.mainGrid.setSpacing(32)
         self.rootLayout.addLayout(self.mainGrid, 1)
 
         # Left card
         self.projectsCard = QtWidgets.QFrame(frm_ProjectPage)
         self.projectsCard.setObjectName("jobCard")
         self.projectsCardLayout = QtWidgets.QVBoxLayout(self.projectsCard)
-        self.projectsCardLayout.setContentsMargins(18, 18, 18, 18)
-        self.projectsCardLayout.setSpacing(10)
+        self.projectsCardLayout.setContentsMargins(36, 36, 36, 36)
+        self.projectsCardLayout.setSpacing(20)
 
         self.projectsHeaderRow = QtWidgets.QHBoxLayout()
         self.projectsCardTitle = QtWidgets.QLabel("Projects & Jobs List", self.projectsCard)
@@ -181,8 +181,8 @@ QPushButton[cssClass="rowPrimaryBtn"]:hover {{ background-color: {ACCENT_YELLOW_
         self.txtSearchProject = QtWidgets.QLineEdit(self.projectsCard)
         self.txtSearchProject.setObjectName("txtSearch")
         self.txtSearchProject.setPlaceholderText("Search...")
-        self.txtSearchProject.setMinimumHeight(44)
-        self.txtSearchProject.setMaximumWidth(240)
+        self.txtSearchProject.setMinimumHeight(88)
+        self.txtSearchProject.setMaximumWidth(400)
         self.txtSearchProject.setClearButtonEnabled(True)
         self.projectsHeaderRow.addWidget(self.txtSearchProject)
         self.projectsCardLayout.addLayout(self.projectsHeaderRow)
@@ -192,7 +192,7 @@ QPushButton[cssClass="rowPrimaryBtn"]:hover {{ background-color: {ACCENT_YELLOW_
         self.projectsScrollContent = QtWidgets.QWidget()
         self.projectsListLayout = QtWidgets.QVBoxLayout(self.projectsScrollContent)
         self.projectsListLayout.setContentsMargins(0, 0, 0, 0)
-        self.projectsListLayout.setSpacing(10)
+        self.projectsListLayout.setSpacing(20)
         self.projectsListLayout.addStretch(1)
         self.projectsScroll.setWidget(self.projectsScrollContent)
         self.projectsCardLayout.addWidget(self.projectsScroll, 1)
@@ -203,8 +203,8 @@ QPushButton[cssClass="rowPrimaryBtn"]:hover {{ background-color: {ACCENT_YELLOW_
         self.scheduleCardOuter = QtWidgets.QFrame(frm_ProjectPage)
         self.scheduleCardOuter.setObjectName("jobCard")
         self.scheduleCardOuterLayout = QtWidgets.QVBoxLayout(self.scheduleCardOuter)
-        self.scheduleCardOuterLayout.setContentsMargins(18, 18, 18, 18)
-        self.scheduleCardOuterLayout.setSpacing(10)
+        self.scheduleCardOuterLayout.setContentsMargins(36, 36, 36, 36)
+        self.scheduleCardOuterLayout.setSpacing(20)
 
         self.scheduleCardTitle = QtWidgets.QLabel("Work Schedule", self.scheduleCardOuter)
         self.scheduleCardTitle.setObjectName("jobCardTitle")
@@ -215,7 +215,7 @@ QPushButton[cssClass="rowPrimaryBtn"]:hover {{ background-color: {ACCENT_YELLOW_
         self.scheduleScrollContent = QtWidgets.QWidget()
         self.scheduleListLayout = QtWidgets.QVBoxLayout(self.scheduleScrollContent)
         self.scheduleListLayout.setContentsMargins(0, 0, 0, 0)
-        self.scheduleListLayout.setSpacing(10)
+        self.scheduleListLayout.setSpacing(20)
         self.scheduleListLayout.addStretch(1)
         self.scheduleScroll.setWidget(self.scheduleScrollContent)
         self.scheduleCardOuterLayout.addWidget(self.scheduleScroll, 1)
