@@ -172,6 +172,27 @@ def _draw_bell_icon(size=96, color="white", stroke=6):
     return QtGui.QIcon(pixmap)
 
 
+def _draw_report_icon(size=96, color="white", stroke=6):
+    """Side-nav icon for the REPORT tab: a page with a magnifier over it
+    (compare + view report combined)."""
+    pixmap, painter = _icon_painter(size, color, stroke)
+    m = size * 0.16
+    page = QtCore.QRectF(m, m * 0.6, size * 0.52, size * 0.8)
+    painter.drawRoundedRect(page, 4, 4)
+    for frac in (0.28, 0.46, 0.64):
+        y = page.top() + page.height() * frac
+        painter.drawLine(QtCore.QPointF(page.left() + size * 0.08, y),
+                          QtCore.QPointF(page.right() - size * 0.08, y))
+    cx = size * 0.62
+    cy = size * 0.62
+    r = size * 0.18
+    painter.drawEllipse(QtCore.QPointF(cx, cy), r, r)
+    painter.drawLine(QtCore.QPointF(cx + r * 0.7, cy + r * 0.7),
+                      QtCore.QPointF(size * 0.92, size * 0.92))
+    painter.end()
+    return QtGui.QIcon(pixmap)
+
+
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
@@ -568,6 +589,7 @@ QLabel {{
         self.btnNavJob = _make_nav_button(_draw_list_icon(48, color=TEXT_MUTED), "JOB", "btnNavJob")
         self.btnNavSystem = _make_nav_button(_draw_monitor_icon(48, color=TEXT_MUTED), "SYSTEM", "btnNavSystem")
         self.btnNavAlarm = _make_nav_button(_draw_bell_icon(48, color=TEXT_MUTED), "ALARM", "btnNavAlarm")
+        self.btnNavReport = _make_nav_button(_draw_report_icon(48, color=TEXT_MUTED), "REPORT", "btnNavReport")
         self.btnNav3DMain.setChecked(True)
         self.sideNavLayout.addStretch(1)
         self.workspaceLayout.addWidget(self.side_nav)
@@ -737,6 +759,15 @@ QLabel {{
         self.tab_jobnumber = QtWidgets.QWidget()
         self.tab_jobnumber.setObjectName("tab_jobnumber")
         self.stacked.addWidget(self.tab_jobnumber)
+
+        # ================= PAGE: REPORT (tab_report) =================
+        # New merged Compare+Report screen (ReportPageManager, inserted by
+        # app.py) - built alongside the old Compare/Report dialogs without
+        # touching them, per plan: review this first, delete the old dialog
+        # code in a follow-up once approved.
+        self.tab_report = QtWidgets.QWidget()
+        self.tab_report.setObjectName("tab_report")
+        self.stacked.addWidget(self.tab_report)
 
         # ================= PAGE: SYSTEM (tab_system) =================
         # Redesigned to match docs/ui_sample/App.html's SYSTEM screen: two
