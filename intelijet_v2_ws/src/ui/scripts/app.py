@@ -22,6 +22,7 @@ from vtk_viewer import VTKViewer
 from ros_thread import RosThread
 #Import pages manager
 from project_dlg_manager import ProjectManager
+from report_page_manager import ReportPageManager
 
 from ui.status_binder import StatusBinder
 
@@ -98,6 +99,7 @@ class App(QMainWindow):
         self.ui.btnNavJob.clicked.connect(lambda: self.ui.stacked.setCurrentWidget(self.ui.tab_jobnumber))
         self.ui.btnNavSystem.clicked.connect(lambda: self.ui.stacked.setCurrentWidget(self.ui.tab_system))
         self.ui.btnNavAlarm.clicked.connect(lambda: self.ui.stacked.setCurrentWidget(self.diagnostics_tab))
+        self.ui.btnNavReport.clicked.connect(lambda: self.ui.stacked.setCurrentWidget(self.ui.tab_report))
 
         # ------Tab JobSetting ---
         # JobStore built here (not at its previous spot further down) so
@@ -108,6 +110,18 @@ class App(QMainWindow):
         if self.ui.tab_jobnumber.layout() is None:
             self.ui.tab_jobnumber.setLayout(QVBoxLayout())
         self.ui.tab_jobnumber.layout().addWidget(self.project_manager)
+
+        # ------Tab REPORT (new merged Compare+Report screen) ---
+        # Built alongside the old Compare/Report dialogs without touching
+        # them - review this first, delete the old dialog code after.
+        self.report_page_manager = ReportPageManager(
+            job_store=self.job_store,
+            on_view_3d=self.on_report_view_3d,
+            on_start_compare=self.on_report_start_compare,
+        )
+        if self.ui.tab_report.layout() is None:
+            self.ui.tab_report.setLayout(QVBoxLayout())
+        self.ui.tab_report.layout().addWidget(self.report_page_manager)
 
         #Page 3: Compare page
         self.ui.btnCompare2.released.connect(self.on_compare)
@@ -555,8 +569,47 @@ class App(QMainWindow):
 
             # ✅ start thread
             self.worker.start()
-     
-       
+
+
+    # --- New REPORT tab (ReportPageManager) callbacks ---
+    def on_report_view_3d(self, filepath):
+        """"3D View" button on a REPORT-tab row - load that .ply straight
+        into the viewport, same conversion CompareManager.on_file_opened
+        used for the old dialog's equivalent action."""
+        from pps.data_converter import cloudconverter
+        o3d_cloud = cloudconverter.load_ply(filepath)
+        if o3d_cloud is None:
+            self.notification_center.push("report", f"Failed to load point cloud: {filepath}", "error")
+            return
+        self.update_pointcloud_from_data(o3d_cloud, filepath)
+
+    def on_report_start_compare(self, prescan_path, postscan_path):
+        """"Compare Selected" on the REPORT tab - identical manual-compare
+        pipeline as the old on_compare(), just sourced from the new
+        page's own file picker instead of the CompareManager dialog."""
+        self.isManualCompare = True
+        self.current_post_scan_path = postscan_path
+
+        from ui.compare_cloud_worker import CompareWorker
+
+        do_align = rospy.get_param("/runtime/do_align", True)
+        do_pre_process = rospy.get_param("/runtime/do_pre_process", True)
+        do_2d_keypoint = rospy.get_param("/runtime/do_2d_keypoint", False)
+        do_upsample = rospy.get_param("/runtime/do_upsample", False)
+        do_post_process = rospy.get_param("/runtime/do_post_process", False)
+
+        self.worker = CompareWorker(
+            prescan_path=prescan_path,
+            postscan_path=postscan_path,
+            do_2d_keypoint=do_2d_keypoint,
+            do_pre_process=do_pre_process,
+            do_align=do_align,
+            do_post_process=do_post_process,
+            do_upsample=do_upsample
+        )
+        self.worker.progress.connect(self.on_compare_process)
+        self.worker.finished.connect(self.on_compare_done)
+        self.worker.start()
 
     def on_compare_process(self, progress, stage):
         progress = max(0.0, min(1.0, progress))  # clamp
