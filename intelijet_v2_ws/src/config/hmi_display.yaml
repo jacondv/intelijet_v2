@@ -1,0 +1,7 @@
+# Shown on the bottom status bar (right side): "Mode: {mode} | System Version: {version}".
+# Edit by hand and restart the app to pick up changes - this file is
+# read directly via shared.config_loader.load_config("hmi_display.yaml"),
+# not merged into config/last_used.yaml like commond/lidar/runtime.yaml,
+# so there's no stale cache to clear after editing it.
+mode: "Automatic"
+version: "1.0.0"
