@@ -40,7 +40,7 @@ from ui.services.cloud_pipeline import CloudPipelineService
 from ui.services.report_service import ReportService
 from ui.scan_pipeline_worker import ScanPipelineWorker
 
-from shared.config_loader import CONFIG as cfg
+from shared.config_loader import CONFIG as cfg, load_config as load_yaml_config
 
 
 BASE_DIR = cfg.BASE_DIR
@@ -198,6 +198,35 @@ class App(QMainWindow):
         self.report_service = ReportService()
 
         # --- Status bar / notifications ---
+        # Left: a glowing accent dot + "SYSTEM READY", matching
+        # docs/ui_sample/App.html's status-bar indicator.
+        self.lblStatusDot = QLabel()
+        self.lblStatusDot.setFixedSize(10, 10)
+        self.lblStatusDot.setStyleSheet(
+            "background-color: #fbc02d; border-radius: 5px; margin-left: 8px;"
+        )
+        self.ui.statusbar.addWidget(self.lblStatusDot)
+
+        self.lblSystemStatus = QLabel("SYSTEM READY")
+        self.lblSystemStatus.setStyleSheet(
+            "color: #fbc02d; font-weight: 800; margin-left: 6px; margin-right: 12px;"
+        )
+        self.ui.statusbar.addWidget(self.lblSystemStatus)
+
+        # Right (permanent, stays put regardless of the transient
+        # notification message): Mode/Version, hand-edited via
+        # config/hmi_display.yaml rather than hardcoded here.
+        try:
+            hmi_display = load_yaml_config("hmi_display.yaml")
+            mode = getattr(hmi_display, "mode", "--")
+            version = getattr(hmi_display, "version", "--")
+        except Exception as e:
+            rospy.logwarn(f"Could not load hmi_display.yaml: {e}")
+            mode, version = "--", "--"
+        self.lblModeVersion = QLabel(f"Mode: {mode}  |  System Version: {version}")
+        self.lblModeVersion.setStyleSheet("color: #80cbc4; margin-right: 8px;")
+        self.ui.statusbar.addPermanentWidget(self.lblModeVersion)
+
         self.lblNotification = QLabel("Ready")
         self.lblNotification.setStyleSheet("margin-left: 5px;")
         # A long message (e.g. a full error string) makes this QLabel's
