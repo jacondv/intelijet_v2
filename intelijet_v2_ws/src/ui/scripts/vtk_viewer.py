@@ -2,17 +2,10 @@
 import numpy as np
 import vtk
 from vtk.qt.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
-from PyQt5.QtCore import Qt, QEvent
+from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QWidget, QVBoxLayout, QPushButton, QGestureEvent, QPinchGesture, QPanGesture
 
 import rospy
-
-# Touch events this widget consumes itself (see event() below) instead of
-# letting them fall through to Qt's default mouse-synthesis-from-touch
-# fallback.
-_TOUCH_EVENT_TYPES = (
-    QEvent.TouchBegin, QEvent.TouchUpdate, QEvent.TouchEnd, QEvent.TouchCancel,
-)
 
 
 class QVTKWidget(QVTKRenderWindowInteractor):
@@ -34,24 +27,6 @@ class QVTKWidget(QVTKRenderWindowInteractor):
     def event(self, event):
         if event.type() == QGestureEvent.Gesture:
             return self._gesture_event(event)
-        if event.type() in _TOUCH_EVENT_TYPES:
-            # Without this, an un-accepted touch event falls through to
-            # Qt's default handling, which (since nothing here overrides
-            # touchEvent()) synthesizes a left-button mouse press/move/
-            # release from the SAME touch points. Those synthesized mouse
-            # events reach QVTKRenderWindowInteractor's own native
-            # handling underneath us, which feeds
-            # vtkInteractorStyleTrackballCamera's own (different) rotation
-            # algorithm - running at the same time as, and fighting
-            # against, the gesture-driven on_pan()/on_pinch_zoom() above.
-            # That fight is exactly what produced the reported symptom:
-            # the cloud snapping to an unpredictable orientation right as
-            # a touch-drag begins, before settling into normal gesture-
-            # only rotation once the synthesized mouse drag stops. Accept
-            # (consume) touch here so only the gesture recognizer ever
-            # drives the camera.
-            event.accept()
-            return True
         return super().event(event)
 
 
