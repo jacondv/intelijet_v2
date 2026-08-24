@@ -96,10 +96,7 @@ class VTKViewer:
         self.iren = self.vtkWidget.GetRenderWindow().GetInteractor()
 
         # ----- Camera -----
-        cam = self.renderer.GetActiveCamera()
-        cam.SetPosition(-1, 0, 0)
-        cam.SetFocalPoint(0, 0, 0)
-        cam.SetViewUp(0, 0, 1)
+        self._apply_canonical_orientation()
         self.renderer.ResetCameraClippingRange()
 
         # Trackball camera
@@ -160,6 +157,17 @@ class VTKViewer:
         self.vtkWidget.GetRenderWindow().Render()
 
     # ------------------ Camera ------------------
+    # The app's one fixed camera convention, matching the original
+    # __init__ setup below: standing at -X looking toward +X (X axis
+    # points into the screen, away from the viewer), Z up. With that
+    # direction/up pair, the camera's screen-right vector works out to
+    # (0,-1,0) - i.e. +Y is screen-LEFT. Both a freshly loaded cloud
+    # (update()) and "Zoom Center" (restore_initial_view()) reset back to
+    # this orientation, regardless of whatever the user last rotated to
+    # via mouse drag - only the fit distance is recomputed per cloud.
+    CANONICAL_VIEW_DIRECTION = (-1, 0, 0)
+    CANONICAL_VIEW_UP = (0, 0, 1)
+
     # "Zoom Center" - recomputed fresh against whichever cloud is
     # CURRENTLY loaded (previously this replayed a camera state captured
     # once from the very FIRST cloud ever shown in the app session, which
@@ -169,20 +177,28 @@ class VTKViewer:
     # camera/actor state.
     ZOOM_CENTER_DOLLY_METERS = 2.0
 
+    def _apply_canonical_orientation(self):
+        cam = self.renderer.GetActiveCamera()
+        cam.SetPosition(*self.CANONICAL_VIEW_DIRECTION)
+        cam.SetFocalPoint(0, 0, 0)
+        cam.SetViewUp(*self.CANONICAL_VIEW_UP)
+
     def restore_initial_view(self):
         if not self.current_actor:
             return
         cam = self.renderer.GetActiveCamera()
 
-        # Undo any box-widget drag back to identity, then re-fit the
-        # camera to the actor's OWN bounds specifically (ResetCamera()
-        # with no args scans every visible prop in the renderer, which
-        # includes the box widget's outline - invisible at opacity 0, but
-        # still a real prop with real bounds set 3x larger than the cloud
-        # via SetPlaceFactor(3) in _enable_box_widget - so it was fitting
-        # the camera to a box 3x too big, making the cloud look small and
-        # far instead of properly framed).
+        # Undo any box-widget drag back to identity, reset to the
+        # canonical orientation, then re-fit the camera to the actor's
+        # OWN bounds specifically (ResetCamera() with no args scans every
+        # visible prop in the renderer, which includes the box widget's
+        # outline - invisible at opacity 0, but still a real prop with
+        # real bounds set 3x larger than the cloud via SetPlaceFactor(3)
+        # in _enable_box_widget - so it was fitting the camera to a box
+        # 3x too big, making the cloud look small and far instead of
+        # properly framed).
         self.current_actor.SetUserTransform(vtk.vtkTransform())
+        self._apply_canonical_orientation()
         self.renderer.ResetCamera(self.current_actor.GetBounds())
 
         # Move the camera ZOOM_CENTER_DOLLY_METERS closer along its own
@@ -253,6 +269,11 @@ class VTKViewer:
 
         self.current_actor = actor
         self.renderer.AddActor(actor)
+        # Reset to the canonical orientation (see CANONICAL_VIEW_DIRECTION
+        # above) rather than keeping whatever direction the user last
+        # rotated to - a freshly loaded cloud always starts from the same
+        # fixed viewing angle.
+        self._apply_canonical_orientation()
         # Explicit bounds, not a bare ResetCamera(): from the 2nd cloud
         # onward, the box widget from the PREVIOUS cloud is still On()
         # and visible (opacity 0, but still a real prop) with bounds 3x
