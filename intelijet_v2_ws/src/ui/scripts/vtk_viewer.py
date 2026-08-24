@@ -242,16 +242,17 @@ class VTKViewer:
             box.ScalingEnabledOff()
             box.GetOutlineProperty().SetOpacity(0)
             box.OutlineCursorWiresOff()
-            # The corner/face handles are real sphere geometry, not
-            # GL_POINTS, so SetPointSize() on the handle property (the old
-            # line here) had no visible effect at all. SetHandleSize() is
-            # the actual control - a fraction of the placed box's own
-            # diagonal (so it stays proportionally consistent across
-            # differently-sized clouds, not a fixed world/pixel size).
-            # Default is 0.0125; shrunk down since the white sphere
-            # handles were too obtrusive at that size.
-            box.SetHandleSize(0.004)
-            box.GetHandleProperty().SetPointSize(1)
+            # The 6 handle spheres exist only for per-face scaling, which
+            # is already off (ScalingEnabledOff() above) - so they have no
+            # function left, just visual clutter. vtkBoxWidget doesn't
+            # expose per-handle visibility in Python, only all-or-nothing
+            # (HandlesOn/Off), so hide them all rather than picking one to
+            # keep. Rotating/moving the box (on_interact below) drags the
+            # outline itself, not these handles, so this has no effect on
+            # that interaction - the outline stays pickable even at
+            # opacity 0 (VTK picking is visibility-based, not
+            # opacity-based).
+            box.HandlesOff()
 
             def on_interact(caller, event):
                 t = vtk.vtkTransform()
