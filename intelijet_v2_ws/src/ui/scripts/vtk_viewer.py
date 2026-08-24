@@ -175,7 +175,10 @@ class VTKViewer:
     # Camera-only: this has no effect on compare or its results - compare
     # works off the raw cloud data, never off this viewport's
     # camera/actor state.
-    ZOOM_CENTER_DOLLY_METERS = 2.0
+    ZOOM_CENTER_DOLLY_METERS = 5.0
+    # Floor so the dolly above can never cross into/past the cloud's own
+    # center when ZOOM_CENTER_DOLLY_METERS is bigger than the fit distance.
+    MIN_DISTANCE_METERS = 0.1
 
     def _apply_canonical_orientation(self):
         cam = self.renderer.GetActiveCamera()
@@ -204,12 +207,19 @@ class VTKViewer:
         # Move the camera ZOOM_CENTER_DOLLY_METERS closer along its own
         # view direction (camera -> focal point) so the cloud reads
         # closer/larger than a plain bounding-box fit, not just centered.
+        # Clamped to MIN_DISTANCE_METERS instead of skipped outright when
+        # the requested dolly is bigger than the fit distance itself (the
+        # previous `if distance > ZOOM_CENTER_DOLLY_METERS` guard silently
+        # did nothing whenever the cloud's fit distance was smaller than
+        # the configured dolly - e.g. dolly=5m on a cloud that fits at
+        # 3m - instead of moving in as far as it safely can).
         pos = np.array(cam.GetPosition())
         focal = np.array(cam.GetFocalPoint())
         direction = focal - pos
         distance = np.linalg.norm(direction)
-        if distance > self.ZOOM_CENTER_DOLLY_METERS:
-            cam.SetPosition(*(pos + direction / distance * self.ZOOM_CENTER_DOLLY_METERS))
+        if distance > 0:
+            new_distance = max(distance - self.ZOOM_CENTER_DOLLY_METERS, self.MIN_DISTANCE_METERS)
+            cam.SetPosition(*(focal - direction / distance * new_distance))
 
         self.renderer.ResetCameraClippingRange()
 
