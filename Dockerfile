@@ -58,6 +58,7 @@ RUN apt-get update && apt-get install -y \
     onboard \
     dbus-x11 \
     qpdfview \
+    wmctrl \
     && rm -rf /var/lib/apt/lists/*
 # python3-vtk7: libvtk7-dev alone is C++ headers only, no Python bindings.
 # libjsoncpp-dev/libboost-*-dev/diagnostic-updater/dynamic-reconfigure:
@@ -76,6 +77,10 @@ RUN apt-get update && apt-get install -y \
 # a private D-Bus bus for onboard's Show/Hide calls to connect to.
 # qpdfview: PDF viewer for report_view_dlg_manager.py - persists its own
 # window geometry via QSettings and is much lighter than Okular/evince.
+# wmctrl: qpdfview --unique reuses its already-running instance's window
+# instead of opening a new one, so report_page_manager.py's "View Report"
+# button uses wmctrl to raise/focus that existing window (Popen'ing
+# qpdfview alone doesn't guarantee that window comes to front).
 #
 # If a package still fails to build with "missing dependency", run (inside
 # the container, from intelijet_v2_ws): rosdep install --from-paths src

@@ -17,7 +17,23 @@ PROJECT_DIR = repo.PROJECT_DIR
 ACTIVE_JOB_FILE = repo.ACTIVE_JOB_FILE
 
 
-from PyQt5.QtWidgets import QDialog, QFormLayout, QSpinBox, QComboBox, QDialogButtonBox
+from PyQt5.QtWidgets import QDialog, QFormLayout, QSpinBox, QComboBox, QDialogButtonBox, QDesktopWidget
+
+
+def _position_dialog_near_top(dlg, margin_top=30, use_size_hint=True):
+    """Popups (Rename Project, New/Edit Job) default to opening centered
+    on screen, which the nam72 on-screen keyboard then sits right on top
+    of/overlaps once it appears for one of the dialog's text fields -
+    push the dialog up near the top of the screen instead, well clear of
+    where the keyboard will dock at the bottom. use_size_hint=False for a
+    dialog that already sets its own explicit size via resize() - calling
+    adjustSize() on top of that would just discard it."""
+    if use_size_hint:
+        dlg.adjustSize()
+    screen = QDesktopWidget().availableGeometry(dlg)
+    x = screen.x() + (screen.width() - dlg.width()) // 2
+    dlg.move(x, screen.y() + margin_top)
+
 
 class NewProjectDlg(QDialog):
     def __init__(self, parent=None):
@@ -101,6 +117,7 @@ class JobInfoDialog(QDialog):
 
 
         self.setLayout(layout)
+        _position_dialog_near_top(self, use_size_hint=False)
 
     def get_data(self):
         """Trả về dict chứa tất cả dữ liệu"""
@@ -133,7 +150,6 @@ class ProjectManager(QWidget, Ui_frm_ProjectPage):
         self.job_store = job_store or JobStore(repo.ACTIVE_JOB_FILE, repo.CURRENT_JOB_FILE)
 
         self.btnNewProject.clicked.connect(self.new_project)
-        self.btnNewJob.clicked.connect(lambda: self.new_job())
         self.txtSearchProject.textChanged.connect(lambda _text: self.render_projects())
 
         self.render_projects()
@@ -235,8 +251,12 @@ class ProjectManager(QWidget, Ui_frm_ProjectPage):
         h.addLayout(info)
         h.addStretch(1)
 
-        btn_schedule = QPushButton("Schedule")
-        btn_schedule.setProperty("cssClass", "rowPrimaryBtn")
+        is_scheduled = any(
+            a["project"] == project and a["job"] == job
+            for a in self.job_store.list_active_jobs()
+        )
+        btn_schedule = QPushButton("Scheduled" if is_scheduled else "Schedule")
+        btn_schedule.setProperty("cssClass", "rowScheduledBtn" if is_scheduled else "rowPrimaryBtn")
         btn_schedule.clicked.connect(lambda _checked, p=project, j=job: self.add_job_to_active(p, j))
         h.addWidget(btn_schedule)
 
@@ -284,10 +304,10 @@ class ProjectManager(QWidget, Ui_frm_ProjectPage):
         h.addLayout(info)
         h.addStretch(1)
 
-        btn_pause = QPushButton("Pause")
-        btn_pause.setProperty("cssClass", "rowDangerBtn")
-        btn_pause.clicked.connect(lambda _checked, p=project, j=job: self.remove_job_from_active(p, j))
-        h.addWidget(btn_pause)
+        btn_remove = QPushButton("Remove")
+        btn_remove.setProperty("cssClass", "rowDangerBtn")
+        btn_remove.clicked.connect(lambda _checked, p=project, j=job: self.remove_job_from_active(p, j))
+        h.addWidget(btn_remove)
 
         return card
 
@@ -317,7 +337,13 @@ class ProjectManager(QWidget, Ui_frm_ProjectPage):
                 QMessageBox.warning(self, "Active Job", "Cannot rename a project with active jobs. Please remove its jobs from active jobs first.")
                 return
 
-        new_name, ok = QInputDialog.getText(self, "Rename Project", "Enter new name:", text=old_name)
+        dlg = QInputDialog(self)
+        dlg.setWindowTitle("Rename Project")
+        dlg.setLabelText("Enter new name:")
+        dlg.setTextValue(old_name)
+        _position_dialog_near_top(dlg)
+        ok = dlg.exec_() == QDialog.Accepted
+        new_name = dlg.textValue()
         if not ok or not new_name.strip() or new_name == old_name:
             return
         new_name = new_name.strip()
@@ -352,19 +378,11 @@ class ProjectManager(QWidget, Ui_frm_ProjectPage):
     # =========================
     #        JOB ACTIONS
     # =========================
-    def new_job(self, project=None):
-        """project=None -> triggered from the top-bar "+ New Job" button,
-        which has no implicit project context (no row is "selected" in
-        this card layout), so ask which project via a picker instead."""
-        if project is None:
-            projects = repo.list_projects()
-            if not projects:
-                QMessageBox.warning(self, "No Project", "Please create a project first.")
-                return
-            project, ok = QInputDialog.getItem(self, "New Job", "Project:", projects, 0, False)
-            if not ok or not project:
-                return
-
+    def new_job(self, project):
+        """Always called from a project card's "+ Add Job" button, which
+        carries its own project context - no top-bar "+ New Job" button
+        exists any more (a job with no project to belong to doesn't make
+        sense in this card layout)."""
         dlg = JobInfoDialog(self)
         if dlg.exec() != QDialog.Accepted:
             return  # user cancel
@@ -457,7 +475,9 @@ class ProjectManager(QWidget, Ui_frm_ProjectPage):
             QMessageBox.information(self, "Exists", f"Job '{job}' is already active.")
             return
         self.render_schedule()
+        self.render_projects()  # job's own "Schedule" button needs to flip to "Scheduled"
 
     def remove_job_from_active(self, project, job):
         self.job_store.remove_active_job(project, job)
         self.render_schedule()
+        self.render_projects()  # job's own "Schedule" button needs to flip back

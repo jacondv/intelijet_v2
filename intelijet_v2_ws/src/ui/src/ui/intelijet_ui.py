@@ -9,6 +9,12 @@ import math
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 
+from ui.style_tokens import (
+    FONT_SECTION_TITLE, FONT_ROW_TITLE, FONT_VALUE, FONT_FIELD_LABEL, FONT_BUTTON_PRIMARY,
+    CARD_BG as LIGHT_CARD_BG, BORDER as LIGHT_BORDER, TEXT as LIGHT_TEXT, TEXT_MUTED as LIGHT_TEXT_MUTED,
+    CHEVRON_ICON_PATH,
+)
+
 # ---- HMI dark-green/yellow chrome theme (see docs/ui_sample/App.html) ----
 BG_MAIN = "#0f4448"
 PANEL_BG = "#185F63"
@@ -280,28 +286,46 @@ QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {{ height: 0; }}
     background: transparent; border: none;
     color: {ACCENT_YELLOW}; font-weight: 800; font-size: 26px; letter-spacing: 1px;
 }}
+/* Styled like a REPORT-tab #fieldBox (white card, gray border, label
+   baked into the same box as the value) rather than the dark header's
+   own theme - reads as a search-bar-like control sitting on the header. */
 #jobSelectorBox {{
-    background-color: {BG_MAIN};
-    border: 1px solid {PANEL_BORDER};
+    background-color: {LIGHT_CARD_BG};
+    border: 2px solid {LIGHT_BORDER};
     border-radius: 10px;
 }}
+#jobSelectorBox:hover {{ border-color: #cbd5e1; }}
 #lblCurrentJob {{
-    background: transparent; border: none; color: {TEXT_MUTED};
-    font-size: 16px; font-weight: 700;
+    background: transparent; border: none; color: {LIGHT_TEXT_MUTED};
+    font-size: {FONT_FIELD_LABEL}; font-weight: 700;
 }}
 #cbbJobSelect {{
-    background: transparent; color: {ACCENT_YELLOW}; border: none; font-weight: 700;
+    background: transparent; color: {LIGHT_TEXT}; border: 2px solid transparent;
+    border-radius: 8px; font-weight: 700; font-size: {FONT_VALUE};
+    padding: 4px 46px 4px 4px;
 }}
-#btnCompare2, #btnViewReport {{
-    background-color: transparent;
-    color: {ACCENT_YELLOW};
-    border: 1px solid {ACCENT_YELLOW};
-    border-radius: 8px;
-    padding: 10px 22px;
-    font-size: 20px;
-    font-weight: 700;
+#cbbJobSelect:focus {{ border-color: {ACCENT_YELLOW}; }}
+#cbbJobSelect::drop-down {{
+    subcontrol-origin: padding; subcontrol-position: top right;
+    width: 40px; border: none; background: transparent;
 }}
-#btnCompare2:hover, #btnViewReport:hover {{ background-color: rgba(251, 192, 45, 0.15); }}
+#cbbJobSelect::down-arrow {{
+    image: url({CHEVRON_ICON_PATH});
+    width: 18px; height: 18px;
+    margin-right: 14px;
+}}
+#cbbJobSelect QAbstractItemView {{
+    background-color: {LIGHT_CARD_BG};
+    color: {LIGHT_TEXT};
+    border: 2px solid {LIGHT_BORDER};
+    border-radius: 10px;
+    selection-background-color: {ACCENT_YELLOW};
+    selection-color: #153E42;
+    padding: 6px;
+    font-size: {FONT_VALUE};
+    outline: none;
+}}
+#cbbJobSelect QAbstractItemView::item {{ padding: 16px 14px; min-height: 26px; margin: 3px 0px; border-radius: 8px; }}
 #btnLogin, #btnFullScreen {{
     background-color: {BTN_NEUTRAL};
     border: 1px solid {PANEL_BORDER};
@@ -395,7 +419,7 @@ QLabel {{
     border: none;
     border-bottom: 2px solid #e2e8f0;
     color: #1e293b;
-    font-size: 28px;
+    font-size: {FONT_SECTION_TITLE};
     font-weight: 800;
     padding: 0px 0px 12px 0px;
 }}
@@ -408,7 +432,7 @@ QLabel {{
     background: transparent;
     border: none;
     color: #1e293b;
-    font-size: 23px;
+    font-size: {FONT_ROW_TITLE};
     font-weight: 700;
     padding: 0px;
 }}
@@ -417,7 +441,7 @@ QLabel {{
     background: transparent;
     border: none;
     color: #64748b;
-    font-size: 19px;
+    font-size: {FONT_FIELD_LABEL};
     font-weight: 700;
     padding: 0px;
 }}
@@ -427,7 +451,7 @@ QLabel {{
     border: 1px solid #e2e8f0;
     border-radius: 6px;
     padding: 10px 14px;
-    font-size: 24px;
+    font-size: {FONT_VALUE};
     font-weight: 700;
 }}
 #btnSetHome {{
@@ -435,7 +459,7 @@ QLabel {{
     color: white;
     border: none;
     border-radius: 6px;
-    font-size: 25px;
+    font-size: {FONT_BUTTON_PRIMARY};
     font-weight: 700;
 }}
 #btnSetHome:hover {{ background-color: #e65100; }}
@@ -452,7 +476,7 @@ QLabel {{
     color: #475569;
     border: none;
     border-radius: 22px;
-    font-size: 19px;
+    font-size: 22px;
     font-weight: 800;
 }}
 #processingCard QPushButton:checked {{ background-color: #059669; color: white; }}
@@ -504,16 +528,6 @@ QLabel {{
         self.cbbJobSelect.addItem("")
         self.jobSelectorLayout.addWidget(self.cbbJobSelect)
         self.headerLayout.addWidget(self.jobSelectorBox)
-
-        self.btnCompare2 = QtWidgets.QPushButton(self.header)
-        self.btnCompare2.setObjectName("btnCompare2")
-        self.btnCompare2.setMinimumHeight(64)
-        self.headerLayout.addWidget(self.btnCompare2)
-
-        self.btnViewReport = QtWidgets.QPushButton(self.header)
-        self.btnViewReport.setObjectName("btnViewReport")
-        self.btnViewReport.setMinimumHeight(64)
-        self.headerLayout.addWidget(self.btnViewReport)
 
         self.headerLayout.addStretch(1)
 
@@ -851,7 +865,7 @@ QLabel {{
 
         self.btnSetHome = QtWidgets.QPushButton("Set Zero Position", self.deviceCard)
         self.btnSetHome.setObjectName("btnSetHome")
-        self.btnSetHome.setMinimumHeight(56)
+        self.btnSetHome.setMinimumHeight(66)
         self.btnSetHome.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.deviceCardLayout.addWidget(self.btnSetHome)
         self.deviceCardLayout.addStretch(1)
@@ -877,8 +891,8 @@ QLabel {{
             btn.setCheckable(True)
             btn.setChecked(True)
             btn.setText("ON")
-            btn.setMinimumSize(QtCore.QSize(108, 48))
-            btn.setMaximumSize(QtCore.QSize(108, 48))
+            btn.setMinimumSize(QtCore.QSize(120, 56))
+            btn.setMaximumSize(QtCore.QSize(120, 56))
             btn.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
             btn.toggled.connect(lambda checked, b=btn: b.setText("ON" if checked else "OFF"))
             return btn
@@ -934,8 +948,6 @@ QLabel {{
         self.cbbJobSelect.setItemText(0, _translate("MainWindow", "New Item"))
         self.cbbJobSelect.setItemText(1, _translate("MainWindow", "New Item"))
         self.cbbJobSelect.setItemText(2, _translate("MainWindow", "New Item"))
-        self.btnCompare2.setText(_translate("MainWindow", "Compare"))
-        self.btnViewReport.setText(_translate("MainWindow", "Report"))
         self.btnFullScreen.setToolTip(_translate("MainWindow", "Full Screen"))
         self.btnShutdown.setToolTip(_translate("MainWindow", "Exit"))
         self.btnPreScan.setText(_translate("MainWindow", "PRE-SCAN"))
