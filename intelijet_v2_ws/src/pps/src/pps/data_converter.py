@@ -10,6 +10,19 @@ import ros_numpy
 from sensor_msgs.msg import PointCloud2
 import sensor_msgs.point_cloud2 as pc2
 
+# The VTK build in this image (python3-vtk7) ships a numpy_support.py that
+# still references the numpy.bool alias, removed in numpy>=1.24 (this repo
+# runs 1.24.4). vtk.util.numpy_support.numpy_to_vtk() calls
+# get_vtk_to_numpy_typemap() unconditionally on every call - even when
+# converting a plain float64/uint8 array that has nothing to do with
+# VTK_BIT/numpy.bool - so without this shim it raises AttributeError
+# immediately for ANY use of numpy_to_vtk in this environment, not just
+# boolean arrays. numpy.bool was always just an alias for the builtin
+# bool, so restoring it is exactly what numpy's own deprecation message
+# recommends - safe, and confined to this one attribute.
+if not hasattr(np, "bool"):
+    np.bool = bool
+
 
 class CloudConverter:
 
@@ -380,6 +393,7 @@ class CloudConverter:
     def o3d_to_vtk_polydata(pcd, voxel_size=0.0, max_points=None):
         import vtk
         import numpy as np
+        from vtk.util import numpy_support
 
         pcd = CloudConverter.tensor_to_o3d_legacy(pcd)
 
@@ -399,21 +413,24 @@ class CloudConverter:
             if has_colors:
                 colors = colors[indices]
 
+        # Vectorized via numpy_support instead of a per-point Python loop
+        # (InsertNextPoint/InsertNextTuple3 x N) - for the several hundred
+        # thousand to ~2M points these clouds can have, the loop was the
+        # actual bottleneck in this function; numpy_to_vtk hands the whole
+        # array to VTK in one C call.
+        points = np.ascontiguousarray(points, dtype=np.float64)
         vtk_points = vtk.vtkPoints()
-        vtk_colors = vtk.vtkUnsignedCharArray()
-        vtk_colors.SetNumberOfComponents(3)
+        vtk_points.SetData(numpy_support.numpy_to_vtk(points, deep=True))
+
+        if has_colors:
+            color_bytes = np.ascontiguousarray((colors * 255).astype(np.uint8))
+        else:
+            # Default to red (255, 0, 0)
+            color_bytes = np.tile(
+                np.array([255, 0, 0], dtype=np.uint8), (points.shape[0], 1)
+            )
+        vtk_colors = numpy_support.numpy_to_vtk(color_bytes, deep=True)
         vtk_colors.SetName("Colors")
-
-        for i in range(points.shape[0]):
-            vtk_points.InsertNextPoint(points[i])
-
-            if has_colors:
-                r, g, b = (colors[i] * 255).astype(np.uint8)
-            else:
-                # Default to red (255, 0, 0)
-                r, g, b = 255, 0, 0
-
-            vtk_colors.InsertNextTuple3(r, g, b)
 
         polydata = vtk.vtkPolyData()
         polydata.SetPoints(vtk_points)
