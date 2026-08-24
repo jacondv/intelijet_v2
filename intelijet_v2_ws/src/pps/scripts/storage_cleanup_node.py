@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 """Auto-deletes old scan data under <BASE_DIR>/<DATA_DIR>/Projects to keep
 disk usage bounded, per config/storage_cleanup.yaml (max_data_gb,
-max_projects, check_interval_seconds).
+max_projects). Runs ONCE at app startup (launched by pps.launch like any
+other node) and exits - not a long-running periodic check.
 
-Two independent caps, both enforced every cycle:
+Two independent caps, both enforced on that one run:
   1. Total size of the Projects folder <= max_data_gb. If over, strip the
      Pre-Scan/Post-Scan .ply files (the bulky raw clouds) from the oldest
      eligible project, re-check, and move on to the next-oldest project
@@ -242,39 +243,35 @@ def _enforce_max_project_count(max_projects):
 
 
 def run_cleanup_cycle(max_data_gb, max_projects):
-    """Both caps are enforced every cycle: size first, then count -
-    deleting a whole project (count cap) also frees size, so running
-    size-cleanup first and count-cleanup second means a project deleted
-    for being over the count cap can never leave the size cap need-
-    lessly re-triggered on the very next cycle. Each _enforce_* call
-    already loops internally to completion (satisfied, or gives up when
-    nothing eligible remains - see their docstrings), so this function
-    itself never loops - rospy.Timer re-invokes it on its own interval,
-    which is retry enough."""
+    """Both caps enforced once: size first, then count - deleting a
+    whole project (count cap) also frees size, so running size-cleanup
+    first and count-cleanup second means a project deleted for being
+    over the count cap can never leave the size cap needlessly
+    re-triggered right after. Each _enforce_* call already loops
+    internally to completion (satisfied, or gives up when nothing
+    eligible remains - see their docstrings), so this function itself
+    never loops."""
     max_bytes = max_data_gb * (1024 ** 3)
     _enforce_max_data_size(max_bytes)
     _enforce_max_project_count(max_projects)
 
 
 def main():
+    # One-shot: check/clean once at app startup, then exit - not a
+    # long-running periodic node. roslaunch (see pps.launch) starts this
+    # fresh alongside everything else each time the app is launched,
+    # which is the only "trigger" this needs.
     rospy.init_node("storage_cleanup_node")
-
-    def _tick(_event=None):
-        try:
-            settings = load_config("storage_cleanup.yaml")
-            run_cleanup_cycle(settings.max_data_gb, settings.max_projects)
-        except Exception as e:
-            rospy.logerr(f"[storage_cleanup] Cleanup cycle failed: {e}")
-
     settings = load_config("storage_cleanup.yaml")
     rospy.loginfo(
-        f"[storage_cleanup] Started - max_data_gb={settings.max_data_gb}, "
-        f"max_projects={settings.max_projects}, "
-        f"check_interval_seconds={settings.check_interval_seconds}"
+        f"[storage_cleanup] Running startup check - max_data_gb={settings.max_data_gb}, "
+        f"max_projects={settings.max_projects}"
     )
-    _tick()  # run once at startup, don't wait a full interval first
-    rospy.Timer(rospy.Duration(settings.check_interval_seconds), _tick)
-    rospy.spin()
+    try:
+        run_cleanup_cycle(settings.max_data_gb, settings.max_projects)
+    except Exception as e:
+        rospy.logerr(f"[storage_cleanup] Cleanup cycle failed: {e}")
+    rospy.loginfo("[storage_cleanup] Startup check done, exiting.")
 
 
 if __name__ == "__main__":
