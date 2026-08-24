@@ -175,9 +175,15 @@ class VTKViewer:
         cam = self.renderer.GetActiveCamera()
 
         # Undo any box-widget drag back to identity, then re-fit the
-        # camera to the box's real (untransformed) bounds.
+        # camera to the actor's OWN bounds specifically (ResetCamera()
+        # with no args scans every visible prop in the renderer, which
+        # includes the box widget's outline - invisible at opacity 0, but
+        # still a real prop with real bounds set 3x larger than the cloud
+        # via SetPlaceFactor(3) in _enable_box_widget - so it was fitting
+        # the camera to a box 3x too big, making the cloud look small and
+        # far instead of properly framed).
         self.current_actor.SetUserTransform(vtk.vtkTransform())
-        self.renderer.ResetCamera()
+        self.renderer.ResetCamera(self.current_actor.GetBounds())
 
         # Move the camera ZOOM_CENTER_DOLLY_METERS closer along its own
         # view direction (camera -> focal point) so the cloud reads
@@ -247,7 +253,13 @@ class VTKViewer:
 
         self.current_actor = actor
         self.renderer.AddActor(actor)
-        self.renderer.ResetCamera()
+        # Explicit bounds, not a bare ResetCamera(): from the 2nd cloud
+        # onward, the box widget from the PREVIOUS cloud is still On()
+        # and visible (opacity 0, but still a real prop) with bounds 3x
+        # the old cloud's size (SetPlaceFactor(3) in _enable_box_widget,
+        # called below AFTER this) - a bare ResetCamera() would fit
+        # against that stale, oversized box instead of the new cloud.
+        self.renderer.ResetCamera(actor.GetBounds())
 
         self.vtkWidget.GetRenderWindow().Render()
         self._enable_box_widget()
