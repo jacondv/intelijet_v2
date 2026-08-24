@@ -169,6 +169,11 @@ class App(QMainWindow):
             cb.toggled.connect(self.update_param)
 
         # --- Control Buttons ---
+        # Pre/Post-Scan need Encoder + Scanner actually connected - start
+        # disabled and let status_binder.py's STATUS_BINDINGS enable them
+        # once the first device status snapshot confirms that.
+        self.ui.btnPreScan.setEnabled(False)
+        self.ui.btnPostScan.setEnabled(False)
         # self.ui.btnPreScan.released.connect(lambda: self.ui_send_cmd_signal.emit(PPSCommand.START_PRESCAN.value))
         self.ui.btnPreScan.released.connect(self.confirm_and_send_prescan)
         self.ui.btnPostScan.released.connect(lambda: self.ui_send_cmd_signal.emit(PPSCommand.START_POSTSCAN.value))
@@ -207,19 +212,17 @@ class App(QMainWindow):
         self.report_service = ReportService()
 
         # --- Status bar / notifications ---
-        # Left: a glowing accent dot + "SYSTEM READY", matching
-        # docs/ui_sample/App.html's status-bar indicator.
+        # Left: a glowing accent dot + "SYSTEM READY"/"DEVICE DISCONNECTED",
+        # matching docs/ui_sample/App.html's status-bar indicator - driven
+        # live off actual device connection state by status_binder.py
+        # (registered into self.status_binder below), not hardcoded text.
         self.lblStatusDot = QLabel()
+        self.lblStatusDot.setObjectName("lblStatusDot")
         self.lblStatusDot.setFixedSize(10, 10)
-        self.lblStatusDot.setStyleSheet(
-            "background-color: #fbc02d; border-radius: 5px; margin-left: 8px;"
-        )
         self.ui.statusbar.addWidget(self.lblStatusDot)
 
         self.lblSystemStatus = QLabel("SYSTEM READY")
-        self.lblSystemStatus.setStyleSheet(
-            "color: #fbc02d; font-weight: 800; margin-left: 6px; margin-right: 12px;"
-        )
+        self.lblSystemStatus.setObjectName("lblSystemStatus")
         self.ui.statusbar.addWidget(self.lblSystemStatus)
 
         # Right (permanent, stays put regardless of the transient
@@ -292,6 +295,12 @@ class App(QMainWindow):
 
         # --- Data binder ---
         self.status_binder = StatusBinder(self.ui.centralFrame)
+        # lblStatusDot/lblSystemStatus live on the QMainWindow's own
+        # QStatusBar, not under centralFrame, so they're not picked up by
+        # StatusBinder's automatic findChildren() scan - register them by
+        # hand so STATUS_BINDINGS can still drive them.
+        self.status_binder.register("lblStatusDot", self.lblStatusDot)
+        self.status_binder.register("lblSystemStatus", self.lblSystemStatus)
 
         #Load ui state
         self.load_ui_state()
