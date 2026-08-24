@@ -1,4 +1,5 @@
 # vtk_viewer.py
+import numpy as np
 import vtk
 from vtk.qt.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
 from PyQt5.QtCore import Qt
@@ -81,7 +82,6 @@ class VTKViewer:
         self.renderer = vtk.vtkRenderer()
         self.current_actor = None
         self.box_widget = None
-        self.initial_camera_state = None
 
         # ----- VTK widget -----
         self.vtkWidget = QVTKWidget(parent_widget, on_resize=None, vtk_viewer=self)
@@ -160,44 +160,39 @@ class VTKViewer:
         self.vtkWidget.GetRenderWindow().Render()
 
     # ------------------ Camera ------------------
-    def _save_camera_state(self):
-        cam = self.renderer.GetActiveCamera()
-        self.initial_camera_state = {
-            "position": cam.GetPosition(),
-            "focal_point": cam.GetFocalPoint(),
-            "view_up": cam.GetViewUp(),
-            "view_angle": cam.GetViewAngle(),
-            "parallel_scale": cam.GetParallelScale(),
-        }
-
-        # Box / Actor transform
-        if self.current_actor:
-            t = vtk.vtkTransform()
-            if self.current_actor.GetUserTransform():
-                t.DeepCopy(self.current_actor.GetUserTransform())
-            else:
-                t.Identity()
-            self.initial_actor_transform = vtk.vtkTransform()
-            self.initial_actor_transform.DeepCopy(t)
+    # "Zoom Center" - recomputed fresh against whichever cloud is
+    # CURRENTLY loaded (previously this replayed a camera state captured
+    # once from the very FIRST cloud ever shown in the app session, which
+    # no longer matched a later, differently-sized/positioned cloud).
+    # Camera-only: this has no effect on compare or its results - compare
+    # works off the raw cloud data, never off this viewport's
+    # camera/actor state.
+    ZOOM_CENTER_DOLLY_METERS = 2.0
 
     def restore_initial_view(self):
-        if not self.initial_camera_state:
+        if not self.current_actor:
             return
         cam = self.renderer.GetActiveCamera()
-        s = self.initial_camera_state
-        cam.SetPosition(*s["position"])
-        cam.SetFocalPoint(*s["focal_point"])
-        cam.SetViewUp(*s["view_up"])
-        cam.SetViewAngle(s["view_angle"])
-        cam.SetParallelScale(s["parallel_scale"])
+
+        # Undo any box-widget drag back to identity, then re-fit the
+        # camera to the box's real (untransformed) bounds.
+        self.current_actor.SetUserTransform(vtk.vtkTransform())
+        self.renderer.ResetCamera()
+
+        # Move the camera ZOOM_CENTER_DOLLY_METERS closer along its own
+        # view direction (camera -> focal point) so the cloud reads
+        # closer/larger than a plain bounding-box fit, not just centered.
+        pos = np.array(cam.GetPosition())
+        focal = np.array(cam.GetFocalPoint())
+        direction = focal - pos
+        distance = np.linalg.norm(direction)
+        if distance > self.ZOOM_CENTER_DOLLY_METERS:
+            cam.SetPosition(*(pos + direction / distance * self.ZOOM_CENTER_DOLLY_METERS))
+
         self.renderer.ResetCameraClippingRange()
 
-            # ---- Actor / Box transform ----
-        if self.current_actor and hasattr(self, "initial_actor_transform"):
-            self.current_actor.SetUserTransform(self.initial_actor_transform)
-            # Cập nhật box widget
-            if self.box_widget:
-                self.box_widget.PlaceWidget()
+        if self.box_widget:
+            self.box_widget.PlaceWidget()
 
         self.vtkWidget.GetRenderWindow().Render()
 
@@ -253,10 +248,6 @@ class VTKViewer:
         self.current_actor = actor
         self.renderer.AddActor(actor)
         self.renderer.ResetCamera()
-
-        # lưu camera LẦN ĐẦU
-        if self.initial_camera_state is None:
-            self._save_camera_state()
 
         self.vtkWidget.GetRenderWindow().Render()
         self._enable_box_widget()
