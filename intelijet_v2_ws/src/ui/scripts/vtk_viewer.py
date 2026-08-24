@@ -242,6 +242,15 @@ class VTKViewer:
             box.ScalingEnabledOff()
             box.GetOutlineProperty().SetOpacity(0)
             box.OutlineCursorWiresOff()
+            # The corner/face handles are real sphere geometry, not
+            # GL_POINTS, so SetPointSize() on the handle property (the old
+            # line here) had no visible effect at all. SetHandleSize() is
+            # the actual control - a fraction of the placed box's own
+            # diagonal (so it stays proportionally consistent across
+            # differently-sized clouds, not a fixed world/pixel size).
+            # Default is 0.0125; shrunk down since the white sphere
+            # handles were too obtrusive at that size.
+            box.SetHandleSize(0.004)
             box.GetHandleProperty().SetPointSize(1)
 
             def on_interact(caller, event):
