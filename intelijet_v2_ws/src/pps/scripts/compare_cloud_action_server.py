@@ -15,7 +15,6 @@ from pps.cloud_processing.compare_pipeline import CloudComparePipeline
 
 from pps.tunnel_processing import TunnelProcessing
 
-PRE_SCAN_TOPIC = "/pre_scan_cloud"
 POST_SCAN_TOPIC = "/post_scan_cloud"
 
 CLOUD_OUT = cfg.CLOUD_COMPARED_TOPIC
@@ -26,14 +25,17 @@ class CompareCloudServer:
 
     def __init__(self):
 
-        self.pre_cloud = None
         self.post_cloud = None
-        # Set by _pre_cb/_post_cb, waited on in execute() instead of
-        # busy-polling with rospy.sleep(1). pre_cloud_event stays set once
-        # a pre-scan has arrived (pre_cloud itself is never reset, so a
-        # cycle can reuse an older pre-scan); post_cloud_event is cleared
-        # each time post_cloud is consumed, since post_cloud is too.
-        self.pre_cloud_event = threading.Event()
+        # Set by _post_cb, waited on in execute() instead of busy-polling
+        # with rospy.sleep(1). Cleared the moment execute() consumes it
+        # (see execute() below) - a post-scan cloud is single-use per
+        # compare cycle, and leaving this set after a failed/aborted
+        # cycle used to make the NEXT cycle's wait() below return
+        # instantly against that stale, already-consumed cloud instead of
+        # genuinely waiting for its own post-scan message to arrive (the
+        # actual cause of "compare ran before the post-scan had fully
+        # arrived" reported from the field - not a slow file/message
+        # load, but a leftover flag from a previous failure).
         self.post_cloud_event = threading.Event()
 
         self.pipeline = CloudComparePipeline()
@@ -45,7 +47,6 @@ class CompareCloudServer:
             auto_start=False
         )
 
-        rospy.Subscriber(PRE_SCAN_TOPIC, PointCloud2, self._pre_cb)
         rospy.Subscriber(POST_SCAN_TOPIC, PointCloud2, self._post_cb)
 
         self.pub = rospy.Publisher(CLOUD_OUT, PointCloud2, queue_size=1, latch=True)
@@ -55,22 +56,40 @@ class CompareCloudServer:
         rospy.loginfo("ONLINE compare server started")
 
     # ---------------- CALLBACK ----------------
-    def _pre_cb(self, msg):
-        self.pre_cloud = cloudconverter.pointcloud2_to_o3d(msg)
-        self.pre_cloud_event.set()
-
     def _post_cb(self, msg):
         self.post_cloud = cloudconverter.pointcloud2_to_o3d(msg)
-
-        if self.pre_cloud is None:
-            last_pre_path = rospy.get_param("/runtime/last_prescan_path", "")
-            if last_pre_path:
-                rospy.loginfo(f"No Pre-scan found --> Load last Pre-scan cloud from: {last_pre_path}")
-                self.pre_cloud = cloudconverter.load_ply(last_pre_path, as_legacy=True)
-                if self.pre_cloud is not None:
-                    self.pre_cloud_event.set()
-
         self.post_cloud_event.set()
+
+    def _load_latest_prescan(self):
+        """Pre-Scan is no longer taken from an in-memory clouds kept by
+        this node's own /pre_scan_cloud subscription - it's always
+        reloaded from the most recently SAVED Pre-Scan file for whatever
+        job is current (last_prescan_path, written by the UI right after
+        every successful Pre-Scan - see app.py's update_data/_process in
+        scan_pipeline_worker.py). Two reasons this is safer, not just
+        different:
+          - The in-memory cloud was whatever this node's OWN subscriber
+            happened to see last, with no job/segment scoping at all - if
+            the operator switched jobs between Pre-Scan and Post-Scan, it
+            would silently keep comparing against the wrong job's cloud.
+          - The two tablets share job data over Syncthing (files), not
+            ROS params/topics - a Pre-Scan done on one tablet was never
+            visible to the OTHER tablet's compare server under the old
+            in-memory approach; the saved file is.
+        Timing is safe: Post-Scan (which is what actually triggers a
+        compare, see hmi_scan_command_handler.py) always happens well
+        after its Pre-Scan is done and its file fully saved - there's no
+        "file not finished writing yet" race here the way there is for
+        the just-arrived post-scan cloud above.
+        """
+        path = rospy.get_param("/runtime/last_prescan_path", "")
+        if not path:
+            rospy.logwarn("No Pre-Scan recorded yet (/runtime/last_prescan_path is empty)")
+            return None
+        cloud = cloudconverter.load_ply(path, as_legacy=True)
+        if cloud is None:
+            rospy.logwarn(f"Failed to load Pre-Scan cloud from: {path}")
+        return cloud
 
     # ---------------- FEEDBACK ----------------
     def fb(self, stage, progress):
@@ -89,12 +108,14 @@ class CompareCloudServer:
                 self.server.set_aborted(CompareCloudResult(), "Timeout waiting for post-scan cloud")
                 return
 
-            if not self.pre_cloud_event.wait(timeout=10):
-                self.server.set_aborted(CompareCloudResult(), "Timeout waiting for pre-scan cloud")
-                return
-
-            pre = self.pre_cloud
+            # Consume it now, before doing anything else that could fail -
+            # see post_cloud_event's docstring above for why this can't
+            # wait until after a successful run.
             post = self.post_cloud
+            self.post_cloud = None
+            self.post_cloud_event.clear()
+
+            pre = self._load_latest_prescan()
 
             if pre is None or post is None:
                 self.server.set_aborted(CompareCloudResult(), "No cloud")
@@ -121,8 +142,6 @@ class CompareCloudServer:
             res.success = True
             res.job_id = job_id
             self.server.set_succeeded(res)
-            self.post_cloud = None
-            self.post_cloud_event.clear()
 
         except Exception as e:
             # str(e) alone loses the exception type and, for some errors
