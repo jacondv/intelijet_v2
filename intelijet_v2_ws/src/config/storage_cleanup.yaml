@@ -1,0 +1,11 @@
+# Auto-cleanup policy for <BASE_DIR>/<DATA_DIR>/Projects (see
+# ui/services/project_repository.py's PROJECT_DIR - this is the same
+# folder). Enforced by pps/scripts/storage_cleanup_node.py, which
+# re-checks on the interval below. Not merged into last_used.yaml like
+# commond/lidar/runtime.yaml - read directly via
+# shared.config_loader.load_config("storage_cleanup.yaml"), so there's
+# no stale cache to clear after editing it (same convention as
+# hmi_display.yaml).
+max_data_gb: 100
+max_projects: 50
+check_interval_seconds: 3600

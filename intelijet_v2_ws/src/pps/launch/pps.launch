@@ -8,7 +8,11 @@
 	<node pkg="pps" type="compare_cloud_action_manual_server.py" name="compare_cloud_action_manual_server" output="screen" />
 	<!-- <node pkg="pps" name="dv_cloud_align" type="dv_cloud_align.py" /> -->
 	<node pkg="pps" name="hmi_scan_command_handler" type="hmi_scan_command_handler.py" />
-	
+	<!-- Auto-deletes old scan data to keep disk usage bounded - see
+	     config/storage_cleanup.yaml (max_data_gb/max_projects/check_interval_seconds)
+	     and pps/scripts/storage_cleanup_node.py's module docstring. -->
+	<node pkg="pps" name="storage_cleanup_node" type="storage_cleanup_node.py" output="screen" />
+
 
 	<!-- AI CORE -->
 	<include file="$(find ai_core_pkg)/launch/image_matcher_service.launch"/>
