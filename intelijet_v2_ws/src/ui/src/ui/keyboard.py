@@ -73,12 +73,17 @@ def _configure_onboard():
             pass  # gsettings/dconf not available - onboard just uses its defaults
 
 
+_instance = None  # the app's one TouchKeyboard, for show_keyboard()/hide_keyboard() below
+
+
 class TouchKeyboard(QObject):
     def __init__(self):
         super().__init__()
         self.proc = None
         self._dbus_keyboard = None
         _configure_onboard()
+        global _instance
+        _instance = self
 
     def _ensure_running(self):
         """Launch onboard if it isn't already running. Only ever called
@@ -161,3 +166,20 @@ class TouchKeyboard(QObject):
                 QTimer.singleShot(50, self.update_keyboard)
 
         return False
+
+
+def show_keyboard():
+    """Explicit show, for a widget that wants the keyboard up without
+    waiting on/relying on the app-wide FocusIn eventFilter above - e.g. a
+    QComboBox's internal QLineEdit, which not being the object the click
+    lands on, doesn't always ferry app.installEventFilter() a fresh
+    FocusIn (see report_page_manager.py's _make_searchable). No-op if no
+    TouchKeyboard has been constructed yet (app.py always constructs one
+    at startup, before any page can be interacted with)."""
+    if _instance is not None:
+        _instance.show_keyboard()
+
+
+def hide_keyboard():
+    if _instance is not None:
+        _instance.hide_keyboard()

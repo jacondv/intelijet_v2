@@ -14,7 +14,7 @@ import rospy
 
 from PyQt5.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QLabel, QWidget
 from PyQt5.QtCore import pyqtSignal, QTimer, Qt
-from PyQt5.QtWidgets import QMessageBox, QDialog
+from PyQt5.QtWidgets import QMessageBox
 from PyQt5.QtCore import QSettings
 
 
@@ -122,11 +122,6 @@ class App(QMainWindow):
         if self.ui.tab_report.layout() is None:
             self.ui.tab_report.setLayout(QVBoxLayout())
         self.ui.tab_report.layout().addWidget(self.report_page_manager)
-
-        #Page 3: Compare page
-        self.ui.btnCompare2.released.connect(self.on_compare)
-        self.ui.btnViewReport.released.connect(self.on_viewreport_dlg)
-        
 
         # --- VTK Viewer ---
 
@@ -509,66 +504,6 @@ class App(QMainWindow):
             print("updated polydata from file:", filename)
         self.vtk_viewer.update(polydata)
         self.show_3d_main_page()
-
-
-    # 4.--- Show report view dialog---
-    def on_viewreport_dlg(self):
-        # from reportselect_dlg_manager import reportselect_dlg
-        # reportselect_dlg.exec_()
-        from report_view_dlg_manager import ReportViewManager
-        dlg = ReportViewManager()
-
-        project, job = project_repository.parse_job_ref(self.ui.cbbJobSelect.currentText())
-        dlg.initialize(project,job)
-
-        if dlg.exec_() == QDialog.Rejected:
-            return
-
-
-    # 6.--- Start compare 2 cloud selected for dialog---
-    def on_compare(self):
-
-        from compare_dlg_manager import CompareManager
-        jobcompare_dlg = CompareManager()
-        # Initialize dialog with current selected project and job
-        project, job = project_repository.parse_job_ref(self.ui.cbbJobSelect.currentText())
-        jobcompare_dlg.initialize(project,job)
-        jobcompare_dlg.polydataSignal.connect(self.update_pointcloud_from_data)
-
-        if jobcompare_dlg.exec_() == QDialog.Accepted:
-            data = jobcompare_dlg.get_result()
-            
-            prescan_path, postscan_path, *_ = data
-            if prescan_path is None or postscan_path is None:
-                return
-            
-            self.isManualCompare = True
-            self.current_post_scan_path = postscan_path
-
-            from ui.compare_cloud_worker import CompareWorker
-
-            do_align        = rospy.get_param("/runtime/do_align", True)
-            do_pre_process  = rospy.get_param("/runtime/do_pre_process", True)
-            do_2d_keypoint  = rospy.get_param("/runtime/do_2d_keypoint", False)
-            do_upsample     = rospy.get_param("/runtime/do_upsample", False)
-            do_post_process     = rospy.get_param("/runtime/do_post_process", False)
-
-            self.worker = CompareWorker(
-                prescan_path=prescan_path,
-                postscan_path=postscan_path,
-                do_2d_keypoint=do_2d_keypoint,
-                do_pre_process=do_pre_process,
-                do_align=do_align,
-                do_post_process=do_post_process,
-                do_upsample=do_upsample
-            )
-
-            # ✅ connect signal
-            self.worker.progress.connect(self.on_compare_process)
-            self.worker.finished.connect(self.on_compare_done)
-
-            # ✅ start thread
-            self.worker.start()
 
 
     # --- New REPORT tab (ReportPageManager) callbacks ---

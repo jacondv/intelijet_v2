@@ -1,16 +1,19 @@
 # -*- coding: utf-8 -*-
-"""ReportPageManager - the new merged "COMPARE & REPORT" screen (REPORT
-side-nav tab). Replaces the old CompareManager/ReportViewManager modal
-dialogs' functionality with a single always-visible page: pick a job
-(defaults to the header's CURRENT JOB), see every point-cloud scan for
-that job in one list, and per-row:
-  - "3D View"     - load that cloud into the 3D MAIN viewport
-  - "View Report" - open the matching PDF report in qpdfview, if one
-                    exists (report filenames share the postscan/compared
-                    file's timestamp+index+scan_id - see file_name.py's
-                    FILENAME_TEMPLATE - so it's found by re-deriving that
-                    name rather than storing a separate mapping)
-  - "Delete"      - remove the file
+"""ReportPageManager - the new merged "Reports" screen (REPORT side-nav
+tab). Replaces the old CompareManager/ReportViewManager modal dialogs'
+functionality with a single always-visible page: pick a project then a
+job (or jump straight to the header's CURRENT JOB), see every scan for
+that job grouped into segments (one Pre-Scan + the Post-Scans taken
+against it, i.e. sharing its scan_id), and per-row:
+  - "3D View"  - load that raw scan cloud into the 3D MAIN viewport
+  - "Heatmap"  - (Post-Scan rows only) find the compared/result cloud
+                 produced from this scan and load THAT into the 3D MAIN
+                 viewport instead
+  - "Report"   - open the matching PDF report in qpdfview, if one
+                 exists, and raise/activate its window
+  - "Delete"   - remove the file
+Compared-cloud files themselves are not listed as rows (too much noise -
+they're reached via "Heatmap" on their source Post-Scan row).
 Checking exactly 2 rows enables "Compare Selected", which runs the same
 manual-compare pipeline the old Compare dialog used (CompareWorker).
 
@@ -20,45 +23,136 @@ on_start_compare callbacks passed into the constructor - this file has
 no other dependency on App's internals, same spirit as ProjectManager's
 job_store injection.
 
-The old compare_dlg_manager.py/report_view_dlg_manager.py are left
-completely untouched for now - this is reviewed first, then deleted in
-a follow-up per the plan.
+The old compare_dlg_manager.py/report_view_dlg_manager.py/compare_dlg_ui.py
+(and the header's Compare/Report buttons that opened them) have been
+deleted - this page fully replaces them.
 """
 import os
 import subprocess
 
-from PyQt5.QtWidgets import QWidget, QFrame, QMessageBox, QHBoxLayout, QVBoxLayout, QLabel, QPushButton, QCheckBox
+from PyQt5.QtCore import Qt
+from PyQt5.QtGui import QColor
+from PyQt5.QtWidgets import (
+    QWidget, QFrame, QMessageBox, QHBoxLayout, QVBoxLayout, QLabel, QPushButton,
+    QStyle, QStyledItemDelegate,
+)
 
 from ui.report_page_ui import Ui_frm_ReportPage
 from ui.models.file_name import is_sync_junk, parse_filename
 from ui.services import project_repository as repo
 
 
-def _find_matching_report(ply_path):
-    """Given a prescan/postscan/compared .ply path, return the path of
-    its matching PDF report if one exists, else None. Report files are
-    written with the exact same job/timestamp/index/scan_id as the
-    compared cloud they came from (scan_pipeline_worker.py passes the
-    postscan's own filepath into generate_filename() to derive the
-    compared cloud's name, and report_service.py just swaps .ply for
-    .pdf on that same name) - so match by those 4 fields plus the type
-    token containing "compared" (it's "cloud_compared_NN" or
-    "cloud_compared_manual_NN" - never a bare "compared" prefix).
+class _PickerItemDelegate(QStyledItemDelegate):
+    """Custom-painted popup rows for the Project/Job/Segment pickers.
+
+    QSS ::item padding/margin was observed to have no effect on row
+    height in this Qt build (confirmed by testing - rows stayed exactly
+    the same size no matter what padding/min-height was set), so real
+    control over row height/selection appearance has to go through a
+    delegate instead of a stylesheet.
+
+    "Currently selected" (checkmark + accent fill) is determined by
+    comparing index.row() to the combobox's own currentIndex(), not by
+    Qt's State_Selected flag - that flag only turns on for the item under
+    keyboard/mouse highlight while the popup is open, not for "this is
+    the field's actual current value", which is what a checkmark should
+    mean. State_MouseOver still gets its own (lighter, no checkmark)
+    hover fill so pointer/touch feedback isn't lost.
     """
-    parsed = parse_filename(ply_path)
-    folder = os.path.dirname(ply_path)
+    ROW_HEIGHT = 68
+    BG_CURRENT = QColor("#fef3c7")
+    BG_HOVER = QColor("#f1f5f9")
+    TEXT_CURRENT = QColor("#c2410c")
+    TEXT_NORMAL = QColor("#1e293b")
+
+    def __init__(self, combo):
+        super().__init__(combo)
+        self.combo = combo
+
+    def sizeHint(self, option, index):
+        size = super().sizeHint(option, index)
+        size.setHeight(self.ROW_HEIGHT)
+        return size
+
+    def paint(self, painter, option, index):
+        painter.save()
+        is_current = index.row() == self.combo.currentIndex()
+        hovered = bool(option.state & QStyle.State_MouseOver)
+        rect = option.rect
+
+        if is_current:
+            painter.setBrush(self.BG_CURRENT)
+            painter.setPen(Qt.NoPen)
+            painter.drawRoundedRect(rect.adjusted(6, 4, -6, -4), 8, 8)
+        elif hovered:
+            painter.setBrush(self.BG_HOVER)
+            painter.setPen(Qt.NoPen)
+            painter.drawRoundedRect(rect.adjusted(6, 4, -6, -4), 8, 8)
+
+        font = option.font
+        font.setBold(True)
+        painter.setFont(font)
+        painter.setPen(self.TEXT_CURRENT if is_current else self.TEXT_NORMAL)
+        text_rect = rect.adjusted(24, 0, -44, 0)
+        painter.drawText(text_rect, Qt.AlignVCenter | Qt.AlignLeft, str(index.data()))
+        if is_current:
+            check_rect = rect.adjusted(0, 0, -18, 0)
+            painter.drawText(check_rect, Qt.AlignVCenter | Qt.AlignRight, "✓")
+        painter.restore()
+
+
+def _matches(parsed, candidate_parsed):
+    """A compared-cloud/report file is considered "produced from" a given
+    scan when it shares the same scan_id + index - NOT timestamp: auto
+    compare re-stamps a fresh timestamp when it writes the compared
+    cloud (only manual compare reuses the source file's exact timestamp,
+    see scan_pipeline_worker.py's filepath= branch), so timestamp can't
+    be part of the identity check here.
+    """
+    return (candidate_parsed["scan_id"] == parsed["scan_id"]
+            and candidate_parsed["index"] == parsed["index"])
+
+
+def _find_latest(folder, parsed, ext, type_predicate):
     try:
         candidates = os.listdir(folder)
     except OSError:
         return None
+    matches = []
     for name in candidates:
-        if not name.lower().endswith(".pdf") or is_sync_junk(name):
+        if not name.lower().endswith(f".{ext}") or is_sync_junk(name):
             continue
         p = parse_filename(name)
-        if (p["timestamp"] == parsed["timestamp"] and p["index"] == parsed["index"]
-                and p["scan_id"] == parsed["scan_id"] and "compared" in p["type"]):
-            return os.path.join(folder, name)
-    return None
+        if type_predicate(p["type"]) and _matches(parsed, p):
+            path = os.path.join(folder, name)
+            matches.append(path)
+    if not matches:
+        return None
+    matches.sort(key=lambda p: os.path.getmtime(p), reverse=True)
+    return matches[0]
+
+
+def _find_matching_compared(ply_path):
+    """Given a Post-Scan .ply path, return the newest compared/result
+    cloud produced from it, if one exists."""
+    parsed = parse_filename(ply_path)
+    folder = os.path.dirname(ply_path)
+    return _find_latest(folder, parsed, "ply", lambda t: "compared" in t)
+
+
+def _find_matching_report(ply_path):
+    """Given any scan .ply path, return the path of its matching PDF
+    report if one exists (report_service.py names the report file by
+    swapping .ply for .pdf on the compared cloud's own name, so we
+    match the same way _find_matching_compared does: scan_id + index,
+    on a file whose type contains "compared")."""
+    parsed = parse_filename(ply_path)
+    folder = os.path.dirname(ply_path)
+    return _find_latest(folder, parsed, "pdf", lambda t: "compared" in t)
+
+
+def _is_prescan(scan_type):
+    return "pre" in scan_type.lower()
 
 
 class ReportPageManager(QWidget, Ui_frm_ReportPage):
@@ -72,13 +166,25 @@ class ReportPageManager(QWidget, Ui_frm_ReportPage):
 
         self.current_project = None
         self.current_job = None
+        self.current_segment_filter = None  # None = "All Segments"
         self._checked_files = []  # ordered - at most 2
+        self._all_projects = []  # full, unfiltered - see _load_project_and_job
+        self._all_jobs = []
 
-        self._populate_job_picker()
+        self._enlarge_popup_items(self.cbbProjectPicker)
+        self._enlarge_popup_items(self.cbbJobPicker)
+        self._enlarge_popup_items(self.cbbSegmentFilter)
+
+        self._wire_search_filter(self.searchProjectBox, self.cbbProjectPicker, lambda: self._all_projects, self._on_project_picker_changed)
+        self._wire_search_filter(self.searchJobBox, self.cbbJobPicker, lambda: self._all_jobs, self._on_job_picker_changed)
+
+        self.cbbProjectPicker.currentIndexChanged.connect(self._on_project_picker_changed)
         self.cbbJobPicker.currentIndexChanged.connect(self._on_job_picker_changed)
+        self.cbbSegmentFilter.currentIndexChanged.connect(self._on_segment_filter_changed)
+        self.btnCurrentJob.clicked.connect(self._jump_to_current_job)
         self.btnStartCompare.clicked.connect(self._start_compare)
 
-        self._select_default_job()
+        self._jump_to_current_job()
 
     def showEvent(self, event):
         # Job list / active-jobs / files can all change while this page
@@ -86,56 +192,104 @@ class ReportPageManager(QWidget, Ui_frm_ReportPage):
         # whenever the operator actually switches to this tab instead of
         # only once at construction.
         super().showEvent(event)
-        self._populate_job_picker()
+        self._populate_project_picker()
 
     # =========================
-    #      JOB SELECTION
+    #   PROJECT / JOB SELECTION
     # =========================
-    def _index_for(self, project, job):
-        """QComboBox.findData() compares itemData via QVariant equality,
-        which for an opaque Python object (our (project, job) tuples)
-        falls back to identity rather than value equality in PyQt - it
-        never matches a freshly-built tuple even when equal by value.
-        Look it up by hand instead."""
-        for i in range(self.cbbJobPicker.count()):
-            if self.cbbJobPicker.itemData(i) == (project, job):
-                return i
-        return -1
+    def _enlarge_popup_items(self, combo):
+        """Real per-row height/selection styling for the popup list -
+        see _PickerItemDelegate for why this has to be a delegate rather
+        than QSS ::item rules."""
+        combo.view().setItemDelegate(_PickerItemDelegate(combo))
 
-    def _populate_job_picker(self):
-        previous = (self.current_project, self.current_job)
-        self.cbbJobPicker.blockSignals(True)
-        self.cbbJobPicker.clear()
-        for project in repo.list_projects():
-            for job in repo.list_jobs(project):
-                self.cbbJobPicker.addItem(f"{project}/{job}", (project, job))
-        self.cbbJobPicker.blockSignals(False)
+    def _wire_search_filter(self, search_box, combo, get_all_items, on_changed):
+        """The Project/Job pickers are plain selection-only comboboxes
+        (see report_page_ui.py's _build_searchable_field) - each has its
+        own dedicated search QLineEdit above it instead of being made
+        editable itself, so typing to filter and picking an item stay
+        two clearly separate actions (an editable combobox's internal
+        QLineEdit was also the thing that turned out to not reliably
+        raise the on-screen keyboard). Typing here just narrows what
+        combo currently lists; if that causes the selection itself to
+        change (the previously-selected item got filtered out), run
+        on_changed same as a real user pick would.
+        """
+        def apply_filter():
+            previous = combo.currentData()
+            self._populate_picker(combo, get_all_items(), previous, search_box.text())
+            if combo.currentData() != previous:
+                on_changed(combo.currentIndex())
+        search_box.textChanged.connect(lambda _text: apply_filter())
 
-        if previous[0] is not None:
-            idx = self._index_for(*previous)
-            if idx >= 0:
-                self.cbbJobPicker.setCurrentIndex(idx)
-                self._checked_files = []
-                self.render_files()
-                return
-        self._select_default_job()
-
-    def _select_default_job(self):
-        current = self.job_store.get_current_job()
-        project, job = (None, None)
-        if current:
-            project, job = repo.parse_job_ref(current)
-        idx = self._index_for(project, job) if project else -1
+    def _populate_picker(self, combo, all_items, desired_value, filter_text=""):
+        """Repopulate combo from all_items, narrowed to filter_text (case
+        -insensitive substring) if given, and select desired_value if
+        it's still present (else the first item, if any) - signals
+        blocked throughout so this never itself fires currentIndexChanged;
+        callers that need to react to a resulting selection change do so
+        explicitly (see _wire_search_filter)."""
+        filter_text = (filter_text or "").strip().lower()
+        items = [v for v in all_items if filter_text in v.lower()] if filter_text else list(all_items)
+        combo.blockSignals(True)
+        combo.clear()
+        for v in items:
+            combo.addItem(v, v)
+        idx = combo.findData(desired_value) if desired_value else -1
         if idx < 0:
-            idx = 0 if self.cbbJobPicker.count() else -1
+            idx = 0 if combo.count() else -1
         if idx >= 0:
-            self.cbbJobPicker.setCurrentIndex(idx)
-        self._on_job_picker_changed(idx)
+            combo.setCurrentIndex(idx)
+        combo.blockSignals(False)
+
+    def _populate_project_picker(self):
+        """Only called on user-driven changes (user typed/picked a project)
+        - never for programmatic init/refresh, see _load_project_and_job.
+        """
+        self._load_project_and_job(self.current_project, self.current_job)
+
+    def _on_project_picker_changed(self, index):
+        # User picked a different project from the dropdown - reload jobs
+        # for it and default to that project's first job.
+        project = self.cbbProjectPicker.itemData(index) if index is not None and index >= 0 else None
+        self._load_project_and_job(project, None)
 
     def _on_job_picker_changed(self, index):
-        data = self.cbbJobPicker.itemData(index) if index is not None and index >= 0 else None
-        self.current_project, self.current_job = data if data else (None, None)
+        # User picked a different job for the already-selected project.
+        self.current_job = self.cbbJobPicker.itemData(index) if index is not None and index >= 0 else None
         self._checked_files = []
+        self.current_segment_filter = None
+        self.render_files()
+
+    def _on_segment_filter_changed(self, index):
+        self.current_segment_filter = self.cbbSegmentFilter.itemData(index) if index is not None and index >= 0 else None
+        self.render_files(rebuild_filter=False)
+
+    def _jump_to_current_job(self):
+        current = self.job_store.get_current_job()
+        project, job = repo.parse_job_ref(current) if current else (None, None)
+        self._load_project_and_job(project, job)
+
+    def _load_project_and_job(self, project, job):
+        """Refresh both comboboxes' full item list and selection in one
+        deterministic pass, then render - used for every non-interactive
+        (re)population: construction, showEvent refresh, and "Current
+        Job". Signals are blocked throughout (via _populate_picker) so
+        this never itself fires currentIndexChanged; only genuine user
+        picks go through the signal-connected _on_..._changed slots.
+        Re-applies whatever each search box currently has typed, so a
+        background refresh doesn't silently clear an active filter.
+        """
+        self._all_projects = repo.list_projects()
+        self._populate_picker(self.cbbProjectPicker, self._all_projects, project, self.searchProjectBox.text())
+        self.current_project = self.cbbProjectPicker.currentData()
+
+        self._all_jobs = repo.list_jobs(self.current_project) if self.current_project else []
+        self._populate_picker(self.cbbJobPicker, self._all_jobs, job, self.searchJobBox.text())
+        self.current_job = self.cbbJobPicker.currentData()
+
+        self._checked_files = []
+        self.current_segment_filter = None
         self.render_files()
 
     # =========================
@@ -146,6 +300,14 @@ class ReportPageManager(QWidget, Ui_frm_ReportPage):
             item = layout.takeAt(0)
             widget = item.widget()
             if widget:
+                # Removing from the layout alone doesn't stop it from
+                # painting - it stays a visible (just unmanaged) child of
+                # filesScrollContent until deleteLater()'s deferred
+                # deletion actually runs, which briefly overlapped the
+                # next segment card's widgets when re-rendering
+                # back-to-back (e.g. picking a new project). hide() takes
+                # effect immediately, deleteLater() still reclaims it.
+                widget.hide()
                 widget.deleteLater()
 
     def _empty_label(self, text):
@@ -153,49 +315,120 @@ class ReportPageManager(QWidget, Ui_frm_ReportPage):
         lbl.setObjectName("emptyStateLabel")
         return lbl
 
-    def render_files(self):
+    def render_files(self, rebuild_filter=True):
         layout = self.filesListLayout
         self._clear_dynamic_rows(layout)
 
-        if not self.current_project:
+        if not self.current_project or not self.current_job:
+            if rebuild_filter:
+                self._populate_segment_filter({})
             layout.insertWidget(0, self._empty_label("No project/job available - create one in the JOB tab first."))
             self._update_compare_bar()
             return
 
         job_path = repo.job_path(self.current_project, self.current_job)
         try:
-            files = sorted(
+            all_files = sorted(
                 f for f in os.listdir(job_path)
                 if f.lower().endswith(".ply") and not is_sync_junk(f)
             )
         except OSError:
-            files = []
+            all_files = []
 
-        if not files:
-            layout.insertWidget(0, self._empty_label("No point clouds for this job yet."))
-        for filename in files:
-            layout.insertWidget(layout.count() - 1, self._build_file_row(job_path, filename))
+        # Compared/result clouds are reached via "Heatmap" on their
+        # source Post-Scan row, not listed as their own rows.
+        parsed_files = [(f, parse_filename(f)) for f in all_files]
+        parsed_files = [(f, p) for f, p in parsed_files if "compared" not in p["type"]]
+
+        # Group into segments: one Pre-Scan opens a segment, every
+        # Post-Scan up to (not including) the next Pre-Scan shares its
+        # scan_id and belongs to that same segment.
+        segments = {}
+        for f, p in parsed_files:
+            segments.setdefault(p["scan_id"], []).append((f, p))
+
+        if rebuild_filter:
+            self._populate_segment_filter(segments)
+
+        if not segments:
+            layout.insertWidget(0, self._empty_label("No pre-scan/post-scan point clouds for this job yet."))
+            self._update_compare_bar()
+            return
+
+        shown_scan_ids = (
+            [self.current_segment_filter] if self.current_segment_filter is not None and self.current_segment_filter in segments
+            else sorted(segments.keys())
+        )
+
+        for scan_id in shown_scan_ids:
+            entries = segments[scan_id]
+            entries.sort(key=lambda fp: (0 if _is_prescan(fp[1]["type"]) else 1, fp[1]["index"]))
+            layout.insertWidget(layout.count() - 1, self._build_segment_card(job_path, scan_id, entries))
 
         self._update_compare_bar()
 
-    def _build_file_row(self, job_path, filename):
+    def _populate_segment_filter(self, segments):
+        previous = self.current_segment_filter
+        self.cbbSegmentFilter.blockSignals(True)
+        self.cbbSegmentFilter.clear()
+        self.cbbSegmentFilter.addItem("All Segments", None)
+        for scan_id in sorted(segments.keys()):
+            self.cbbSegmentFilter.addItem(f"Segment - Scan {scan_id}", scan_id)
+        idx = 0
+        if previous is not None:
+            for i in range(self.cbbSegmentFilter.count()):
+                if self.cbbSegmentFilter.itemData(i) == previous:
+                    idx = i
+                    break
+            else:
+                previous = None  # previously-selected segment no longer exists
+        self.current_segment_filter = previous
+        self.cbbSegmentFilter.setCurrentIndex(idx)
+        self.cbbSegmentFilter.blockSignals(False)
+
+    def _build_segment_card(self, job_path, scan_id, entries):
+        prescan_entry = next((p for f, p in entries if _is_prescan(p["type"])), None)
+        post_count = sum(1 for f, p in entries if not _is_prescan(p["type"]))
+
+        card = QFrame()
+        card.setObjectName("segmentCard")
+        v = QVBoxLayout(card)
+        v.setContentsMargins(20, 18, 20, 20)
+        v.setSpacing(14)
+
+        header = QLabel(f"Segment - Scan {scan_id}")
+        header.setObjectName("segmentHeader")
+        v.addWidget(header)
+
+        subtitle = (f"Pre-Scan at {prescan_entry['timestamp']}  ·  {post_count} Post-Scan(s)"
+                    if prescan_entry else f"No Pre-Scan recorded  ·  {post_count} Post-Scan(s)")
+        sub = QLabel(subtitle)
+        sub.setObjectName("segmentSubtext")
+        v.addWidget(sub)
+
+        for filename, parsed in entries:
+            v.addWidget(self._build_file_row(job_path, filename, parsed))
+
+        return card
+
+    def _build_file_row(self, job_path, filename, parsed):
         filepath = os.path.join(job_path, filename)
-        parsed = parse_filename(filename)
+        is_prescan = _is_prescan(parsed["type"])
 
         row = QFrame()
         row.setObjectName("fileRow")
         h = QHBoxLayout(row)
-        h.setContentsMargins(20, 14, 20, 14)
+        # Vertical margin kept small (not zero - the row still needs a
+        # little breathing room from its neighbors) so the row's height
+        # is mostly however tall the buttons' own (generous) padding
+        # makes them, not fought over between the two.
+        h.setContentsMargins(20, 8, 20, 8)
         h.setSpacing(14)
-
-        chk = QCheckBox()
-        chk.setChecked(filepath in self._checked_files)
-        chk.toggled.connect(lambda checked, p=filepath: self._on_row_checked(p, checked))
-        h.addWidget(chk)
 
         info = QVBoxLayout()
         info.setSpacing(4)
-        title = QLabel(f"{parsed['type'].upper()} #{parsed['index']} (SCAN {parsed['scan_id']})")
+        label = "PRE SCAN" if is_prescan else "POST SCAN"
+        title = QLabel(f"{label} #{parsed['index']} (SCAN {parsed['scan_id']})")
         title.setObjectName("fileRowTitle")
         info.addWidget(title)
         subtext = QLabel(f"Timestamp: {parsed['timestamp']}")
@@ -209,17 +442,48 @@ class ReportPageManager(QWidget, Ui_frm_ReportPage):
         btn_view3d.clicked.connect(lambda _checked, p=filepath: self.on_view_3d(p))
         h.addWidget(btn_view3d)
 
-        report_path = _find_matching_report(filepath)
-        btn_report = QPushButton("View Report")
+        if not is_prescan:
+            result_path = _find_matching_compared(filepath)
+            btn_result = QPushButton("Heatmap")
+            btn_result.setProperty("cssClass", "rowActionBtn")
+            btn_result.setEnabled(result_path is not None)
+            btn_result.clicked.connect(lambda _checked, p=result_path: self.on_view_3d(p))
+            h.addWidget(btn_result)
+
+        # Pre-Scan rows are excluded here: generate_filename() gives a
+        # prescan file whatever post-index happened to be current at scan
+        # time (often "01" by default, before any post-scan/compare exists
+        # yet) - that index carries no real relationship to any compared
+        # cloud/report, so matching against it would just produce
+        # coincidental false positives.
+        report_path = None if is_prescan else _find_matching_report(filepath)
+        btn_report = QPushButton("Report")
         btn_report.setProperty("cssClass", "rowActionBtn")
         btn_report.setEnabled(report_path is not None)
         btn_report.clicked.connect(lambda _checked, p=report_path: self._open_report(p))
         h.addWidget(btn_report)
 
+        # Delete sits with extra breathing room on both sides - it's the
+        # only destructive action in the row, so it must not be adjacent
+        # to the scrollbar (easy to hit by accident while scrolling) nor
+        # to the Compare toggle (easy to hit while selecting for compare).
+        h.addSpacing(28)
         btn_delete = QPushButton("Delete")
         btn_delete.setProperty("cssClass", "rowDangerBtn")
         btn_delete.clicked.connect(lambda _checked, p=filepath: self._delete_file(p))
         h.addWidget(btn_delete)
+        h.addSpacing(28)
+
+        # Compare toggle is the rightmost element, right against the
+        # scrollbar edge - it's non-destructive (just marks/unmarks this
+        # file for the Compare Selected action below), so it's safe to
+        # place where an accidental tap is most likely.
+        compare_toggle = QPushButton("Compare")
+        compare_toggle.setProperty("cssClass", "compareToggle")
+        compare_toggle.setCheckable(True)
+        compare_toggle.setChecked(filepath in self._checked_files)
+        compare_toggle.toggled.connect(lambda checked, p=filepath: self._on_row_checked(p, checked))
+        h.addWidget(compare_toggle)
 
         return row
 
@@ -263,6 +527,15 @@ class ReportPageManager(QWidget, Ui_frm_ReportPage):
             QMessageBox.warning(self, "Not Found", "Report file not found.")
             return
         subprocess.Popen(["qpdfview", "--unique", pdf_path])
+        # qpdfview --unique reuses its existing instance's window if one is
+        # already running rather than opening a new one, so wmctrl (by
+        # window class, not PID - the new process may just be a client
+        # signalling the running instance) is used to raise+focus it
+        # instead of relying on the Popen'd process being the visible window.
+        try:
+            subprocess.Popen(["wmctrl", "-a", "qpdfview"])
+        except OSError:
+            pass  # wmctrl not installed - report still opened, just not raised
 
     def _delete_file(self, filepath):
         if QMessageBox.question(

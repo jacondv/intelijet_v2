@@ -131,16 +131,24 @@ class ScanPipelineWorker(QThread):
 
             from ui.models.file_name import generate_filename
 
+            # Auto compare and manual compare publish on different ROS topics
+            # ("/cloud_compared" vs "/cloud_compared_manual") so a manual
+            # result's topic_name still carries the "_manual" suffix here -
+            # normalize it to the same type token as auto-compare so both
+            # produce identically-named files (only prefix/timestamp/index/
+            # scan_id differ, not the "type" segment).
+            scan_type = topics["compared"] if topic_name == topics["compared_manual"] else topic_name
+
             if not job["is_manual"]:
                 filepath = generate_filename(
                     folder=jobs_folder,
                     job=job_number,
-                    scan_type=topic_name,
+                    scan_type=scan_type,
                     ext="ply",
                 )
             else:
                 filepath = generate_filename(
-                    folder="", job="", scan_type=topic_name, ext="ply",
+                    folder="", job="", scan_type=scan_type, ext="ply",
                     filepath=job["post_scan_path_snapshot"],
                 )
 
