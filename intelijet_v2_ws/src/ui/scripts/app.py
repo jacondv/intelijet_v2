@@ -364,10 +364,20 @@ class App(QMainWindow):
 
     #confirm_send_prescan_signal
     def confirm_and_send_prescan(self):
+        # Pre-Scan never overwrites a file on disk (generate_filename always
+        # stamps a fresh timestamp + a new scan_id) - what actually happens
+        # is a new segment starts, and any not-yet-compared Post-Scans from
+        # the PREVIOUS segment stop being this job's "current" Pre-Scan (see
+        # compare_cloud_action_server.py's last_prescan_path fallback), so
+        # they'd no longer auto-pair correctly. That's the real thing worth
+        # confirming, not "overwrite".
         reply = QMessageBox.question(
             self,
-            "Confirm",
-            "This will overwrite the existing Pre-Scan file. Continue?",
+            "Start New Segment?",
+            "This starts a new segment with a fresh Pre-Scan.\n\n"
+            "If the current job still has Post-Scans that haven't been "
+            "compared yet, they will no longer be matched against this new "
+            "Pre-Scan automatically. Continue?",
             QMessageBox.Yes | QMessageBox.No,
             QMessageBox.No
         )
