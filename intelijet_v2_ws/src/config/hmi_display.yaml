@@ -3,5 +3,5 @@
 # read directly via shared.config_loader.load_config("hmi_display.yaml"),
 # not merged into config/last_used.yaml like commond/lidar/runtime.yaml,
 # so there's no stale cache to clear after editing it.
-mode: "Automatic"
+mode: "MJ5"
 version: "1.0.0"
