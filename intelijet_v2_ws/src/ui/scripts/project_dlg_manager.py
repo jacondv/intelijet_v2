@@ -140,6 +140,14 @@ class ProjectManager(QWidget, Ui_frm_ProjectPage):
     there's no QListWidget selection model here, every row carries its
     own project/job directly via closures on its buttons."""
 
+    # Emitted right after add_job_to_active/remove_job_from_active change
+    # active_jobs.json - App connects this to refresh the header's
+    # CURRENT JOB combobox immediately, instead of that combobox only
+    # ever catching up on its own 30s polling timer (_refresh_active_jobs
+    # in app.py), which made Schedule/Remove feel like it did nothing for
+    # up to half a minute.
+    active_jobs_changed = QtCore.pyqtSignal()
+
     def __init__(self, job_store=None):
         super().__init__()
         self.setupUi(self)
@@ -476,8 +484,10 @@ class ProjectManager(QWidget, Ui_frm_ProjectPage):
             return
         self.render_schedule()
         self.render_projects()  # job's own "Schedule" button needs to flip to "Scheduled"
+        self.active_jobs_changed.emit()
 
     def remove_job_from_active(self, project, job):
         self.job_store.remove_active_job(project, job)
         self.render_schedule()
         self.render_projects()  # job's own "Schedule" button needs to flip back
+        self.active_jobs_changed.emit()

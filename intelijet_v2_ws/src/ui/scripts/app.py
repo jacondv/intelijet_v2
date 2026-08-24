@@ -107,6 +107,10 @@ class App(QMainWindow):
         # opening a second independent JobStore on the same active_jobs.json.
         self.job_store = JobStore(ACTIVE_JOB_FILE, CURRENT_JOB_FILE)
         self.project_manager = ProjectManager(job_store=self.job_store)
+        # Refresh the header's CURRENT JOB combobox the instant a job is
+        # Scheduled/Removed in the JOB tab, instead of waiting for
+        # _refresh_active_jobs' own 30s polling timer below to catch up.
+        self.project_manager.active_jobs_changed.connect(self._refresh_active_jobs)
         if self.ui.tab_jobnumber.layout() is None:
             self.ui.tab_jobnumber.setLayout(QVBoxLayout())
         self.ui.tab_jobnumber.layout().addWidget(self.project_manager)
