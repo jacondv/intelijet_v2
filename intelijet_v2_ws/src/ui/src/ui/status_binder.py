@@ -65,8 +65,8 @@ def _is_connected(status, device_name):
 SCAN_REQUIRED_DEVICES = ("encoder", "lidar")
 
 # Every device this HMI tracks a connection badge for - used only to decide
-# whether the status bar can honestly say "SYSTEM READY" (see
-# lblSystemStatus/lblStatusDot below), not for gating any specific button.
+# the status bar's Connected/Disconnected badge (see lblSystemStatus
+# below), not for gating any specific button.
 ALL_TRACKED_DEVICES = ("plc", "pcan", "lidar", "encoder")
 
 
@@ -78,16 +78,15 @@ def _all_devices_connected(status):
     return all(_is_connected(status, name) for name in ALL_TRACKED_DEVICES)
 
 
-def _set_system_ready_dot(widget, all_connected):
-    color = "#4caf50" if all_connected else "#e74c3c"
-    widget.setStyleSheet(f"background-color: {color}; border-radius: 5px; margin-left: 8px;")
-
-
-def _set_system_ready_label(widget, all_connected):
-    text = "SYSTEM READY" if all_connected else "DEVICE DISCONNECTED"
-    color = "#4caf50" if all_connected else "#e74c3c"
+def _set_system_status_badge(widget, all_connected):
+    text = "Connected" if all_connected else "Disconnected"
+    bg = "#e8f8ee" if all_connected else "#fdecea"
+    fg = "#1e8e3e" if all_connected else "#d93025"
     widget.setText(text)
-    widget.setStyleSheet(f"color: {color}; font-weight: 800; margin-left: 6px; margin-right: 12px;")
+    widget.setStyleSheet(
+        f"background-color: {bg}; color: {fg}; font-weight: 700; "
+        "border-radius: 8px; padding: 2px 10px; margin: 2px 8px;"
+    )
 
 
 @dataclass
@@ -126,12 +125,11 @@ STATUS_BINDINGS = {
     "lblPLCStatus": BindingRule(
         lambda s: s.devices.get("plc"), _set_device_label, skip_if_none=False,
     ),
-    # SYSTEM READY only means something if it actually reflects every
-    # tracked device's connection state - previously this text/dot were
-    # hardcoded once at startup and never updated again, so it kept
-    # saying "SYSTEM READY" even with every device shown DISCONNECTED.
-    "lblStatusDot": BindingRule(_all_devices_connected, _set_system_ready_dot, skip_if_none=False),
-    "lblSystemStatus": BindingRule(_all_devices_connected, _set_system_ready_label, skip_if_none=False),
+    # The badge only means something if it actually reflects every
+    # tracked device's connection state - previously it was hardcoded once
+    # at startup and never updated again, so it kept showing Connected
+    # even with every device disconnected.
+    "lblSystemStatus": BindingRule(_all_devices_connected, _set_system_status_badge, skip_if_none=False),
     # Pre-Scan/Post-Scan only make sense with the Encoder and Scanner
     # (lidar) actually connected - previously these stayed clickable
     # regardless of device connection state.
@@ -174,8 +172,8 @@ class StatusBinder:
 
     def register(self, name, widget):
         """For widgets outside root_widget's own tree - e.g. the status
-        bar's lblStatusDot/lblSystemStatus, which live on the QMainWindow's
-        QStatusBar rather than under centralFrame."""
+        bar's lblSystemStatus, which lives on the QMainWindow's QStatusBar
+        rather than under centralFrame."""
         self._widget_cache[name] = widget
 
     def apply(self, status):

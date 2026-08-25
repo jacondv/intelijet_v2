@@ -649,10 +649,13 @@ QLabel {{
         self.panelHeaderBoxLayout = QtWidgets.QHBoxLayout(self.panelHeaderBox)
         self.panelHeaderBoxLayout.setContentsMargins(0, 0, 0, 8)
         self.lblPanelTitle = QtWidgets.QLabel("CONTROL PANEL", self.panelHeaderBox)
+        self.lblPanelTitle.setAlignment(QtCore.Qt.AlignCenter)
         self.lblPanelTitle.setStyleSheet(f"background: transparent; border: none; color: {ACCENT_YELLOW}; font-size: 16px; font-weight: 800;")
+        self.panelHeaderBoxLayout.addStretch(1)
         self.panelHeaderBoxLayout.addWidget(self.lblPanelTitle)
         self.panelHeaderBoxLayout.addStretch(1)
         self.verticalLayout_14.addWidget(self.panelHeaderBox)
+
 
         self.lblLogo = QtWidgets.QLabel(self.control_panel)
         self.lblLogo.setMaximumSize(QtCore.QSize(200, 72))

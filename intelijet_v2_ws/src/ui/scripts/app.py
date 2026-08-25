@@ -216,16 +216,12 @@ class App(QMainWindow):
         self.report_service = ReportService()
 
         # --- Status bar / notifications ---
-        # Left: a glowing accent dot + "SYSTEM READY"/"DEVICE DISCONNECTED",
-        # matching docs/ui_sample/App.html's status-bar indicator - driven
-        # live off actual device connection state by status_binder.py
-        # (registered into self.status_binder below), not hardcoded text.
-        self.lblStatusDot = QLabel()
-        self.lblStatusDot.setObjectName("lblStatusDot")
-        self.lblStatusDot.setFixedSize(10, 10)
-        self.ui.statusbar.addWidget(self.lblStatusDot)
-
-        self.lblSystemStatus = QLabel("SYSTEM READY")
+        # Left: a "Connected"/"Disconnected" pill badge - driven live off
+        # actual device connection state by status_binder.py (registered
+        # into self.status_binder below), not hardcoded text. (A plain
+        # colored-dot QLabel was tried first but wasn't visibly rendering
+        # for the user, so a styled text badge is used instead.)
+        self.lblSystemStatus = QLabel("Connected")
         self.lblSystemStatus.setObjectName("lblSystemStatus")
         self.ui.statusbar.addWidget(self.lblSystemStatus)
 
@@ -240,7 +236,9 @@ class App(QMainWindow):
             rospy.logwarn(f"Could not load hmi_display.yaml: {e}")
             mode, version = "--", "--"
         self.lblModeVersion = QLabel(f"Mode: {mode}  |  System Version: {version}")
-        self.lblModeVersion.setStyleSheet("color: #80cbc4; margin-right: 8px;")
+        self.lblModeVersion.setStyleSheet(
+            "color: #ffffff; background: transparent; border: none; font-size: 20px; margin-right: 8px;"
+        )
         self.ui.statusbar.addPermanentWidget(self.lblModeVersion)
 
         self.lblNotification = QLabel("Ready")
@@ -299,11 +297,10 @@ class App(QMainWindow):
 
         # --- Data binder ---
         self.status_binder = StatusBinder(self.ui.centralFrame)
-        # lblStatusDot/lblSystemStatus live on the QMainWindow's own
-        # QStatusBar, not under centralFrame, so they're not picked up by
-        # StatusBinder's automatic findChildren() scan - register them by
-        # hand so STATUS_BINDINGS can still drive them.
-        self.status_binder.register("lblStatusDot", self.lblStatusDot)
+        # lblSystemStatus lives on the QMainWindow's own QStatusBar, not
+        # under centralFrame, so it's not picked up by StatusBinder's
+        # automatic findChildren() scan - register it by hand so
+        # STATUS_BINDINGS can still drive it.
         self.status_binder.register("lblSystemStatus", self.lblSystemStatus)
 
         #Load ui state
