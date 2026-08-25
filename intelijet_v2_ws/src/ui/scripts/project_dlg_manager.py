@@ -21,18 +21,34 @@ from PyQt5.QtWidgets import QDialog, QFormLayout, QSpinBox, QComboBox, QDialogBu
 
 
 def _position_dialog_near_top(dlg, margin_top=30, use_size_hint=True):
-    """Popups (Rename Project, New/Edit Job) default to opening centered
-    on screen, which the nam72 on-screen keyboard then sits right on top
-    of/overlaps once it appears for one of the dialog's text fields -
-    push the dialog up near the top of the screen instead, well clear of
-    where the keyboard will dock at the bottom. use_size_hint=False for a
-    dialog that already sets its own explicit size via resize() - calling
-    adjustSize() on top of that would just discard it."""
-    if use_size_hint:
-        dlg.adjustSize()
-    screen = QDesktopWidget().availableGeometry(dlg)
-    x = screen.x() + (screen.width() - dlg.width()) // 2
-    dlg.move(x, screen.y() + margin_top)
+    """Popups (New Project, Rename Project, New/Edit Job) default to
+    opening centered on screen, which the nam72 on-screen keyboard then
+    sits right on top of/overlaps once it appears for one of the dialog's
+    text fields - push the dialog up near the top of the screen instead,
+    well clear of where the keyboard will dock at the bottom.
+    use_size_hint=False for a dialog that already sets its own explicit
+    size via resize() - calling adjustSize() on top of that would just
+    discard it.
+
+    A plain move() call here (e.g. from __init__) doesn't stick - Qt
+    re-centers a QDialog on its parent internally the moment
+    show()/exec_() actually runs, which overrides any position set
+    beforehand. Wrapping dlg's own showEvent to reposition on every show
+    (not just once) is what actually survives that."""
+    def _do_position():
+        if use_size_hint:
+            dlg.adjustSize()
+        screen = QDesktopWidget().availableGeometry(dlg)
+        x = screen.x() + (screen.width() - dlg.width()) // 2
+        dlg.move(x, screen.y() + margin_top)
+
+    original_show_event = dlg.showEvent
+
+    def _show_event(event):
+        original_show_event(event)
+        _do_position()
+
+    dlg.showEvent = _show_event
 
 
 class NewProjectDlg(QDialog):
@@ -59,7 +75,7 @@ class NewProjectDlg(QDialog):
         h.addWidget(btn_ok)
         layout.addLayout(h)
 
-
+        _position_dialog_near_top(self)
 
     def get_text(self):
         return self.edit.text()
