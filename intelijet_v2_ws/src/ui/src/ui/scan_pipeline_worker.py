@@ -164,6 +164,15 @@ class ScanPipelineWorker(QThread):
                 "reset_post_scan_path": job["is_manual"],
                 "reset_is_manual_compare": topic_name in (topics["compared"], topics["compared_manual"]),
                 "last_prescan_path": None,
+                # True only when this cloud will actually go on to a report
+                # export below - lets the GUI thread hold off switching to
+                # the 3D MAIN page until report_done/report_failed fires,
+                # instead of jumping there the instant the compared cloud
+                # itself is ready (while the report PDF is still generating).
+                "report_pending": (
+                    topic_name in (topics["compared"], topics["compared_manual"])
+                    and not (job["auto_compare_off"] or job["auto_report_off"])
+                ),
             }
             if topic_name in (topics["compared"], topics["compared_manual"]):
                 metadata["report_name"] = f_name

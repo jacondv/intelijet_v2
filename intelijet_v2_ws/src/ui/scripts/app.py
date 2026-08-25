@@ -428,7 +428,12 @@ class App(QMainWindow):
 
     def _on_scan_cloud_ready(self, polydata, metadata):
         self.vtk_viewer.update(polydata)
-        self.show_3d_main_page()
+        # If a report export is about to run for this cloud, hold off
+        # switching to 3D MAIN until it's actually done (see
+        # _on_scan_report_done/_on_scan_report_failed) - otherwise switch
+        # right away, same as before.
+        if not metadata["report_pending"]:
+            self.show_3d_main_page()
 
         if metadata["report_name"] is not None:
             self.report_name = metadata["report_name"]
@@ -444,6 +449,7 @@ class App(QMainWindow):
         if getattr(self, "_compare_done_pending_report", False):
             self._compare_done_pending_report = False
             self.notification_center.push("compare", "✅COMPARE DONE ", "info")
+        self.show_3d_main_page()
 
     def _on_scan_report_failed(self, error_message):
         rospy.logerr(f"[App] Failed to export report: {error_message}")
@@ -451,6 +457,7 @@ class App(QMainWindow):
         if getattr(self, "_compare_done_pending_report", False):
             self._compare_done_pending_report = False
             self.notification_center.push("compare", "⚠️COMPARE DONE (report export failed) ", "warning")
+        self.show_3d_main_page()
 
 
     def show_3d_main_page(self):
