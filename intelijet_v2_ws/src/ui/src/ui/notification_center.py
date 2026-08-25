@@ -6,8 +6,11 @@ level) pushes from whoever is listening to ROS/device state, so it can be
 unit-tested standalone (see ui/tests/test_notification_center.py).
 
 Two ways to feed it:
-  - push(source, message, level):  adds to history (deduped, capped) and
-    updates the "current label" text, subject to the pin rule below.
+  - push(source, message, level, code=None):  adds to history (deduped,
+    capped) and updates the "current label" text, subject to the pin rule
+    below. `code` (see shared/error_codes.py) is prefixed onto the
+    displayed message and kept on the history item for a future
+    troubleshooting-guide lookup.
   - push_transient(message, level): updates the "current label" text only,
     never added to history. Used for high-frequency progress ticks that
     would otherwise spam the history list.
@@ -149,9 +152,18 @@ class NotificationCenter(QObject):
         """Return items oldest-first."""
         return list(self._history)
 
-    def push(self, source, message, level="info"):
+    def push(self, source, message, level="info", code=None):
         """Add a persistent notification (kept in history) and try to update
-        the current label. Returns the item dict."""
+        the current label. Returns the item dict.
+
+        code: stable error/warning code (see shared/error_codes.py), e.g.
+        "SCAN-004". When given, it's prefixed onto the displayed message
+        ("[SCAN-004] ...") so it shows up in the status bar/ALARM history
+        as-is - no other UI change needed to see it. Also kept as its own
+        `code` field on the history item for a future troubleshooting-guide
+        lookup."""
+        if code:
+            message = f"[{code}] {message}"
         now = time.time()
 
         for item in reversed(self._history):
@@ -162,7 +174,7 @@ class NotificationCenter(QObject):
                     return item
                 break
 
-        item = {"timestamp": now, "level": level, "source": source, "message": message}
+        item = {"timestamp": now, "level": level, "source": source, "message": message, "code": code or ""}
         self._history.append(item)
         self._append_to_log(item)
         self.notification_added.emit(item)

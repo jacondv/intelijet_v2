@@ -1,0 +1,142 @@
+# Registry of operator-facing error/warning codes for the scan/compare
+# process (see shared/src/shared/error_codes.py's lookup()). Each code
+# maps to a default message, level, and a short troubleshooting guide -
+# the ALARM tab's detail popup (ui/src/ui/diagnostics_tab.py) shows the
+# guide for any history entry that carries a matching code.
+#
+# Only scan/compare-process failures the operator actually sees on the
+# status bar/ALARM tab are registered here (not internal-only log lines,
+# device connectivity, or storage cleanup).
+#
+# Adding a new code: add an entry below, then pass code="XXX-NNN" to the
+# matching notify() call (or notification_center.push()) - no other file
+# needs to change. Read directly (not merged into last_used.yaml), same
+# convention as hmi_display.yaml/storage_cleanup.yaml, so editing the
+# guide text here takes effect immediately, no restart needed.
+
+SCAN-001:
+  level: error
+  message: "Failed to assemble point cloud (laser_assembler service call failed or returned no data)"
+  guide: |
+    1. Check that the laser_assembler node (point_cloud2_assembler) is running.
+    2. Check the Lidar connection on the SYSTEM tab.
+    3. Retry the scan; if it keeps failing, restart the pps launch.
+
+SCAN-002:
+  level: warning
+  message: "Encoder did not reach target angle while opening the housing"
+  guide: |
+    1. Check for a mechanical obstruction blocking the housing.
+    2. Check the Encoder connection and reading on the SYSTEM tab.
+    3. Try OPEN HOUSING again manually; if the encoder still stalls, check the PLC/PCAN link.
+
+SCAN-003:
+  level: warning
+  message: "Encoder did not reach target angle while closing the housing"
+  guide: |
+    1. Check for a mechanical obstruction blocking the housing.
+    2. Check the Encoder connection and reading on the SYSTEM tab.
+    3. Try CLOSE HOUSING again manually; if the encoder still stalls, check the PLC/PCAN link.
+
+SCAN-004:
+  level: error
+  message: "Scan failed"
+  guide: |
+    1. Check the ALARM history for the exact exception text right after this entry.
+    2. Check Encoder/Lidar connectivity on the SYSTEM tab.
+    3. Retry Pre-Scan/Post-Scan; if it keeps failing, check the pps node logs.
+
+SCAN-005:
+  level: error
+  message: "Housing move failed"
+  guide: |
+    1. Check for a mechanical obstruction blocking the housing.
+    2. Check the PLC/PCAN connection on the SYSTEM tab.
+    3. Retry OPEN/CLOSE HOUSING.
+
+SCAN-006:
+  level: error
+  message: "Unsupported active_lidar value in lidar.yaml"
+  guide: |
+    1. Open config/lidar.yaml and check the active_lidar value.
+    2. It must match one of the supported scanner types (e.g. 'lms511').
+    3. Fix the value and restart the pps launch.
+
+SCAN-007:
+  level: error
+  message: "Pre-Scan cloud preprocessing failed"
+  guide: |
+    1. Check the ALARM history for the exact exception text right after this entry.
+    2. Retry Pre-Scan.
+    3. If it keeps failing, check dv_cloud_preprocess node logs.
+
+SCAN-008:
+  level: error
+  message: "Post-Scan cloud preprocessing failed"
+  guide: |
+    1. Check the ALARM history for the exact exception text right after this entry.
+    2. Retry Post-Scan.
+    3. If it keeps failing, check dv_cloud_preprocess node logs.
+
+SCAN-009:
+  level: error
+  message: "Scan pipeline error while processing a scan cloud"
+  guide: |
+    1. Check the ALARM history for the exact exception text right after this entry.
+    2. Retry the scan.
+    3. If it keeps failing, check the UI process logs (scan_pipeline_worker).
+
+SCAN-010:
+  level: warning
+  message: "Failed to color point cloud for display"
+  guide: |
+    1. This only affects the on-screen highlight color, not the saved data - the scan/compare result is still valid.
+    2. If this happens repeatedly, check job_info.json for the current job.
+
+COMPARE-001:
+  level: error
+  message: "Compare finished with success=False"
+  guide: |
+    1. Check the ALARM history for the compare stage that failed.
+    2. Check that both Pre-Scan and Post-Scan clouds cover the same area with enough overlap.
+    3. Retry the compare.
+
+COMPARE-002:
+  level: error
+  message: "Compare timed out"
+  guide: |
+    1. Check the compare_cloud_action_server node is running and not stuck.
+    2. Check CPU load - a very large point cloud can make ICP/keypoint steps slow.
+    3. Retry the compare; consider lowering upsample/keypoint settings if this repeats.
+
+COMPARE-003:
+  level: warning
+  message: "Post-process crop step failed, using the uncropped cloud instead"
+  guide: |
+    1. The compare result is still produced, just without the crop-box applied.
+    2. Check the crop-box parameters in config.
+    3. If the result looks wrong, retry the compare.
+
+COMPARE-004:
+  level: error
+  message: "Compare failed (auto-compare)"
+  guide: |
+    1. Check the ALARM history for the exact exception text right after this entry.
+    2. Check that the Pre-Scan and Post-Scan clouds both saved correctly.
+    3. Retry the compare from the REPORT tab.
+
+COMPARE-005:
+  level: error
+  message: "Compare failed (manual compare)"
+  guide: |
+    1. Check the ALARM history for the exact exception text right after this entry.
+    2. Check that both selected files in the REPORT tab are valid scans.
+    3. Retry Compare Selected.
+
+COMPARE-006:
+  level: error
+  message: "Compare failed"
+  guide: |
+    1. Check the ALARM history for the exact exception text right after this entry.
+    2. Check that both selected files in the REPORT tab are valid scans.
+    3. Retry Compare Selected.

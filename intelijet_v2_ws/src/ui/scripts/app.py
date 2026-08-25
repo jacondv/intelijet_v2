@@ -77,9 +77,11 @@ class App(QMainWindow):
     cloud_received_signal = pyqtSignal(object, str)
     ui_send_cmd_signal = pyqtSignal(int)
     ui_data_update = pyqtSignal(object)  # ui.system_status.SystemStatus
-    # (source, message, level) - see shared/notify.py. Replaces the old
-    # /rosout-JSON "notification" key inside ui_data_update's dict.
-    notification_received = pyqtSignal(str, str, str)
+    # (source, message, level, code) - see shared/notify.py. code is "" when
+    # the notify() call didn't pass one (see shared/error_codes.py).
+    # Replaces the old /rosout-JSON "notification" key inside
+    # ui_data_update's dict.
+    notification_received = pyqtSignal(str, str, str, str)
 
     def __init__(self):
         super().__init__()
@@ -259,7 +261,9 @@ class App(QMainWindow):
         self.notification_center = NotificationCenter(max_history=DIAGNOSTICS_HISTORY_CAP, parent=self)
         self.notification_center.label_changed.connect(self._on_notification_label_changed)
         self.notification_received.connect(
-            lambda source, message, level: self.notification_center.push(source, message, level)
+            lambda source, message, level, code: self.notification_center.push(
+                source, message, level, code or None
+            )
         )
         self.lblNotification.mousePressEvent = self._open_notification_history
 
@@ -292,7 +296,9 @@ class App(QMainWindow):
         self.scan_worker.report_done.connect(self._on_scan_report_done)
         self.scan_worker.report_failed.connect(self._on_scan_report_failed)
         self.scan_worker.notify.connect(
-            lambda source, message, level: self.notification_center.push(source, message, level)
+            lambda source, message, level, code: self.notification_center.push(
+                source, message, level, code or None
+            )
         )
 
         # --- Data binder ---
@@ -584,7 +590,7 @@ class App(QMainWindow):
 
         if not success:
             print("❌COMPARE FAILED ", job_id)
-            self.notification_center.push("compare", "❌COMPARE FAILED ", "error")
+            self.notification_center.push("compare", "❌COMPARE FAILED ", "error", "COMPARE-006")
             return
 
         print("✅COMPARE DONE ", job_id)

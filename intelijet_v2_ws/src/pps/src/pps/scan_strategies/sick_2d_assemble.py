@@ -58,11 +58,7 @@ class Sick2DAssembleStrategy(ScanStrategy):
 
         assemble_failed = point_cloud is None
         if assemble_failed:
-            notify(
-                message="[ERROR] Failed to assemble point cloud (assemble_scans2 "
-                        "service call failed or returned no data)",
-                level="error",
-            )
+            notify(code="SCAN-001")
             if controller.status_callback:
                 if topic_name == cfg.PRE_SCAN_TOPIC:
                     controller.status_callback(DeviceStatus.PRESCAN_ERROR)
@@ -104,7 +100,10 @@ class Sick2DAssembleStrategy(ScanStrategy):
         for speed, target, timeout in speeds_targets:
             controller.housing.open(speed)
             if not controller.wait_until_target(target, direction=True, timeout=timeout):
-                notify(message=f"[WARN] Encoder did not reach target {target}° for speed {speed} after {timeout}s")
+                notify(
+                    message=f"Encoder did not reach target {target}° for speed {speed} after {timeout}s",
+                    code="SCAN-002",
+                )
                 controller.housing.stop()
                 return False
         return True
@@ -124,7 +123,10 @@ class Sick2DAssembleStrategy(ScanStrategy):
                 if speed == 'slow':
                     return True  # cho phép không đạt chính xác vị trí start khi đóng chậm
 
-                notify(message=f"[WARN] Encoder did not reach target {target}° while closing at speed {speed}")
+                notify(
+                    message=f"Encoder did not reach target {target}° while closing at speed {speed}",
+                    code="SCAN-003",
+                )
                 controller.housing.stop()
                 return False
 
