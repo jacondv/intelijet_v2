@@ -9,6 +9,7 @@ semantics back together is exactly what this replaces
 """
 import rospy
 from shared.config_loader import CONFIG as cfg
+from shared.error_codes import lookup as lookup_error_code
 from shared.msg import Notification
 
 _pub = None
@@ -21,7 +22,7 @@ def _get_publisher():
     return _pub
 
 
-def notify(message, level=None, source=None):
+def notify(message=None, level=None, source=None, code=None):
     """
     level: "info" | "warning" | "error" (optional). If omitted, inferred from
     "[WARN]"/"[ERROR]" markers in `message`, same convention as the old
@@ -29,7 +30,23 @@ def notify(message, level=None, source=None):
     working unchanged.
     source: human-readable label for where this came from (e.g. "Scan",
     "Compare", "Housing"). Defaults to the publishing node's ROS name.
+    code: stable error/warning code (see shared/error_codes.py), e.g.
+    "SCAN-004". When given, `message`/`level` default from the registry
+    entry if not passed explicitly - pass `message` too only when you want
+    to add exception-specific detail on top of the registry's generic text.
+    An unknown code is logged and otherwise ignored (message/level still
+    come from the caller).
     """
+    entry = lookup_error_code(code) if code else None
+    if code and entry is None:
+        rospy.logwarn(f"[notify] Unknown error code: {code}")
+
+    if entry is not None:
+        if message is None:
+            message = entry["message"]
+        if level is None:
+            level = entry["level"]
+
     if level is None:
         if message and "[ERROR]" in message:
             level = "error"
@@ -44,4 +61,5 @@ def notify(message, level=None, source=None):
         message=message,
         node=rospy.get_name(),
         stamp=rospy.Time.now(),
+        code=code or "",
     ))

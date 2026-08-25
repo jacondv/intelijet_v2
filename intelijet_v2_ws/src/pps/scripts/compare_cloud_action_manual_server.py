@@ -96,7 +96,7 @@ class CompareCloudManualServer:
             # Full traceback makes every future failure here actually
             # diagnosable from the log instead of a bare message.
             rospy.logerr(f"{type(e).__name__}: {e}\n{traceback.format_exc()}")
-            notify(message=f"[ERROR] Compare failed: {type(e).__name__}: {e}", level="error")
+            notify(message=f"Compare failed: {type(e).__name__}: {e}", code="COMPARE-005")
             self.server.set_aborted(CompareCloudResult(), f"{type(e).__name__}: {e}")
 
 

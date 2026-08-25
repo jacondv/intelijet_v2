@@ -23,6 +23,8 @@ import threading
 
 from PyQt5.QtCore import QThread, pyqtSignal
 
+from shared.error_codes import lookup as lookup_error_code
+
 
 class ScanPipelineWorker(QThread):
     # (polydata, metadata dict) - GUI thread updates vtk_viewer + App state from this.
@@ -33,7 +35,9 @@ class ScanPipelineWorker(QThread):
     report_done = pyqtSignal(str)
     report_failed = pyqtSignal(str)
     # (source, message, level) - routed straight to NotificationCenter.push().
-    notify = pyqtSignal(str, str, str)
+    # (source, message, level, code) - code is "" when there isn't one
+    # (see shared/error_codes.py).
+    notify = pyqtSignal(str, str, str, str)
 
     def __init__(self, cloud_pipeline, report_service, job_store, topics,
                  project_dir, thickness_default, tolerance_default, parent=None):
@@ -64,6 +68,7 @@ class ScanPipelineWorker(QThread):
                         f"Superseded pending cloud on {self._pending_job['topic_name']} "
                         f"before it was processed",
                         "info",
+                        "",
                     )
                 self._pending_job = job
                 return
@@ -76,8 +81,12 @@ class ScanPipelineWorker(QThread):
             try:
                 self._process(job)
             except Exception as e:
+                entry = lookup_error_code("SCAN-009")
                 self.notify.emit(
-                    "cloud", f"Scan pipeline error on {job.get('topic_name')}: {e}", "error"
+                    "cloud",
+                    f"{entry['message']} ({job.get('topic_name')}): {e}",
+                    entry["level"],
+                    "SCAN-009",
                 )
             with self._lock:
                 if self._pending_job is None:
@@ -122,7 +131,10 @@ class ScanPipelineWorker(QThread):
                 o3d_cloud = self.cloud_pipeline.assign_colors_for_highlight(o3d_cloud, highlight_range)
 
             except Exception as e:
-                self.notify.emit("cloud", f"Failed to color point cloud: {e}", "warning")
+                entry = lookup_error_code("SCAN-010")
+                self.notify.emit(
+                    "cloud", f"{entry['message']}: {e}", entry["level"], "SCAN-010"
+                )
 
         # 2. Show pointcloud and Save Data
         metadata = None

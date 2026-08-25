@@ -95,12 +95,7 @@ class RosThread(threading.Thread):
 
     def notification_callback(self, msg):
         if self.notification_received_signal is not None:
-            self.notification_received_signal.emit(msg.source, msg.message, msg.level)
-
-
-    def _publish_device_transition(self, name, old_state, new_state):
-        level = "error" if new_state in _ERROR_DEVICE_STATES else "info"
-        notify(f"{name}: {new_state}", level=level, source=name)
+            self.notification_received_signal.emit(msg.source, msg.message, msg.level, msg.code)
 
 
     def emit_ui_data_update(self, event):

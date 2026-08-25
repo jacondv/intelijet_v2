@@ -72,13 +72,13 @@ class CloudProcessorNode:
             processed = self.process_cloud(msg, rgb=[255,255,255])
         except Exception as e:
             rospy.logerr(f"{type(e).__name__}: {e}\n{traceback.format_exc()}")
-            notify(message=f"[ERROR] Pre-scan cloud preprocessing failed: {e}", level="error")
+            notify(message=f"Pre-scan cloud preprocessing failed: {e}", code="SCAN-007")
             return
         if isinstance(processed, PointCloud2):
             rospy.loginfo("processed is a PointCloud2 message and sent --> pre_scan_0")
         else:
             rospy.logerr("processed is NOT a PointCloud2 message.")
-            notify(message="[ERROR] Pre-scan cloud preprocessing returned invalid data", level="error")
+            notify(message="Pre-scan cloud preprocessing returned invalid data", code="SCAN-007")
             return
 
         self.pub_pre.publish(processed)
@@ -90,13 +90,13 @@ class CloudProcessorNode:
             processed = self.process_cloud(msg, rgb=[255,255,0])
         except Exception as e:
             rospy.logerr(f"{type(e).__name__}: {e}\n{traceback.format_exc()}")
-            notify(message=f"[ERROR] Post-scan cloud preprocessing failed: {e}", level="error")
+            notify(message=f"Post-scan cloud preprocessing failed: {e}", code="SCAN-008")
             return
         if isinstance(processed, PointCloud2):
             rospy.loginfo("processed is a PointCloud2 message and sent --> post_scan_0")
         else:
             rospy.logerr("processed is NOT a PointCloud2 message.")
-            notify(message="[ERROR] Post-scan cloud preprocessing returned invalid data", level="error")
+            notify(message="Post-scan cloud preprocessing returned invalid data", code="SCAN-008")
             return
 
         self.pub_post.publish(processed)

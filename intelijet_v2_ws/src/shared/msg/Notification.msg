@@ -3,6 +3,7 @@ string level
 string message
 string node
 time   stamp
+string code
 
 # ---- Constants for level ----
 string INFO    = info

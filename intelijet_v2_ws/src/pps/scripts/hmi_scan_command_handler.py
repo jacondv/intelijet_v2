@@ -33,7 +33,7 @@ def get_scanner_controller(status_callback=None, active_lidar=cfg.active_lidar):
         f"Unsupported active_lidar '{active_lidar}' in lidar.yaml "
         f"(expected: 'lms511')"
     )
-    notify(message=f"[ERROR] {message}", level="error")
+    notify(message=message, code="SCAN-006")
     raise ValueError(message)
 
 

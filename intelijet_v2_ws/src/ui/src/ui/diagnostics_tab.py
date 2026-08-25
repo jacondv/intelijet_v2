@@ -19,6 +19,7 @@ from PyQt5.QtWidgets import (
     QDialog, QPushButton, QScrollArea, QFrame,
 )
 
+from shared.error_codes import lookup as lookup_error_code
 from ui.notification_center import LEVEL_COLORS, LOG_DATE_FORMAT, read_log
 
 LEVEL_FILTERS = ["All Levels", "Info", "Warning", "Error"]
@@ -370,7 +371,7 @@ class DiagnosticsTab(QWidget):
         # the rest of the app while open.
         dlg = QDialog(self, Qt.Window)
         dlg.setWindowTitle("Alarm Detail")
-        dlg.resize(760, 460)
+        dlg.resize(1520, 920)
         dlg.setStyleSheet(f"QDialog {{ background-color: {BG_PAGE}; }}")
         layout = QVBoxLayout(dlg)
         layout.setContentsMargins(24, 24, 24, 24)
@@ -397,6 +398,35 @@ class DiagnosticsTab(QWidget):
         body_label.setStyleSheet(body_label.styleSheet() + f" background-color: {BG_CARD}; padding: 12px;")
         scroll.setWidget(body_label)
         layout.addWidget(scroll, 1)
+
+        # Troubleshooting guide - only shown for entries carrying a known
+        # error code (see shared/error_codes.py). Older history entries
+        # (logged before this feature, or a level with no assigned code)
+        # simply don't have one - item.get(), not item["code"], on purpose.
+        entry = lookup_error_code(item.get("code")) if item.get("code") else None
+        if entry is not None:
+            dlg.resize(1520, 1240)
+
+            guide_header = QLabel("How to check / fix", dlg)
+            guide_header.setStyleSheet(
+                f"font-size: {DIALOG_FONT_SIZE}px; font-weight: bold; color: {TEXT_PRIMARY};"
+            )
+            layout.addWidget(guide_header)
+
+            guide_label = QLabel(entry["guide"], dlg)
+            guide_label.setWordWrap(True)
+            guide_label.setAlignment(Qt.AlignTop | Qt.AlignLeft)
+            guide_label.setTextInteractionFlags(Qt.TextSelectableByMouse)
+            guide_label.setStyleSheet(
+                f"font-size: {TABLE_FONT_SIZE}px; color: {TEXT_PRIMARY};"
+                f"background-color: {BG_CARD}; padding: 12px;"
+            )
+
+            guide_scroll = QScrollArea(dlg)
+            guide_scroll.setWidgetResizable(True)
+            guide_scroll.setStyleSheet(f"QScrollArea {{ background-color: {BG_CARD}; border: 1px solid {BORDER}; }}")
+            guide_scroll.setWidget(guide_label)
+            layout.addWidget(guide_scroll, 1)
 
         close_btn = QPushButton("Close", dlg)
         close_btn.setStyleSheet(

@@ -107,8 +107,8 @@ class CloudComparePipeline:
             except Exception as e:
                 rospy.logerr(f"post-process failed: {e}")
                 notify(
-                    message=f"[WARN] Post-process crop skipped (using uncropped cloud): {e}",
-                    level="warning",
+                    message=f"Post-process crop skipped (using uncropped cloud): {e}",
+                    code="COMPARE-003",
                 )
 
         # ===== COMPARE =====
