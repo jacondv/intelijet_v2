@@ -12,9 +12,20 @@ Two ways to feed it:
     never added to history. Used for high-frequency progress ticks that
     would otherwise spam the history list.
 
-Pin rule: an "error" push pins the label for PIN_SECONDS - an "info" arriving
-during that window is dropped (label unchanged); a "warning" or another
-"error" can still override it immediately.
+Pin rule: an "error" push pins the label for PIN_SECONDS - any push_transient
+arriving during that window is dropped (label unchanged); another push()
+can still override it immediately.
+
+A push() (a real operational event - job started/canceled/failed, etc.) also
+pins the label for a short TRANSIENT_PIN_SECONDS window against
+push_transient() specifically - this is what keeps a high-frequency progress
+ticker (e.g. "COMPARE 42%", sent via push_transient) from flickering the
+label back and forth against a "Job canceled" push() that lands while the
+in-flight progress stream hasn't stopped yet (the two were previously
+uncoordinated - both just called the same _try_update_label with no
+ordering, so whichever arrived last on the Qt event queue won, alternating
+every tick). push_transient() itself never sets this pin, only push() does,
+so back-to-back progress ticks keep updating the label as normal.
 """
 import json
 import os
@@ -29,6 +40,7 @@ from shared.config_loader import CONFIG as cfg
 MAX_HISTORY = 50
 DEDUP_WINDOW_SECONDS = 5
 PIN_SECONDS = 10
+TRANSIENT_PIN_SECONDS = 3
 
 LOG_DIR = os.path.join(cfg.BASE_DIR, cfg.DATA_DIR, "logs")
 LOG_DATE_FORMAT = "%Y%m%d"
@@ -115,11 +127,13 @@ class NotificationCenter(QObject):
     label_changed = pyqtSignal(str, str)  # (text, level)
 
     def __init__(self, max_history=MAX_HISTORY, dedup_window=DEDUP_WINDOW_SECONDS,
-                 pin_seconds=PIN_SECONDS, parent=None):
+                 pin_seconds=PIN_SECONDS, transient_pin_seconds=TRANSIENT_PIN_SECONDS,
+                 parent=None):
         super().__init__(parent)
         self._max_history = max_history
         self._dedup_window = dedup_window
         self._pin_seconds = pin_seconds
+        self._transient_pin_seconds = transient_pin_seconds
         self._history = deque(maxlen=max_history)
         self._pinned_until = 0.0
         self._pinned_level = None
@@ -144,7 +158,7 @@ class NotificationCenter(QObject):
             if item["source"] == source and item["message"] == message:
                 if now - item["timestamp"] < self._dedup_window:
                     item["timestamp"] = now
-                    self._try_update_label(message, level, now)
+                    self._try_update_label(message, level, now, transient=False)
                     return item
                 break
 
@@ -152,7 +166,7 @@ class NotificationCenter(QObject):
         self._history.append(item)
         self._append_to_log(item)
         self.notification_added.emit(item)
-        self._try_update_label(message, level, now)
+        self._try_update_label(message, level, now, transient=False)
         return item
 
     def _append_to_log(self, item):
@@ -170,12 +184,18 @@ class NotificationCenter(QObject):
 
     def push_transient(self, message, level="info"):
         """Update the current label without touching history."""
-        self._try_update_label(message, level, time.time())
+        self._try_update_label(message, level, time.time(), transient=True)
 
-    def _try_update_label(self, message, level, now):
-        if now < self._pinned_until and level == "info":
-            return  # an error is still pinned, drop this info-level update
+    def _try_update_label(self, message, level, now, transient):
+        if now < self._pinned_until:
+            if transient:
+                return  # a real push() event is still pinned, drop this progress tick
+            if level == "info" and self._pinned_level == "error":
+                return  # an error is still pinned, drop this info-level update
         if level == "error":
             self._pinned_until = now + self._pin_seconds
             self._pinned_level = "error"
+        elif not transient:
+            self._pinned_until = now + self._transient_pin_seconds
+            self._pinned_level = level
         self.label_changed.emit(message, level)

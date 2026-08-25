@@ -10,18 +10,8 @@ from shared.config_loader import CONFIG as cfg
 
 from shared.device_monitor import  StatusReader
 from shared.pps_command import PPSCommand
-from shared.msg import Notification, DeviceStatus
-from shared.notify import notify
+from shared.msg import Notification
 from ui.system_status import build_system_status
-
-# device_state values that should read as an error notification rather
-# than a plain info one when transitioned into (see _publish_device_transition).
-_ERROR_DEVICE_STATES = {
-    DeviceStatus.DISCONNECTED,
-    DeviceStatus.ERROR,
-    DeviceStatus.PRESCAN_ERROR,
-    DeviceStatus.POSTSCAN_ERROR,
-}
 
 HMI_CMD_TOPIC = cfg.HMI_CMD_TOPIC
 PRE_SCAN_CLOUD_TOPIC = cfg.PRE_SCAN_CLOUD_TOPIC
@@ -49,13 +39,12 @@ class RosThread(threading.Thread):
         # Run when thread .start() called
         rospy.init_node("gui_node", anonymous=True, disable_signals=True)
         self.cmd_pub = rospy.Publisher(HMI_CMD_TOPIC, Int32, queue_size=1)
-        # Autoload device config from devices.yaml. on_transition fires
-        # only on an actual device_state change (see Monitor.update_status
-        # in device_monitor.py), not every poll tick - this is what used
-        # to be app.py's manual _prev_device_state diffing, moved to the
-        # ROS side where the fact ("device X disconnected") actually
-        # originates.
-        self.device_status_reader = StatusReader(on_transition=self._publish_device_transition)
+        # Autoload device config from devices.yaml. Device connect/disconnect
+        # is surfaced only via the SYSTEM tab's live status badges - it's
+        # deliberately not pushed to the notification/status-bar stream
+        # (that's reserved for scan-process errors), so no on_transition
+        # callback is wired here.
+        self.device_status_reader = StatusReader()
 
         rospy.Subscriber(PRE_SCAN_CLOUD_TOPIC, PointCloud2, self.cloud_received_signal_callback,callback_args=PRE_SCAN_CLOUD_TOPIC,queue_size=1)
         rospy.Subscriber(POST_SCAN_CLOUD_TOPIC, PointCloud2, self.cloud_received_signal_callback,callback_args=POST_SCAN_CLOUD_TOPIC,queue_size=1)
