@@ -155,6 +155,29 @@ def _is_prescan(scan_type):
     return "pre" in scan_type.lower()
 
 
+def _find_matching_report_for_segment(job_path, scan_id):
+    """For a Pre-Scan row: the newest report PDF belonging to this
+    segment (same scan_id), regardless of index - a Pre-Scan's own index
+    carries no real relationship to any compared cloud/report (see
+    _build_file_row), but every Post-Scan/report generated against this
+    Pre-Scan does share its scan_id, so that's the right key here."""
+    try:
+        candidates = os.listdir(job_path)
+    except OSError:
+        return None
+    matches = []
+    for name in candidates:
+        if not name.lower().endswith(".pdf") or is_sync_junk(name):
+            continue
+        p = parse_filename(name)
+        if "compared" in p["type"] and p["scan_id"] == scan_id:
+            matches.append(os.path.join(job_path, name))
+    if not matches:
+        return None
+    matches.sort(key=lambda p: os.path.getmtime(p), reverse=True)
+    return matches[0]
+
+
 class ReportPageManager(QWidget, Ui_frm_ReportPage):
     def __init__(self, job_store, on_view_3d, on_start_compare):
         super().__init__()
@@ -450,13 +473,15 @@ class ReportPageManager(QWidget, Ui_frm_ReportPage):
             btn_result.clicked.connect(lambda _checked, p=result_path: self.on_view_3d(p))
             h.addWidget(btn_result)
 
-        # Pre-Scan rows are excluded here: generate_filename() gives a
-        # prescan file whatever post-index happened to be current at scan
-        # time (often "01" by default, before any post-scan/compare exists
-        # yet) - that index carries no real relationship to any compared
-        # cloud/report, so matching against it would just produce
-        # coincidental false positives.
-        report_path = None if is_prescan else _find_matching_report(filepath)
+        # Pre-Scan rows match by scan_id only (see
+        # _find_matching_report_for_segment) since generate_filename()
+        # gives a prescan file whatever post-index happened to be current
+        # at scan time - that index carries no real relationship to any
+        # compared cloud/report, so index can't be part of the match here.
+        if is_prescan:
+            report_path = _find_matching_report_for_segment(job_path, parsed["scan_id"])
+        else:
+            report_path = _find_matching_report(filepath)
         btn_report = QPushButton("Report")
         btn_report.setProperty("cssClass", "rowActionBtn")
         btn_report.setEnabled(report_path is not None)
