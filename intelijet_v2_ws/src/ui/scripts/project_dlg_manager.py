@@ -3,8 +3,9 @@ from datetime import datetime
 
 from PyQt5 import QtCore
 from PyQt5.QtWidgets import (
-    QWidget, QFrame, QInputDialog, QMessageBox, QHBoxLayout, QVBoxLayout,
-    QLabel, QPushButton, QLineEdit,
+    QApplication, QWidget, QFrame, QMessageBox, QHBoxLayout, QVBoxLayout,
+    QLabel, QPushButton, QLineEdit, QSpinBox, QComboBox, QStyledItemDelegate,
+    QSizePolicy,
 )
 
 from ui.project_dlg_ui import Ui_frm_ProjectPage
@@ -17,135 +18,18 @@ PROJECT_DIR = repo.PROJECT_DIR
 ACTIVE_JOB_FILE = repo.ACTIVE_JOB_FILE
 
 
-from PyQt5.QtWidgets import QDialog, QFormLayout, QSpinBox, QComboBox, QDialogButtonBox, QDesktopWidget
+class _ComboRowDelegate(QStyledItemDelegate):
+    """Fixed popup row height for a QComboBox's dropdown - QSS ::item
+    padding/min-height was confirmed to have no effect on row height in
+    this Qt build (see report_page_manager.py's _PickerItemDelegate,
+    which hit the same thing first), so real control has to go through a
+    delegate's sizeHint instead of a stylesheet, or rows overlap."""
+    ROW_HEIGHT = 60
 
-
-def _position_dialog_near_top(dlg, margin_top=30, use_size_hint=True):
-    """Popups (New Project, Rename Project, New/Edit Job) default to
-    opening centered on screen, which the nam72 on-screen keyboard then
-    sits right on top of/overlaps once it appears for one of the dialog's
-    text fields - push the dialog up near the top of the screen instead,
-    well clear of where the keyboard will dock at the bottom.
-    use_size_hint=False for a dialog that already sets its own explicit
-    size via resize() - calling adjustSize() on top of that would just
-    discard it.
-
-    A plain move() call here (e.g. from __init__) doesn't stick - Qt
-    re-centers a QDialog on its parent internally the moment
-    show()/exec_() actually runs, which overrides any position set
-    beforehand. Wrapping dlg's own showEvent to reposition on every show
-    (not just once) is what actually survives that."""
-    def _do_position():
-        if use_size_hint:
-            dlg.adjustSize()
-        screen = QDesktopWidget().availableGeometry(dlg)
-        x = screen.x() + (screen.width() - dlg.width()) // 2
-        dlg.move(x, screen.y() + margin_top)
-
-    original_show_event = dlg.showEvent
-
-    def _show_event(event):
-        original_show_event(event)
-        _do_position()
-
-    dlg.showEvent = _show_event
-
-
-class NewProjectDlg(QDialog):
-    def __init__(self, parent=None):
-        super().__init__(parent)
-        self.setWindowTitle("New Project")
-
-        layout = QVBoxLayout(self)
-
-        self.edit = QLineEdit(self)
-        self.edit.setPlaceholderText("Enter project name...")
-        self.edit.setMinimumHeight(50)  # dễ bấm trên tablet
-        self.edit.setFocus()            # bắt focus -> bật bàn phím
-        layout.addWidget(self.edit)
-
-        btn_ok = QPushButton("OK")
-        btn_cancel = QPushButton("Cancel")
-        btn_ok.setDefault(True)  # so Enter (incl. from the on-screen keyboard) confirms
-        btn_ok.clicked.connect(self.accept)
-        btn_cancel.clicked.connect(self.reject)
-
-        h = QHBoxLayout()
-        h.addWidget(btn_cancel)
-        h.addWidget(btn_ok)
-        layout.addLayout(h)
-
-        _position_dialog_near_top(self)
-
-    def get_text(self):
-        return self.edit.text()
-
-
-class JobInfoDialog(QDialog):
-    """Dialog để nhập tất cả thông tin cho JobInfo"""
-    def __init__(self, parent=None, default_name=""):
-        super().__init__(parent)
-        self.setWindowTitle("New Job Info")
-        self.resize(600, 400)
-        # ===== Set FONT 24px cho toàn dialog =====
-        self.setStyleSheet("""
-            QLineEdit, QComboBox, QSpinBox, QTextEdit {
-                font-size: 24px;
-                min-height: 60px;
-                min-width: 120px;
-            }
-            QLabel {
-                font-size: 24px;
-            }
-            QDialogButtonBox QPushButton {
-                font-size: 24px;
-                min-height: 60px;
-                min-width: 120px;
-                padding: 10px;
-            }
-        """)
-        # ===== Set font chung =====
-
-        self.name_edit = QLineEdit(default_name)
-        self.status_combo = QComboBox()
-        self.status_combo.addItems([JobInfo.PENDING, JobInfo.ACTIVE, JobInfo.FINISHED])
-        self.description_edit = QLineEdit()
-
-        self.target_thickness_spin = QSpinBox()
-        self.target_thickness_spin.setRange(0, 1000)
-        self.target_thickness_spin.setValue(60)
-
-        self.tolerance_spin = QSpinBox()
-        self.tolerance_spin.setRange(0, 100)
-        self.tolerance_spin.setValue(10)
-
-        layout = QFormLayout()
-        layout.addRow("Job Name:", self.name_edit)
-        layout.addRow("Status:", self.status_combo)
-        layout.addRow("Description:", self.description_edit)
-        layout.addRow("Target Thickness:", self.target_thickness_spin)
-        layout.addRow("Tolerance:", self.tolerance_spin)
-
-        self.buttons = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
-        self.buttons.accepted.connect(self.accept)
-        self.buttons.rejected.connect(self.reject)
-        layout.addRow(self.buttons)
-
-
-        self.setLayout(layout)
-        _position_dialog_near_top(self, use_size_hint=False)
-
-    def get_data(self):
-        """Trả về dict chứa tất cả dữ liệu"""
-        return {
-            "name": self.name_edit.text().strip(),
-            "status": self.status_combo.currentText(),
-            "description": self.description_edit.text().strip(),
-            "parameters": {
-                "target_thickness": self.target_thickness_spin.value(),
-                "tolerance": self.tolerance_spin.value()
-            }
-        }
+    def sizeHint(self, option, index):
+        size = super().sizeHint(option, index)
+        size.setHeight(self.ROW_HEIGHT)
+        return size
 
 
 class ProjectManager(QWidget, Ui_frm_ProjectPage):
@@ -154,7 +38,19 @@ class ProjectManager(QWidget, Ui_frm_ProjectPage):
     the mockup) and 'Work Schedule' (right). Project/job rows are plain
     widgets built and rebuilt in render_projects()/render_schedule() -
     there's no QListWidget selection model here, every row carries its
-    own project/job directly via closures on its buttons."""
+    own project/job directly via closures on its buttons.
+
+    New Project / New Job / Edit Job / Rename Project used to open as
+    separate QDialog popups. On this touchscreen, a popup centered on
+    screen gets covered by the nam72 on-screen keyboard the moment a text
+    field inside it takes focus - repositioning the popup near the top of
+    the screen never reliably stuck (Qt re-centers a QDialog on its
+    parent internally the instant show()/exec_() runs, no matter what
+    position was set beforehand). Inline editing sidesteps the problem
+    entirely: there's no floating window to fight the keyboard over - the
+    input fields are part of this page's own scroll area, and opening one
+    just scrolls it into view above where the keyboard will dock.
+    """
 
     # Emitted right after add_job_to_active/remove_job_from_active change
     # active_jobs.json - App connects this to refresh the header's
@@ -172,6 +68,14 @@ class ProjectManager(QWidget, Ui_frm_ProjectPage):
         # Shared with App (same active_jobs.json cache) instead of each
         # opening an independent JobStore - see project_repository.py.
         self.job_store = job_store or JobStore(repo.ACTIVE_JOB_FILE, repo.CURRENT_JOB_FILE)
+
+        # Inline-edit state - at most one of these is "open" at a time.
+        # None/False means "not editing anything right now".
+        self._creating_project = False          # True while the New Project card is open
+        self._renaming_project = None           # project name being renamed, or None
+        self._job_panel = None                  # (project, job_or_None) - None job = "new job"
+        self._scroll_target = None              # widget to scroll into view after the next render
+        self._focus_target = None               # input field to focus after the next render
 
         self.btnNewProject.clicked.connect(self.new_project)
         self.txtSearchProject.textChanged.connect(lambda _text: self.render_projects())
@@ -197,9 +101,31 @@ class ProjectManager(QWidget, Ui_frm_ProjectPage):
         lbl.setAlignment(QtCore.Qt.AlignCenter)
         return lbl
 
+    _STATUS_BADGE_COLORS = {
+        JobInfo.PENDING: ("#fef3c7", "#92400e"),   # amber
+        JobInfo.ACTIVE: ("#dbeafe", "#1e40af"),     # blue ("Scheduled")
+        JobInfo.FINISHED: ("#dcfce7", "#166534"),   # green
+    }
+
+    def _status_badge(self, status):
+        bg, fg = self._STATUS_BADGE_COLORS.get(status, ("#e2e8f0", "#334155"))
+        badge = QLabel((status or "Unknown").capitalize())
+        badge.setAlignment(QtCore.Qt.AlignCenter)
+        badge.setStyleSheet(
+            f"background-color: {bg}; color: {fg}; font-weight: 700; "
+            "border-radius: 8px; padding: 2px 12px;"
+        )
+        badge.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
+        return badge
+
     def render_projects(self):
         layout = self.projectsListLayout
         self._clear_dynamic_rows(layout)
+        self._scroll_target = None
+        self._focus_target = None
+
+        if self._creating_project:
+            layout.insertWidget(0, self._build_new_project_card())
 
         search = self.txtSearchProject.text().strip().lower()
         any_shown = False
@@ -212,9 +138,40 @@ class ProjectManager(QWidget, Ui_frm_ProjectPage):
             any_shown = True
             layout.insertWidget(layout.count() - 1, self._build_project_card(project, jobs_to_show))
 
-        if not any_shown:
+        if not any_shown and not self._creating_project:
             text = "No projects found." if search else "No projects yet - create one with \"+ New Project\"."
             layout.insertWidget(0, self._empty_label(text))
+
+        # Scroll whatever inline editor just opened into view, above where
+        # the on-screen keyboard will dock - deferred via singleShot(0) so
+        # it runs after this layout pass has actually sized/placed the
+        # new widget (ensureWidgetVisible on a not-yet-laid-out widget is
+        # a no-op).
+        if self._scroll_target is not None:
+            target = self._scroll_target
+            QtCore.QTimer.singleShot(0, lambda: self.projectsScroll.ensureWidgetVisible(target, 0, 80))
+
+        # Same deferral reason as the scroll above - setFocus() called
+        # while the widget was being built (before it's actually part of
+        # the visible layout/window) is silently ignored by Qt, which is
+        # why the field wasn't visibly focused/getting the on-screen
+        # keyboard before this.
+        if self._focus_target is not None:
+            field = self._focus_target
+            QtCore.QTimer.singleShot(0, field.setFocus)
+        else:
+            # Rebuilding this list (e.g. after Schedule/Remove) deletes
+            # whatever row widget currently held focus - Qt's automatic
+            # focus succession then lands on some other newly-built
+            # focusable field (often the search box) even though nothing
+            # here asked to edit text, which pops the on-screen keyboard
+            # for no reason. Explicitly drop focus off of it when we're
+            # not the ones opening an editor.
+            def _clear_stray_focus():
+                w = QApplication.focusWidget()
+                if w is not None:
+                    w.clearFocus()
+            QtCore.QTimer.singleShot(0, _clear_stray_focus)
 
     def _build_project_card(self, project, jobs):
         card = QFrame()
@@ -223,35 +180,103 @@ class ProjectManager(QWidget, Ui_frm_ProjectPage):
         v.setContentsMargins(28, 24, 28, 24)
         v.setSpacing(16)
 
-        header = QHBoxLayout()
-        header.setSpacing(12)
-        title = QLabel(f"Project: {project}")
-        title.setObjectName("projectHeaderLabel")
-        header.addWidget(title)
-        header.addStretch(1)
+        if self._renaming_project == project:
+            v.addLayout(self._build_rename_project_header(project))
+        else:
+            header = QHBoxLayout()
+            header.setSpacing(12)
+            title = QLabel(f"Project: {project}")
+            title.setObjectName("projectHeaderLabel")
+            header.addWidget(title)
+            header.addStretch(1)
 
-        btn_add_job = QPushButton("+ Add Job")
-        btn_add_job.setProperty("cssClass", "rowPrimaryBtn")
-        btn_add_job.clicked.connect(lambda _checked, p=project: self.new_job(p))
-        header.addWidget(btn_add_job)
+            btn_add_job = QPushButton("+ Add Job")
+            btn_add_job.setProperty("cssClass", "rowPrimaryBtn")
+            btn_add_job.clicked.connect(lambda _checked, p=project: self.new_job(p))
+            header.addWidget(btn_add_job)
 
-        btn_rename = QPushButton("Rename")
-        btn_rename.setProperty("cssClass", "rowActionBtn")
-        btn_rename.clicked.connect(lambda _checked, p=project: self.rename_project(p))
-        header.addWidget(btn_rename)
+            btn_rename = QPushButton("Rename")
+            btn_rename.setProperty("cssClass", "rowActionBtn")
+            btn_rename.clicked.connect(lambda _checked, p=project: self.rename_project(p))
+            header.addWidget(btn_rename)
 
-        btn_delete = QPushButton("Delete")
-        btn_delete.setProperty("cssClass", "rowDangerBtn")
-        btn_delete.clicked.connect(lambda _checked, p=project: self.delete_project(p))
-        header.addWidget(btn_delete)
+            btn_delete = QPushButton("Delete")
+            btn_delete.setProperty("cssClass", "rowDangerBtn")
+            btn_delete.clicked.connect(lambda _checked, p=project: self.delete_project(p))
+            header.addWidget(btn_delete)
 
-        v.addLayout(header)
+            v.addLayout(header)
+
+        if self._job_panel == (project, None):
+            v.addWidget(self._build_job_edit_panel(project, None))
 
         if not jobs:
             v.addWidget(self._empty_label("No jobs yet."))
         for job in jobs:
-            v.addWidget(self._build_job_row(project, job))
+            if self._job_panel == (project, job):
+                v.addWidget(self._build_job_edit_panel(project, job))
+            else:
+                v.addWidget(self._build_job_row(project, job))
 
+        return card
+
+    def _build_rename_project_header(self, project):
+        header = QHBoxLayout()
+        header.setSpacing(12)
+
+        edit = QLineEdit(project)
+        edit.setObjectName("jobEditField")
+        edit.setMinimumHeight(50)
+        header.addWidget(edit, 1)
+
+        btn_cancel = QPushButton("Cancel")
+        btn_cancel.setProperty("cssClass", "rowActionBtn")
+        btn_cancel.clicked.connect(self._cancel_rename_project)
+        header.addWidget(btn_cancel)
+
+        btn_save = QPushButton("Save")
+        btn_save.setProperty("cssClass", "rowPrimaryBtn")
+        btn_save.clicked.connect(lambda _checked, p=project, e=edit: self._commit_rename_project(p, e.text()))
+        header.addWidget(btn_save)
+
+        edit.returnPressed.connect(lambda p=project, e=edit: self._commit_rename_project(p, e.text()))
+        self._scroll_target = edit
+        self._focus_target = edit
+        return header
+
+    def _build_new_project_card(self):
+        card = QFrame()
+        card.setObjectName("projectCard")
+        v = QVBoxLayout(card)
+        v.setContentsMargins(28, 24, 28, 24)
+        v.setSpacing(12)
+
+        title = QLabel("New Project")
+        title.setObjectName("projectHeaderLabel")
+        v.addWidget(title)
+
+        edit = QLineEdit()
+        edit.setObjectName("jobEditField")
+        edit.setPlaceholderText("Enter project name...")
+        edit.setMinimumHeight(50)
+        v.addWidget(edit)
+
+        btn_row = QHBoxLayout()
+        btn_row.addStretch(1)
+        btn_cancel = QPushButton("Cancel")
+        btn_cancel.setProperty("cssClass", "rowActionBtn")
+        btn_cancel.clicked.connect(self._cancel_new_project)
+        btn_row.addWidget(btn_cancel)
+
+        btn_save = QPushButton("Save")
+        btn_save.setProperty("cssClass", "rowPrimaryBtn")
+        btn_save.clicked.connect(lambda _checked, e=edit: self._commit_new_project(e.text()))
+        btn_row.addWidget(btn_save)
+        v.addLayout(btn_row)
+
+        edit.returnPressed.connect(lambda e=edit: self._commit_new_project(e.text()))
+        self._scroll_target = card
+        self._focus_target = edit
         return card
 
     def _build_job_row(self, project, job):
@@ -272,6 +297,14 @@ class ProjectManager(QWidget, Ui_frm_ProjectPage):
         subtext = QLabel(f"Created: {created}")
         subtext.setObjectName("jobRowSubtext")
         info.addWidget(subtext)
+
+        status_row = QHBoxLayout()
+        status_row.setSpacing(6)
+        status_row.addWidget(QLabel("Status:"), 0)
+        status_row.itemAt(0).widget().setObjectName("jobRowSubtext")
+        status_row.addWidget(self._status_badge(job_info.status if job_info else None), 0)
+        status_row.addStretch(1)
+        info.addLayout(status_row)
         h.addLayout(info)
         h.addStretch(1)
 
@@ -295,6 +328,85 @@ class ProjectManager(QWidget, Ui_frm_ProjectPage):
         h.addWidget(btn_delete)
 
         return row
+
+    def _build_job_edit_panel(self, project, job):
+        """Inline replacement for the old JobInfoDialog popup - used for
+        both "New Job" (job=None) and "Edit Job" (job=an existing job
+        name), same fields either way."""
+        job_info = repo.load_job_info(project, job) if job else None
+
+        panel = QFrame()
+        panel.setObjectName("jobEditPanel")
+        v = QVBoxLayout(panel)
+        v.setContentsMargins(24, 20, 24, 20)
+        v.setSpacing(10)
+
+        title = QLabel("Edit Job" if job else "New Job")
+        title.setObjectName("jobRowTitle")
+        v.addWidget(title)
+
+        name_edit = QLineEdit(job_info.name if job_info else "")
+        name_edit.setObjectName("jobEditField")
+        name_edit.setMinimumHeight(50)
+
+        status_combo = QComboBox()
+        status_combo.addItems([JobInfo.PENDING, JobInfo.ACTIVE, JobInfo.FINISHED])
+        status_combo.setMinimumHeight(50)
+        status_combo.setItemDelegate(_ComboRowDelegate(status_combo))
+        if job_info:
+            status_combo.setCurrentText(job_info.status)
+
+        description_edit = QLineEdit(job_info.description if job_info else "")
+        description_edit.setObjectName("jobEditField")
+        description_edit.setMinimumHeight(50)
+
+        thickness_spin = QSpinBox()
+        thickness_spin.setRange(0, 1000)
+        thickness_spin.setMinimumHeight(50)
+        thickness_spin.setValue(job_info.parameters.get("target_thickness", 60) if job_info else 60)
+
+        tolerance_spin = QSpinBox()
+        tolerance_spin.setRange(0, 100)
+        tolerance_spin.setMinimumHeight(50)
+        tolerance_spin.setValue(job_info.parameters.get("tolerance", 10) if job_info else 10)
+
+        # Each field stacked as its own label-above-field block (not a
+        # QFormLayout's side-by-side columns) - at this panel's width, a
+        # 2-column form squeezed the field column too narrow and the
+        # combo/spinbox text overlapped its own label. Full-width fields
+        # stacked vertically can't collide with anything next to them.
+        for caption, field in (
+            ("Job Name:", name_edit),
+            ("Status:", status_combo),
+            ("Description:", description_edit),
+            ("Target Thickness:", thickness_spin),
+            ("Tolerance:", tolerance_spin),
+        ):
+            label = QLabel(caption)
+            label.setObjectName("jobEditFieldLabel")
+            v.addWidget(label)
+            v.addWidget(field)
+
+        btn_row = QHBoxLayout()
+        btn_row.addStretch(1)
+        btn_cancel = QPushButton("Cancel")
+        btn_cancel.setProperty("cssClass", "rowActionBtn")
+        btn_cancel.clicked.connect(self._cancel_job_panel)
+        btn_row.addWidget(btn_cancel)
+
+        btn_save = QPushButton("Save")
+        btn_save.setProperty("cssClass", "rowPrimaryBtn")
+        btn_save.clicked.connect(
+            lambda _checked, p=project, j=job, ne=name_edit, sc=status_combo, de=description_edit,
+                   ts=thickness_spin, tl=tolerance_spin:
+            self._commit_job_panel(p, j, ne, sc, de, ts, tl)
+        )
+        btn_row.addWidget(btn_save)
+        v.addLayout(btn_row)
+
+        self._scroll_target = panel
+        self._focus_target = name_edit
+        return panel
 
     def render_schedule(self):
         layout = self.scheduleListLayout
@@ -321,12 +433,20 @@ class ProjectManager(QWidget, Ui_frm_ProjectPage):
         info.addWidget(title)
 
         job_info = repo.load_job_info(project, job)
-        status = job_info.status.capitalize() if job_info else "Unknown"
-        subtext = QLabel(f"Status: {status}")
-        subtext.setObjectName("scheduleSubtext")
-        info.addWidget(subtext)
+        status_row = QHBoxLayout()
+        status_row.setSpacing(6)
+        status_row.addWidget(QLabel("Status:"), 0)
+        status_row.itemAt(0).widget().setObjectName("scheduleSubtext")
+        status_row.addWidget(self._status_badge(job_info.status if job_info else None), 0)
+        status_row.addStretch(1)
+        info.addLayout(status_row)
         h.addLayout(info)
         h.addStretch(1)
+
+        btn_finish = QPushButton("Finish")
+        btn_finish.setProperty("cssClass", "rowPrimaryBtn")
+        btn_finish.clicked.connect(lambda _checked, p=project, j=job: self.finish_job(p, j))
+        h.addWidget(btn_finish)
 
         btn_remove = QPushButton("Remove")
         btn_remove.setProperty("cssClass", "rowDangerBtn")
@@ -339,11 +459,15 @@ class ProjectManager(QWidget, Ui_frm_ProjectPage):
     #      PROJECT ACTIONS
     # =========================
     def new_project(self):
-        dlg = NewProjectDlg(self)
-        if dlg.exec_() != QDialog.Accepted:
-            return
+        self._creating_project = True
+        self.render_projects()
 
-        name = dlg.get_text().strip()
+    def _cancel_new_project(self):
+        self._creating_project = False
+        self.render_projects()
+
+    def _commit_new_project(self, name):
+        name = name.strip()
         if not name:
             return
 
@@ -353,6 +477,7 @@ class ProjectManager(QWidget, Ui_frm_ProjectPage):
             QMessageBox.warning(self, "Exists", str(e))
             return
 
+        self._creating_project = False
         self.render_projects()
 
     def rename_project(self, old_name):
@@ -361,16 +486,19 @@ class ProjectManager(QWidget, Ui_frm_ProjectPage):
                 QMessageBox.warning(self, "Active Job", "Cannot rename a project with active jobs. Please remove its jobs from active jobs first.")
                 return
 
-        dlg = QInputDialog(self)
-        dlg.setWindowTitle("Rename Project")
-        dlg.setLabelText("Enter new name:")
-        dlg.setTextValue(old_name)
-        _position_dialog_near_top(dlg)
-        ok = dlg.exec_() == QDialog.Accepted
-        new_name = dlg.textValue()
-        if not ok or not new_name.strip() or new_name == old_name:
-            return
+        self._renaming_project = old_name
+        self.render_projects()
+
+    def _cancel_rename_project(self):
+        self._renaming_project = None
+        self.render_projects()
+
+    def _commit_rename_project(self, old_name, new_name):
         new_name = new_name.strip()
+        if not new_name or new_name == old_name:
+            self._renaming_project = None
+            self.render_projects()
+            return
 
         try:
             repo.rename_project(old_name, new_name)
@@ -379,6 +507,7 @@ class ProjectManager(QWidget, Ui_frm_ProjectPage):
             return
 
         self.job_store.rename_active_job_project(old_name, new_name)
+        self._renaming_project = None
         self.render_projects()
         self.render_schedule()
 
@@ -407,30 +536,7 @@ class ProjectManager(QWidget, Ui_frm_ProjectPage):
         carries its own project context - no top-bar "+ New Job" button
         exists any more (a job with no project to belong to doesn't make
         sense in this card layout)."""
-        dlg = JobInfoDialog(self)
-        if dlg.exec() != QDialog.Accepted:
-            return  # user cancel
-
-        data = dlg.get_data()
-        name = data["name"]
-        if not name:
-            QMessageBox.warning(self, "Invalid Name", "Job name cannot be empty.")
-            return
-
-        job_info = JobInfo(
-            name=name,
-            created=datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-            status=data["status"],
-            description=data["description"],
-            parameters=data["parameters"]
-        )
-
-        try:
-            repo.create_job(project, job_info)
-        except repo.ProjectError as e:
-            QMessageBox.warning(self, "Exists", str(e))
-            return
-
+        self._job_panel = (project, None)
         self.render_projects()
 
     def edit_job(self, project, job):
@@ -439,44 +545,65 @@ class ProjectManager(QWidget, Ui_frm_ProjectPage):
                 QMessageBox.warning(self, "Active Job", "Cannot edit an active job. Please remove it from active jobs first.")
                 return
 
-        job_info = repo.load_job_info(project, job)
-        if not job_info:
-            QMessageBox.critical(self, "Error", f"Cannot load job_info.json for {job}")
+        self._job_panel = (project, job)
+        self.render_projects()
+
+    def _cancel_job_panel(self):
+        self._job_panel = None
+        self.render_projects()
+
+    def _commit_job_panel(self, project, job, name_edit, status_combo, description_edit, thickness_spin, tolerance_spin):
+        name = name_edit.text().strip()
+        if not name:
+            QMessageBox.warning(self, "Invalid Name", "Job name cannot be empty.")
             return
 
-        dlg = JobInfoDialog(self, default_name=job_info.name)
-        dlg.name_edit.setText(job_info.name)
-        dlg.status_combo.setCurrentText(job_info.status)
-        dlg.description_edit.setText(job_info.description)
-        dlg.target_thickness_spin.setValue(job_info.parameters.get("target_thickness", 60))
-        dlg.tolerance_spin.setValue(job_info.parameters.get("tolerance", 17))
+        status = status_combo.currentText()
+        description = description_edit.text().strip()
+        parameters = {
+            "target_thickness": thickness_spin.value(),
+            "tolerance": tolerance_spin.value(),
+        }
 
-        if dlg.exec() != QDialog.Accepted:
-            return  # user cancel
-
-        data = dlg.get_data()
-        new_name = data["name"]
-
-        if new_name != job:
+        if job is None:
+            job_info = JobInfo(
+                name=name,
+                created=datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                status=status,
+                description=description,
+                parameters=parameters,
+            )
             try:
-                repo.rename_job(project, job, new_name)
+                repo.create_job(project, job_info)
             except repo.ProjectError as e:
                 QMessageBox.warning(self, "Exists", str(e))
                 return
-            self.job_store.rename_active_job(project, job, new_name)
-            job = new_name
+        else:
+            job_info = repo.load_job_info(project, job)
+            if not job_info:
+                QMessageBox.critical(self, "Error", f"Cannot load job_info.json for {job}")
+                return
 
-        job_info.name = new_name
-        job_info.status = data["status"]
-        job_info.description = data["description"]
-        job_info.parameters = data["parameters"]
+            if name != job:
+                try:
+                    repo.rename_job(project, job, name)
+                except repo.ProjectError as e:
+                    QMessageBox.warning(self, "Exists", str(e))
+                    return
+                self.job_store.rename_active_job(project, job, name)
 
-        try:
-            repo.save_job_info(project, job_info)
-        except OSError as e:
-            QMessageBox.critical(self, "Error", f"Unable to save job info:\n{e}")
-            return
+            job_info.name = name
+            job_info.status = status
+            job_info.description = description
+            job_info.parameters = parameters
 
+            try:
+                repo.save_job_info(project, job_info)
+            except OSError as e:
+                QMessageBox.critical(self, "Error", f"Unable to save job info:\n{e}")
+                return
+
+        self._job_panel = None
         self.render_projects()
 
     def delete_job(self, project, job):
@@ -495,15 +622,49 @@ class ProjectManager(QWidget, Ui_frm_ProjectPage):
     #     ACTIVE JOB SECTION
     # =========================
     def add_job_to_active(self, project, job):
+        job_info = repo.load_job_info(project, job)
+        if job_info and job_info.status == JobInfo.FINISHED:
+            if QMessageBox.question(
+                self,
+                "Job Finished",
+                f"Job '{job}' is already Finished.\nDo you want to reset it to Pending and schedule it again?",
+            ) != QMessageBox.Yes:
+                return
+            job_info.status = JobInfo.PENDING
+            repo.save_job_info(project, job_info)
+
         if not self.job_store.add_active_job(project, job):
             QMessageBox.information(self, "Exists", f"Job '{job}' is already active.")
             return
+
+        job_info = repo.load_job_info(project, job)
+        if job_info and job_info.status != JobInfo.FINISHED:
+            job_info.status = JobInfo.ACTIVE
+            repo.save_job_info(project, job_info)
+
         self.render_schedule()
         self.render_projects()  # job's own "Schedule" button needs to flip to "Scheduled"
         self.active_jobs_changed.emit()
 
     def remove_job_from_active(self, project, job):
         self.job_store.remove_active_job(project, job)
+
+        job_info = repo.load_job_info(project, job)
+        if job_info and job_info.status == JobInfo.ACTIVE:
+            job_info.status = JobInfo.PENDING
+            repo.save_job_info(project, job_info)
+
         self.render_schedule()
         self.render_projects()  # job's own "Schedule" button needs to flip back
+        self.active_jobs_changed.emit()
+
+    def finish_job(self, project, job):
+        job_info = repo.load_job_info(project, job)
+        if job_info:
+            job_info.status = JobInfo.FINISHED
+            repo.save_job_info(project, job_info)
+
+        self.job_store.remove_active_job(project, job)
+        self.render_schedule()
+        self.render_projects()
         self.active_jobs_changed.emit()

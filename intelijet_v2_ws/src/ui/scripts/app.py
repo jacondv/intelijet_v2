@@ -32,6 +32,7 @@ from ui.intelijet_ui import Ui_MainWindow
 from ui.keyboard import TouchKeyboard
 
 from ui.notification_center import NotificationCenter, LEVEL_COLORS
+from ui.widgets.picker_item_delegate import PickerItemDelegate
 from ui.notification_history_dialog import NotificationHistoryDialog
 from ui.diagnostics_tab import DiagnosticsTab
 
@@ -200,6 +201,11 @@ class App(QMainWindow):
         self.ui.btnSetHome.released.connect(self.confirm_and_send_sethome)
 
         # --- Select Job to work process ---
+        # Same popup-row delegate as the REPORT tab's Project/Job pickers -
+        # marks the current selection with a checkmark, gives rows real
+        # spacing/height (QSS ::item rules don't reliably apply in this Qt
+        # build - see PickerItemDelegate's docstring).
+        self.ui.cbbJobSelect.setItemDelegate(PickerItemDelegate(self.ui.cbbJobSelect))
         self._populate_job_combobox()
         self.load_current_job()
         # self.ui.cbbJobSelect.currentIndexChanged.connect(self.on_job_changed)
@@ -243,7 +249,7 @@ class App(QMainWindow):
         )
         self.ui.statusbar.addPermanentWidget(self.lblModeVersion)
 
-        self.lblNotification = QLabel("Ready")
+        self.lblNotification = QLabel("No Notifications")
         self.lblNotification.setStyleSheet("margin-left: 5px;")
         # A long message (e.g. a full error string) makes this QLabel's
         # sizeHint() grow past the window width, since it's added directly
