@@ -21,6 +21,7 @@ from PyQt5.QtWidgets import (
 
 from shared.error_codes import lookup as lookup_error_code
 from ui.notification_center import LEVEL_COLORS, LOG_DATE_FORMAT, read_log
+from ui.widgets.picker_item_delegate import PickerItemDelegate
 
 LEVEL_FILTERS = ["All Levels", "Info", "Warning", "Error"]
 ALL_SOURCES = "All Sources"
@@ -145,7 +146,9 @@ class DiagnosticsTab(QWidget):
         self._level_filter = QComboBox(card)
         self._level_filter.setMinimumHeight(56)
         self._level_filter.addItems(LEVEL_FILTERS)
+        self._level_filter.setCurrentIndex(LEVEL_FILTERS.index("Error"))
         self._level_filter.setStyleSheet(control_style)
+        self._level_filter.setItemDelegate(PickerItemDelegate(self._level_filter))
         self._level_filter.currentIndexChanged.connect(self._rebuild_table)
         grid.addLayout(self._labeled_field("LEVEL", self._level_filter), 0, 1)
 
@@ -155,6 +158,7 @@ class DiagnosticsTab(QWidget):
         self._source_filter.addItem(ALL_SOURCES)
         self._source_filter.addItems(self._sources)
         self._source_filter.setStyleSheet(control_style)
+        self._source_filter.setItemDelegate(PickerItemDelegate(self._source_filter))
         self._source_filter.currentIndexChanged.connect(self._rebuild_table)
         grid.addLayout(self._labeled_field("SOURCE", self._source_filter), 0, 2)
 
@@ -212,7 +216,7 @@ class DiagnosticsTab(QWidget):
     def _open_date_picker(self):
         dlg = QDialog(self)
         dlg.setWindowTitle("Select Date")
-        dlg.resize(560, 480)
+        dlg.resize(840, 720)
         dlg.setStyleSheet(f"QDialog {{ background-color: {BG_CARD}; }}")
         layout = QVBoxLayout(dlg)
 
@@ -221,16 +225,16 @@ class DiagnosticsTab(QWidget):
         calendar.setSelectedDate(self._selected_date)
         calendar.setGridVisible(True)
         calendar.setStyleSheet(
-            f"QCalendarWidget {{ background-color: {BG_CARD}; font-size: 18px; }}"
+            f"QCalendarWidget {{ background-color: {BG_CARD}; font-size: 27px; }}"
             f"QCalendarWidget QWidget {{ background-color: {BG_CARD}; alternate-background-color: {BG_CARD}; }}"
             f"QCalendarWidget QToolButton {{"
-            f"    font-size: 20px; height: 48px; color: {TEXT_PRIMARY};"
+            f"    font-size: 30px; height: 72px; color: {TEXT_PRIMARY};"
             f"    background-color: {BG_CARD}; border: none; border-radius: 0px;"
             f"}}"
             f"QCalendarWidget QToolButton:hover {{ background-color: {BG_CARD_ALT}; }}"
             f"QCalendarWidget QMenu {{ background-color: {BG_CARD_ALT}; color: {TEXT_PRIMARY}; }}"
             f"QCalendarWidget QAbstractItemView {{"
-            f"    font-size: 20px; color: {TEXT_PRIMARY}; background-color: {BG_CARD};"
+            f"    font-size: 30px; color: {TEXT_PRIMARY}; background-color: {BG_CARD};"
             f"    selection-background-color: {ACCENT}; selection-color: #FFFFFF;"
             f"}}"
             f"QCalendarWidget QAbstractItemView:disabled {{ color: #A9BACB; }}"

@@ -84,6 +84,63 @@ QScrollArea > QWidget > QWidget {{ background: transparent; }}
     background: transparent; border: none;
     color: {TEXT_MUTED}; font-size: {FONT_SUBTEXT}; font-weight: 600;
 }}
+/* Inline New/Edit Job panel and New Project/Rename Project's inline text
+   field - replaces the old JobInfoDialog/NewProjectDlg popups (see
+   ProjectManager's docstring for why: a popup can't reliably dodge the
+   on-screen keyboard on this touchscreen, an inline field just scrolls
+   into view above it instead). */
+#jobEditPanel {{
+    background-color: {CARD_BG};
+    border: 2px solid {ACCENT_YELLOW};
+    border-radius: 8px;
+}}
+#jobEditField, #jobEditPanel QComboBox, #jobEditPanel QSpinBox {{
+    background-color: {ROW_BG};
+    color: {TEXT};
+    border: 1px solid {BORDER};
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-size: {FONT_VALUE};
+    font-weight: 600;
+}}
+#jobEditPanel QComboBox {{
+    padding-right: 52px;
+}}
+#jobEditFieldLabel {{
+    background: transparent; border: none;
+    color: {TEXT_MUTED}; font-size: {FONT_SUBTEXT}; font-weight: 700;
+    margin-top: 6px;
+}}
+#jobEditPanel QComboBox::drop-down {{
+    width: 44px;
+    border: none;
+}}
+/* The dropdown popup is a separate top-level view, not a child of
+   #jobEditPanel, so it needs its own selector - without this it falls
+   back to Qt's tiny default popup styling (small font, cramped padding),
+   which is what was clipping/obscuring the Status items. Row height
+   itself is NOT set here (::item min-height has no effect in this Qt
+   build - see _ComboRowDelegate in project_dlg_manager.py, which is
+   what actually fixes the overlapping rows). */
+#jobEditPanel QComboBox QAbstractItemView {{
+    background-color: {CARD_BG};
+    color: {TEXT};
+    border: 1px solid {BORDER};
+    font-size: {FONT_VALUE};
+    padding: 6px;
+    outline: none;
+}}
+#jobEditPanel QComboBox QAbstractItemView::item {{
+    padding: 8px 14px;
+}}
+#jobEditPanel QComboBox QAbstractItemView::item:selected {{
+    background-color: {ACCENT_YELLOW};
+    color: #153E42;
+}}
+#jobEditPanel QLabel {{
+    background: transparent; border: none;
+    color: {TEXT}; font-size: {FONT_SUBTEXT}; font-weight: 700;
+}}
 #scheduleCard {{
     background-color: {ROW_BG};
     border: 1px solid {BORDER};
@@ -107,9 +164,9 @@ QPushButton[cssClass="rowActionBtn"] {{
     color: {TEXT};
     border: 1px solid {BORDER};
     border-radius: 8px;
-    padding: 20px 22px;
-    font-size: {FONT_BUTTON};
-    font-weight: 700;
+    padding: 18px 26px;
+    font-size: {FONT_BUTTON_PRIMARY};
+    font-weight: 800;
 }}
 QPushButton[cssClass="rowActionBtn"]:hover {{ border-color: {ACCENT_YELLOW}; }}
 QPushButton[cssClass="rowDangerBtn"] {{
@@ -117,9 +174,9 @@ QPushButton[cssClass="rowDangerBtn"] {{
     color: {ACCENT_RED};
     border: 1px solid {ACCENT_RED};
     border-radius: 8px;
-    padding: 20px 22px;
-    font-size: {FONT_BUTTON};
-    font-weight: 700;
+    padding: 18px 26px;
+    font-size: {FONT_BUTTON_PRIMARY};
+    font-weight: 800;
 }}
 QPushButton[cssClass="rowDangerBtn"]:hover {{ background-color: {ACCENT_RED}; color: white; }}
 QPushButton[cssClass="rowPrimaryBtn"] {{

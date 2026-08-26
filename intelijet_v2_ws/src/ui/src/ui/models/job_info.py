@@ -5,16 +5,16 @@ import json
 class JobInfo:
 
     PENDING = "pending"
-    ACTIVE = "active"
+    ACTIVE = "scheduled"
     FINISHED = "finished"
     INFO_FILE = "job_info.json"
-    
+
     VALID_STATUSES = {PENDING, ACTIVE, FINISHED}
 
     def __init__(self, name: str, created: str = None,  status:str = None, description: str = "", parameters: dict = None):
         self.name = name
         self.created = created or datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        self.status = status      # pending / active / completed
+        self.status = status      # pending / scheduled / finished
         self.description = description
         self.parameters = parameters or {}
 
@@ -34,17 +34,20 @@ class JobInfo:
             with open(path, "r") as f:
                 data = json.load(f)
             return cls.from_dict(data)
-        except (OSError, IOError, json.JSONDecodeError) as e:
+        except (OSError, IOError, json.JSONDecodeError, ValueError) as e:
             print(f"[Error] Failed to load JobInfo: {e}")
             return None
 
 
     @classmethod
     def from_dict(cls, data: dict):
+        status = data.get("status", cls.PENDING)
+        if status == "active":  # legacy value, renamed to "scheduled"
+            status = cls.ACTIVE
         return cls(
             name=data.get("name", ""),
             created=data.get("created"),
-            status=data.get("status", cls.PENDING),
+            status=status,
             description=data.get("description", ""),
             parameters=data.get("parameters", {})
         )
