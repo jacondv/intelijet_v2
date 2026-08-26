@@ -133,17 +133,6 @@ QLineEdit[cssClass="pickerSearchBox"]:focus {{ border-color: {ACCENT_YELLOW}; }}
 }}
 #btnCurrentJob:hover {{ border-color: {ACCENT_YELLOW}; color: {ACCENT_YELLOW_HOVER}; }}
 QScrollArea {{ background: transparent; border: none; }}
-/* Segment List's vertical scrollbar, ~1.5x a default scrollbar's width
-   so it's easier to grab on a touchscreen. */
-#filesScroll QScrollBar:vertical {{
-    width: 28px; background: {LIGHT_BG}; margin: 0px; border-radius: 6px;
-}}
-#filesScroll QScrollBar::handle:vertical {{
-    background: #cbd5e1; min-height: 40px; border-radius: 6px;
-}}
-#filesScroll QScrollBar::handle:vertical:hover {{ background: #94a3b8; }}
-#filesScroll QScrollBar::add-line:vertical, #filesScroll QScrollBar::sub-line:vertical {{ height: 0px; }}
-#filesScroll QScrollBar::add-page:vertical, #filesScroll QScrollBar::sub-page:vertical {{ background: transparent; }}
 QScrollArea > QWidget > QWidget {{ background: transparent; }}
 
 /* ---- Segment grouping: one card per scan_id (Pre-Scan + its Post-Scans) ---- */

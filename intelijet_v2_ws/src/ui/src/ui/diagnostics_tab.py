@@ -22,6 +22,10 @@ from PyQt5.QtWidgets import (
 from shared.error_codes import lookup as lookup_error_code
 from ui.notification_center import LEVEL_COLORS, LOG_DATE_FORMAT, read_log
 from ui.widgets.picker_item_delegate import PickerItemDelegate
+from ui.style_tokens import (
+    LIGHT_BG, CARD_BG, ROW_BG, ACCENT_YELLOW,
+    BORDER as BORDER_TOKEN, TEXT, TEXT_MUTED as TEXT_MUTED_TOKEN,
+)
 
 LEVEL_FILTERS = ["All Levels", "Info", "Warning", "Error"]
 ALL_SOURCES = "All Sources"
@@ -31,17 +35,19 @@ ROW_HEIGHT = 64
 TABLE_FONT_SIZE = 24
 DIALOG_FONT_SIZE = 32
 
-# ---- HMI light theme palette (matches the app's existing industrial
-# blue/white theme - see intelijet_ui.py - rather than introducing a new
-# color scheme) ----
-BG_PAGE = "#EAF2F8"
-BG_CARD = "#FFFFFF"
-BG_CARD_ALT = "#F4F8FB"
-BG_HEADER = "#FFFFFF"
-BORDER = "#C7D6E3"
-TEXT_PRIMARY = "#1F2D3A"
-TEXT_MUTED = "#5C7080"
-ACCENT = "#2F4F6E"
+# ---- Shared light-card palette (same tokens as style_tokens.py, used by
+# JOB/SYSTEM/REPORT) - kept as local names here since severity colors
+# below need their own dedicated constants anyway. ----
+BG_PAGE = LIGHT_BG
+BG_CARD = CARD_BG
+BG_CARD_ALT = ROW_BG
+BG_HEADER = CARD_BG
+BORDER = BORDER_TOKEN
+TEXT_PRIMARY = TEXT
+TEXT_MUTED = TEXT_MUTED_TOKEN
+ACCENT = ACCENT_YELLOW
+CARD_RADIUS = "10px"
+FIELD_RADIUS = "8px"
 LEVEL_ERROR = "#E74C3C"
 LEVEL_WARN = "#F39C12"
 LEVEL_INFO = "#22A559"
@@ -59,6 +65,12 @@ ROW_TINTS = {"error": ROW_ERROR_BG, "warning": ROW_WARN_BG}
 class DiagnosticsTab(QWidget):
     def __init__(self, notification_center, parent=None):
         super().__init__(parent)
+        # A plain QWidget doesn't paint its stylesheet's background-color
+        # by default (only styled widgets like QFrame do) - without this
+        # attribute, this page's background falls through to whatever the
+        # parent QStackedWidget/QMainWindow paints (the app's dark theme),
+        # not the light gray set in _build_ui().
+        self.setAttribute(Qt.WA_StyledBackground, True)
         self._notification_center = notification_center
         self._today = date_cls.today().strftime(LOG_DATE_FORMAT)
         self._viewing_date = self._today  # date currently shown; only "today" gets live updates
@@ -75,8 +87,8 @@ class DiagnosticsTab(QWidget):
         self.setStyleSheet(f"QWidget {{ background-color: {BG_PAGE}; color: {TEXT_PRIMARY}; }}")
 
         layout = QVBoxLayout(self)
-        layout.setContentsMargins(16, 16, 16, 16)
-        layout.setSpacing(14)
+        layout.setContentsMargins(40, 40, 40, 40)
+        layout.setSpacing(32)
 
         layout.addWidget(self._build_header())
         layout.addWidget(self._build_filter_toolbar())
@@ -86,10 +98,10 @@ class DiagnosticsTab(QWidget):
         header = QFrame(self)
         header.setStyleSheet(
             f"QFrame {{ background-color: {BG_HEADER}; border: 1px solid {BORDER};"
-            f" border-left: 6px solid {ACCENT}; }}"
+            f" border-left: 6px solid {ACCENT}; border-radius: {CARD_RADIUS}; }}"
         )
         header_layout = QHBoxLayout(header)
-        header_layout.setContentsMargins(20, 14, 20, 14)
+        header_layout.setContentsMargins(36, 28, 36, 28)
         title = QLabel("HMI System Alarm & Event Log", header)
         title.setStyleSheet(f"font-size: 28px; font-weight: bold; color: {TEXT_PRIMARY}; border: none;")
         header_layout.addWidget(title)
@@ -103,7 +115,7 @@ class DiagnosticsTab(QWidget):
             f"    background-color: {BG_CARD_ALT};"
             f"    color: {TEXT_PRIMARY};"
             f"    border: 1px solid {BORDER};"
-            f"    border-radius: 0px;"
+            f"    border-radius: {FIELD_RADIUS};"
             f"    padding: 8px 12px;"
             f"    font-size: 22px;"
             f"}}"
@@ -111,7 +123,7 @@ class DiagnosticsTab(QWidget):
             f"QComboBox::drop-down {{ border: none; width: 36px; }}"
             f"QComboBox QAbstractItemView {{"
             f"    background-color: {BG_CARD_ALT}; color: {TEXT_PRIMARY};"
-            f"    selection-background-color: {ACCENT}; selection-color: #FFFFFF; font-size: 20px;"
+            f"    selection-background-color: {ACCENT}; selection-color: #153E42; font-size: 20px;"
             f"}}"
         )
 
@@ -126,9 +138,12 @@ class DiagnosticsTab(QWidget):
 
     def _build_filter_toolbar(self):
         card = QFrame(self)
-        card.setStyleSheet(f"QFrame {{ background-color: {BG_CARD}; border: 1px solid {BORDER}; }}")
+        card.setStyleSheet(
+            f"QFrame {{ background-color: {BG_CARD}; border: 1px solid {BORDER};"
+            f" border-radius: {CARD_RADIUS}; }}"
+        )
         grid = QGridLayout(card)
-        grid.setContentsMargins(20, 18, 20, 18)
+        grid.setContentsMargins(36, 36, 36, 36)
         grid.setHorizontalSpacing(24)
         grid.setVerticalSpacing(14)
 
@@ -190,10 +205,11 @@ class DiagnosticsTab(QWidget):
             f"    alternate-background-color: {BG_CARD_ALT};"
             f"    gridline-color: {BORDER};"
             f"    border: 1px solid {BORDER};"
+            f"    border-radius: {CARD_RADIUS};"
             f"    font-size: {TABLE_FONT_SIZE}px;"
             f"}}"
             f"QTableWidget::item {{ border: none; padding: 4px 10px; }}"
-            f"QTableWidget::item:selected {{ background-color: {ACCENT}; color: #FFFFFF; }}"
+            f"QTableWidget::item:selected {{ background-color: {ACCENT}; color: #153E42; }}"
             f"QHeaderView::section {{"
             f"    background-color: {BG_HEADER};"
             f"    color: {TEXT_MUTED};"
@@ -235,7 +251,7 @@ class DiagnosticsTab(QWidget):
             f"QCalendarWidget QMenu {{ background-color: {BG_CARD_ALT}; color: {TEXT_PRIMARY}; }}"
             f"QCalendarWidget QAbstractItemView {{"
             f"    font-size: 30px; color: {TEXT_PRIMARY}; background-color: {BG_CARD};"
-            f"    selection-background-color: {ACCENT}; selection-color: #FFFFFF;"
+            f"    selection-background-color: {ACCENT}; selection-color: #153E42;"
             f"}}"
             f"QCalendarWidget QAbstractItemView:disabled {{ color: #A9BACB; }}"
         )

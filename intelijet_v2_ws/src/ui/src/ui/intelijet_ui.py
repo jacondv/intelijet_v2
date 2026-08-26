@@ -794,7 +794,7 @@ QLabel {{
         self.tab_system.setObjectName("tab_system")
         self.verticalLayout_5 = QtWidgets.QVBoxLayout(self.tab_system)
         self.verticalLayout_5.setObjectName("verticalLayout_5")
-        self.verticalLayout_5.setContentsMargins(24, 24, 24, 24)
+        self.verticalLayout_5.setContentsMargins(40, 40, 40, 40)
         self.systemGrid = QtWidgets.QHBoxLayout()
         self.systemGrid.setSpacing(20)
         self.verticalLayout_5.addLayout(self.systemGrid)
