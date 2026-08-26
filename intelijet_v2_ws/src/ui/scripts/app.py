@@ -485,6 +485,11 @@ class App(QMainWindow):
             self.showFullScreen()
             self.ui.btnFullScreen.setToolTip("Exit Full Screen")
         else:
+            # Some window managers won't go straight from FullScreen to
+            # Maximized (they just restore to the last windowed geometry
+            # instead) - showNormal() first forces a clean state so
+            # showMaximized() actually lands maximized.
+            self.showNormal()
             self.showMaximized()
             self.ui.btnFullScreen.setToolTip("Full Screen")
 
