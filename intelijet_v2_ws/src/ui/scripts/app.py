@@ -28,7 +28,7 @@ from ui.status_binder import StatusBinder
 
 from shared.pps_command import PPSCommand
 
-from ui.intelijet_ui import Ui_MainWindow 
+from ui.intelijet_ui import Ui_MainWindow, draw_app_icon
 from ui.keyboard import TouchKeyboard
 
 from ui.notification_center import NotificationCenter, LEVEL_COLORS
@@ -757,6 +757,9 @@ if __name__ == "__main__":
     app = QApplication(sys.argv)
     # Load style QSS tại đây
 
+    app_icon = draw_app_icon()
+    app.setWindowIcon(app_icon)
+
     keyboard_filter = TouchKeyboard()
     app.installEventFilter(keyboard_filter)
 
@@ -764,5 +767,6 @@ if __name__ == "__main__":
         app.setStyleSheet(f.read())
 
     viewer = App()
+    viewer.setWindowIcon(app_icon)
     viewer.showFullScreen()
     sys.exit(app.exec_())
