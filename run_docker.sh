@@ -20,6 +20,11 @@ if ! id -nG "$USER" | grep -qw docker; then
     exit 1
 fi
 
+# Only one Intelijet version should touch the real hardware/ROS master at
+# once (every version uses --network host) - stop the other test-version
+# container (see run_intelijet_v2_1.sh) first.
+docker stop intelijet_v2_1 >/dev/null 2>&1 || true
+
 # Let the container connect to this session's X server. Belt-and-suspenders
 # alongside docker-compose.yml's Xauthority mount (the main mechanism) -
 # some X server/session setups need this too. Not swallowed silently
