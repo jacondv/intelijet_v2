@@ -9,6 +9,7 @@
 # can put things back exactly, even on a machine you've never seen before.
 #
 # Usage (needs root - it edits systemd units and another user's dotfiles):
+#   sudo ./kiosk_mode.sh                     # no args: interactive menu
 #   sudo ./kiosk_mode.sh enable [username]   # username defaults to $SUDO_USER
 #   sudo ./kiosk_mode.sh restore
 #   sudo ./kiosk_mode.sh status
@@ -130,7 +131,15 @@ openbox &
 xset s off
 xset -dpms
 xset s noblank
-exec $REPO_DIR/run_docker.sh
+"$REPO_DIR/run_docker.sh"
+# run_docker.sh only starts the container in detached mode (docker compose
+# up -d) and returns within a few seconds - it does NOT block for the app's
+# lifetime. Without something after it to keep this script running, xinit
+# treats the script finishing as "the X session is over" and tears down the
+# X server, which (via getty autologin -> .bash_profile -> exec startx)
+# immediately restarts the whole thing - an infinite boot loop that flips
+# between a bare console and the app window instead of ever settling.
+exec tail -f /dev/null
 $MARK_END
 EOF
     chmod +x "$XINITRC"
@@ -194,12 +203,36 @@ cmd_restore() {
     echo "    sudo reboot"
 }
 
+cmd_menu() {
+    require_root
+    echo "=== Intelijet Kiosk Mode ==="
+    cmd_status
+    echo ""
+    echo "1) Enable kiosk mode (boot straight to app, no desktop)"
+    echo "2) Restore normal desktop"
+    echo "3) Show status only"
+    echo "4) Exit"
+    read -rp "Choose [1-4]: " choice
+    case "$choice" in
+        1)
+            read -rp "Username to autologin as [${SUDO_USER:-$USER}]: " kiosk_user
+            kiosk_user="${kiosk_user:-${SUDO_USER:-$USER}}"
+            cmd_enable "$kiosk_user"
+            ;;
+        2) cmd_restore ;;
+        3) cmd_status ;;
+        4) exit 0 ;;
+        *) echo "Invalid choice." >&2; exit 1 ;;
+    esac
+}
+
 case "${1:-}" in
     enable)  shift; cmd_enable "$@" ;;
     restore) cmd_restore ;;
     status)  cmd_status ;;
+    "")      cmd_menu ;;
     *)
-        echo "Usage: sudo $0 {enable [username]|restore|status}" >&2
+        echo "Usage: sudo $0 [enable [username]|restore|status]" >&2
         exit 1
         ;;
 esac
