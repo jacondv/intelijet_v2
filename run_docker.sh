@@ -35,6 +35,7 @@ fi
 # Tablet screen rotation - no-op (harmless) on machines/monitors without a
 # DSI-1 output.
 xrandr --output DSI-1 --rotate right 2>/dev/null || true
+xrandr --output DSI1 --rotate right 2>/dev/null || true
 
 # Lock orientation so GNOME's auto-rotate (accelerometer-driven, via
 # iio-sensor-proxy on tablet hardware) doesn't undo the xrandr rotation
