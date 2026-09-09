@@ -11,7 +11,9 @@
 # Usage (needs root - it edits systemd units and another user's dotfiles):
 #   sudo ./kiosk_mode.sh                     # no args: interactive menu
 #   sudo ./kiosk_mode.sh enable [username]   # username defaults to $SUDO_USER
-#   sudo ./kiosk_mode.sh restore
+#   sudo ./kiosk_mode.sh restore [username]  # username only needed as a
+#                                             # fallback if the state file
+#                                             # from 'enable' is gone
 #   sudo ./kiosk_mode.sh status
 set -euo pipefail
 
@@ -35,6 +37,20 @@ detect_display_manager() {
     else
         echo ""
     fi
+}
+
+# Fallback for when display-manager.service isn't symlinked (so
+# detect_display_manager returns empty) - happens if it was never enabled at
+# all, e.g. left disabled from an earlier failed kiosk toggle. Finds
+# whichever known display manager's unit file actually exists on disk.
+find_any_display_manager() {
+    for dm in gdm3 gdm lightdm sddm; do
+        if [ -f "/lib/systemd/system/$dm.service" ] || [ -f "/usr/lib/systemd/system/$dm.service" ]; then
+            echo "$dm"
+            return 0
+        fi
+    done
+    echo ""
 }
 
 cmd_status() {
@@ -161,37 +177,68 @@ EOF
 
 cmd_restore() {
     require_root
-    if [ ! -f "$STATE_FILE" ]; then
-        echo "Kiosk mode isn't enabled (no $STATE_FILE) - nothing to restore."
-        exit 0
+    if [ -f "$STATE_FILE" ]; then
+        # shellcheck disable=SC1090
+        source "$STATE_FILE"
+    else
+        echo ">>> No $STATE_FILE found (already restored, or state was lost) -"
+        echo "    doing a best-effort restore anyway."
+        KIOSK_USER="${1:-${SUDO_USER:-}}"
+        if [ -z "$KIOSK_USER" ]; then
+            read -rp "Username to clean up (whose .bash_profile/.xinitrc): " KIOSK_USER
+        fi
+        KIOSK_HOME="$(getent passwd "$KIOSK_USER" 2>/dev/null | cut -d: -f6 || true)"
+        DISPLAY_MANAGER=""
     fi
-    # shellcheck disable=SC1090
-    source "$STATE_FILE"
 
-    if [ -n "${DISPLAY_MANAGER:-}" ]; then
-        echo ">>> Re-enabling $DISPLAY_MANAGER..."
-        systemctl enable "$DISPLAY_MANAGER"
+    # Always unmask - a plain `disable` never masks, but this machine may
+    # have had `systemctl mask getty@tty1` run by hand during troubleshooting
+    # (mask is a distinct, stronger state than disable and does NOT get
+    # undone by re-enabling or by removing the override file below - it
+    # blocks the unit from starting at all until explicitly unmasked, which
+    # is exactly what stops tty1/GDM from coming up).
+    echo ">>> Ensuring getty@tty1 isn't masked..."
+    systemctl unmask getty@tty1 2>/dev/null || true
+
+    DM_TO_ENABLE="${DISPLAY_MANAGER:-}"
+    if [ -z "$DM_TO_ENABLE" ]; then
+        DM_TO_ENABLE="$(detect_display_manager)"
+    fi
+    if [ -z "$DM_TO_ENABLE" ]; then
+        DM_TO_ENABLE="$(find_any_display_manager)"
+    fi
+    if [ -n "$DM_TO_ENABLE" ]; then
+        echo ">>> Re-enabling $DM_TO_ENABLE..."
+        systemctl enable "$DM_TO_ENABLE"
+    else
+        echo ">>> WARNING: could not find any display manager (gdm3/gdm/lightdm/sddm) to re-enable." >&2
+        echo "    The machine may still boot to a text console - install/configure one manually if so." >&2
     fi
 
     echo ">>> Removing tty1 autologin override..."
     rm -f "$GETTY_OVERRIDE_FILE"
     systemctl daemon-reload
 
-    BASH_PROFILE="$KIOSK_HOME/.bash_profile"
-    if [ -f "$BASH_PROFILE" ] && grep -qF "$MARK_BEGIN" "$BASH_PROFILE"; then
-        echo ">>> Removing kiosk autostart block from $BASH_PROFILE..."
-        sed -i "/$MARK_BEGIN/,/$MARK_END/d" "$BASH_PROFILE"
-    fi
-
-    XINITRC="$KIOSK_HOME/.xinitrc"
-    if [ -f "$XINITRC" ] && grep -qF "$MARK_BEGIN" "$XINITRC"; then
-        if [ -f "$XINITRC.pre-kiosk.bak" ]; then
-            echo ">>> Restoring original $XINITRC from backup..."
-            mv "$XINITRC.pre-kiosk.bak" "$XINITRC"
-        else
-            echo ">>> Removing $XINITRC (was created by kiosk mode, no prior version existed)..."
-            rm -f "$XINITRC"
+    if [ -n "${KIOSK_HOME:-}" ] && [ -d "$KIOSK_HOME" ]; then
+        BASH_PROFILE="$KIOSK_HOME/.bash_profile"
+        if [ -f "$BASH_PROFILE" ] && grep -qF "$MARK_BEGIN" "$BASH_PROFILE"; then
+            echo ">>> Removing kiosk autostart block from $BASH_PROFILE..."
+            sed -i "/$MARK_BEGIN/,/$MARK_END/d" "$BASH_PROFILE"
         fi
+
+        XINITRC="$KIOSK_HOME/.xinitrc"
+        if [ -f "$XINITRC" ] && grep -qF "$MARK_BEGIN" "$XINITRC"; then
+            if [ -f "$XINITRC.pre-kiosk.bak" ]; then
+                echo ">>> Restoring original $XINITRC from backup..."
+                mv "$XINITRC.pre-kiosk.bak" "$XINITRC"
+            else
+                echo ">>> Removing $XINITRC (was created by kiosk mode, no prior version existed)..."
+                rm -f "$XINITRC"
+            fi
+        fi
+    else
+        echo ">>> WARNING: don't know which user's home directory to clean up (.bash_profile/.xinitrc)." >&2
+        echo "    Run: sudo $0 restore <username> if kiosk mode was set up for a specific user." >&2
     fi
 
     echo ">>> Note: TeamViewer is left running as a systemd service (harmless alongside a normal desktop) - not reverted."
@@ -228,11 +275,11 @@ cmd_menu() {
 
 case "${1:-}" in
     enable)  shift; cmd_enable "$@" ;;
-    restore) cmd_restore ;;
+    restore) shift; cmd_restore "$@" ;;
     status)  cmd_status ;;
     "")      cmd_menu ;;
     *)
-        echo "Usage: sudo $0 [enable [username]|restore|status]" >&2
+        echo "Usage: sudo $0 [enable [username]|restore [username]|status]" >&2
         exit 1
         ;;
 esac
