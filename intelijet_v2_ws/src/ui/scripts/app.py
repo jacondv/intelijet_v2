@@ -16,6 +16,7 @@ from PyQt5.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QLabel, QWid
 from PyQt5.QtCore import pyqtSignal, QTimer, Qt
 from PyQt5.QtWidgets import QMessageBox
 from PyQt5.QtCore import QSettings
+from PyQt5.QtGui import QIcon
 
 
 from vtk_viewer import VTKViewer
@@ -755,6 +756,9 @@ class App(QMainWindow):
 if __name__ == "__main__":
 
     app = QApplication(sys.argv)
+    # Sets the icon shown in the taskbar/window switcher for every top-level
+    # window that doesn't set its own (main window, dialogs, ...).
+    app.setWindowIcon(QIcon(f"{BASE_DIR}/PPSicon.png"))
     # Load style QSS tại đây
 
     keyboard_filter = TouchKeyboard()
