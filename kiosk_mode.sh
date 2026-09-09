@@ -6,8 +6,13 @@
 # Usage (needs root):
 #   sudo ./kiosk_mode.sh                     # no args: interactive menu
 #   sudo ./kiosk_mode.sh enable [username]   # username defaults to $SUDO_USER
-#   sudo ./kiosk_mode.sh restore [username]  # username only needed if the
-#                                             # state file from enable is gone
+#   sudo ./kiosk_mode.sh restore [username]  # username only needed to also
+#                                             # clean up .bash_profile/.xinitrc
+#                                             # if the state file is gone.
+#                                             # Safe to run in any state -
+#                                             # never blocks waiting for input,
+#                                             # so it also works as a one-shot
+#                                             # emergency un-brick.
 #   sudo ./kiosk_mode.sh status
 set -uo pipefail
 
@@ -126,7 +131,6 @@ cmd_restore() {
     else
         echo ">>> No state file (already restored, or lost) - best-effort restore."
         KIOSK_USER="${1:-${SUDO_USER:-}}"
-        [ -n "$KIOSK_USER" ] || read -rp "Username to clean up: " KIOSK_USER
         KIOSK_HOME="$(getent passwd "$KIOSK_USER" 2>/dev/null | cut -d: -f6)"
         DISPLAY_MANAGER=""
     fi
@@ -148,6 +152,13 @@ cmd_restore() {
     if [ -n "$DM" ]; then
         echo ">>> Enabling and starting $DM now (not just on next boot)..."
         systemctl enable -f "$DM"
+        # Ubuntu's gdm3 unit ships with no [Install] section, so the line
+        # above is a silent no-op for the one symlink systemd actually
+        # checks at boot - without it, the machine looks fixed right now
+        # (start below brings up gdm for this session) but drops back to
+        # tty1 on every subsequent reboot. Recreate it directly.
+        DM_FRAGMENT="$(systemctl show -p FragmentPath --value "$DM" 2>/dev/null)"
+        [ -n "$DM_FRAGMENT" ] && ln -sf "$DM_FRAGMENT" /etc/systemd/system/display-manager.service
         systemctl start "$DM"
     else
         echo ">>> WARNING: no display manager found to enable." >&2
