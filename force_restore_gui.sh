@@ -10,12 +10,15 @@ set -uo pipefail
 echo ">>> Unmasking getty@tty1 (undoes 'systemctl mask getty@tty1' if it was run)..."
 systemctl unmask getty@tty1 2>/dev/null || true
 
-echo ">>> Re-enabling a display manager..."
-systemctl enable gdm3 2>/dev/null \
-    || systemctl enable gdm 2>/dev/null \
-    || systemctl enable lightdm 2>/dev/null \
-    || systemctl enable sddm 2>/dev/null \
-    || echo "    WARNING: no known display manager (gdm3/gdm/lightdm/sddm) found." >&2
+echo ">>> Enabling and starting a display manager now..."
+for dm in gdm3 gdm lightdm sddm; do
+    if systemctl enable -f "$dm" 2>/dev/null; then
+        systemctl start "$dm"
+        DM_FOUND=1
+        break
+    fi
+done
+[ -n "${DM_FOUND:-}" ] || echo "    WARNING: no known display manager (gdm3/gdm/lightdm/sddm) found." >&2
 
 echo ">>> Removing tty1 autologin override..."
 rm -f /etc/systemd/system/getty@tty1.service.d/override.conf
