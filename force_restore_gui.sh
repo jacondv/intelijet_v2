@@ -10,6 +10,9 @@ set -uo pipefail
 echo ">>> Unmasking getty@tty1 (undoes 'systemctl mask getty@tty1' if it was run)..."
 systemctl unmask getty@tty1 2>/dev/null || true
 
+echo ">>> Ensuring boot target is graphical (not text-only multi-user.target)..."
+systemctl set-default graphical.target 2>/dev/null || true
+
 echo ">>> Enabling and starting a display manager now..."
 for dm in gdm3 gdm lightdm sddm; do
     if systemctl enable -f "$dm" 2>/dev/null; then

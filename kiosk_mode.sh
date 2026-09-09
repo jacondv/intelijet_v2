@@ -137,6 +137,12 @@ cmd_restore() {
     echo ">>> Unmasking getty@tty1..."
     systemctl unmask getty@tty1 2>/dev/null
 
+    # If the boot target was ever switched to multi-user.target (text-only,
+    # no display manager at all), enabling gdm/etc. alone does nothing -
+    # the boot never reaches a graphical target to start it from.
+    echo ">>> Ensuring boot target is graphical..."
+    systemctl set-default graphical.target 2>/dev/null
+
     DM="${DISPLAY_MANAGER:-$(current_dm)}"
     DM="${DM:-$(any_installed_dm)}"
     if [ -n "$DM" ]; then
