@@ -236,13 +236,13 @@ class App(QMainWindow):
 
         # Right (permanent, stays put regardless of the transient
         # notification message): Mode/Version, hand-edited via
-        # config/hmi_display.yaml rather than hardcoded here.
+        # config/machine_info.yaml rather than hardcoded here.
         try:
-            hmi_display = load_yaml_config("hmi_display.yaml")
-            mode = getattr(hmi_display, "mode", "--")
-            version = getattr(hmi_display, "version", "--")
+            machine_info = load_yaml_config("machine_info.yaml")
+            mode = getattr(machine_info, "mode", "--")
+            version = getattr(machine_info, "version", "--")
         except Exception as e:
-            rospy.logwarn(f"Could not load hmi_display.yaml: {e}")
+            rospy.logwarn(f"Could not load machine_info.yaml: {e}")
             mode, version = "--", "--"
         self.lblModeVersion = QLabel(f"Mode: {mode}  |  System Version: {version}")
         self.lblModeVersion.setStyleSheet(
