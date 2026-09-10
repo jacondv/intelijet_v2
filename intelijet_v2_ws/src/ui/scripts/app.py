@@ -16,6 +16,7 @@ from PyQt5.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QLabel, QWid
 from PyQt5.QtCore import pyqtSignal, QTimer, Qt
 from PyQt5.QtWidgets import QMessageBox
 from PyQt5.QtCore import QSettings
+from PyQt5.QtGui import QIcon
 
 
 from vtk_viewer import VTKViewer
@@ -28,7 +29,7 @@ from ui.status_binder import StatusBinder
 
 from shared.pps_command import PPSCommand
 
-from ui.intelijet_ui import Ui_MainWindow, draw_app_icon
+from ui.intelijet_ui import Ui_MainWindow
 from ui.keyboard import TouchKeyboard
 
 from ui.notification_center import NotificationCenter, LEVEL_COLORS
@@ -755,10 +756,13 @@ class App(QMainWindow):
 if __name__ == "__main__":
 
     app = QApplication(sys.argv)
-    # Load style QSS tại đây
-
-    app_icon = draw_app_icon()
+    # Sets the icon shown in the taskbar/window switcher for every top-level
+    # window that doesn't set its own (main window, dialogs, ...) - PPSicon.png
+    # is also the desktop launcher's Icon= (see install.sh), so startup and
+    # taskbar now show the same icon instead of the drawn "J" placeholder.
+    app_icon = QIcon(f"{BASE_DIR}/PPSicon.png")
     app.setWindowIcon(app_icon)
+    # Load style QSS tại đây
 
     keyboard_filter = TouchKeyboard()
     app.installEventFilter(keyboard_filter)
