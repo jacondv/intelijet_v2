@@ -58,6 +58,9 @@ BADGE_WARN_BG = "#FDECD1"
 BADGE_INFO_BG = "#DAF3E4"
 
 BADGE_COLORS = {"error": LEVEL_ERROR, "warning": LEVEL_WARN, "info": LEVEL_INFO}
+# Severity order for sorting by the Level column - higher is more severe,
+# so clicking Level ascending shows Info->Warning->Error.
+LEVEL_RANK = {"info": 0, "warning": 1, "error": 2}
 BADGE_BG_COLORS = {"error": BADGE_ERROR_BG, "warning": BADGE_WARN_BG, "info": BADGE_INFO_BG}
 ROW_TINTS = {"error": ROW_ERROR_BG, "warning": ROW_WARN_BG}
 
@@ -76,6 +79,10 @@ class DiagnosticsTab(QWidget):
         self._viewing_date = self._today  # date currently shown; only "today" gets live updates
         self._all_items = list(notification_center.history())
         self._sources = sorted({item["source"] for item in self._all_items})
+        # Timestamp column, newest first - matches the previous hardcoded
+        # default before header-click sorting existed.
+        self._sort_column = 0
+        self._sort_ascending = False
 
         self._build_ui()
         self._rebuild_table()
@@ -177,29 +184,17 @@ class DiagnosticsTab(QWidget):
         self._source_filter.currentIndexChanged.connect(self._rebuild_table)
         grid.addLayout(self._labeled_field("SOURCE", self._source_filter), 0, 2)
 
-        # Sort order - Newest First is the long-standing default (matches
-        # the old hardcoded reverse=True), Oldest First is the added option.
-        self._sort_order = QComboBox(card)
-        self._sort_order.setMinimumHeight(56)
-        self._sort_order.addItem("Newest First", "desc")
-        self._sort_order.addItem("Oldest First", "asc")
-        self._sort_order.setStyleSheet(control_style)
-        self._sort_order.setItemDelegate(PickerItemDelegate(self._sort_order))
-        self._sort_order.currentIndexChanged.connect(self._rebuild_table)
-        grid.addLayout(self._labeled_field("SORT BY TIME", self._sort_order), 0, 3)
-
         # Search - spans the full width, second row
         self._search_box = QLineEdit(card)
         self._search_box.setMinimumHeight(56)
         self._search_box.setPlaceholderText("Filter by message content...")
         self._search_box.setStyleSheet(control_style)
         self._search_box.textChanged.connect(self._rebuild_table)
-        grid.addLayout(self._labeled_field("SEARCH MESSAGE", self._search_box), 1, 0, 1, 4)
+        grid.addLayout(self._labeled_field("SEARCH MESSAGE", self._search_box), 1, 0, 1, 3)
 
         grid.setColumnStretch(0, 1)
         grid.setColumnStretch(1, 1)
         grid.setColumnStretch(2, 1)
-        grid.setColumnStretch(3, 1)
         return card
 
     def _build_table(self):
@@ -237,8 +232,29 @@ class DiagnosticsTab(QWidget):
         header.setSectionResizeMode(1, QHeaderView.ResizeToContents)
         header.setSectionResizeMode(2, QHeaderView.ResizeToContents)
         header.setSectionResizeMode(3, QHeaderView.Stretch)
+        # Click-to-sort headers instead of a separate sort dropdown -
+        # standard grid convention (Excel, Windows Event Viewer): click a
+        # column to sort by it, click again to flip direction. Manual
+        # (not QTableWidget's built-in setSortingEnabled) because the
+        # Level column is a cell widget (badge), which Qt's own sort
+        # doesn't reorder correctly - see _rebuild_table/_sort_key.
+        header.setSectionsClickable(True)
+        header.setSortIndicatorShown(True)
+        header.sectionClicked.connect(self._on_header_clicked)
+        header.setSortIndicator(self._sort_column, Qt.DescendingOrder)
         self._table.itemDoubleClicked.connect(self._show_item_detail)
         return self._table
+
+    def _on_header_clicked(self, column):
+        if column == self._sort_column:
+            self._sort_ascending = not self._sort_ascending
+        else:
+            self._sort_column = column
+            self._sort_ascending = True
+        self._table.horizontalHeader().setSortIndicator(
+            self._sort_column, Qt.AscendingOrder if self._sort_ascending else Qt.DescendingOrder
+        )
+        self._rebuild_table()
 
     # ----------------- Date selection -----------------
     def _open_date_picker(self):
@@ -312,11 +328,19 @@ class DiagnosticsTab(QWidget):
             self._source_filter.addItem(item["source"])
             self._source_filter.blockSignals(False)
         if self._matches_filter(item):
-            if self._sort_order.currentData() == "asc":
-                self._append_row(item)  # oldest-first view - new entry belongs at the bottom
+            # A live push only has an unambiguous "correct" slot to insert
+            # into when sorted by Timestamp (new items are the newest by
+            # definition). Sorted by any other column, where a new item
+            # lands among existing values isn't knowable without a real
+            # sort, so just rebuild - live pushes are infrequent enough
+            # for this to be cheap.
+            if self._sort_column != 0:
+                self._rebuild_table()
+            elif self._sort_ascending:
+                self._append_row(item)  # oldest-first - new entry belongs at the bottom
                 self._table.scrollToBottom()
             else:
-                self._append_row(item, row=0)  # newest-first view (default)
+                self._append_row(item, row=0)  # newest-first (default)
                 self._table.scrollToTop()
 
     def _matches_filter(self, item):
@@ -331,11 +355,19 @@ class DiagnosticsTab(QWidget):
             return False
         return True
 
+    def _sort_key(self, item):
+        if self._sort_column == 1:
+            return LEVEL_RANK.get(item.get("level", "info").lower(), 0)
+        if self._sort_column == 2:
+            return item.get("source", "").lower()
+        if self._sort_column == 3:
+            return item.get("message", "").lower()
+        return item["timestamp"]  # column 0, and the fallback default
+
     def _rebuild_table(self, *_args):
         self._table.setRowCount(0)
         filtered = [item for item in self._all_items if self._matches_filter(item)]
-        newest_first = self._sort_order.currentData() != "asc"
-        filtered.sort(key=lambda i: i["timestamp"], reverse=newest_first)
+        filtered.sort(key=self._sort_key, reverse=not self._sort_ascending)
         for item in filtered:
             self._append_row(item)
         self._table.scrollToTop()
