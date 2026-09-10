@@ -382,6 +382,17 @@ class DiagnosticsTab(QWidget):
         if not item:
             return
 
+        # Only one Alarm Detail window at a time - close whatever's open
+        # before building the next one, instead of letting popups pile up
+        # (there's no taskbar/alt-tab on this touchscreen kiosk to manage
+        # a stack of them, so a second click needs to replace, not add).
+        existing = getattr(self, "_detail_dlg", None)
+        if existing is not None:
+            try:
+                existing.close()
+            except RuntimeError:
+                pass  # already destroyed (WA_DeleteOnClose beat us to it)
+
         ts = time.strftime("%d/%m/%Y %H:%M:%S", time.localtime(item["timestamp"]))
         level = item.get("level", "info").upper()
         color = BADGE_COLORS.get(item.get("level", "info"), TEXT_MUTED)
@@ -460,3 +471,8 @@ class DiagnosticsTab(QWidget):
         dlg.setModal(False)  # movable, non-blocking - user can keep working while it's open
         self._detail_dlg = dlg  # keep a reference so it isn't garbage-collected while shown
         dlg.show()
+        # show() alone doesn't guarantee top stacking order on every WM -
+        # raise_()+activateWindow() is the standard Qt one-two for "make
+        # this the frontmost, focused window right now".
+        dlg.raise_()
+        dlg.activateWindow()
