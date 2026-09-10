@@ -55,6 +55,7 @@ def parse_job_ref(text, sep="/"):
 SORT_NAME_ASC = "name_asc"
 SORT_NAME_DESC = "name_desc"
 SORT_DATE_DESC = "date_desc"  # newest created first
+SORT_DATE_ASC = "date_asc"    # oldest created first
 
 # Kept as the plain alphabetical order every existing caller (report
 # picker, tests) already relies on. The Job tab's project list defaults
@@ -81,9 +82,10 @@ def list_projects(sort_mode=DEFAULT_SORT_MODE):
         return sorted(names, key=str.lower)
     if sort_mode == SORT_NAME_DESC:
         return sorted(names, key=str.lower, reverse=True)
-    return sorted(
-        names, key=lambda n: os.path.getctime(os.path.join(PROJECT_DIR, n)), reverse=True
-    )
+    by_ctime = sorted(names, key=lambda n: os.path.getctime(os.path.join(PROJECT_DIR, n)))
+    if sort_mode == SORT_DATE_ASC:
+        return by_ctime
+    return list(reversed(by_ctime))  # SORT_DATE_DESC (default)
 
 
 def list_jobs(project):
