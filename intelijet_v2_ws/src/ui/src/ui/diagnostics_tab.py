@@ -177,17 +177,29 @@ class DiagnosticsTab(QWidget):
         self._source_filter.currentIndexChanged.connect(self._rebuild_table)
         grid.addLayout(self._labeled_field("SOURCE", self._source_filter), 0, 2)
 
+        # Sort order - Newest First is the long-standing default (matches
+        # the old hardcoded reverse=True), Oldest First is the added option.
+        self._sort_order = QComboBox(card)
+        self._sort_order.setMinimumHeight(56)
+        self._sort_order.addItem("Newest First", "desc")
+        self._sort_order.addItem("Oldest First", "asc")
+        self._sort_order.setStyleSheet(control_style)
+        self._sort_order.setItemDelegate(PickerItemDelegate(self._sort_order))
+        self._sort_order.currentIndexChanged.connect(self._rebuild_table)
+        grid.addLayout(self._labeled_field("SORT BY TIME", self._sort_order), 0, 3)
+
         # Search - spans the full width, second row
         self._search_box = QLineEdit(card)
         self._search_box.setMinimumHeight(56)
         self._search_box.setPlaceholderText("Filter by message content...")
         self._search_box.setStyleSheet(control_style)
         self._search_box.textChanged.connect(self._rebuild_table)
-        grid.addLayout(self._labeled_field("SEARCH MESSAGE", self._search_box), 1, 0, 1, 3)
+        grid.addLayout(self._labeled_field("SEARCH MESSAGE", self._search_box), 1, 0, 1, 4)
 
         grid.setColumnStretch(0, 1)
         grid.setColumnStretch(1, 1)
         grid.setColumnStretch(2, 1)
+        grid.setColumnStretch(3, 1)
         return card
 
     def _build_table(self):
@@ -300,8 +312,12 @@ class DiagnosticsTab(QWidget):
             self._source_filter.addItem(item["source"])
             self._source_filter.blockSignals(False)
         if self._matches_filter(item):
-            self._append_row(item, row=0)  # newest first
-            self._table.scrollToTop()
+            if self._sort_order.currentData() == "asc":
+                self._append_row(item)  # oldest-first view - new entry belongs at the bottom
+                self._table.scrollToBottom()
+            else:
+                self._append_row(item, row=0)  # newest-first view (default)
+                self._table.scrollToTop()
 
     def _matches_filter(self, item):
         level_choice = self._level_filter.currentText()
@@ -318,7 +334,8 @@ class DiagnosticsTab(QWidget):
     def _rebuild_table(self, *_args):
         self._table.setRowCount(0)
         filtered = [item for item in self._all_items if self._matches_filter(item)]
-        filtered.sort(key=lambda i: i["timestamp"], reverse=True)  # newest first
+        newest_first = self._sort_order.currentData() != "asc"
+        filtered.sort(key=lambda i: i["timestamp"], reverse=newest_first)
         for item in filtered:
             self._append_row(item)
         self._table.scrollToTop()
