@@ -222,12 +222,16 @@ class DiagnosticsTab(QWidget):
             f"    color: {TEXT_MUTED};"
             f"    border: none;"
             f"    border-bottom: 2px solid {BORDER};"
-            f"    padding: 10px;"
+            f"    padding: 15px 10px;"
             f"    font-size: 18px;"
             f"    font-weight: bold;"
             f"}}"
         )
         header = self._table.horizontalHeader()
+        # +50% over the ~44px the padding/font alone would produce -
+        # header sections are now click-to-sort, so they need to be as
+        # easy to tap accurately as any other control on this touchscreen.
+        header.setMinimumHeight(66)
         header.setSectionResizeMode(0, QHeaderView.ResizeToContents)
         header.setSectionResizeMode(1, QHeaderView.ResizeToContents)
         header.setSectionResizeMode(2, QHeaderView.ResizeToContents)
