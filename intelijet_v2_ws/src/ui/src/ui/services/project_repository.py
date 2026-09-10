@@ -52,14 +52,40 @@ def parse_job_ref(text, sep="/"):
     return parts[0], parts[1]
 
 
-def list_projects():
-    """Sorted project names on disk (Syncthing junk filtered out).
-    Creates PROJECT_DIR if it doesn't exist yet."""
+SORT_NAME_ASC = "name_asc"
+SORT_NAME_DESC = "name_desc"
+SORT_DATE_DESC = "date_desc"  # newest created first
+SORT_DATE_ASC = "date_asc"    # oldest created first
+
+# Kept as the plain alphabetical order every existing caller (report
+# picker, tests) already relies on. The Job tab's project list defaults
+# to SORT_DATE_DESC instead, but does so explicitly (see
+# project_dlg_manager.py) rather than by changing this module default.
+DEFAULT_SORT_MODE = SORT_NAME_ASC
+
+
+def list_projects(sort_mode=DEFAULT_SORT_MODE):
+    """Project names on disk (Syncthing junk filtered out), ordered per
+    `sort_mode`. Creates PROJECT_DIR if it doesn't exist yet.
+
+    Projects carry no creation-date metadata of their own (unlike jobs -
+    see JobInfo.created), so "creation date" uses the project folder's
+    filesystem ctime, same convention already used for date sort in
+    report_page_manager.py.
+    """
     os.makedirs(PROJECT_DIR, exist_ok=True)
-    return sorted(
+    names = [
         name for name in os.listdir(PROJECT_DIR)
         if not is_sync_junk(name) and os.path.isdir(os.path.join(PROJECT_DIR, name))
-    )
+    ]
+    if sort_mode == SORT_NAME_ASC:
+        return sorted(names, key=str.lower)
+    if sort_mode == SORT_NAME_DESC:
+        return sorted(names, key=str.lower, reverse=True)
+    by_ctime = sorted(names, key=lambda n: os.path.getctime(os.path.join(PROJECT_DIR, n)))
+    if sort_mode == SORT_DATE_ASC:
+        return by_ctime
+    return list(reversed(by_ctime))  # SORT_DATE_DESC (default)
 
 
 def list_jobs(project):

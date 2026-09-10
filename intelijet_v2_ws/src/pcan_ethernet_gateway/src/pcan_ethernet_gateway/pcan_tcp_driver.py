@@ -5,20 +5,18 @@ from can_msgs.msg import Frame
 
 # This class is responsible for sending CAN frames over TCP to the PCAN Gateway
 # |Can device| <-CAN frame-> |PCAN Gateway| <-TCP frame-> |PCAN Gateway Node| <-ROS can_msgs-> ROS Topic
+#
+# Required PCAN-Gateway web UI settings for the Send/Receive routes used here
+# (Device > User Management > Expert mode, then Routing > Edit Route):
+#   - Handshake: OFF   ("PCAN-Gateway handshake off" checkbox) - required for
+#     plain socket communication; a PC is not a PCAN-Gateway peer.
+#   - CRC32 checksum: OFF - this driver assumes classic CAN 2.0 A/B frames
+#     without CRC (Message Type 0x80, 36-byte frame). Enabling CRC makes the
+#     gateway send 40-byte frames (Message Type 0x81) and FRAME_SIZE below
+#     must change to match, or the byte stream will desync.
+#   - CAN FD: not supported by this driver (PCAN-Ethernet Gateway DR only).
 
-FRAME_SIZE = 36  # Fixed frame size in bytes
-
-
-def log_tcp_frame(frame: bytes):
-    header    = frame[0:20]
-    dlc       = frame[21]
-    flags     = frame[23]
-    can_id    = int.from_bytes(frame[24:28], "big")
-    data      = frame[28:28 + dlc]
-    rospy.loginfo(f"Header: {header.hex()}")
-    rospy.loginfo(f"DLC: {dlc}, Flags: 0x{flags:02X}")
-    rospy.loginfo(f"CAN ID: 0x{can_id:X}")
-    rospy.loginfo(f"Data: {[hex(b) for b in data]}")
+FRAME_SIZE = 36  # Fixed frame size in bytes (classic CAN 2.0 A/B, no CRC)
 
 
 # ─────────────────────────────────────────────
@@ -59,7 +57,6 @@ class PcanTcpSender:
 
         data  = list(msg.data[:msg.dlc])
         frame = self._encode_can_to_tcp(msg.id, data, is_extended=msg.is_extended)
-        log_tcp_frame(frame)
 
         try:
             self.sock.sendall(frame)    # sendall guarantees full 36 bytes are sent
