@@ -11,7 +11,7 @@
 # Adding a new code: add an entry below, then pass code="XXX-NNN" to the
 # matching notify() call (or notification_center.push()) - no other file
 # needs to change. Read directly (not merged into last_used.yaml), same
-# convention as hmi_display.yaml/storage_cleanup.yaml, so editing the
+# convention as machine_info.yaml/storage_cleanup.yaml, so editing the
 # guide text here takes effect immediately, no restart needed.
 
 SCAN-001:

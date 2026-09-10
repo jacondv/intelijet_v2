@@ -3,7 +3,7 @@
 The actual codes (message/level/guide per code) live in
 config/error_codes.yaml - not here - so editing the troubleshooting guide
 text is a plain YAML edit, no code change/restart needed (same convention
-as hmi_display.yaml/storage_cleanup.yaml: read directly, not merged into
+as machine_info.yaml/storage_cleanup.yaml: read directly, not merged into
 last_used.yaml, so there's no stale cache to clear). This module just
 loads and looks it up.
 
