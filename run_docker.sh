@@ -90,24 +90,31 @@ echo "Previous run's log saved to: $LOG_DIR/last_run.log"
 
 # Startup (ROS master + all nodes coming up) can take a while with nothing
 # visible on screen - open a terminal tailing the container's logs so the
-# user sees it's progressing, then close that terminal automatically once
-# the UI's actually up (READY_FILE appears) instead of leaving it sitting
-# on top of the app. Best-effort: a missing terminal emulator or a
-# never-arriving marker (timeout) just means no progress terminal, not a
-# failed launch - the app itself doesn't depend on any of this.
-if command -v x-terminal-emulator >/dev/null 2>&1; then
-    x-terminal-emulator -T "Intelijet - đang khởi động..." \
-        -e bash -c "$COMPOSE_CMD logs -f" &
-    LOGS_TERM_PID=$!
-
-    (
-        waited=0
-        while [ ! -f "$READY_FILE" ] && [ "$waited" -lt 120 ] && kill -0 "$LOGS_TERM_PID" 2>/dev/null; do
-            sleep 1
-            waited=$((waited + 1))
-        done
-        kill "$LOGS_TERM_PID" 2>/dev/null
-    ) &
+# user sees it's progressing and can debug any ROS node error. Left open
+# for the whole app session on purpose (not auto-closed once the UI's up).
+#
+# Gated by the SYSTEM tab's Debug Mode switch (app.py's
+# _on_debug_mode_toggled - writes "1"/"0" to this file). Missing file
+# (brand new install, app has never run once to write it) defaults to ON,
+# matching this terminal's long-standing always-on behavior.
+#
+# setsid + disown: this script exits within a couple seconds of spawning
+# the terminal (nothing blocks after this point), and when it's launched
+# from a desktop icon, the desktop environment often tears down the whole
+# process group/session of the launching process on exit - including any
+# plain "&" background job that's still part of that group, even though
+# nothing here ever calls kill on it. setsid detaches the terminal into
+# its own session so it isn't swept up in that cleanup; disown drops it
+# from this shell's job table for the same reason. Best-effort: a missing
+# terminal emulator just means no progress terminal, not a failed launch -
+# the app itself doesn't depend on any of this.
+DEBUG_MODE_FILE="$REPO_DIR/data/.debug_mode"
+if [ "$(cat "$DEBUG_MODE_FILE" 2>/dev/null)" = "0" ]; then
+    echo "Debug Mode is OFF (SYSTEM tab) - skipping the startup log terminal."
+elif command -v x-terminal-emulator >/dev/null 2>&1; then
+    setsid x-terminal-emulator -T "Intelijet - đang khởi động..." \
+        -e bash -c "$COMPOSE_CMD logs -f" < /dev/null > /dev/null 2>&1 &
+    disown
 else
     echo "WARNING: no x-terminal-emulator found - skipping the startup progress terminal." >&2
 fi

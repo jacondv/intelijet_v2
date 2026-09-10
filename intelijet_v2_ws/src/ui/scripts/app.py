@@ -328,9 +328,12 @@ class App(QMainWindow):
 
     def _mark_ui_ready(self):
         """Touch a marker file the moment the main window is about to show.
-        run_docker.sh watches for this (via the host bind mount at
-        data/.ui_ready) to know when to close the startup terminal - see
-        run_docker.sh. Best-effort: startup must never fail because of this."""
+        Bind-mounted to the host at data/.ui_ready - run_docker.sh clears
+        it before each restart, so it's available there as a readiness
+        signal for anything that wants to poll for it (nothing currently
+        does; run_docker.sh's own startup terminal used to auto-close on
+        this but that was removed - see run_docker.sh). Best-effort:
+        startup must never fail because of this."""
         try:
             ready_file = os.path.join(BASE_DIR, DATA_DIR, ".ui_ready")
             os.makedirs(os.path.dirname(ready_file), exist_ok=True)
@@ -338,10 +341,33 @@ class App(QMainWindow):
         except OSError as e:
             rospy.logwarn(f"Could not write UI-ready marker: {e}")
 
+    def _on_debug_mode_toggled(self, checked):
+        """SYSTEM tab's Debug Mode switch. Writes a flag file run_docker.sh
+        reads (host-side, before the app/container even starts) to decide
+        whether to open the startup log terminal - so this can't take
+        effect on the terminal that's already open for the current run,
+        only the next one (see the note label next to the switch).
+        Written immediately on toggle rather than only at closeEvent,
+        since `docker compose down` (run_docker.sh's restart path) doesn't
+        reliably give this process a chance to run closeEvent first.
+
+        Content, not just presence ("1"/"0"), so run_docker.sh can tell
+        "explicitly turned off" apart from "this file doesn't exist yet"
+        (a brand new install, before the app has ever run once to write
+        it) - the latter must still default to ON to match the terminal's
+        long-standing always-on behavior."""
+        flag_file = os.path.join(BASE_DIR, DATA_DIR, ".debug_mode")
+        try:
+            os.makedirs(os.path.dirname(flag_file), exist_ok=True)
+            Path(flag_file).write_text("1" if checked else "0")
+        except OSError as e:
+            rospy.logwarn(f"Could not update debug-mode marker: {e}")
+
     # Setting parameter
     def save_ui_state(self):
         settings.setValue("cbbAutoAlign_on", self.ui.cbbAutoAlign.isChecked())
         settings.setValue("cbbAutoCompare_on", self.ui.cbbAutoCompare.isChecked())
+        settings.setValue("cbbDebugMode_on", self.ui.cbbDebugMode.isChecked())
         settings.setValue("cbbAutoReport_on", self.ui.cbbAutoReport.isChecked())
         settings.setValue("cbbRemoveGround_on", self.ui.cbbRemoveGround.isChecked())
         settings.setValue("cbbUseKeypoint_on", self.ui.cbbUseKeypoint.isChecked())
@@ -359,6 +385,17 @@ class App(QMainWindow):
         self.ui.cbbRemoveGround.setChecked(settings.value("cbbRemoveGround_on", True, type=bool))
         self.ui.cbbUseKeypoint.setChecked(settings.value("cbbUseKeypoint_on", True, type=bool))
         self.ui.cbbUpsample.setChecked(settings.value("cbbUpsample_on", True, type=bool))
+
+        # Default True - matches the startup terminal's behavior before
+        # this switch existed (always shown), so nothing changes for an
+        # operator who's never touched this setting.
+        self.ui.cbbDebugMode.setChecked(settings.value("cbbDebugMode_on", True, type=bool))
+        # Sync the flag file run_docker.sh reads to match right away -
+        # covers first run (file doesn't exist yet) and the case where the
+        # QSettings value and the flag file drifted apart (e.g. the file
+        # was deleted by hand).
+        self._on_debug_mode_toggled(self.ui.cbbDebugMode.isChecked())
+        self.ui.cbbDebugMode.toggled.connect(self._on_debug_mode_toggled)
 
 
     # Update runtime param to ROS
