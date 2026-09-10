@@ -48,6 +48,54 @@ class Ui_frm_ProjectPage(object):
     font-size: {FONT_VALUE};
     font-weight: 600;
 }}
+#sortProjectLabel {{
+    background: transparent; border: none;
+    color: {TEXT_MUTED}; font-size: {FONT_VALUE}; font-weight: 700;
+}}
+/* Styled explicitly as a control (pill + colored drop-down segment +
+   chevron), not the plain-text QComboBox default - operators were
+   reading it as a static label instead of something tappable. */
+#cmbSortProject {{
+    background-color: {ROW_BG};
+    color: {TEXT};
+    border: 1px solid {BORDER};
+    border-radius: 10px;
+    padding: 16px 52px 16px 22px;
+    font-size: {FONT_VALUE};
+    font-weight: 700;
+}}
+#cmbSortProject:hover {{ border: 1px solid {ACCENT_YELLOW_HOVER}; }}
+#cmbSortProject::drop-down {{
+    subcontrol-origin: padding;
+    subcontrol-position: top right;
+    width: 44px;
+    border-left: 1px solid {BORDER};
+    border-top-right-radius: 10px;
+    border-bottom-right-radius: 10px;
+    background-color: {ACCENT_YELLOW};
+}}
+#cmbSortProject::down-arrow {{
+    image: none;
+    width: 0px;
+    height: 0px;
+    border-left: 7px solid transparent;
+    border-right: 7px solid transparent;
+    border-top: 9px solid #153E42;
+    margin-right: 16px;
+}}
+#cmbSortProject QAbstractItemView {{
+    background-color: {CARD_BG};
+    color: {TEXT};
+    border: 1px solid {BORDER};
+    font-size: {FONT_VALUE};
+    padding: 6px;
+    outline: none;
+}}
+#cmbSortProject QAbstractItemView::item {{ padding: 8px 14px; }}
+#cmbSortProject QAbstractItemView::item:selected {{
+    background-color: {ACCENT_YELLOW};
+    color: #153E42;
+}}
 QScrollArea {{ background: transparent; border: none; }}
 QScrollArea > QWidget > QWidget {{ background: transparent; }}
 
@@ -240,9 +288,13 @@ QPushButton[cssClass="rowScheduledBtn"]:hover {{ background-color: #15803d; }}
         self.projectsCardTitle.setObjectName("jobCardTitle")
         self.projectsHeaderRow.addWidget(self.projectsCardTitle)
         self.projectsHeaderRow.addStretch(1)
+        self.lblSortProject = QtWidgets.QLabel("Sort:", self.projectsCard)
+        self.lblSortProject.setObjectName("sortProjectLabel")
+        self.projectsHeaderRow.addWidget(self.lblSortProject)
         self.cmbSortProject = QtWidgets.QComboBox(self.projectsCard)
         self.cmbSortProject.setObjectName("cmbSortProject")
         self.cmbSortProject.setMinimumHeight(88)
+        self.cmbSortProject.setMinimumWidth(220)
         self.cmbSortProject.addItem("Newest", "date_desc")
         self.cmbSortProject.addItem("Oldest", "date_asc")
         self.cmbSortProject.addItem("A to Z", "name_asc")
