@@ -49,6 +49,18 @@ def _set_text(widget, value, fmt="{}"):
         widget.setText(fmt.format(value))
 
 
+def _set_storage_usage(widget, used_and_max):
+    if widget is not None:
+        used, max_gb = used_and_max
+        widget.setText(f"{used:.1f} / {max_gb:.0f} GB")
+
+
+def _set_project_count(widget, count_and_max):
+    if widget is not None:
+        count, max_count = count_and_max
+        widget.setText(f"{count} / {max_count}")
+
+
 def _set_device_label(widget, device):
     set_device_label(widget, device.device_state if device else None)
 
@@ -112,6 +124,16 @@ STATUS_BINDINGS = {
     "txtEncodeValueRaw": BindingRule(
         lambda s: s.encoder_raw,
         lambda w, v: _set_text(w, v, "{}"),
+    ),
+    # None (skip_if_none, default True) until RosThread's first 10-minute
+    # storage scan completes - see ros_thread.py/_update_storage_stats.
+    "lblStorageUsage": BindingRule(
+        lambda s: None if s.storage_used_gb is None else (s.storage_used_gb, s.storage_max_gb),
+        _set_storage_usage,
+    ),
+    "lblProjectCount": BindingRule(
+        lambda s: None if s.project_count is None else (s.project_count, s.project_max),
+        _set_project_count,
     ),
     "lblEncoderStatus": BindingRule(
         lambda s: s.devices.get("encoder"), _set_device_label, skip_if_none=False,
