@@ -91,19 +91,22 @@ echo "Previous run's log saved to: $LOG_DIR/last_run.log"
 # Startup (ROS master + all nodes coming up) can take a while with nothing
 # visible on screen - open a terminal tailing the container's logs so the
 # user sees it's progressing and can debug any ROS node error. Left open
-# for the whole app session on purpose (not auto-closed once the UI's up)
-# - closing it was also unreliable across terminal emulators: whether
-# `kill "$LOGS_TERM_PID"` actually reached the visible window depended on
-# how that emulator forks (e.g. gnome-terminal's client process exits
-# almost immediately, handing off to a long-running gnome-terminal-server,
-# so the captured PID was already dead and the "auto-close" was a no-op -
-# it only ever really closed on emulators like xterm where $! is the
-# window's own process). Best-effort: a missing terminal emulator just
-# means no progress terminal, not a failed launch - the app itself
-# doesn't depend on any of this.
+# for the whole app session on purpose (not auto-closed once the UI's up).
+#
+# setsid + disown: this script exits within a couple seconds of spawning
+# the terminal (nothing blocks after this point), and when it's launched
+# from a desktop icon, the desktop environment often tears down the whole
+# process group/session of the launching process on exit - including any
+# plain "&" background job that's still part of that group, even though
+# nothing here ever calls kill on it. setsid detaches the terminal into
+# its own session so it isn't swept up in that cleanup; disown drops it
+# from this shell's job table for the same reason. Best-effort: a missing
+# terminal emulator just means no progress terminal, not a failed launch -
+# the app itself doesn't depend on any of this.
 if command -v x-terminal-emulator >/dev/null 2>&1; then
-    x-terminal-emulator -T "Intelijet - đang khởi động..." \
-        -e bash -c "$COMPOSE_CMD logs -f" &
+    setsid x-terminal-emulator -T "Intelijet - đang khởi động..." \
+        -e bash -c "$COMPOSE_CMD logs -f" < /dev/null > /dev/null 2>&1 &
+    disown
 else
     echo "WARNING: no x-terminal-emulator found - skipping the startup progress terminal." >&2
 fi
