@@ -473,7 +473,7 @@ QLabel {{
     font-weight: 700;
     padding: 0px;
 }}
-#sysFieldValue {{
+QLabel[cssClass="sysFieldValue"] {{
     background-color: #f8fafc;
     color: #1e293b;
     border: 1px solid #e2e8f0;
@@ -878,20 +878,21 @@ QLabel {{
         self.encoderFieldsRow = QtWidgets.QHBoxLayout()
         self.encoderFieldsRow.setSpacing(14)
 
-        def _encoder_field(caption_text):
+        def _encoder_field(caption_text, value_object_name):
             box = QtWidgets.QVBoxLayout()
             box.setSpacing(4)
             caption = QtWidgets.QLabel(caption_text, self.deviceCard)
             caption.setObjectName("sysFieldCaption")
             box.addWidget(caption)
             value = QtWidgets.QLabel("--", self.deviceCard)
-            value.setObjectName("sysFieldValue")
+            value.setObjectName(value_object_name)
+            value.setProperty("cssClass", "sysFieldValue")
             box.addWidget(value)
             self.encoderFieldsRow.addLayout(box)
             return caption, value
 
-        self.label, self.lblEncoder = _encoder_field("Encoder Value (deg)")
-        self.label_4, self.lblEncoderRawValue = _encoder_field("Encoder Value (raw)")
+        self.label, self.lblEncoder = _encoder_field("Encoder Value (deg)", "lblEncoder")
+        self.label_4, self.lblEncoderRawValue = _encoder_field("Encoder Value (raw)", "lblEncoderRawValue")
         self.deviceCardLayout.addLayout(self.encoderFieldsRow)
 
         self.btnSetHome = QtWidgets.QPushButton("Set Zero Position", self.deviceCard)
