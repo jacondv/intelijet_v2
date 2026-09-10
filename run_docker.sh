@@ -93,6 +93,11 @@ echo "Previous run's log saved to: $LOG_DIR/last_run.log"
 # user sees it's progressing and can debug any ROS node error. Left open
 # for the whole app session on purpose (not auto-closed once the UI's up).
 #
+# Gated by the SYSTEM tab's Debug Mode switch (app.py's
+# _on_debug_mode_toggled - writes "1"/"0" to this file). Missing file
+# (brand new install, app has never run once to write it) defaults to ON,
+# matching this terminal's long-standing always-on behavior.
+#
 # setsid + disown: this script exits within a couple seconds of spawning
 # the terminal (nothing blocks after this point), and when it's launched
 # from a desktop icon, the desktop environment often tears down the whole
@@ -103,7 +108,10 @@ echo "Previous run's log saved to: $LOG_DIR/last_run.log"
 # from this shell's job table for the same reason. Best-effort: a missing
 # terminal emulator just means no progress terminal, not a failed launch -
 # the app itself doesn't depend on any of this.
-if command -v x-terminal-emulator >/dev/null 2>&1; then
+DEBUG_MODE_FILE="$REPO_DIR/data/.debug_mode"
+if [ "$(cat "$DEBUG_MODE_FILE" 2>/dev/null)" = "0" ]; then
+    echo "Debug Mode is OFF (SYSTEM tab) - skipping the startup log terminal."
+elif command -v x-terminal-emulator >/dev/null 2>&1; then
     setsid x-terminal-emulator -T "Intelijet - đang khởi động..." \
         -e bash -c "$COMPOSE_CMD logs -f" < /dev/null > /dev/null 2>&1 &
     disown
