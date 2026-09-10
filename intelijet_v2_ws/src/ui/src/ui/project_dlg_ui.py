@@ -260,14 +260,14 @@ QPushButton[cssClass="rowScheduledBtn"]:hover {{ background-color: #15803d; }}
         self.jobTopBar = QtWidgets.QWidget(frm_ProjectPage)
         self.jobTopBar.setObjectName("jobTopBar")
         self.jobTopBarLayout = QtWidgets.QHBoxLayout(self.jobTopBar)
-        self.jobTopBarLayout.setContentsMargins(40, 28, 40, 28)
-        self.jobTitle = QtWidgets.QLabel("HMI Execution Management", self.jobTopBar)
+        self.jobTopBarLayout.setContentsMargins(40, 14, 40, 14)
+        self.jobTitle = QtWidgets.QLabel("Project Management", self.jobTopBar)
         self.jobTitle.setObjectName("jobTitle")
         self.jobTopBarLayout.addWidget(self.jobTitle)
         self.jobTopBarLayout.addStretch(1)
         self.btnNewProject = QtWidgets.QPushButton("+ New Project", self.jobTopBar)
         self.btnNewProject.setObjectName("btnNewProject")
-        self.btnNewProject.setMinimumHeight(104)
+        self.btnNewProject.setMinimumHeight(68)
         self.jobTopBarLayout.addWidget(self.btnNewProject)
         self.rootLayout.addWidget(self.jobTopBar)
 
@@ -319,7 +319,7 @@ QPushButton[cssClass="rowScheduledBtn"]:hover {{ background-color: #15803d; }}
         self.projectsScroll.setWidget(self.projectsScrollContent)
         self.projectsCardLayout.addWidget(self.projectsScroll, 1)
 
-        self.mainGrid.addWidget(self.projectsCard, 1)
+        self.mainGrid.addWidget(self.projectsCard, 6)
 
         # Right card
         self.scheduleCardOuter = QtWidgets.QFrame(frm_ProjectPage)
@@ -342,7 +342,7 @@ QPushButton[cssClass="rowScheduledBtn"]:hover {{ background-color: #15803d; }}
         self.scheduleScroll.setWidget(self.scheduleScrollContent)
         self.scheduleCardOuterLayout.addWidget(self.scheduleScroll, 1)
 
-        self.mainGrid.addWidget(self.scheduleCardOuter, 1)
+        self.mainGrid.addWidget(self.scheduleCardOuter, 4)
 
         self.retranslateUi(frm_ProjectPage)
         QtCore.QMetaObject.connectSlotsByName(frm_ProjectPage)
