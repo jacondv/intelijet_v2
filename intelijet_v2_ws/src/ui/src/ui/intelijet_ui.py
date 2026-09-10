@@ -55,6 +55,34 @@ def _draw_fullscreen_icon(size=96, color="white", stroke=8):
     return QtGui.QIcon(pixmap)
 
 
+def draw_app_icon(size=256):
+    """The taskbar/window icon - drawn instead of shipping a new binary
+    asset (same reasoning as _draw_fullscreen_icon above). Without any
+    setWindowIcon() call, X11/the window manager falls back to a generic
+    icon that on most desktop themes happens to look like a gear, which
+    reads as "Settings" rather than this app - so this is a real icon,
+    not just cosmetic. Rounded square in the app's own dark-green/yellow
+    chrome colors with a bold "J" (JACON), not the wordmark logo.png -
+    that image is a wide non-square lockup that would get squashed at
+    icon sizes."""
+    pixmap = QtGui.QPixmap(size, size)
+    pixmap.fill(QtCore.Qt.transparent)
+    painter = QtGui.QPainter(pixmap)
+    painter.setRenderHint(QtGui.QPainter.Antialiasing)
+    painter.setPen(QtCore.Qt.NoPen)
+    painter.setBrush(QtGui.QColor(PANEL_BG))
+    radius = size * 0.22
+    painter.drawRoundedRect(0, 0, size, size, radius, radius)
+
+    font = QtGui.QFont("Sans Serif", int(size * 0.56))
+    font.setBold(True)
+    painter.setFont(font)
+    painter.setPen(QtGui.QColor(ACCENT_YELLOW))
+    painter.drawText(pixmap.rect(), QtCore.Qt.AlignCenter, "J")
+    painter.end()
+    return QtGui.QIcon(pixmap)
+
+
 def _icon_painter(size, color, stroke):
     pixmap = QtGui.QPixmap(size, size)
     pixmap.fill(QtCore.Qt.transparent)
@@ -445,7 +473,7 @@ QLabel {{
     font-weight: 700;
     padding: 0px;
 }}
-#sysFieldValue {{
+QLabel[cssClass="sysFieldValue"] {{
     background-color: #f8fafc;
     color: #1e293b;
     border: 1px solid #e2e8f0;
@@ -794,7 +822,7 @@ QLabel {{
         self.tab_system.setObjectName("tab_system")
         self.verticalLayout_5 = QtWidgets.QVBoxLayout(self.tab_system)
         self.verticalLayout_5.setObjectName("verticalLayout_5")
-        self.verticalLayout_5.setContentsMargins(24, 24, 24, 24)
+        self.verticalLayout_5.setContentsMargins(40, 40, 40, 40)
         self.systemGrid = QtWidgets.QHBoxLayout()
         self.systemGrid.setSpacing(20)
         self.verticalLayout_5.addLayout(self.systemGrid)
@@ -850,20 +878,21 @@ QLabel {{
         self.encoderFieldsRow = QtWidgets.QHBoxLayout()
         self.encoderFieldsRow.setSpacing(14)
 
-        def _encoder_field(caption_text):
+        def _encoder_field(caption_text, value_object_name):
             box = QtWidgets.QVBoxLayout()
             box.setSpacing(4)
             caption = QtWidgets.QLabel(caption_text, self.deviceCard)
             caption.setObjectName("sysFieldCaption")
             box.addWidget(caption)
             value = QtWidgets.QLabel("--", self.deviceCard)
-            value.setObjectName("sysFieldValue")
+            value.setObjectName(value_object_name)
+            value.setProperty("cssClass", "sysFieldValue")
             box.addWidget(value)
             self.encoderFieldsRow.addLayout(box)
             return caption, value
 
-        self.label, self.lblEncoder = _encoder_field("Encoder Value (deg)")
-        self.label_4, self.lblEncoderRawValue = _encoder_field("Encoder Value (raw)")
+        self.label, self.lblEncoder = _encoder_field("Encoder Value (deg)", "lblEncoder")
+        self.label_4, self.lblEncoderRawValue = _encoder_field("Encoder Value (raw)", "lblEncoderRawValue")
         self.deviceCardLayout.addLayout(self.encoderFieldsRow)
 
         self.btnSetHome = QtWidgets.QPushButton("Set Zero Position", self.deviceCard)
