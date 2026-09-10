@@ -55,34 +55,6 @@ def _draw_fullscreen_icon(size=96, color="white", stroke=8):
     return QtGui.QIcon(pixmap)
 
 
-def draw_app_icon(size=256):
-    """The taskbar/window icon - drawn instead of shipping a new binary
-    asset (same reasoning as _draw_fullscreen_icon above). Without any
-    setWindowIcon() call, X11/the window manager falls back to a generic
-    icon that on most desktop themes happens to look like a gear, which
-    reads as "Settings" rather than this app - so this is a real icon,
-    not just cosmetic. Rounded square in the app's own dark-green/yellow
-    chrome colors with a bold "J" (JACON), not the wordmark logo.png -
-    that image is a wide non-square lockup that would get squashed at
-    icon sizes."""
-    pixmap = QtGui.QPixmap(size, size)
-    pixmap.fill(QtCore.Qt.transparent)
-    painter = QtGui.QPainter(pixmap)
-    painter.setRenderHint(QtGui.QPainter.Antialiasing)
-    painter.setPen(QtCore.Qt.NoPen)
-    painter.setBrush(QtGui.QColor(PANEL_BG))
-    radius = size * 0.22
-    painter.drawRoundedRect(0, 0, size, size, radius, radius)
-
-    font = QtGui.QFont("Sans Serif", int(size * 0.56))
-    font.setBold(True)
-    painter.setFont(font)
-    painter.setPen(QtGui.QColor(ACCENT_YELLOW))
-    painter.drawText(pixmap.rect(), QtCore.Qt.AlignCenter, "J")
-    painter.end()
-    return QtGui.QIcon(pixmap)
-
-
 def _icon_painter(size, color, stroke):
     pixmap = QtGui.QPixmap(size, size)
     pixmap.fill(QtCore.Qt.transparent)
