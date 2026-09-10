@@ -58,6 +58,9 @@ BADGE_WARN_BG = "#FDECD1"
 BADGE_INFO_BG = "#DAF3E4"
 
 BADGE_COLORS = {"error": LEVEL_ERROR, "warning": LEVEL_WARN, "info": LEVEL_INFO}
+# Severity order for sorting by the Level column - higher is more severe,
+# so clicking Level ascending shows Info->Warning->Error.
+LEVEL_RANK = {"info": 0, "warning": 1, "error": 2}
 BADGE_BG_COLORS = {"error": BADGE_ERROR_BG, "warning": BADGE_WARN_BG, "info": BADGE_INFO_BG}
 ROW_TINTS = {"error": ROW_ERROR_BG, "warning": ROW_WARN_BG}
 
@@ -76,6 +79,10 @@ class DiagnosticsTab(QWidget):
         self._viewing_date = self._today  # date currently shown; only "today" gets live updates
         self._all_items = list(notification_center.history())
         self._sources = sorted({item["source"] for item in self._all_items})
+        # Timestamp column, newest first - matches the previous hardcoded
+        # default before header-click sorting existed.
+        self._sort_column = 0
+        self._sort_ascending = False
 
         self._build_ui()
         self._rebuild_table()
@@ -215,18 +222,43 @@ class DiagnosticsTab(QWidget):
             f"    color: {TEXT_MUTED};"
             f"    border: none;"
             f"    border-bottom: 2px solid {BORDER};"
-            f"    padding: 10px;"
+            f"    padding: 15px 10px;"
             f"    font-size: 18px;"
             f"    font-weight: bold;"
             f"}}"
         )
         header = self._table.horizontalHeader()
+        # +50% over the ~44px the padding/font alone would produce -
+        # header sections are now click-to-sort, so they need to be as
+        # easy to tap accurately as any other control on this touchscreen.
+        header.setMinimumHeight(66)
         header.setSectionResizeMode(0, QHeaderView.ResizeToContents)
         header.setSectionResizeMode(1, QHeaderView.ResizeToContents)
         header.setSectionResizeMode(2, QHeaderView.ResizeToContents)
         header.setSectionResizeMode(3, QHeaderView.Stretch)
+        # Click-to-sort headers instead of a separate sort dropdown -
+        # standard grid convention (Excel, Windows Event Viewer): click a
+        # column to sort by it, click again to flip direction. Manual
+        # (not QTableWidget's built-in setSortingEnabled) because the
+        # Level column is a cell widget (badge), which Qt's own sort
+        # doesn't reorder correctly - see _rebuild_table/_sort_key.
+        header.setSectionsClickable(True)
+        header.setSortIndicatorShown(True)
+        header.sectionClicked.connect(self._on_header_clicked)
+        header.setSortIndicator(self._sort_column, Qt.DescendingOrder)
         self._table.itemDoubleClicked.connect(self._show_item_detail)
         return self._table
+
+    def _on_header_clicked(self, column):
+        if column == self._sort_column:
+            self._sort_ascending = not self._sort_ascending
+        else:
+            self._sort_column = column
+            self._sort_ascending = True
+        self._table.horizontalHeader().setSortIndicator(
+            self._sort_column, Qt.AscendingOrder if self._sort_ascending else Qt.DescendingOrder
+        )
+        self._rebuild_table()
 
     # ----------------- Date selection -----------------
     def _open_date_picker(self):
@@ -300,8 +332,20 @@ class DiagnosticsTab(QWidget):
             self._source_filter.addItem(item["source"])
             self._source_filter.blockSignals(False)
         if self._matches_filter(item):
-            self._append_row(item, row=0)  # newest first
-            self._table.scrollToTop()
+            # A live push only has an unambiguous "correct" slot to insert
+            # into when sorted by Timestamp (new items are the newest by
+            # definition). Sorted by any other column, where a new item
+            # lands among existing values isn't knowable without a real
+            # sort, so just rebuild - live pushes are infrequent enough
+            # for this to be cheap.
+            if self._sort_column != 0:
+                self._rebuild_table()
+            elif self._sort_ascending:
+                self._append_row(item)  # oldest-first - new entry belongs at the bottom
+                self._table.scrollToBottom()
+            else:
+                self._append_row(item, row=0)  # newest-first (default)
+                self._table.scrollToTop()
 
     def _matches_filter(self, item):
         level_choice = self._level_filter.currentText()
@@ -315,10 +359,19 @@ class DiagnosticsTab(QWidget):
             return False
         return True
 
+    def _sort_key(self, item):
+        if self._sort_column == 1:
+            return LEVEL_RANK.get(item.get("level", "info").lower(), 0)
+        if self._sort_column == 2:
+            return item.get("source", "").lower()
+        if self._sort_column == 3:
+            return item.get("message", "").lower()
+        return item["timestamp"]  # column 0, and the fallback default
+
     def _rebuild_table(self, *_args):
         self._table.setRowCount(0)
         filtered = [item for item in self._all_items if self._matches_filter(item)]
-        filtered.sort(key=lambda i: i["timestamp"], reverse=True)  # newest first
+        filtered.sort(key=self._sort_key, reverse=not self._sort_ascending)
         for item in filtered:
             self._append_row(item)
         self._table.scrollToTop()
@@ -381,6 +434,17 @@ class DiagnosticsTab(QWidget):
         item = first_cell.data(Qt.UserRole) if first_cell else None
         if not item:
             return
+
+        # Only one Alarm Detail window at a time - close whatever's open
+        # before building the next one, instead of letting popups pile up
+        # (there's no taskbar/alt-tab on this touchscreen kiosk to manage
+        # a stack of them, so a second click needs to replace, not add).
+        existing = getattr(self, "_detail_dlg", None)
+        if existing is not None:
+            try:
+                existing.close()
+            except RuntimeError:
+                pass  # already destroyed (WA_DeleteOnClose beat us to it)
 
         ts = time.strftime("%d/%m/%Y %H:%M:%S", time.localtime(item["timestamp"]))
         level = item.get("level", "info").upper()
@@ -460,3 +524,8 @@ class DiagnosticsTab(QWidget):
         dlg.setModal(False)  # movable, non-blocking - user can keep working while it's open
         self._detail_dlg = dlg  # keep a reference so it isn't garbage-collected while shown
         dlg.show()
+        # show() alone doesn't guarantee top stacking order on every WM -
+        # raise_()+activateWindow() is the standard Qt one-two for "make
+        # this the frontmost, focused window right now".
+        dlg.raise_()
+        dlg.activateWindow()
