@@ -40,6 +40,23 @@ fi
 # Tablet screen rotation - no-op (harmless) on machines/monitors without a
 # DSI-1 output.
 xrandr --output DSI-1 --rotate right 2>/dev/null || true
+xrandr --output DSI1 --rotate right 2>/dev/null || true
+
+# xrandr above only rotates the framebuffer - the touchscreen keeps
+# reporting raw panel coordinates, so without this touches land where
+# they'd be in the original (unrotated) orientation instead of where the
+# rotated image now shows them. map-to-output derives the right
+# transformation matrix from the output's current rotation instead of
+# hardcoding one, so it keeps working if that ever changes. No-op
+# (harmless) on machines without this touchscreen/output.
+xinput map-to-output "pointer:Goodix Capacitive TouchScreen" DSI-1 2>/dev/null || true
+xinput map-to-output "pointer:Goodix Capacitive TouchScreen" DSI1 2>/dev/null || true
+
+# Lock orientation so GNOME's auto-rotate (accelerometer-driven, via
+# iio-sensor-proxy on tablet hardware) doesn't undo the xrandr rotation
+# above the moment the device is tilted. No-op (harmless) on machines/DEs
+# without this GNOME schema.
+gsettings set org.gnome.settings-daemon.peripherals.touchscreen orientation-lock true 2>/dev/null || true
 
 trap 'xhost -local:docker >/dev/null 2>&1' EXIT
 

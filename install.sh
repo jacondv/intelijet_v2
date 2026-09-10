@@ -10,6 +10,13 @@ set -euo pipefail
 REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$REPO_DIR"
 
+echo ">>> Checking for curl..."
+if ! command -v curl >/dev/null 2>&1; then
+    echo ">>> curl not found - installing (needs sudo)..."
+    sudo apt-get update
+    sudo apt-get install -y curl
+fi
+
 echo ">>> Checking for Docker..."
 if ! command -v docker >/dev/null 2>&1; then
     echo ">>> Docker not found - installing via get.docker.com (needs sudo)..."
@@ -60,7 +67,7 @@ Type=Application
 Name=Intelijet
 Comment=Jacon Intelijet
 Exec=$REPO_DIR/run_docker.sh
-Icon=multimedia-player
+Icon=$REPO_DIR/PPSicon.png
 Terminal=false
 StartupWMClass=Intelijet
 TryExec=$REPO_DIR/run_docker.sh
