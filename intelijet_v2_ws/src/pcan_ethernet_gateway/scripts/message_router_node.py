@@ -6,7 +6,7 @@ cfg = CONFIG
 # Mapping COB-ID → topic
 COB_ID_MAPPING = {
     "encoder": [0x285],  
-    "plc": [0x7f]   
+    "plc": [0x285]   
 }
 PCAN_GATEWAY_RECV_TOPIC = "/pcan_received_messanges"
 
@@ -27,13 +27,13 @@ class MessageRouter:
     def callback(self, msg: Frame):
         cob_id = msg.id
 
-        # Phân loại dựa trên COB-ID
+        # Phân loại dựa trên COB-ID - độc lập, không elif, vì một ID có thể
+        # thuộc nhiều nhóm (vd: encoder và plc tạm dùng chung 0x285).
         if cob_id in COB_ID_MAPPING["encoder"]:
             self.pub_encoder.publish(msg)
-        elif cob_id in COB_ID_MAPPING["plc"]:
+        if cob_id in COB_ID_MAPPING["plc"]:
             self.pub_plc.publish(msg)
-        else:
-            self.pub_other.publish(msg)
+        # pub_other chưa được dùng ở đâu - tạm không publish.
 
     def spin(self):
         rospy.spin()
