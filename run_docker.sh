@@ -73,20 +73,24 @@ echo "Previous run's log saved to: $LOG_DIR/last_run.log"
 
 # Startup (ROS master + all nodes coming up) can take a while with nothing
 # visible on screen - open a terminal tailing the container's logs so the
-# user sees it's progressing and can debug any ROS node error. Left open
-# for the whole app session on purpose (not auto-closed once the UI's up)
-# - closing it was also unreliable across terminal emulators: whether
-# `kill "$LOGS_TERM_PID"` actually reached the visible window depended on
-# how that emulator forks (e.g. gnome-terminal's client process exits
-# almost immediately, handing off to a long-running gnome-terminal-server,
-# so the captured PID was already dead and the "auto-close" was a no-op -
-# it only ever really closed on emulators like xterm where $! is the
-# window's own process). Best-effort: a missing terminal emulator just
-# means no progress terminal, not a failed launch - the app itself
-# doesn't depend on any of this.
+# user sees it's progressing, then close that terminal automatically once
+# the UI's actually up (READY_FILE appears) instead of leaving it sitting
+# on top of the app. Best-effort: a missing terminal emulator or a
+# never-arriving marker (timeout) just means no progress terminal, not a
+# failed launch - the app itself doesn't depend on any of this.
 if command -v x-terminal-emulator >/dev/null 2>&1; then
     x-terminal-emulator -T "Intelijet - đang khởi động..." \
         -e bash -c "$COMPOSE_CMD logs -f" &
+    LOGS_TERM_PID=$!
+
+    (
+        waited=0
+        while [ ! -f "$READY_FILE" ] && [ "$waited" -lt 120 ] && kill -0 "$LOGS_TERM_PID" 2>/dev/null; do
+            sleep 1
+            waited=$((waited + 1))
+        done
+        kill "$LOGS_TERM_PID" 2>/dev/null
+    ) &
 else
     echo "WARNING: no x-terminal-emulator found - skipping the startup progress terminal." >&2
 fi
