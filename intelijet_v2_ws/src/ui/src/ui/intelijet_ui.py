@@ -409,7 +409,7 @@ QLabel {{
 #tab_operator {{ background-color: black; }}
 
 /* ---- SYSTEM tab (docs/ui_sample/App.html light-card layout) ---- */
-#deviceCard, #processingCard {{
+#deviceCard, #processingCard, #storageCard {{
     background-color: #ffffff;
     border: 1px solid #e2e8f0;
     border-radius: 10px;
@@ -471,7 +471,7 @@ QLabel[cssClass="sysFieldValue"] {{
    locked from interaction (setEnabled(False)) always renders gray,
    regardless of its checked value - the :disabled rules are last so
    they win the tie against :checked on specificity. */
-#processingCard QPushButton {{
+#processingCard QPushButton, #storageCard QPushButton {{
     background-color: #cbd5e1;
     color: #475569;
     border: none;
@@ -479,11 +479,11 @@ QLabel[cssClass="sysFieldValue"] {{
     font-size: 22px;
     font-weight: 800;
 }}
-#processingCard QPushButton:checked {{ background-color: #059669; color: white; }}
-#processingCard QPushButton:hover {{ background-color: #94a3b8; }}
-#processingCard QPushButton:checked:hover {{ background-color: #047857; }}
-#processingCard QPushButton:disabled {{ background-color: #e2e8f0; color: #94a3b8; }}
-#processingCard QPushButton:checked:disabled {{ background-color: #e2e8f0; color: #94a3b8; }}
+#processingCard QPushButton:checked, #storageCard QPushButton:checked {{ background-color: #059669; color: white; }}
+#processingCard QPushButton:hover, #storageCard QPushButton:hover {{ background-color: #94a3b8; }}
+#processingCard QPushButton:checked:hover, #storageCard QPushButton:checked:hover {{ background-color: #047857; }}
+#processingCard QPushButton:disabled, #storageCard QPushButton:disabled {{ background-color: #e2e8f0; color: #94a3b8; }}
+#processingCard QPushButton:checked:disabled, #storageCard QPushButton:checked:disabled {{ background-color: #e2e8f0; color: #94a3b8; }}
 """)
         self.centralwidget = QtWidgets.QWidget(MainWindow)
         self.centralwidget.setObjectName("centralwidget")
@@ -931,6 +931,34 @@ QLabel[cssClass="sysFieldValue"] {{
             self.processingGrid.addWidget(row_widget, i // 2, i % 2)
 
         self.systemGrid.addWidget(self.processingCard)
+
+        # ---- Storage & Data card ----
+        self.storageCard, self.storageCardLayout = _sys_card("Storage & Data", "storageCard")
+
+        self.lblStorageUsage = QtWidgets.QLabel("--", self.storageCard)
+        self.lblStorageUsage.setObjectName("lblStorageUsage")
+        _switch_row(self.storageCardLayout, "Data Usage", self.lblStorageUsage, self.storageCard)
+
+        self.lblProjectCount = QtWidgets.QLabel("--", self.storageCard)
+        self.lblProjectCount.setObjectName("lblProjectCount")
+        _switch_row(self.storageCardLayout, "Projects", self.lblProjectCount, self.storageCard)
+
+        self.storageDivider = QtWidgets.QFrame(self.storageCard)
+        self.storageDivider.setObjectName("sysDivider")
+        self.storageDivider.setFrameShape(QtWidgets.QFrame.HLine)
+        self.storageCardLayout.addWidget(self.storageDivider)
+
+        self.cbbDebugMode = _switch_checkbox("cbbDebugMode")
+        _switch_row(self.storageCardLayout, "Debug Mode (Startup Terminal)", self.cbbDebugMode, self.storageCard)
+
+        self.lblDebugModeNote = QtWidgets.QLabel(
+            "Takes effect on next app restart.", self.storageCard
+        )
+        self.lblDebugModeNote.setObjectName("sysFieldCaption")
+        self.storageCardLayout.addWidget(self.lblDebugModeNote)
+
+        self.storageCardLayout.addStretch(1)
+        self.systemGrid.addWidget(self.storageCard)
 
         self.stacked.addWidget(self.tab_system)
 

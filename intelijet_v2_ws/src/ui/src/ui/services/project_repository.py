@@ -88,6 +88,22 @@ def list_projects(sort_mode=DEFAULT_SORT_MODE):
     return list(reversed(by_ctime))  # SORT_DATE_DESC (default)
 
 
+def project_dir_size_bytes():
+    """Total size in bytes of everything under PROJECT_DIR. Walks the
+    whole tree (os.walk + os.path.getsize) - can take a while against a
+    data-heavy install, so callers should run this off the GUI thread and
+    poll it infrequently (see RosThread._update_storage_stats, every 10
+    minutes) rather than on every UI refresh."""
+    total = 0
+    for root, _dirs, files in os.walk(PROJECT_DIR):
+        for name in files:
+            try:
+                total += os.path.getsize(os.path.join(root, name))
+            except OSError:
+                pass  # file removed/renamed mid-walk - skip it, not fatal
+    return total
+
+
 def list_jobs(project):
     """Sorted job names under `project` (Syncthing junk filtered out).
     Returns [] if the project doesn't exist."""

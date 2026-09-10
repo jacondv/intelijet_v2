@@ -6,12 +6,15 @@ from sensor_msgs.msg import PointCloud2, JointState
 from std_msgs.msg import Int32
 
 import threading
-from shared.config_loader import CONFIG as cfg
+from shared.config_loader import CONFIG as cfg, load_config
 
 from shared.device_monitor import  StatusReader
 from shared.pps_command import PPSCommand
 from shared.msg import Notification
 from ui.system_status import build_system_status
+from ui.services import project_repository as repo
+
+STORAGE_SCAN_INTERVAL_SEC = 600  # 10 minutes - see project_dir_size_bytes()
 
 HMI_CMD_TOPIC = cfg.HMI_CMD_TOPIC
 PRE_SCAN_CLOUD_TOPIC = cfg.PRE_SCAN_CLOUD_TOPIC
@@ -34,6 +37,12 @@ class RosThread(threading.Thread):
         self.notification_received_signal = notification_received_signal
         self.encoder_deg = None
         self.encoder_raw = None
+        # Storage & Data card (SYSTEM tab) - filled in by
+        # _update_storage_stats, None until the first scan completes.
+        self.storage_used_gb = None
+        self.storage_max_gb = None
+        self.project_count = None
+        self.project_max = None
 
     def run(self):
         # Run when thread .start() called
@@ -67,6 +76,15 @@ class RosThread(threading.Thread):
         rospy.Timer(rospy.Duration(1.0), self.emit_ui_data_update) # Update data 1Hz
         # rospy.Subscriber(HMI_CMD_TOPIC,Int32, self.update_hmi_cmd)
 
+        # Storage & Data card (SYSTEM tab) - os.walk over the whole
+        # Projects folder is too slow to do every 1Hz tick, so it gets its
+        # own low-frequency timer. rospy.Timer runs each registered timer's
+        # callback on its own thread, so this doesn't stall the 1Hz timer
+        # above even while a scan is in progress. Run once immediately
+        # (don't make the operator wait 10 minutes for the first number).
+        self._update_storage_stats(None)
+        rospy.Timer(rospy.Duration(STORAGE_SCAN_INTERVAL_SEC), self._update_storage_stats)
+
         rospy.spin()
 
     def cloud_received_signal_callback(self, msg, topic_name):
@@ -98,11 +116,29 @@ class RosThread(threading.Thread):
             self.notification_received_signal.emit(msg.source, msg.message, msg.level, msg.code)
 
 
+    def _update_storage_stats(self, event):
+        # storage_cleanup.yaml is read-only here - shared config also read
+        # (unmodified) by pps/scripts/storage_cleanup_node.py, which owns
+        # actually enforcing these caps. This is purely a display read.
+        try:
+            limits = load_config("storage_cleanup.yaml")
+            self.storage_max_gb = limits.max_data_gb
+            self.project_max = limits.max_projects
+            self.storage_used_gb = repo.project_dir_size_bytes() / (1024 ** 3)
+            self.project_count = len(repo.list_projects())
+        except Exception as e:
+            rospy.logwarn(f"[RosThread] Storage stats scan failed: {e}")
+
+
     def emit_ui_data_update(self, event):
         status = build_system_status(
             self.device_status_reader.get_status(),
             encoder_deg=self.encoder_deg,
             encoder_raw=self.encoder_raw,
+            storage_used_gb=self.storage_used_gb,
+            storage_max_gb=self.storage_max_gb,
+            project_count=self.project_count,
+            project_max=self.project_max,
         )
         self.ui_data_update.emit(status)
 
