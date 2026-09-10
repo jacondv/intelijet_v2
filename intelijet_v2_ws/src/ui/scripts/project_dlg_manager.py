@@ -79,6 +79,8 @@ class ProjectManager(QWidget, Ui_frm_ProjectPage):
 
         self.btnNewProject.clicked.connect(self.new_project)
         self.txtSearchProject.textChanged.connect(lambda _text: self.render_projects())
+        self.cmbSortProject.setItemDelegate(_ComboRowDelegate(self.cmbSortProject))
+        self.cmbSortProject.currentIndexChanged.connect(lambda _idx: self.render_projects())
 
         self.render_projects()
         self.render_schedule()
@@ -128,8 +130,9 @@ class ProjectManager(QWidget, Ui_frm_ProjectPage):
             layout.insertWidget(0, self._build_new_project_card())
 
         search = self.txtSearchProject.text().strip().lower()
+        sort_mode = self.cmbSortProject.currentData() or repo.SORT_DATE_DESC
         any_shown = False
-        for project in repo.list_projects():
+        for project in repo.list_projects(sort_mode=sort_mode):
             jobs = repo.list_jobs(project)
             project_matches = not search or search in project.lower()
             jobs_to_show = jobs if project_matches else [j for j in jobs if search in j.lower()]
