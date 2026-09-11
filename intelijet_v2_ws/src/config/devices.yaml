@@ -52,11 +52,6 @@ devices:
     type: RosnodeAliveMonitor
     timeout: 5.0
     mode: continuous
-  - name: node_compare_cloud_action_server
-    node: /compare_cloud_action_server
-    type: RosnodeAliveMonitor
-    timeout: 5.0
-    mode: continuous
   - name: node_compare_cloud_action_manual_server
     node: /compare_cloud_action_manual_server
     type: RosnodeAliveMonitor

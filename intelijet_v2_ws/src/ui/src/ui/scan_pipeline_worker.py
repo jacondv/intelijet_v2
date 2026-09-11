@@ -29,9 +29,12 @@ from shared.error_codes import lookup as lookup_error_code
 class ScanPipelineWorker(QThread):
     # (polydata, metadata dict) - GUI thread updates vtk_viewer + App state from this.
     cloud_ready = pyqtSignal(object, dict)
-    # Ask the GUI thread to emit PPSCommand.START_COMPARE (keeps ui_send_cmd_signal
-    # ownership/threading entirely on the GUI side).
-    compare_requested = pyqtSignal()
+    # (prescan_path, postscan_path) - ask the GUI thread to run the same
+    # CompareWorker/`/compare_cloud_manual` pipeline manual compare uses
+    # (see App._start_compare), with explicit paths resolved here instead
+    # of relying on a ROS param that only ever got updated once at UI
+    # startup (see _resolve_prescan_path).
+    compare_requested = pyqtSignal(str, str)
     report_done = pyqtSignal(str)
     report_failed = pyqtSignal(str)
     # (source, message, level) - routed straight to NotificationCenter.push().
@@ -53,6 +56,10 @@ class ScanPipelineWorker(QThread):
         self._lock = threading.Lock()
         self._current_job = None
         self._pending_job = None
+        # Latest Pre-Scan .ply path seen this session, live-updated every
+        # time a pre_scan message is processed below - the fast path for
+        # _resolve_prescan_path().
+        self._last_prescan_path = None
 
     def submit(self, job):
         """Thread-safe (call from the GUI thread). If idle, starts
@@ -96,6 +103,23 @@ class ScanPipelineWorker(QThread):
                 self._pending_job = None
 
     # ------------------------------------------------------------------
+    def _resolve_prescan_path(self, jobs_folder):
+        """Prescan path to compare the just-finished Post-Scan against.
+        Prefers the live-tracked path (always correct/current - updated
+        on every pre_scan message, see below); falls back to scanning
+        the job's own folder for the newest Pre-Scan .ply on disk if
+        that isn't available yet or its file is missing (e.g. app
+        restarted mid-job, or the very first Post-Scan this session
+        arrives before any pre_scan message has been processed) - this
+        guarantees a compare always has a cloud to run against instead
+        of silently using a stale/empty path.
+        """
+        if self._last_prescan_path and os.path.exists(self._last_prescan_path):
+            return self._last_prescan_path
+
+        from ui.models.file_name import find_latest_prescan
+        return find_latest_prescan(jobs_folder)
+
     def _process(self, job):
         topics = self.topics
         msg = job["msg"]
@@ -175,7 +199,6 @@ class ScanPipelineWorker(QThread):
                 # mode (not only compared topics) - preserved exactly here.
                 "reset_post_scan_path": job["is_manual"],
                 "reset_is_manual_compare": topic_name in (topics["compared"], topics["compared_manual"]),
-                "last_prescan_path": None,
                 # True only when this cloud will actually go on to a report
                 # export below - lets the GUI thread hold off switching to
                 # the 3D MAIN page until report_done/report_failed fires,
@@ -189,14 +212,32 @@ class ScanPipelineWorker(QThread):
             if topic_name in (topics["compared"], topics["compared_manual"]):
                 metadata["report_name"] = f_name
             if topic_name == topics["pre_scan"]:
-                metadata["last_prescan_path"] = filepath
+                self._last_prescan_path = filepath
 
             self.cloud_ready.emit(polydata, metadata)
 
-        # 3. Ask GUI thread to trigger Compare Cloud Action
+        # 3. Ask GUI thread to trigger Compare Cloud Action, with explicit
+        # prescan/postscan paths (see compare_requested's docstring above).
         if topic_name == topics["post_scan"]:
             if job["auto_compare_on"]:
-                self.compare_requested.emit()
+                if not (f_name and os.path.exists(f_name)):
+                    self.notify.emit(
+                        "cloud",
+                        f"Auto-compare skipped: Post-Scan cloud was not saved to disk ({filepath})",
+                        "error",
+                        "",
+                    )
+                else:
+                    prescan_path = self._resolve_prescan_path(jobs_folder)
+                    if not prescan_path:
+                        self.notify.emit(
+                            "cloud",
+                            f"Auto-compare skipped: no Pre-Scan file found for this job in {jobs_folder}",
+                            "error",
+                            "",
+                        )
+                    else:
+                        self.compare_requested.emit(prescan_path, f_name)
 
         # 4. Export Report
         if topic_name in (topics["compared"], topics["compared_manual"]):

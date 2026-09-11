@@ -219,6 +219,29 @@ def generate_filename(folder: str, job: str, scan_type: str, ext="ply", filepath
 
     return os.path.join(folder, filename)
 
+def find_latest_prescan(folder: str, ext: str = "ply"):
+    """Newest Pre-Scan .ply file directly inside `folder`, by mtime.
+    Fallback source of truth when a live-tracked prescan path isn't
+    available or its file no longer exists (e.g. app restarted mid-job,
+    or the tracked path was never set yet) - see scan_pipeline_worker.py's
+    _resolve_prescan_path().
+    """
+    try:
+        candidates = os.listdir(folder)
+    except OSError:
+        return None
+    matches = []
+    for name in candidates:
+        if not name.lower().endswith(f".{ext}") or is_sync_junk(name):
+            continue
+        if "pre" in parse_filename(name)["type"].lower():
+            matches.append(os.path.join(folder, name))
+    if not matches:
+        return None
+    matches.sort(key=os.path.getmtime, reverse=True)
+    return matches[0]
+
+
 def parse_filename(filename: str):
     import os
     import re
