@@ -80,6 +80,11 @@ venv/
 .DS_Store
 Thumbs.db
 
+# === SYNCTHING ===
+.stfolder/
+.stversions/
+.stignore
+
 # === RUNTIME STATE (Docker bind mount target, not source) ===
 # QSettings("JaconEquipment", "Intelijet") data - see docker-compose.yml
 intelijet_v2_ws/src/config/.config/
