@@ -1,13 +1,11 @@
 #!/usr/bin/env python3
 
 import rospy
-import actionlib
 from std_msgs.msg import String, Empty, Int32
 # from std_srvs.srv import Trigger
 # from align_service_client import AlignServiceClient
 # from pps.msg import StartScanAction, StartScanGoal
 # from pps.msg import CompareCloudAction, CompareCloudGoal
-from pps.cloud_compare.compare_cloud_base_client import CompareBaseClient
 from pps.sick_scan_eRob_controller import SickScanErobController
 
 # from ros_blkarc_msgs.msg import TimedScanAction, TimedScanGoal
@@ -58,24 +56,6 @@ class ScanManagerNode:
         # self.__align_service_client = AlignServiceClient()
         # rospy.logwarn("Starting AlignServiceClient")
         self.scanner_controller = get_scanner_controller(status_callback=self.set_state)
-        # ---- compare client ----
-
-        do_align        = rospy.get_param("/runtime/do_align", True)
-        do_pre_process  = rospy.get_param("/runtime/do_pre_process", True)
-        do_2d_keypoint  = rospy.get_param("/runtime/do_2d_keypoint", False)
-        do_upsample     = rospy.get_param("/runtime/do_upsample", False)
-        do_post_process     = rospy.get_param("/runtime/do_post_process", False)
-        
-        self.compare_client = CompareBaseClient(
-            prescan_path="",
-            postscan_path="",
-            do_pre_process=do_pre_process,
-            do_2d_keypoint=do_2d_keypoint,
-            do_post_process=do_post_process,
-            do_align=do_align,
-            do_upsample=do_upsample,
-            timeout=150.0
-        )
 
     def is_state(self, state):
         return self.current_state == state
@@ -106,24 +86,6 @@ class ScanManagerNode:
         elif cmd == PPSCommand.CANCEL_JOB.value:
             self.scanner_controller.on_cancel()
             self.set_state(DeviceStatus.IDLE)
-            self.compare_client.cancel()
-
-        elif cmd == PPSCommand.START_COMPARE.value:
-
-            rospy.loginfo("Start compare command received")
-            # avoid double call start()
-            state = self.compare_client.client.get_state()
-            if state in [actionlib.GoalStatus.ACTIVE,
-                         actionlib.GoalStatus.PENDING]:
-                rospy.logwarn("Compare already running")
-                return
-            
-            # Get parameter from ros server
-            self.compare_client.set_pre_process(rospy.get_param("/runtime/do_pre_process", True))
-            self.compare_client.set_2d_keypoint(rospy.get_param("/runtime/do_2d_keypoint", True))
-            self.compare_client.set_align(rospy.get_param("/runtime/do_align", True))
-            self.compare_client.set_upsample(rospy.get_param("/runtime/do_upsample", True))
-            self.compare_client.send_goal()
 
         elif cmd == PPSCommand.OPEN_HOUSING.value:
             if self.is_state(DeviceStatus.OPEN_HOUSING):

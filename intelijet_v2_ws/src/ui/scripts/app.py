@@ -90,6 +90,13 @@ class App(QMainWindow):
         self.report_name = ""
         self.current_post_scan_path = ""
         self.isManualCompare = False
+        # Compare state shared by manual (REPORT tab) and auto (post-scan
+        # pipeline) requests - both now funnel through _start_compare(), see
+        # its docstring for the priority/queueing rules.
+        self.worker = None
+        self.compare_in_progress = False
+        self._pending_compare = None
+        self._superseded_worker = None
 
 
         # --- UI chính ---
@@ -298,7 +305,7 @@ class App(QMainWindow):
         )
         self.scan_worker.cloud_ready.connect(self._on_scan_cloud_ready)
         self.scan_worker.compare_requested.connect(
-            lambda: self.ui_send_cmd_signal.emit(PPSCommand.START_COMPARE.value)
+            lambda pre, post: self._start_compare(pre, post, is_manual=False)
         )
         self.scan_worker.report_done.connect(self._on_scan_report_done)
         self.scan_worker.report_failed.connect(self._on_scan_report_failed)
@@ -320,9 +327,6 @@ class App(QMainWindow):
         self.load_ui_state()
         # Send parameters to the ROS on the first boot.
         self.update_param()
-
-        # Load last prescan path to runtime param
-        self._load_last_prescan()
 
         self._mark_ui_ready()
 
@@ -419,7 +423,7 @@ class App(QMainWindow):
         # stamps a fresh timestamp + a new scan_id) - what actually happens
         # is a new segment starts, and any not-yet-compared Post-Scans from
         # the PREVIOUS segment stop being this job's "current" Pre-Scan (see
-        # compare_cloud_action_server.py's last_prescan_path fallback), so
+        # scan_pipeline_worker.py's _resolve_prescan_path), so
         # they'd no longer auto-pair correctly. That's the real thing worth
         # confirming, not "overwrite".
         reply = QMessageBox.question(
@@ -449,13 +453,6 @@ class App(QMainWindow):
         if reply == QMessageBox.Yes:
             # Gửi signal nếu người dùng xác nhận
             self.ui_send_cmd_signal.emit(PPSCommand.PLC_SET_HOME_POSITION.value)
-
-    # Load last prescan at startup, and put to topic compare_cloud_action_server can use it to continue compare when prescan cloud is missing.
-    def _load_last_prescan(self):
-        last_prescan_path = settings.value("last_prescan_path", "")
-        if last_prescan_path:
-            rospy.set_param("/runtime/last_prescan_path", last_prescan_path)
-            
 
     # 1.0--- Update commond data from ROS (packages the job and hands it to
     # ScanPipelineWorker - the actual convert/color/save/report work runs
@@ -491,8 +488,6 @@ class App(QMainWindow):
             self.isManualCompare = False
         if metadata["reset_post_scan_path"]:
             self.current_post_scan_path = ""
-        if metadata["last_prescan_path"] is not None:
-            settings.setValue("last_prescan_path", metadata["last_prescan_path"])
 
     def _on_scan_report_done(self, final_path):
         self.notification_center.push("report", f"Report exported: {os.path.basename(final_path)}", "info")
@@ -604,25 +599,56 @@ class App(QMainWindow):
         """"Compare Selected" on the REPORT tab - identical manual-compare
         pipeline as the old on_compare(), just sourced from the new
         page's own file picker instead of the CompareManager dialog."""
-        self.isManualCompare = True
+        self._start_compare(prescan_path, postscan_path, is_manual=True)
+
+    def _start_compare(self, prescan_path, postscan_path, is_manual):
+        """Single entry point for both manual (REPORT tab) and auto
+        (post-scan pipeline, via scan_worker.compare_requested) compare
+        requests - both now drive the same CompareWorker/`/compare_cloud_manual`
+        action, since it's the only one that takes explicit prescan/postscan
+        paths (auto used to go through a separate action driven by a ROS
+        param that only updated once per UI session, causing stale-prescan
+        compares - see git history).
+
+        Only one compare can run at a time (the action server itself
+        serializes goals anyway). Auto-compare has priority: if a manual
+        compare is still in flight when an auto request arrives, the
+        manual result is discarded (not saved/reported) once it comes
+        back, and the auto request runs immediately after. Any other
+        combination (auto already running, or manual already running and
+        another manual/auto request arrives) just queues behind the
+        current one - only the single newest queued request is kept,
+        matching the actionlib SimpleActionServer's own 1-pending-goal
+        behavior.
+        """
+        if self.compare_in_progress:
+            if not is_manual and self.isManualCompare:
+                self._superseded_worker = self.worker
+            if self._pending_compare is not None:
+                self.notification_center.push(
+                    "compare", "A queued compare request was superseded by a newer one", "info"
+                )
+            self._pending_compare = (prescan_path, postscan_path, is_manual)
+            return
+
+        self.compare_in_progress = True
+        self.isManualCompare = is_manual
         self.current_post_scan_path = postscan_path
 
         from ui.compare_cloud_worker import CompareWorker
 
-        do_align = rospy.get_param("/runtime/do_align", True)
-        do_pre_process = rospy.get_param("/runtime/do_pre_process", True)
-        do_2d_keypoint = rospy.get_param("/runtime/do_2d_keypoint", False)
-        do_upsample = rospy.get_param("/runtime/do_upsample", False)
-        do_post_process = rospy.get_param("/runtime/do_post_process", False)
-
+        # Read processing flags straight from the SYSTEM tab widgets -
+        # both flows now run in-process (App), so there's no need to
+        # round-trip through ROS params anymore. do_post_process has no
+        # SYSTEM-tab control (never did); keep it always off to match.
         self.worker = CompareWorker(
             prescan_path=prescan_path,
             postscan_path=postscan_path,
-            do_2d_keypoint=do_2d_keypoint,
-            do_pre_process=do_pre_process,
-            do_align=do_align,
-            do_post_process=do_post_process,
-            do_upsample=do_upsample
+            do_2d_keypoint=self.ui.cbbUseKeypoint.isChecked(),
+            do_pre_process=self.ui.cbbRemoveGround.isChecked(),
+            do_align=self.ui.cbbAutoAlign.isChecked(),
+            do_post_process=False,
+            do_upsample=self.ui.cbbUpsample.isChecked(),
         )
         self.worker.progress.connect(self.on_compare_process)
         self.worker.finished.connect(self.on_compare_done)
@@ -636,27 +662,39 @@ class App(QMainWindow):
 
 
     def on_compare_done(self, success, job_id):
+        is_superseded = self.worker is self._superseded_worker
+        self._superseded_worker = None
+        self.compare_in_progress = False
 
-        if not success:
+        if is_superseded:
+            # An auto-compare request pre-empted this (manual) result while
+            # it was still running - discard it; the queued auto request
+            # below will produce the real result.
+            print("⏭️COMPARE SUPERSEDED (auto-compare priority) ", job_id)
+        elif not success:
             print("❌COMPARE FAILED ", job_id)
             self.notification_center.push("compare", "❌COMPARE FAILED ", "error", "COMPARE-006")
-            return
-
-        print("✅COMPARE DONE ", job_id)
-
-        if not self.ui.cbbAutoReport.isChecked():
-            # No PDF export coming for this compare (scan_worker's report
-            # step is skipped when auto-report is off) - nothing to wait
-            # on, show the status right away like before.
-            self.notification_center.push("compare", "✅COMPARE DONE ", "info")
         else:
-            # A report export is about to run (scan_worker._process(),
-            # triggered once the compared-cloud ROS message arrives) -
-            # hold off on "Compare Done" until that actually finishes, so
-            # the status bar doesn't say "done" while the PDF is still
-            # being generated. _on_scan_report_done/_on_scan_report_failed
-            # push the deferred message once the real outcome is known.
-            self._compare_done_pending_report = True
+            print("✅COMPARE DONE ", job_id)
+
+            if not self.ui.cbbAutoReport.isChecked():
+                # No PDF export coming for this compare (scan_worker's report
+                # step is skipped when auto-report is off) - nothing to wait
+                # on, show the status right away like before.
+                self.notification_center.push("compare", "✅COMPARE DONE ", "info")
+            else:
+                # A report export is about to run (scan_worker._process(),
+                # triggered once the compared-cloud ROS message arrives) -
+                # hold off on "Compare Done" until that actually finishes, so
+                # the status bar doesn't say "done" while the PDF is still
+                # being generated. _on_scan_report_done/_on_scan_report_failed
+                # push the deferred message once the real outcome is known.
+                self._compare_done_pending_report = True
+
+        if self._pending_compare is not None:
+            prescan_path, postscan_path, is_manual = self._pending_compare
+            self._pending_compare = None
+            self._start_compare(prescan_path, postscan_path, is_manual)
 
     def _on_notification_label_changed(self, text, level):
         color = LEVEL_COLORS.get(level, LEVEL_COLORS["info"])
