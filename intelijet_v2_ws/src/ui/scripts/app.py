@@ -684,7 +684,7 @@ class App(QMainWindow):
         self.notification_center.push_transient(_string, "info")
 
 
-    def on_compare_done(self, success, job_id):
+    def on_compare_done(self, success, job_id, error_code=""):
         is_superseded = self.worker is self._superseded_worker
         self._superseded_worker = None
         self.compare_in_progress = False
@@ -696,7 +696,16 @@ class App(QMainWindow):
             print("⏭️COMPARE SUPERSEDED (auto-compare priority) ", job_id)
         elif not success:
             print("❌COMPARE FAILED ", job_id)
-            self.notification_center.push("compare", "❌COMPARE FAILED ", "error", "COMPARE-006")
+            if error_code == "COMPARE-002":
+                # Action server never accepted the goal or never returned a
+                # result within CompareWorker's timeout - the connection to
+                # it (network/PLC link, or the server process itself) was
+                # lost mid-compare instead of it just running long.
+                self.notification_center.push(
+                    "compare", "❌COMPARE TIMED OUT (connection lost?) ", "error", "COMPARE-002"
+                )
+            else:
+                self.notification_center.push("compare", "❌COMPARE FAILED ", "error", error_code or "COMPARE-006")
         else:
             print("✅COMPARE DONE ", job_id)
 
