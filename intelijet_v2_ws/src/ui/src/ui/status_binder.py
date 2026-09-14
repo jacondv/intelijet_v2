@@ -117,6 +117,10 @@ STATUS_BINDINGS = {
         lambda s: s.encoder_deg,
         lambda w, v: _set_text(w, v, "{:.2f}"),
     ),
+    "lblEncoderAngle": BindingRule(
+        lambda s: s.encoder_deg,
+        lambda w, v: _set_text(w, v, "{:.0f}°"),
+    ),
     "lblEncoderRawValue": BindingRule(
         lambda s: s.encoder_raw,
         lambda w, v: _set_text(w, v, "{}"),

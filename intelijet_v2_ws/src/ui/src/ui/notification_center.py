@@ -152,7 +152,7 @@ class NotificationCenter(QObject):
         """Return items oldest-first."""
         return list(self._history)
 
-    def push(self, source, message, level="info", code=None):
+    def push(self, source, message, level="info", code=None, file=None):
         """Add a persistent notification (kept in history) and try to update
         the current label. Returns the item dict.
 
@@ -161,7 +161,10 @@ class NotificationCenter(QObject):
         ("[SCAN-004] ...") so it shows up in the status bar/ALARM history
         as-is - no other UI change needed to see it. Also kept as its own
         `code` field on the history item for a future troubleshooting-guide
-        lookup."""
+        lookup.
+
+        file: optional filename (e.g. the compared cloud/report file) shown
+        as an extra line in the ALARM tab's detail popup."""
         if code:
             message = f"[{code}] {message}"
         now = time.time()
@@ -174,7 +177,7 @@ class NotificationCenter(QObject):
                     return item
                 break
 
-        item = {"timestamp": now, "level": level, "source": source, "message": message, "code": code or ""}
+        item = {"timestamp": now, "level": level, "source": source, "message": message, "code": code or "", "file": file or ""}
         self._history.append(item)
         self._append_to_log(item)
         self.notification_added.emit(item)

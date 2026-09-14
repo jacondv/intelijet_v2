@@ -32,6 +32,7 @@ ALL_SOURCES = "All Sources"
 COLUMNS = ["Timestamp", "Level", "Source", "Message"]
 
 ROW_HEIGHT = 64
+MESSAGE_MAX_CHARS = 140  # longer messages are elided here; full text in tooltip + Alarm Detail popup
 TABLE_FONT_SIZE = 24
 DIALOG_FONT_SIZE = 32
 
@@ -397,8 +398,15 @@ class DiagnosticsTab(QWidget):
         source_item.setForeground(QBrush(QColor(TEXT_MUTED)))
         self._table.setItem(row, 2, source_item)
 
-        message_item = QTableWidgetItem(item.get("message", ""))
+        # Truncated in the grid (with the full text in the tooltip and in
+        # the row's UserRole data, both used by the Alarm Detail popup) -
+        # a long message otherwise stretches the Message column/table wider
+        # than the page and distorts the rest of the tab's layout.
+        full_message = item.get("message", "")
+        display_message = full_message if len(full_message) <= MESSAGE_MAX_CHARS else full_message[:MESSAGE_MAX_CHARS - 1] + "…"
+        message_item = QTableWidgetItem(display_message)
         message_item.setForeground(QBrush(QColor(TEXT_PRIMARY)))
+        message_item.setToolTip(full_message)
         self._table.setItem(row, 3, message_item)
 
         if row_bg:
@@ -470,7 +478,10 @@ class DiagnosticsTab(QWidget):
         # widget - the onboard on-screen keyboard auto-pops up for any
         # focusable/editable text widget, which we don't want for a
         # read-only detail view.
-        body_label = QLabel(item.get("message", ""), dlg)
+        body_text = item.get("message", "")
+        if item.get("file"):
+            body_text = f"{body_text}\n\nFile: {item['file']}"
+        body_label = QLabel(body_text, dlg)
         body_label.setWordWrap(True)
         body_label.setAlignment(Qt.AlignTop | Qt.AlignLeft)
         body_label.setTextInteractionFlags(Qt.TextSelectableByMouse)

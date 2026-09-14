@@ -241,6 +241,16 @@ class App(QMainWindow):
         self.lblSystemStatus.setObjectName("lblSystemStatus")
         self.ui.statusbar.addWidget(self.lblSystemStatus)
 
+        # Right (permanent): current encoder angle, shown just before the
+        # Mode/Version label - live-updated via status_binder.py's
+        # STATUS_BINDINGS (registered below, same as lblSystemStatus).
+        self.lblEncoderAngle = QLabel("--°")
+        self.lblEncoderAngle.setObjectName("lblEncoderAngle")
+        self.lblEncoderAngle.setStyleSheet(
+            "color: #ffffff; background: transparent; border: none; font-size: 20px; margin-right: 8px;"
+        )
+        self.ui.statusbar.addPermanentWidget(self.lblEncoderAngle)
+
         # Right (permanent, stays put regardless of the transient
         # notification message): Mode/Version, hand-edited via
         # config/machine_info.yaml rather than hardcoded here.
@@ -322,6 +332,7 @@ class App(QMainWindow):
         # automatic findChildren() scan - register it by hand so
         # STATUS_BINDINGS can still drive it.
         self.status_binder.register("lblSystemStatus", self.lblSystemStatus)
+        self.status_binder.register("lblEncoderAngle", self.lblEncoderAngle)
 
         #Load ui state
         self.load_ui_state()
@@ -486,14 +497,25 @@ class App(QMainWindow):
             self.report_name = metadata["report_name"]
         if metadata["reset_is_manual_compare"]:
             self.isManualCompare = False
+            # This is the compared cloud itself (not its PDF report) -
+            # when no report export is coming (report_pending False), this
+            # is the earliest point where the compared filename is actually
+            # known, so push "Compare Done" here instead of racing it from
+            # on_compare_done (CompareWorker.finished fires before this).
+            if not metadata["report_pending"] and getattr(self, "_compare_done_pending_report", False):
+                self._compare_done_pending_report = False
+                self.notification_center.push("compare", "✅COMPARE DONE ", "info",
+                                               file=os.path.basename(getattr(self, "report_name", "") or ""))
         if metadata["reset_post_scan_path"]:
             self.current_post_scan_path = ""
 
     def _on_scan_report_done(self, final_path):
-        self.notification_center.push("report", f"Report exported: {os.path.basename(final_path)}", "info")
+        self.notification_center.push("report", f"Report exported: {os.path.basename(final_path)}", "info",
+                                       file=os.path.basename(final_path))
         if getattr(self, "_compare_done_pending_report", False):
             self._compare_done_pending_report = False
-            self.notification_center.push("compare", "✅COMPARE DONE ", "info")
+            self.notification_center.push("compare", "✅COMPARE DONE ", "info",
+                                           file=os.path.basename(getattr(self, "report_name", "") or ""))
         self.show_3d_main_page()
 
     def _on_scan_report_failed(self, error_message):
@@ -501,7 +523,8 @@ class App(QMainWindow):
         self.notification_center.push("report", f"Report export failed: {error_message}", "error")
         if getattr(self, "_compare_done_pending_report", False):
             self._compare_done_pending_report = False
-            self.notification_center.push("compare", "⚠️COMPARE DONE (report export failed) ", "warning")
+            self.notification_center.push("compare", "⚠️COMPARE DONE (report export failed) ", "warning",
+                                           file=os.path.basename(getattr(self, "report_name", "") or ""))
         self.show_3d_main_page()
 
 
@@ -677,19 +700,16 @@ class App(QMainWindow):
         else:
             print("✅COMPARE DONE ", job_id)
 
-            if not self.ui.cbbAutoReport.isChecked():
-                # No PDF export coming for this compare (scan_worker's report
-                # step is skipped when auto-report is off) - nothing to wait
-                # on, show the status right away like before.
-                self.notification_center.push("compare", "✅COMPARE DONE ", "info")
-            else:
-                # A report export is about to run (scan_worker._process(),
-                # triggered once the compared-cloud ROS message arrives) -
-                # hold off on "Compare Done" until that actually finishes, so
-                # the status bar doesn't say "done" while the PDF is still
-                # being generated. _on_scan_report_done/_on_scan_report_failed
-                # push the deferred message once the real outcome is known.
-                self._compare_done_pending_report = True
+            # Either way, hold off pushing "Compare Done" until the compared
+            # cloud actually comes back through scan_worker (ROS topic,
+            # processed off the GUI thread) - self.report_name isn't set
+            # yet at this point, CompareWorker.finished only means the
+            # comparison itself computed, not that the result cloud/its
+            # filename have been produced. If auto-report is off,
+            # _on_scan_cloud_ready pushes it as soon as that cloud arrives;
+            # otherwise _on_scan_report_done/_on_scan_report_failed push it
+            # once the PDF export (which runs after) also finishes.
+            self._compare_done_pending_report = True
 
         if self._pending_compare is not None:
             prescan_path, postscan_path, is_manual = self._pending_compare
