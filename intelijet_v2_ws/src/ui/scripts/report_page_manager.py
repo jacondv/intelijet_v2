@@ -30,6 +30,7 @@ deleted - this page fully replaces them.
 import os
 import subprocess
 
+from PyQt5.QtCore import QTimer
 from PyQt5.QtWidgets import (
     QWidget, QFrame, QMessageBox, QHBoxLayout, QVBoxLayout, QLabel, QPushButton,
 )
@@ -129,6 +130,7 @@ class ReportPageManager(QWidget, Ui_frm_ReportPage):
         self.current_project = None
         self.current_job = None
         self.current_segment_filter = None  # None = "All Segments"
+        self.sort_order = "newest"
         self._checked_files = []  # ordered - at most 2
         self._all_projects = []  # full, unfiltered - see _load_project_and_job
         self._all_jobs = []
@@ -136,6 +138,7 @@ class ReportPageManager(QWidget, Ui_frm_ReportPage):
         self._enlarge_popup_items(self.cbbProjectPicker)
         self._enlarge_popup_items(self.cbbJobPicker)
         self._enlarge_popup_items(self.cbbSegmentFilter)
+        self._update_sort_button_label()
 
         self._wire_search_filter(self.searchProjectBox, self.cbbProjectPicker, lambda: self._all_projects, self._on_project_picker_changed)
         self._wire_search_filter(self.searchJobBox, self.cbbJobPicker, lambda: self._all_jobs, self._on_job_picker_changed)
@@ -143,6 +146,7 @@ class ReportPageManager(QWidget, Ui_frm_ReportPage):
         self.cbbProjectPicker.currentIndexChanged.connect(self._on_project_picker_changed)
         self.cbbJobPicker.currentIndexChanged.connect(self._on_job_picker_changed)
         self.cbbSegmentFilter.currentIndexChanged.connect(self._on_segment_filter_changed)
+        self.btnSortOrder.clicked.connect(self._on_sort_order_toggled)
         self.btnCurrentJob.clicked.connect(self._jump_to_current_job)
         self.btnStartCompare.clicked.connect(self._start_compare)
 
@@ -227,6 +231,14 @@ class ReportPageManager(QWidget, Ui_frm_ReportPage):
         self.current_segment_filter = self.cbbSegmentFilter.itemData(index) if index is not None and index >= 0 else None
         self.render_files(rebuild_filter=False)
 
+    def _on_sort_order_toggled(self):
+        self.sort_order = "oldest" if self.sort_order == "newest" else "newest"
+        self._update_sort_button_label()
+        self.render_files(rebuild_filter=False)
+
+    def _update_sort_button_label(self):
+        self.btnSortOrder.setText("Newest ▾" if self.sort_order == "newest" else "Oldest ▾")
+
     def _jump_to_current_job(self):
         current = self.job_store.get_current_job()
         project, job = repo.parse_job_ref(current) if current else (None, None)
@@ -279,6 +291,17 @@ class ReportPageManager(QWidget, Ui_frm_ReportPage):
 
     def render_files(self, rebuild_filter=True):
         layout = self.filesListLayout
+        # Rebuilding the card widgets below resets the scroll area's
+        # scrollbar to 0 as its content is torn down and re-added - jumping
+        # the view every time a Compare checkbox is toggled. Restore the
+        # position the user was actually at instead.
+        scrollbar = self.filesScroll.verticalScrollBar()
+        scroll_pos = scrollbar.value()
+        # Restored on the next event-loop pass, once the rebuilt widgets
+        # below have actually been laid out and the scrollbar's range
+        # reflects the new content - setting it synchronously here would
+        # just get clamped/overwritten by that later layout pass.
+        QTimer.singleShot(0, lambda: scrollbar.setValue(scroll_pos))
         self._clear_dynamic_rows(layout)
 
         if not self.current_project or not self.current_job:
@@ -319,7 +342,7 @@ class ReportPageManager(QWidget, Ui_frm_ReportPage):
 
         shown_scan_ids = (
             [self.current_segment_filter] if self.current_segment_filter is not None and self.current_segment_filter in segments
-            else sorted(segments.keys())
+            else sorted(segments.keys(), reverse=(self.sort_order == "newest"))
         )
 
         for scan_id in shown_scan_ids:

@@ -56,10 +56,6 @@ class ScanPipelineWorker(QThread):
         self._lock = threading.Lock()
         self._current_job = None
         self._pending_job = None
-        # Latest Pre-Scan .ply path seen this session, live-updated every
-        # time a pre_scan message is processed below - the fast path for
-        # _resolve_prescan_path().
-        self._last_prescan_path = None
 
     def submit(self, job):
         """Thread-safe (call from the GUI thread). If idle, starts
@@ -105,18 +101,9 @@ class ScanPipelineWorker(QThread):
     # ------------------------------------------------------------------
     def _resolve_prescan_path(self, jobs_folder):
         """Prescan path to compare the just-finished Post-Scan against.
-        Prefers the live-tracked path (always correct/current - updated
-        on every pre_scan message, see below); falls back to scanning
-        the job's own folder for the newest Pre-Scan .ply on disk if
-        that isn't available yet or its file is missing (e.g. app
-        restarted mid-job, or the very first Post-Scan this session
-        arrives before any pre_scan message has been processed) - this
-        guarantees a compare always has a cloud to run against instead
-        of silently using a stale/empty path.
+        Always the newest Pre-Scan .ply on disk in the job's own folder -
+        avoids any risk of comparing against a stale in-memory path.
         """
-        if self._last_prescan_path and os.path.exists(self._last_prescan_path):
-            return self._last_prescan_path
-
         from ui.models.file_name import find_latest_prescan
         return find_latest_prescan(jobs_folder)
 
@@ -211,8 +198,6 @@ class ScanPipelineWorker(QThread):
             }
             if topic_name in (topics["compared"], topics["compared_manual"]):
                 metadata["report_name"] = f_name
-            if topic_name == topics["pre_scan"]:
-                self._last_prescan_path = filepath
 
             self.cloud_ready.emit(polydata, metadata)
 

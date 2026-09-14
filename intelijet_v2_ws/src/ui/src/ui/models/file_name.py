@@ -220,11 +220,11 @@ def generate_filename(folder: str, job: str, scan_type: str, ext="ply", filepath
     return os.path.join(folder, filename)
 
 def find_latest_prescan(folder: str, ext: str = "ply"):
-    """Newest Pre-Scan .ply file directly inside `folder`, by mtime.
-    Fallback source of truth when a live-tracked prescan path isn't
-    available or its file no longer exists (e.g. app restarted mid-job,
-    or the tracked path was never set yet) - see scan_pipeline_worker.py's
-    _resolve_prescan_path().
+    """Pre-Scan .ply file directly inside `folder` with the highest
+    SCAN{scan_id} in its filename - e.g. if the job has SCAN001 and
+    SCAN002, the Pre-Scan belonging to SCAN002 is returned. Used by
+    scan_pipeline_worker.py's _resolve_prescan_path() to pick the
+    Pre-Scan a just-finished Post-Scan should be compared against.
     """
     try:
         candidates = os.listdir(folder)
@@ -234,12 +234,13 @@ def find_latest_prescan(folder: str, ext: str = "ply"):
     for name in candidates:
         if not name.lower().endswith(f".{ext}") or is_sync_junk(name):
             continue
-        if "pre" in parse_filename(name)["type"].lower():
-            matches.append(os.path.join(folder, name))
+        parsed = parse_filename(name)
+        if "pre" in parsed["type"].lower():
+            matches.append((int(parsed["scan_id"]), os.path.join(folder, name)))
     if not matches:
         return None
-    matches.sort(key=os.path.getmtime, reverse=True)
-    return matches[0]
+    matches.sort(key=lambda m: m[0], reverse=True)
+    return matches[0][1]
 
 
 def parse_filename(filename: str):
