@@ -14,7 +14,7 @@ if the connection to the scanner fails.
 <launch>
     <arg name="hostname" default="192.168.82.121"/>
     <!-- launch file for the lms_5xx series -->
-    <node name="sick_lms_511" pkg="sick_scan" type="sick_generic_caller" respawn="false" output="screen">
+    <node name="sick_lms_511" pkg="sick_scan" type="sick_generic_caller" respawn="true" respawn_delay="5" output="screen">
         <!--<param name="robot_description" command="$(find xacro)/xacro.py '$(find sick_scan)/urdf/example.urdf.xacro'" />-->
 
         <!-- default values: -->
