@@ -132,6 +132,16 @@ QLineEdit[cssClass="pickerSearchBox"]:focus {{ border-color: {ACCENT_YELLOW}; }}
     font-weight: 800;
 }}
 #btnCurrentJob:hover {{ border-color: {ACCENT_YELLOW}; color: {ACCENT_YELLOW_HOVER}; }}
+#btnSortOrder {{
+    background-color: {CARD_BG};
+    color: {TEXT};
+    border: 2px solid {BORDER};
+    border-radius: 8px;
+    padding: 10px 16px;
+    font-size: {FONT_VALUE};
+    font-weight: 700;
+}}
+#btnSortOrder:hover {{ border-color: {ACCENT_YELLOW}; color: {ACCENT_YELLOW_HOVER}; }}
 QScrollArea {{ background: transparent; border: none; }}
 QScrollArea > QWidget > QWidget {{ background: transparent; }}
 
@@ -335,6 +345,15 @@ QPushButton[cssClass="rowPrimaryBtn"]:disabled {{ background-color: #e2e8f0; col
         self.filesCardTitle.setObjectName("reportCardTitle")
         self.filesCardHeaderLayout.addWidget(self.filesCardTitle)
         self.filesCardHeaderLayout.addStretch(1)
+
+        # Single click-to-toggle button instead of a dropdown - there are
+        # only two states, so opening a popup list for it is one tap too
+        # many; the button's own label shows the current state.
+        self.btnSortOrder = QtWidgets.QPushButton("Newest ▾", self.filesCardHeader)
+        self.btnSortOrder.setObjectName("btnSortOrder")
+        self.btnSortOrder.setMinimumHeight(68)
+        self.btnSortOrder.setMinimumWidth(160)
+        self.filesCardHeaderLayout.addWidget(self.btnSortOrder)
 
         self.segmentFieldBox, self.cbbSegmentFilter = self._build_field_box(
             self.filesCardHeader, "Segment", combo_object_name="cbbSegmentFilter", height=68, min_width=280,
