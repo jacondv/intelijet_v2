@@ -301,6 +301,13 @@ class ProjectManager(QWidget, Ui_frm_ProjectPage):
         subtext.setObjectName("jobRowSubtext")
         info.addWidget(subtext)
 
+        params = job_info.parameters if job_info else {}
+        target_thickness = params.get("target_thickness", 60)
+        tolerance = params.get("tolerance", 10)
+        target_label = QLabel(f"Target: {target_thickness}±{tolerance} mm")
+        target_label.setObjectName("jobRowSubtext")
+        info.addWidget(target_label)
+
         status_row = QHBoxLayout()
         status_row.setSpacing(6)
         status_row.addWidget(QLabel("Status:"), 0)
@@ -436,6 +443,14 @@ class ProjectManager(QWidget, Ui_frm_ProjectPage):
         info.addWidget(title)
 
         job_info = repo.load_job_info(project, job)
+
+        params = job_info.parameters if job_info else {}
+        target_thickness = params.get("target_thickness", 60)
+        tolerance = params.get("tolerance", 10)
+        target_label = QLabel(f"Target: {target_thickness}±{tolerance} mm")
+        target_label.setObjectName("scheduleSubtext")
+        info.addWidget(target_label)
+
         status_row = QHBoxLayout()
         status_row.setSpacing(6)
         status_row.addWidget(QLabel("Status:"), 0)
