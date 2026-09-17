@@ -37,6 +37,22 @@ elif ! xhost +local:docker; then
     echo "WARNING: 'xhost +local:docker' failed - the app may fail to connect to the X server." >&2
 fi
 
+# Force off any fractional-scaling CRTC transform GNOME's own display
+# settings may have applied to this output (e.g. Settings > Displays set
+# to 125%/150% "scale") before rotating below. Without this, the X
+# server reports an inflated virtual resolution (observed: 2560x1600
+# instead of the panel's real 1920x1200 post-rotation, from a lingering
+# ~1.333x scale transform) to every client on this DISPLAY - including
+# the container, since it connects to this same X server. The app
+# already renders at 1:1 pixel scale (QT_SCALE_FACTOR=1.0 etc. in
+# run_intelijet.sh), so it lays out against that inflated canvas and
+# everything ends up visibly smaller once X scales the oversized
+# framebuffer back down to the panel's actual pixels. Reset first so
+# rotation always starts from a clean 1x1 scale, regardless of whatever
+# GNOME's monitors.xml currently has configured.
+xrandr --output DSI-1 --scale 1x1 2>/dev/null || true
+xrandr --output DSI1 --scale 1x1 2>/dev/null || true
+
 # Tablet screen rotation - no-op (harmless) on machines/monitors without a
 # DSI-1 output.
 xrandr --output DSI-1 --rotate right 2>/dev/null || true
