@@ -521,7 +521,7 @@ QLabel[cssClass="sysFieldValue"] {{
         self.cbbJobSelect = QtWidgets.QComboBox(self.jobSelectorBox)
         self.cbbJobSelect.setObjectName("cbbJobSelect")
         self.cbbJobSelect.setMinimumHeight(64)
-        self.cbbJobSelect.setMinimumWidth(420)
+        self.cbbJobSelect.setMinimumWidth(630)
         self.cbbJobSelect.setEditable(False)
         self.cbbJobSelect.addItem("")
         self.cbbJobSelect.addItem("")
@@ -628,6 +628,8 @@ QLabel[cssClass="sysFieldValue"] {{
         self.verticalLayout_7.setContentsMargins(2, 2, 2, 2)
         self.verticalLayout_7.setSpacing(2)
         self.verticalLayout_7.setObjectName("verticalLayout_7")
+        self.verticalLayout_7.setContentsMargins(0, 0, 0, 0)
+        self.verticalLayout_7.setSpacing(0)
         self.cloudFrame = QtWidgets.QWidget(self.tab_cloud_view)
         cloudFrameSizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
         cloudFrameSizePolicy.setHeightForWidth(self.cloudFrame.sizePolicy().hasHeightForWidth())
@@ -635,6 +637,18 @@ QLabel[cssClass="sysFieldValue"] {{
         self.cloudFrame.setObjectName("cloudFrame")
         self.verticalLayout_7.addWidget(self.cloudFrame)
         self.horizontalLayout.addWidget(self.tab_cloud_view, 1)
+
+        # Floating overlay (not in any layout, so it costs the 3D viewport
+        # no space) showing which cloud is on screen - parented straight to
+        # cloudFrame and raised above the VTK widget app.py adds into it.
+        self.lblCloudInfo = QtWidgets.QLabel(self.cloudFrame)
+        self.lblCloudInfo.setObjectName("lblCloudInfo")
+        self.lblCloudInfo.setStyleSheet(
+            "color: #ffffff; background-color: rgba(0, 0, 0, 110);"
+            "padding: 6px 12px; font-size: 16px;"
+        )
+        self.lblCloudInfo.move(8, 8)
+        self.lblCloudInfo.hide()  # shown once a cloud with known metadata is loaded
 
         # ---- control_panel: now scoped to the 3D MAIN page only ----
         self.control_panel = QtWidgets.QWidget(self.tab_operator)

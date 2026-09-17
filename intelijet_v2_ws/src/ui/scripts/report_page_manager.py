@@ -519,6 +519,15 @@ class ReportPageManager(QWidget, Ui_frm_ReportPage):
         # window class, not PID - the new process may just be a client
         # signalling the running instance) is used to raise+focus it
         # instead of relying on the Popen'd process being the visible window.
+        # A single immediate wmctrl call used to race qpdfview actually
+        # creating its window (worst case on a cold start, with no window
+        # yet for wmctrl's class match to find) - it would then silently
+        # do nothing, leaving the PDF opened behind the (often fullscreen)
+        # main window. Retry a few times over ~2s to cover that startup gap.
+        for delay_ms in (0, 300, 800, 1500, 2500):
+            QTimer.singleShot(delay_ms, self._raise_qpdfview)
+
+    def _raise_qpdfview(self):
         try:
             subprocess.Popen(["wmctrl", "-a", "qpdfview"])
         except OSError:

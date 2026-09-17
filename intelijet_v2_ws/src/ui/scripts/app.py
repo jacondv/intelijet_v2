@@ -8,6 +8,7 @@ from pathlib import Path
 
 import re
 import time
+from datetime import datetime
 
 import sys, subprocess
 import rospy
@@ -142,6 +143,10 @@ class App(QMainWindow):
 
         self.vtk_viewer = VTKViewer(self.ui.cloudFrame)
         self.ui.btnZoomCenter.released.connect(self.vtk_viewer.restore_initial_view)
+        # VTKViewer just added its own child widget(s) into cloudFrame -
+        # keep the floating cloud-info overlay (parented to cloudFrame,
+        # not part of its layout) drawn on top of them.
+        self.ui.lblCloudInfo.raise_()
 
         #TODO
 
@@ -486,6 +491,8 @@ class App(QMainWindow):
 
     def _on_scan_cloud_ready(self, polydata, metadata):
         self.vtk_viewer.update(polydata)
+        if metadata.get("filepath"):
+            self._update_cloud_info_label(metadata["filepath"])
         # If a report export is about to run for this cloud, hold off
         # switching to 3D MAIN until it's actually done (see
         # _on_scan_report_done/_on_scan_report_failed) - otherwise switch
@@ -602,8 +609,48 @@ class App(QMainWindow):
         polydata = self.cloud_pipeline.to_vtk(data)
         if filename:
             print("updated polydata from file:", filename)
+            self._update_cloud_info_label(filename)
         self.vtk_viewer.update(polydata)
         self.show_3d_main_page()
+
+    def _update_cloud_info_label(self, filepath):
+        """Show "Project | Job | Segment | Post-Scan xx | Date-Time" above
+        the 3D viewport so it's clear which cloud is on screen - filepath
+        is expected at .../<project>/<job>/<filename>, matching how
+        report_page_manager/scan_pipeline_worker lay job folders out."""
+        try:
+            from ui.models.file_name import parse_filename
+            parsed = parse_filename(filepath)
+            job_folder = os.path.dirname(filepath)
+            job = os.path.basename(job_folder)
+            project = os.path.basename(os.path.dirname(job_folder))
+
+            type_name = str(parsed["type"]).lower()
+            if "pre" in type_name:
+                scan_label = f"Pre Scan {int(parsed['index']):02d}"
+            elif "post" in type_name:
+                scan_label = f"Post Scan {int(parsed['index']):02d}"
+            else:
+                scan_label = f"Heatmap {int(parsed['index']):02d}"
+
+            date_time = parsed["timestamp"]
+            try:
+                dt = datetime.strptime(str(parsed["timestamp"]), "%Y%m%d_%H%M%S")
+                date_time = dt.strftime("%d/%m/%Y %H:%M:%S")
+            except ValueError:
+                pass
+
+            text = (
+                f"{project}  |  {job}  |  Segment {int(parsed['scan_id']):03d}  |  "
+                f"{scan_label}  |  {date_time}"
+            )
+            self.ui.lblCloudInfo.setText(text)
+            self.ui.lblCloudInfo.adjustSize()
+            self.ui.lblCloudInfo.raise_()
+            self.ui.lblCloudInfo.show()
+        except Exception as e:
+            rospy.logwarn(f"[App] Could not parse cloud info from {filepath}: {e}")
+            self.ui.lblCloudInfo.hide()
 
 
     # --- New REPORT tab (ReportPageManager) callbacks ---
