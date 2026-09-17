@@ -490,9 +490,7 @@ class App(QMainWindow):
         self.scan_worker.submit(job)
 
     def _on_scan_cloud_ready(self, polydata, metadata):
-        self.vtk_viewer.update(polydata)
-        if metadata.get("filepath"):
-            self._update_cloud_info_label(metadata["filepath"])
+        self._show_cloud_in_viewer(polydata, metadata.get("filepath"))
         # If a report export is about to run for this cloud, hold off
         # switching to 3D MAIN until it's actually done (see
         # _on_scan_report_done/_on_scan_report_failed) - otherwise switch
@@ -609,9 +607,20 @@ class App(QMainWindow):
         polydata = self.cloud_pipeline.to_vtk(data)
         if filename:
             print("updated polydata from file:", filename)
-            self._update_cloud_info_label(filename)
-        self.vtk_viewer.update(polydata)
+        self._show_cloud_in_viewer(polydata, filename)
         self.show_3d_main_page()
+
+    def _show_cloud_in_viewer(self, polydata, filepath=None):
+        """Single entry point for putting a cloud on the 3D MAIN page -
+        both the manual "3D View"/report path (update_pointcloud_from_data)
+        and the live auto-scan path (_on_scan_cloud_ready) call this, so
+        lblCloudInfo always reflects whatever's actually on screen instead
+        of only updating for one of the two sources."""
+        self.vtk_viewer.update(polydata)
+        if filepath:
+            self._update_cloud_info_label(filepath)
+        else:
+            self.ui.lblCloudInfo.hide()
 
     def _update_cloud_info_label(self, filepath):
         """Show "Project | Job | Segment | Post-Scan xx | Date-Time" above
