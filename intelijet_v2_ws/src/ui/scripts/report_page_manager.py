@@ -513,7 +513,23 @@ class ReportPageManager(QWidget, Ui_frm_ReportPage):
         if not pdf_path or not os.path.exists(pdf_path):
             QMessageBox.warning(self, "Not Found", "Report file not found.")
             return
-        subprocess.Popen(["qpdfview", "--unique", pdf_path])
+        # run_intelijet.sh pins QT_AUTO_SCREEN_SCALE_FACTOR=0/QT_SCALE_FACTOR=1.0
+        # for THIS app - deliberately, since its own layout is hand-tuned in
+        # raw pixels and would double-scale otherwise (see that file's
+        # comments). qpdfview is a generic desktop app with no such tuning:
+        # inheriting those same pinned vars (subprocess.Popen inherits the
+        # parent's environment by default) leaves its toolbar/icons at their
+        # small desktop-default pixel size, rendered into the host's often
+        # scaled-up virtual X11 canvas (e.g. 2560x1600 on a 1920x1200 panel
+        # at 150% GNOME scale) - it looks tiny until manually zoomed. Give
+        # it back Qt's normal auto HiDPI scaling instead, independent of the
+        # main app's settings, so its own chrome sizes itself correctly.
+        qpdfview_env = os.environ.copy()
+        qpdfview_env.pop("QT_SCALE_FACTOR", None)
+        qpdfview_env.pop("QT_SCREEN_SCALE_FACTORS", None)
+        qpdfview_env.pop("QT_FONT_DPI", None)
+        qpdfview_env["QT_AUTO_SCREEN_SCALE_FACTOR"] = "1"
+        subprocess.Popen(["qpdfview", "--unique", pdf_path], env=qpdfview_env)
         # qpdfview --unique reuses its existing instance's window if one is
         # already running rather than opening a new one, so wmctrl (by
         # window class, not PID - the new process may just be a client
