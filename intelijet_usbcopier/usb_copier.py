@@ -122,9 +122,19 @@ class USBCopierWindow:
     def __init__(self, root, usb_drives):
         self.root = root
         self.root.title("USB Data Copier")
-        self.root.geometry("960x660")
-        self.root.minsize(600, 800)
+        self.root.geometry("1180x820")
+        self.root.minsize(1000, 800)
         self.root.configure(bg=C["bg"])
+        # Open maximized by default (touchscreen kiosk - no reason to make
+        # the user resize it every time it pops up on a USB insert).
+        # "-zoomed" is the X11/Linux equivalent of Windows' state("zoomed").
+        try:
+            self.root.attributes("-zoomed", True)
+        except tk.TclError:
+            try:
+                self.root.state("zoomed")
+            except tk.TclError:
+                pass
         self.root.protocol("WM_DELETE_WINDOW", self._on_close)
 
         self.source_root = Path(SOURCE_DATA_PATH)
@@ -155,38 +165,50 @@ class USBCopierWindow:
             pass
         style.configure("TScrollbar",
                         background=C["panel"], troughcolor=C["bg"],
-                        arrowcolor=C["muted"],arrowsize=40, borderwidth=0, width=40)
+                        arrowcolor=C["muted"],arrowsize=44, borderwidth=0, width=44)
         style.configure("Prog.Horizontal.TProgressbar",
                         troughcolor=C["border"], background=C["accent"],
-                        borderwidth=0, thickness=10)
-        style.configure("TCombobox", 
-                        padding=10, arrowsize=30, font=("Courier New", 16))
+                        borderwidth=0, thickness=18)
+        style.configure("TCombobox",
+                        padding=14, arrowsize=36, font=("Courier New", 18))
 
     # ── UI BUILD ─────────────────────────────────────────────
     def _build_ui(self):
         # Header
-        hdr = tk.Frame(self.root, bg=C["panel"], height=56)
+        hdr = tk.Frame(self.root, bg=C["panel"], height=72)
         hdr.pack(fill="x")
         hdr.pack_propagate(False)
         tk.Label(hdr, text="⟢  USB DATA COPIER",
                  bg=C["panel"], fg=C["accent"],
-                 font=("Courier New", 15, "bold")).pack(side="left", padx=20)
+                 font=("Courier New", 18, "bold")).pack(side="left", padx=24)
         self.lbl_usb_dot = tk.Label(hdr, text="● 0 USB connected",
                                      bg=C["panel"], fg=C["danger"],
-                                     font=("Courier New", ))
-        self.lbl_usb_dot.pack(side="right", padx=20)
+                                     font=("Courier New", 13))
+        self.lbl_usb_dot.pack(side="right", padx=24)
         tk.Frame(self.root, bg=C["border"], height=1).pack(fill="x")
 
-        # Body: left | right
+        # Body: left (file browser) 70% | right (activity log) 30%.
+        # `place` with relwidth enforces that split as an actual hard
+        # percentage of the parent's width, unlike `grid`'s column
+        # `weight` - weight only distributes space LEFT OVER once each
+        # column's own natural content size is satisfied, so with the log
+        # panel's own widgets (scrollbar, text box) demanding real width,
+        # a plain 2:1 weight split still rendered the log far wider than
+        # intended. `place` also keeps re-applying the percentage on every
+        # resize on its own, no manual <Configure> recompute needed.
         body = tk.Frame(self.root, bg=C["bg"])
         body.pack(fill="both", expand=True)
 
+        # x/width/height alongside relx/relwidth/relheight are additive
+        # pixel offsets in Tk's place geometry manager - used here purely
+        # to reproduce the outer/inter-panel margins the old pack layout
+        # had (16px outer, 8px gap between panels), on top of the 70/30
+        # split itself.
         left = tk.Frame(body, bg=C["bg"])
-        left.pack(side="left", fill="both", expand=True, padx=(16, 8), pady=16)
+        left.place(relx=0.0, x=16, y=16, relwidth=0.70, width=-24, relheight=1.0, height=-32)
 
-        right = tk.Frame(body, bg=C["bg"], width=290)
-        right.pack(side="right", fill="y", padx=(0, 16), pady=16)
-        right.pack_propagate(False)
+        right = tk.Frame(body, bg=C["bg"])
+        right.place(relx=0.70, x=0, y=16, relwidth=0.30, width=-16, relheight=1.0, height=-32)
 
         self._build_left(left)
         self._build_right(right)
@@ -200,32 +222,32 @@ class USBCopierWindow:
         usb_box = self._panel(parent)
         usb_box.pack(fill="x", pady=(0, 10))
         tk.Label(usb_box, text="USB DRIVE", bg=C["panel"], fg=C["muted"],
-                 font=("Courier New", 8, "bold")).pack(anchor="w", padx=14, pady=(10, 2))
+                 font=("Courier New", 11, "bold")).pack(anchor="w", padx=14, pady=(12, 4))
         usb_row = tk.Frame(usb_box, bg=C["panel"])
-        usb_row.pack(fill="x", padx=14, pady=(0, 10))
-        self.combo_usb = ttk.Combobox(usb_row, state="readonly", font=("Courier New", 14),style="TCombobox")
-        self.combo_usb.pack(side="left", fill="x", expand=True)
+        usb_row.pack(fill="x", padx=14, pady=(0, 14))
+        self.combo_usb = ttk.Combobox(usb_row, state="readonly", font=("Courier New", 18), style="TCombobox")
+        self.combo_usb.pack(side="left", fill="x", expand=True, ipady=8)
         self.combo_usb.bind("<<ComboboxSelected>>", self._on_usb_select)
-        self._btn(usb_row, "↻", self._refresh_usb, ghost=True, width=3).pack(side="right", padx=(6, 0))
+        self._btn(usb_row, "↻ Refresh", self._refresh_usb, ghost=True).pack(side="right", padx=(10, 0))
 
         # ── Breadcrumb path bar
         nav_box = self._panel(parent)
-        nav_box.pack(fill="x", pady=(0, 10))
+        nav_box.pack(fill="x", pady=(0, 14))
         nav_inner = tk.Frame(nav_box, bg=C["panel"])
-        nav_inner.pack(fill="x", padx=14, pady=8)
+        nav_inner.pack(fill="x", padx=14, pady=12)
         self._btn(nav_inner, "⬆ Up", self._go_up, ghost=True).pack(side="left")
         self.lbl_path = tk.Label(nav_inner, text="", bg=C["panel"], fg=C["accent2"],
-                                  font=("Courier New", 10), anchor="w")
-        self.lbl_path.pack(side="left", padx=(10, 0), fill="x", expand=True)
+                                  font=("Courier New", 14), anchor="w")
+        self.lbl_path.pack(side="left", padx=(14, 0), fill="x", expand=True)
 
         # ── Folder / file list header
         hdr_row = tk.Frame(parent, bg=C["bg"])
-        hdr_row.pack(fill="x", pady=(0, 5))
+        hdr_row.pack(fill="x", pady=(0, 8))
         tk.Label(hdr_row, text="SELECT ITEMS TO COPY",
                  bg=C["bg"], fg=C["muted"],
-                 font=("Courier New", 14, "bold")).pack(side="left")
+                 font=("Courier New", 16, "bold")).pack(side="left")
         self._btn(hdr_row, "None", self._deselect_all, ghost=True).pack(side="right")
-        self._btn(hdr_row, "All",  self._select_all,   ghost=True).pack(side="right", padx=(0, 4))
+        self._btn(hdr_row, "All",  self._select_all,   ghost=True).pack(side="right", padx=(0, 8))
 
         # ── Scrollable list
         list_outer = self._panel(parent)
@@ -251,9 +273,9 @@ class USBCopierWindow:
         log_box = self._panel(parent)
         log_box.pack(fill="both", expand=True)
         self.log_txt = tk.Text(log_box, bg=C["panel"], fg=C["text"],
-                                font=("Courier New", 9), relief="flat", bd=0,
+                                font=("Courier New", 11), relief="flat", bd=0,
                                 state="disabled", wrap="word",
-                                selectbackground=C["border"], padx=8, pady=8)
+                                selectbackground=C["border"], padx=10, pady=10)
         log_sb = ttk.Scrollbar(log_box, command=self.log_txt.yview)
         self.log_txt.configure(yscrollcommand=log_sb.set)
         log_sb.pack(side="right", fill="y")
@@ -264,52 +286,73 @@ class USBCopierWindow:
             self.log_txt.tag_config(tag, foreground=col)
 
     def _build_bottom(self):
-        bar = tk.Frame(self.root, bg=C["panel"], height=200)
+        bar = tk.Frame(self.root, bg=C["panel"], height=230)
         bar.pack(fill="x", side="bottom")
         bar.pack_propagate(False)
 
         prog_row = tk.Frame(bar, bg=C["panel"])
-        prog_row.pack(fill="x", padx=20, pady=(10, 3))
+        prog_row.pack(fill="x", padx=24, pady=(14, 4))
         self.lbl_progress = tk.Label(prog_row, text="Ready", bg=C["panel"],
-                                      fg=C["muted"], font=("Courier New", 9))
+                                      fg=C["muted"], font=("Courier New", 12))
         self.lbl_progress.pack(side="left")
         self.lbl_pct = tk.Label(prog_row, text="", bg=C["panel"],
-                                 fg=C["accent"], font=("Courier New", 9, "bold"))
+                                 fg=C["accent"], font=("Courier New", 12, "bold"))
         self.lbl_pct.pack(side="right")
 
         self.progress = ttk.Progressbar(bar, style="Prog.Horizontal.TProgressbar",
                                          mode="determinate")
-        self.progress.pack(fill="x", padx=20, pady=(0, 6),ipady=8)
+        self.progress.pack(fill="x", padx=24, pady=(0, 10), ipady=10)
 
         btn_row = tk.Frame(bar, bg=C["panel"])
-        btn_row.pack(fill="x", padx=20, pady=(0, 10))
+        btn_row.pack(fill="x", padx=24, pady=(0, 14))
         self.lbl_size = tk.Label(btn_row, text="", bg=C["panel"],
-                                  fg=C["muted"], font=("Courier New", 9))
+                                  fg=C["muted"], font=("Courier New", 12))
         self.lbl_size.pack(side="left")
+
+        # "Remove USB" sits apart on the left of the action buttons (own
+        # padding gap) - it's not part of the copy flow, so it shouldn't
+        # look like just another step next to Cancel/Start Copy, but it
+        # still needs to be reachable without hunting for it.
+        self.btn_remove_usb = self._btn(btn_row, "⏏  Remove USB", self._remove_usb, warn=True)
+        self.btn_remove_usb.pack(side="left", padx=(24, 0))
+
         self.btn_cancel = self._btn(btn_row, "✕  Cancel", self._cancel_copy, danger=True)
-        self.btn_cancel.pack(side="right", padx=(6, 0))
+        self.btn_cancel.pack(side="right", padx=(10, 0))
         self.btn_cancel.configure(state="disabled")
         self.btn_copy = self._btn(btn_row, "⟶  Start Copy", self._start_copy, accent=True)
         self.btn_copy.pack(side="right")
 
     # ── WIDGET HELPERS ───────────────────────────────────────
+    def _make_checkbox(self, parent, var):
+        """A big tappable ☐/☑ label bound to `var`, sized to match the
+        icon/name text in the same row (see the note at its call site)."""
+        lbl = tk.Label(parent, text="☑" if var.get() else "☐",
+                        bg=C["item"], fg=C["accent"],
+                        font=("Courier New", 22), cursor="hand2")
+        lbl.bind("<Button-1>", lambda e: var.set(not var.get()))
+        var.trace_add("write", lambda *_: lbl.configure(
+            text="☑" if var.get() else "☐"))
+        return lbl
+
     def _panel(self, parent):
         f = tk.Frame(parent, bg=C["panel"],
                      highlightbackground=C["border"], highlightthickness=1)
         return f
 
-    def _btn(self, parent, text, cmd, accent=False, danger=False, ghost=False, **kw):
+    def _btn(self, parent, text, cmd, accent=False, danger=False, warn=False, ghost=False, **kw):
         if accent:
             bg, fg, abg = C["accent"], "#0f1117", "#00b894"
         elif danger:
             bg, fg, abg = C["danger"], "white", "#cc3355"
+        elif warn:
+            bg, fg, abg = C["warn"], "white", "#c96a00"
         else:
             bg, fg, abg = C["border"], C["text"], C["hover"]
         b = tk.Button(parent, text=text, command=cmd,
                       bg=bg, fg=fg, activebackground=abg, activeforeground=fg,
                       relief="flat", cursor="hand2",
-                      font=("Courier New", 16, "bold" if (accent or danger) else "normal"),
-                      padx=10, pady=10, bd=0, **kw)
+                      font=("Courier New", 18, "bold" if (accent or danger or warn) else "normal"),
+                      padx=18, pady=16, bd=0, **kw)
         return b
 
     # ── DIRECTORY BROWSER ────────────────────────────────────
@@ -353,48 +396,47 @@ class USBCopierWindow:
             self.folder_vars[str(item)] = var
 
             row = tk.Frame(self.item_frame, bg=C["item"], cursor="hand2")
-            row.pack(fill="x",pady=10)
+            row.pack(fill="x",pady=14)
             self.folder_widgets[str(item)] = row
 
             # Hover
             row.bind("<Enter>", lambda e, r=row: r.configure(bg=C["hover"]))
             row.bind("<Leave>", lambda e, r=row: r.configure(bg=C["item"]))
 
-            # Checkbox
-            cb = tk.Checkbutton(row, variable=var,
-                                 bg=C["item"], activebackground=C["hover"],
-                                 selectcolor=C["bg"], fg=C["accent"],
-                                 font=("Courier New", 16),
-                                 relief="flat", bd=0)
-            cb.pack(side="left", padx=(8, 0), pady=6)
+            # Checkbox - a plain Label drawing ☐/☑ instead of tk.Checkbutton,
+            # since the native indicator can't be sized up to match the
+            # icon/name text next to it (no "-indicatordiameter" option on
+            # stock Tk; this keeps it visually consistent with the row).
+            cb = self._make_checkbox(row, var)
+            cb.pack(side="left", padx=(12, 0), pady=12)
 
             # Icon
             icon_lbl = tk.Label(row, text="📁" if is_dir else "📄",
-                                  bg=C["item"], font=("Courier New", 11))
-            icon_lbl.pack(side="left", padx=(4, 0))
+                                  bg=C["item"], font=("Courier New", 16))
+            icon_lbl.pack(side="left", padx=(8, 0))
 
             # Name
             name_lbl = tk.Label(row, text=item.name,
                                   bg=C["item"], fg=C["text"],
-                                  font=("Courier New", 10), anchor="w")
-            name_lbl.pack(side="left", padx=(6, 0), fill="x", expand=True)
+                                  font=("Courier New", 14), anchor="w")
+            name_lbl.pack(side="left", padx=(10, 0), fill="x", expand=True)
 
             # Size (files only)
             if not is_dir:
                 sz = tk.Label(row, text=fmt_size(item.stat().st_size),
                                bg=C["item"], fg=C["muted"],
-                               font=("Courier New", 8))
-                sz.pack(side="right", padx=12)
+                               font=("Courier New", 12))
+                sz.pack(side="right", padx=16)
             else:
                 # "Open" button for dirs
                 open_btn = tk.Button(row, text="Open →",
                                       bg=C["border"], fg=C["accent2"],
                                       activebackground=C["hover"],
                                       activeforeground=C["accent"],
-                                      font=("Courier New", 14), relief="flat",
-                                      padx=8, pady=2, cursor="hand2",
+                                      font=("Courier New", 16), relief="flat",
+                                      padx=16, pady=10, cursor="hand2",
                                       command=lambda p=item: self._load_dir(p))
-                open_btn.pack(side="right", padx=8)
+                open_btn.pack(side="right", padx=12)
 
             # Click row = toggle checkbox
             for w in (row, icon_lbl, name_lbl):
@@ -552,6 +594,78 @@ class USBCopierWindow:
         if self.is_copying:
             self.cancel_flag.set()
             self._log("Cancelling...", "warn")
+
+    # ── SAFE REMOVE ──────────────────────────────────────────
+    def _remove_usb(self):
+        """Unmount the selected USB drive and close the window - lets the
+        user pull the drive right after, instead of yanking it out while
+        it's still mounted (the usual cause of corrupted USB filesystems)."""
+        if self.is_copying:
+            messagebox.showwarning(
+                "Copy in progress",
+                "A copy is still running. Cancel or wait for it to finish before removing the USB drive.")
+            return
+
+        idx = self.combo_usb.current()
+        if not (0 <= idx < len(self.usb_drives)):
+            messagebox.showwarning("No USB", "No USB drive selected.")
+            return
+
+        drive = self.usb_drives[idx]
+        if not messagebox.askyesno(
+                "Remove USB",
+                f"Safely unmount and close this window for:\n\n{drive['label']}  [{drive['mount']}]\n\nProceed?"):
+            return
+
+        self.btn_remove_usb.configure(state="disabled")
+        self._log(f"Unmounting {drive['mount']} ...", "warn")
+        threading.Thread(target=self._unmount_worker, args=(drive,), daemon=True).start()
+
+    def _unmount_worker(self, drive):
+        device = f"/dev/{drive['name']}" if drive.get("name") else None
+        error = None
+        try:
+            unmounted = False
+            if device:
+                result = subprocess.run(
+                    ["udisksctl", "unmount", "-b", device],
+                    capture_output=True, text=True, timeout=15)
+                unmounted = result.returncode == 0
+                if not unmounted:
+                    error = result.stderr.strip() or result.stdout.strip()
+            if not unmounted:
+                # Fallback for systems without udisks/polkit set up for
+                # unprivileged unmount - requires the service to already
+                # have permission (e.g. running as the drive's owner/root).
+                result = subprocess.run(
+                    ["umount", drive["mount"]],
+                    capture_output=True, text=True, timeout=15)
+                unmounted = result.returncode == 0
+                if not unmounted:
+                    error = result.stderr.strip() or error or "unmount failed"
+
+            if unmounted:
+                self.root.after(0, lambda: self._on_unmount_done(drive, None))
+            else:
+                self.root.after(0, lambda: self._on_unmount_done(drive, error))
+        except Exception as ex:
+            self.root.after(0, lambda: self._on_unmount_done(drive, str(ex)))
+
+    def _on_unmount_done(self, drive, error):
+        self.btn_remove_usb.configure(state="normal")
+        if error:
+            self._log(f"✗ Unmount failed: {error}", "err")
+            messagebox.showerror(
+                "Unmount Failed",
+                f"Could not safely unmount {drive['label']}:\n{error}\n\n"
+                "Do not remove the USB drive - try again or unmount it manually.")
+            return
+
+        self._log(f"✓ {drive['label']} unmounted - safe to remove now", "success")
+        messagebox.showinfo(
+            "Safe to Remove",
+            f"{drive['label']} has been safely unmounted.\nYou can now remove the USB drive.")
+        self.root.withdraw()
 
     # ── LOG ──────────────────────────────────────────────────
     def _log(self, msg, tag="info"):
