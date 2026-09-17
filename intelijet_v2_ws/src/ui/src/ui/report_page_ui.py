@@ -194,7 +194,7 @@ QPushButton[cssClass="compareToggle"] {{
     color: {TEXT_MUTED};
     border: 2px solid {BORDER};
     border-radius: 20px;
-    padding: 16px 20px;
+    padding: 32px 20px;
     font-size: {FONT_BUTTON};
     font-weight: 800;
 }}
@@ -208,7 +208,7 @@ QPushButton[cssClass="rowActionBtn"] {{
     color: {TEXT};
     border: 1px solid {BORDER};
     border-radius: 8px;
-    padding: 20px 20px;
+    padding: 40px 20px;
     font-size: {FONT_BUTTON};
     font-weight: 700;
 }}
@@ -219,7 +219,7 @@ QPushButton[cssClass="rowDangerBtn"] {{
     color: {ACCENT_RED};
     border: 1px solid {ACCENT_RED};
     border-radius: 8px;
-    padding: 20px 20px;
+    padding: 40px 20px;
     font-size: {FONT_BUTTON};
     font-weight: 700;
 }}

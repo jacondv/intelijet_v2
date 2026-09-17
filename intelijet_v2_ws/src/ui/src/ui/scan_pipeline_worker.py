@@ -181,6 +181,10 @@ class ScanPipelineWorker(QThread):
 
             metadata = {
                 "report_name": None,
+                # For the 3D MAIN page's cloud-info label - the file this
+                # displayed cloud was actually saved to (None if save_ply
+                # failed above).
+                "filepath": f_name,
                 # Original behavior: current_post_scan_path resets to "" for
                 # ANY topic in this block whenever we were in manual-compare
                 # mode (not only compared topics) - preserved exactly here.
