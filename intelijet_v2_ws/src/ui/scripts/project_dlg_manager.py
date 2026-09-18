@@ -2,6 +2,8 @@
 from datetime import datetime
 
 from PyQt5 import QtCore
+from PyQt5.QtGui import QIcon
+from PyQt5.QtCore import QSize
 from PyQt5.QtWidgets import (
     QApplication, QWidget, QFrame, QMessageBox, QHBoxLayout, QVBoxLayout,
     QLabel, QPushButton, QLineEdit, QSpinBox, QComboBox, QStyledItemDelegate,
@@ -13,6 +15,15 @@ from ui.project_dlg_ui import Ui_frm_ProjectPage
 from ui.models.job_info import JobInfo
 from ui.services import project_repository as repo
 from ui.services.job_store import JobStore
+from ui.style_tokens import DELETE_ICON_PATH, UNSCHEDULE_ICON_PATH
+
+ROW_ICON_SIZE = QSize(40, 40)
+DELETE_ICON_SIZE = QSize(48, 48)
+# All row-family buttons (Schedule/Edit/Delete/Remove/Rename/...) share this
+# fixed height so icon-only buttons (whose padding alone can't reproduce a
+# text button's font-driven height) always end up the same size as the rest
+# of their row instead of relying on padding math to happen to match.
+ROW_BUTTON_HEIGHT = 104
 
 PROJECT_DIR = repo.PROJECT_DIR
 ACTIVE_JOB_FILE = repo.ACTIVE_JOB_FILE
@@ -195,16 +206,22 @@ class ProjectManager(QWidget, Ui_frm_ProjectPage):
 
             btn_add_job = QPushButton("+ Add Job")
             btn_add_job.setProperty("cssClass", "rowPrimaryBtn")
+            btn_add_job.setFixedHeight(ROW_BUTTON_HEIGHT)
             btn_add_job.clicked.connect(lambda _checked, p=project: self.new_job(p))
             header.addWidget(btn_add_job)
 
             btn_rename = QPushButton("Rename")
             btn_rename.setProperty("cssClass", "rowActionBtn")
+            btn_rename.setFixedHeight(ROW_BUTTON_HEIGHT)
             btn_rename.clicked.connect(lambda _checked, p=project: self.rename_project(p))
             header.addWidget(btn_rename)
 
-            btn_delete = QPushButton("Delete")
-            btn_delete.setProperty("cssClass", "rowDangerBtn")
+            btn_delete = QPushButton()
+            btn_delete.setIcon(QIcon(DELETE_ICON_PATH))
+            btn_delete.setIconSize(DELETE_ICON_SIZE)
+            btn_delete.setToolTip("Delete Project")
+            btn_delete.setProperty("cssClass", "rowDangerIconBtn")
+            btn_delete.setFixedHeight(ROW_BUTTON_HEIGHT)
             btn_delete.clicked.connect(lambda _checked, p=project: self.delete_project(p))
             header.addWidget(btn_delete)
 
@@ -234,11 +251,13 @@ class ProjectManager(QWidget, Ui_frm_ProjectPage):
 
         btn_cancel = QPushButton("Cancel")
         btn_cancel.setProperty("cssClass", "rowActionBtn")
+        btn_cancel.setFixedHeight(ROW_BUTTON_HEIGHT)
         btn_cancel.clicked.connect(self._cancel_rename_project)
         header.addWidget(btn_cancel)
 
         btn_save = QPushButton("Save")
         btn_save.setProperty("cssClass", "rowPrimaryBtn")
+        btn_save.setFixedHeight(ROW_BUTTON_HEIGHT)
         btn_save.clicked.connect(lambda _checked, p=project, e=edit: self._commit_rename_project(p, e.text()))
         header.addWidget(btn_save)
 
@@ -268,11 +287,13 @@ class ProjectManager(QWidget, Ui_frm_ProjectPage):
         btn_row.addStretch(1)
         btn_cancel = QPushButton("Cancel")
         btn_cancel.setProperty("cssClass", "rowActionBtn")
+        btn_cancel.setFixedHeight(ROW_BUTTON_HEIGHT)
         btn_cancel.clicked.connect(self._cancel_new_project)
         btn_row.addWidget(btn_cancel)
 
         btn_save = QPushButton("Save")
         btn_save.setProperty("cssClass", "rowPrimaryBtn")
+        btn_save.setFixedHeight(ROW_BUTTON_HEIGHT)
         btn_save.clicked.connect(lambda _checked, e=edit: self._commit_new_project(e.text()))
         btn_row.addWidget(btn_save)
         v.addLayout(btn_row)
@@ -285,15 +306,23 @@ class ProjectManager(QWidget, Ui_frm_ProjectPage):
     def _build_job_row(self, project, job):
         row = QFrame()
         row.setObjectName("jobRow")
-        h = QHBoxLayout(row)
-        h.setContentsMargins(24, 16, 24, 16)
-        h.setSpacing(12)
+        v = QVBoxLayout(row)
+        v.setContentsMargins(24, 16, 24, 16)
+        v.setSpacing(8)
+
+        # Title always gets its own full-width line on top, so a long job
+        # name wraps/elides in place instead of squeezing the info or
+        # button columns below it.
+        title = QLabel(job)
+        title.setObjectName("jobRowTitle")
+        title.setWordWrap(True)
+        v.addWidget(title)
+
+        bottom = QHBoxLayout()
+        bottom.setSpacing(12)
 
         info = QVBoxLayout()
         info.setSpacing(4)
-        title = QLabel(job)
-        title.setObjectName("jobRowTitle")
-        info.addWidget(title)
 
         job_info = repo.load_job_info(project, job)
         created = job_info.created if job_info else "--"
@@ -315,8 +344,10 @@ class ProjectManager(QWidget, Ui_frm_ProjectPage):
         status_row.addWidget(self._status_badge(job_info.status if job_info else None), 0)
         status_row.addStretch(1)
         info.addLayout(status_row)
-        h.addLayout(info)
-        h.addStretch(1)
+        bottom.addLayout(info, 1)
+
+        buttons = QHBoxLayout()
+        buttons.setSpacing(12)
 
         is_scheduled = any(
             a["project"] == project and a["job"] == job
@@ -324,18 +355,27 @@ class ProjectManager(QWidget, Ui_frm_ProjectPage):
         )
         btn_schedule = QPushButton("Scheduled" if is_scheduled else "Schedule")
         btn_schedule.setProperty("cssClass", "rowScheduledBtn" if is_scheduled else "rowPrimaryBtn")
+        btn_schedule.setFixedHeight(ROW_BUTTON_HEIGHT)
         btn_schedule.clicked.connect(lambda _checked, p=project, j=job: self.add_job_to_active(p, j))
-        h.addWidget(btn_schedule)
+        buttons.addWidget(btn_schedule)
 
         btn_edit = QPushButton("Edit")
         btn_edit.setProperty("cssClass", "rowActionBtn")
+        btn_edit.setFixedHeight(ROW_BUTTON_HEIGHT)
         btn_edit.clicked.connect(lambda _checked, p=project, j=job: self.edit_job(p, j))
-        h.addWidget(btn_edit)
+        buttons.addWidget(btn_edit)
 
-        btn_delete = QPushButton("Delete")
-        btn_delete.setProperty("cssClass", "rowDangerBtn")
+        btn_delete = QPushButton()
+        btn_delete.setIcon(QIcon(DELETE_ICON_PATH))
+        btn_delete.setIconSize(DELETE_ICON_SIZE)
+        btn_delete.setToolTip("Delete")
+        btn_delete.setProperty("cssClass", "rowDangerIconBtn")
+        btn_delete.setFixedHeight(ROW_BUTTON_HEIGHT)
         btn_delete.clicked.connect(lambda _checked, p=project, j=job: self.delete_job(p, j))
-        h.addWidget(btn_delete)
+        buttons.addWidget(btn_delete)
+
+        bottom.addLayout(buttons, 0)
+        v.addLayout(bottom)
 
         return row
 
@@ -401,11 +441,13 @@ class ProjectManager(QWidget, Ui_frm_ProjectPage):
         btn_row.addStretch(1)
         btn_cancel = QPushButton("Cancel")
         btn_cancel.setProperty("cssClass", "rowActionBtn")
+        btn_cancel.setFixedHeight(ROW_BUTTON_HEIGHT)
         btn_cancel.clicked.connect(self._cancel_job_panel)
         btn_row.addWidget(btn_cancel)
 
         btn_save = QPushButton("Save")
         btn_save.setProperty("cssClass", "rowPrimaryBtn")
+        btn_save.setFixedHeight(ROW_BUTTON_HEIGHT)
         btn_save.clicked.connect(
             lambda _checked, p=project, j=job, ne=name_edit, sc=status_combo, de=description_edit,
                    ts=thickness_spin, tl=tolerance_spin:
@@ -461,13 +503,18 @@ class ProjectManager(QWidget, Ui_frm_ProjectPage):
         h.addLayout(info)
         h.addStretch(1)
 
-        btn_finish = QPushButton("Finish")
-        btn_finish.setProperty("cssClass", "rowPrimaryBtn")
+        btn_finish = QPushButton("Done")
+        btn_finish.setProperty("cssClass", "rowActionBtn")
+        btn_finish.setFixedHeight(ROW_BUTTON_HEIGHT)
         btn_finish.clicked.connect(lambda _checked, p=project, j=job: self.finish_job(p, j))
         h.addWidget(btn_finish)
 
-        btn_remove = QPushButton("Remove")
-        btn_remove.setProperty("cssClass", "rowDangerBtn")
+        btn_remove = QPushButton()
+        btn_remove.setIcon(QIcon(UNSCHEDULE_ICON_PATH))
+        btn_remove.setIconSize(ROW_ICON_SIZE)
+        btn_remove.setToolTip("Remove from Schedule")
+        btn_remove.setProperty("cssClass", "rowActionIconBtn")
+        btn_remove.setFixedHeight(ROW_BUTTON_HEIGHT)
         btn_remove.clicked.connect(lambda _checked, p=project, j=job: self.remove_job_from_active(p, j))
         h.addWidget(btn_remove)
 

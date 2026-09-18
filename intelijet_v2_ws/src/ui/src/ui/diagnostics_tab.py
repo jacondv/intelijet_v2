@@ -29,11 +29,11 @@ from ui.style_tokens import (
 
 LEVEL_FILTERS = ["All Levels", "Info", "Warning", "Error"]
 ALL_SOURCES = "All Sources"
-COLUMNS = ["Timestamp", "Level", "Source", "Message"]
+COLUMNS = ["Timestamp", "Level", "Source", "Message", "Actions"]
 
-ROW_HEIGHT = 64
+ROW_HEIGHT = 96  # +50% over the previous 64px
 MESSAGE_MAX_CHARS = 140  # longer messages are elided here; full text in tooltip + Alarm Detail popup
-TABLE_FONT_SIZE = 24
+TABLE_FONT_SIZE = 26
 DIALOG_FONT_SIZE = 32
 
 # ---- Shared light-card palette (same tokens as style_tokens.py, used by
@@ -111,7 +111,7 @@ class DiagnosticsTab(QWidget):
         header_layout = QHBoxLayout(header)
         header_layout.setContentsMargins(36, 28, 36, 28)
         title = QLabel("HMI System Alarm & Event Log", header)
-        title.setStyleSheet(f"font-size: 28px; font-weight: bold; color: {TEXT_PRIMARY}; border: none;")
+        title.setStyleSheet(f"font-size: 32px; font-weight: bold; color: {TEXT_PRIMARY}; border: none;")
         header_layout.addWidget(title)
         header_layout.addStretch(1)
         return header
@@ -124,14 +124,14 @@ class DiagnosticsTab(QWidget):
             f"    color: {TEXT_PRIMARY};"
             f"    border: 1px solid {BORDER};"
             f"    border-radius: {FIELD_RADIUS};"
-            f"    padding: 8px 12px;"
-            f"    font-size: 22px;"
+            f"    padding: 14px 18px;"
+            f"    font-size: 26px;"
             f"}}"
             f"QPushButton:hover, QComboBox:hover {{ border: 1px solid {ACCENT}; }}"
-            f"QComboBox::drop-down {{ border: none; width: 36px; }}"
+            f"QComboBox::drop-down {{ border: none; width: 44px; }}"
             f"QComboBox QAbstractItemView {{"
             f"    background-color: {BG_CARD_ALT}; color: {TEXT_PRIMARY};"
-            f"    selection-background-color: {ACCENT}; selection-color: #153E42; font-size: 20px;"
+            f"    selection-background-color: {ACCENT}; selection-color: #153E42; font-size: 24px;"
             f"}}"
         )
 
@@ -139,7 +139,7 @@ class DiagnosticsTab(QWidget):
         box = QVBoxLayout()
         box.setSpacing(6)
         label = QLabel(caption)
-        label.setStyleSheet(f"font-size: 16px; color: {TEXT_MUTED}; border: none;")
+        label.setStyleSheet(f"font-size: 19px; color: {TEXT_MUTED}; border: none;")
         box.addWidget(label)
         box.addWidget(control)
         return box
@@ -160,14 +160,14 @@ class DiagnosticsTab(QWidget):
         # Date
         self._selected_date = QDate.currentDate()
         self._date_button = QPushButton(self._selected_date.toString("dd/MM/yyyy"), card)
-        self._date_button.setMinimumHeight(56)
+        self._date_button.setMinimumHeight(76)
         self._date_button.setStyleSheet(control_style)
         self._date_button.clicked.connect(self._open_date_picker)
         grid.addLayout(self._labeled_field("DATE", self._date_button), 0, 0)
 
         # Level
         self._level_filter = QComboBox(card)
-        self._level_filter.setMinimumHeight(56)
+        self._level_filter.setMinimumHeight(76)
         self._level_filter.addItems(LEVEL_FILTERS)
         self._level_filter.setCurrentIndex(LEVEL_FILTERS.index("Error"))
         self._level_filter.setStyleSheet(control_style)
@@ -177,7 +177,7 @@ class DiagnosticsTab(QWidget):
 
         # Source
         self._source_filter = QComboBox(card)
-        self._source_filter.setMinimumHeight(56)
+        self._source_filter.setMinimumHeight(76)
         self._source_filter.addItem(ALL_SOURCES)
         self._source_filter.addItems(self._sources)
         self._source_filter.setStyleSheet(control_style)
@@ -187,7 +187,7 @@ class DiagnosticsTab(QWidget):
 
         # Search - spans the full width, second row
         self._search_box = QLineEdit(card)
-        self._search_box.setMinimumHeight(56)
+        self._search_box.setMinimumHeight(76)
         self._search_box.setPlaceholderText("Filter by message content...")
         self._search_box.setStyleSheet(control_style)
         self._search_box.textChanged.connect(self._rebuild_table)
@@ -223,8 +223,8 @@ class DiagnosticsTab(QWidget):
             f"    color: {TEXT_MUTED};"
             f"    border: none;"
             f"    border-bottom: 2px solid {BORDER};"
-            f"    padding: 15px 10px;"
-            f"    font-size: 18px;"
+            f"    padding: 18px 12px;"
+            f"    font-size: 20px;"
             f"    font-weight: bold;"
             f"}}"
         )
@@ -232,11 +232,12 @@ class DiagnosticsTab(QWidget):
         # +50% over the ~44px the padding/font alone would produce -
         # header sections are now click-to-sort, so they need to be as
         # easy to tap accurately as any other control on this touchscreen.
-        header.setMinimumHeight(66)
+        header.setMinimumHeight(80)
         header.setSectionResizeMode(0, QHeaderView.ResizeToContents)
         header.setSectionResizeMode(1, QHeaderView.ResizeToContents)
         header.setSectionResizeMode(2, QHeaderView.ResizeToContents)
         header.setSectionResizeMode(3, QHeaderView.Stretch)
+        header.setSectionResizeMode(4, QHeaderView.ResizeToContents)
         # Click-to-sort headers instead of a separate sort dropdown -
         # standard grid convention (Excel, Windows Event Viewer): click a
         # column to sort by it, click again to flip direction. Manual
@@ -409,10 +410,40 @@ class DiagnosticsTab(QWidget):
         message_item.setToolTip(full_message)
         self._table.setItem(row, 3, message_item)
 
+        self._table.setCellWidget(row, 4, self._make_view_button(item))
+
         if row_bg:
             for col in (0, 2, 3):
                 self._table.item(row, col).setBackground(QBrush(QColor(row_bg)))
             level_widget.setStyleSheet(level_widget.styleSheet() + f"QWidget {{ background-color: {row_bg}; }}")
+            self._table.cellWidget(row, 4).setStyleSheet(f"background-color: {row_bg};")
+
+    def _make_view_button(self, item):
+        # Opens the same Alarm Detail popup as a double-click on the row -
+        # added because "double-click a row" isn't discoverable on a
+        # touchscreen kiosk with no mouse-hover affordance to hint at it.
+        # Bound to the item itself (not a row index), since live inserts
+        # and re-sorts renumber rows out from under any captured index.
+        wrapper = QWidget()
+        wrapper.setStyleSheet("background-color: transparent;")
+        wlayout = QHBoxLayout(wrapper)
+        wlayout.setContentsMargins(6, 4, 6, 4)
+        btn_view = QPushButton("View")
+        btn_view.setStyleSheet(
+            f"QPushButton {{"
+            f"    background-color: {BG_CARD_ALT};"
+            f"    color: {TEXT_PRIMARY};"
+            f"    border: 1px solid {BORDER};"
+            f"    border-radius: {FIELD_RADIUS};"
+            f"    padding: 6px 16px;"
+            f"    font-size: 18px;"
+            f"    font-weight: bold;"
+            f"}}"
+            f"QPushButton:hover {{ border: 1px solid {ACCENT}; }}"
+        )
+        btn_view.clicked.connect(lambda _checked, it=item: self._open_detail_dialog(it))
+        wlayout.addWidget(btn_view)
+        return wrapper
 
     def _make_level_badge(self, level):
         color = BADGE_COLORS.get(level, LEVEL_COLORS.get(level, TEXT_MUTED))
@@ -442,7 +473,9 @@ class DiagnosticsTab(QWidget):
         item = first_cell.data(Qt.UserRole) if first_cell else None
         if not item:
             return
+        self._open_detail_dialog(item)
 
+    def _open_detail_dialog(self, item):
         # Only one Alarm Detail window at a time - close whatever's open
         # before building the next one, instead of letting popups pile up
         # (there's no taskbar/alt-tab on this touchscreen kiosk to manage

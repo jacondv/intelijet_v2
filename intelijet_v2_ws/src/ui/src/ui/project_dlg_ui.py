@@ -212,7 +212,7 @@ QPushButton[cssClass="rowActionBtn"] {{
     color: {TEXT};
     border: 1px solid {BORDER};
     border-radius: 8px;
-    padding: 18px 26px;
+    padding: 35px 35px;
     font-size: {FONT_BUTTON_PRIMARY};
     font-weight: 800;
 }}
@@ -222,7 +222,7 @@ QPushButton[cssClass="rowDangerBtn"] {{
     color: {ACCENT_RED};
     border: 1px solid {ACCENT_RED};
     border-radius: 8px;
-    padding: 18px 26px;
+    padding: 35px 35px;
     font-size: {FONT_BUTTON_PRIMARY};
     font-weight: 800;
 }}
@@ -232,7 +232,7 @@ QPushButton[cssClass="rowPrimaryBtn"] {{
     color: #153E42;
     border: none;
     border-radius: 8px;
-    padding: 18px 26px;
+    padding: 35px 35px;
     font-size: {FONT_BUTTON_PRIMARY};
     font-weight: 800;
 }}
@@ -246,11 +246,32 @@ QPushButton[cssClass="rowScheduledBtn"] {{
     color: white;
     border: none;
     border-radius: 8px;
-    padding: 18px 26px;
+    padding: 35px 35px;
     font-size: {FONT_BUTTON_PRIMARY};
     font-weight: 800;
 }}
 QPushButton[cssClass="rowScheduledBtn"]:hover {{ background-color: #15803d; }}
+/* Icon-only row buttons (Delete/Remove) - same colors as their text
+   counterparts above, but much less padding: the icon itself already
+   fills the space text would, so the full 35px text-button padding on
+   top of a 48px icon made these buttons noticeably taller/wider than
+   every other row button next to them. */
+QPushButton[cssClass="rowDangerIconBtn"] {{
+    background-color: {CARD_BG};
+    color: {ACCENT_RED};
+    border: 1px solid {ACCENT_RED};
+    border-radius: 8px;
+    padding: 14px;
+}}
+QPushButton[cssClass="rowDangerIconBtn"]:hover {{ background-color: {ACCENT_RED}; color: white; }}
+QPushButton[cssClass="rowActionIconBtn"] {{
+    background-color: {CARD_BG};
+    color: {TEXT};
+    border: 1px solid {BORDER};
+    border-radius: 8px;
+    padding: 14px;
+}}
+QPushButton[cssClass="rowActionIconBtn"]:hover {{ border-color: {ACCENT_YELLOW}; }}
 """)
         self.rootLayout = QtWidgets.QVBoxLayout(frm_ProjectPage)
         self.rootLayout.setContentsMargins(40, 40, 40, 40)

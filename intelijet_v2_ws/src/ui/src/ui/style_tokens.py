@@ -36,7 +36,7 @@ FONT_VALUE = "28px"
 FONT_FIELD_LABEL = "22px"
 FONT_SUBTEXT = "20px"
 FONT_EMPTY_STATE = "24px"
-FONT_BUTTON = "20px"
+FONT_BUTTON = "24px"
 FONT_BUTTON_PRIMARY = "26px"
 FONT_BUTTON_SMALL = "15px"
 
@@ -47,6 +47,14 @@ import os
 # stylesheet rule, Qt's styled paint path won't fall back to the native
 # style's arrow glyph for ::down-arrow). Generated via tools/gen_chevron.py.
 CHEVRON_ICON_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "icons", "chevron_down.png").replace("\\", "/")
+
+# Job/Project row "Delete" button icon (replaces the text label to save row width).
+DELETE_ICON_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "icons", "delete.svg").replace("\\", "/")
+
+# Work Schedule "Remove" button icon - a plain X, not a trash can, since
+# this only unschedules the job (it stays in the project/job list) and a
+# trash icon here was read as "this deletes the job".
+UNSCHEDULE_ICON_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "icons", "unschedule.svg").replace("\\", "/")
 
 # ---- Shared light-card palette (same across JOB/SYSTEM/REPORT) ----
 LIGHT_BG = "#f4f5f8"
