@@ -344,19 +344,28 @@ QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {{ height: 0; }}
    selectors are supported, so these 4 buttons are targeted by being
    descendants of #side_nav instead of a (nonexistent) shared class. */
 #side_nav {{ background-color: {PANEL_BG}; border-right: 1px solid {PANEL_BORDER}; }}
+/* A visible (if subtle) border at rest - not transparent - so each
+   button reads as its own separate control instead of blending into the
+   bar's own background with nothing but hover/checked to mark its edges. */
 #side_nav QToolButton {{
     background-color: transparent;
     color: {TEXT_MUTED};
-    border: 1px solid transparent;
-    border-radius: 10px;
-    font-size: 14px;
+    border: 2px solid {PANEL_BORDER};
+    border-radius: 12px;
+    font-size: 20px;
     font-weight: 700;
 }}
 #side_nav QToolButton:hover {{ background-color: {PANEL_HEADER}; color: {ACCENT_YELLOW}; }}
+/* Checked (active tab) gets its own solid fill plus a left accent bar -
+   not just a text-color change - so the selected tab reads clearly
+   different from the other four at a glance, not just "slightly
+   brighter." */
 #side_nav QToolButton:checked {{
     background-color: {PANEL_HEADER};
     color: {ACCENT_YELLOW};
     border-color: {ACCENT_YELLOW};
+    border-left: 6px solid {ACCENT_YELLOW};
+    font-weight: 800;
 }}
 
 #control_panel {{
@@ -573,8 +582,8 @@ QLabel[cssClass="sysFieldValue"] {{
 
         self.side_nav = QtWidgets.QWidget(self.workspace)
         self.side_nav.setObjectName("side_nav")
-        self.side_nav.setMinimumWidth(140)
-        self.side_nav.setMaximumWidth(140)
+        self.side_nav.setMinimumWidth(180)  # +~10mm over the original 140px
+        self.side_nav.setMaximumWidth(180)
         self.sideNavLayout = QtWidgets.QVBoxLayout(self.side_nav)
         self.sideNavLayout.setContentsMargins(10, 20, 10, 20)
         self.sideNavLayout.setSpacing(14)
@@ -582,28 +591,39 @@ QLabel[cssClass="sysFieldValue"] {{
         self.navGroup = QtWidgets.QButtonGroup(self.side_nav)
         self.navGroup.setExclusive(True)
 
-        def _make_nav_button(icon, text, object_name):
+        def _make_nav_button(draw_icon, text, object_name):
             # QToolButton (not QPushButton) - only QToolButton supports
             # ToolButtonTextUnderIcon for the icon-above-text nav layout.
             btn = QtWidgets.QToolButton(self.side_nav)
             btn.setObjectName(object_name)
             btn.setCheckable(True)
-            btn.setMinimumSize(QtCore.QSize(120, 108))
-            btn.setMaximumWidth(120)
-            btn.setIcon(icon)
-            btn.setIconSize(QtCore.QSize(48, 48))
+            # No fixed/max width - fills the side_nav's full width (minus
+            # its own margins) instead of sitting narrower with dead space
+            # on either side, now that the bar itself is wider.
+            btn.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
+            btn.setMinimumHeight(128)
+            # Two icon variants - muted (default) and accent-colored
+            # (checked) - swapped on toggle, since a QIcon's baked-in
+            # bitmap color doesn't otherwise respond to the :checked QSS
+            # state the way text color does. Without this, the selected
+            # tab was hard to tell apart from the others at a glance.
+            icon_muted = draw_icon(64, color=TEXT_MUTED)
+            icon_active = draw_icon(64, color=ACCENT_YELLOW)
+            btn.setIcon(icon_muted)
+            btn.setIconSize(QtCore.QSize(64, 64))
             btn.setText(text)
             btn.setToolButtonStyle(QtCore.Qt.ToolButtonTextUnderIcon)
             btn.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+            btn.toggled.connect(lambda checked, b=btn, im=icon_muted, ia=icon_active: b.setIcon(ia if checked else im))
             self.sideNavLayout.addWidget(btn)
             self.navGroup.addButton(btn)
             return btn
 
-        self.btnNav3DMain = _make_nav_button(_draw_cube_icon(48, color=TEXT_MUTED), "3D MAIN", "btnNav3DMain")
-        self.btnNavJob = _make_nav_button(_draw_list_icon(48, color=TEXT_MUTED), "JOB", "btnNavJob")
-        self.btnNavSystem = _make_nav_button(_draw_monitor_icon(48, color=TEXT_MUTED), "SYSTEM", "btnNavSystem")
-        self.btnNavAlarm = _make_nav_button(_draw_bell_icon(48, color=TEXT_MUTED), "ALARM", "btnNavAlarm")
-        self.btnNavReport = _make_nav_button(_draw_report_icon(48, color=TEXT_MUTED), "REPORT", "btnNavReport")
+        self.btnNav3DMain = _make_nav_button(_draw_cube_icon, "3D MAIN", "btnNav3DMain")
+        self.btnNavJob = _make_nav_button(_draw_list_icon, "JOB", "btnNavJob")
+        self.btnNavSystem = _make_nav_button(_draw_monitor_icon, "SYSTEM", "btnNavSystem")
+        self.btnNavAlarm = _make_nav_button(_draw_bell_icon, "ALARM", "btnNavAlarm")
+        self.btnNavReport = _make_nav_button(_draw_report_icon, "REPORT", "btnNavReport")
         self.btnNav3DMain.setChecked(True)
         self.sideNavLayout.addStretch(1)
         self.workspaceLayout.addWidget(self.side_nav)
@@ -652,8 +672,8 @@ QLabel[cssClass="sysFieldValue"] {{
 
         # ---- control_panel: now scoped to the 3D MAIN page only ----
         self.control_panel = QtWidgets.QWidget(self.tab_operator)
-        self.control_panel.setMinimumSize(QtCore.QSize(380, 0))
-        self.control_panel.setMaximumSize(QtCore.QSize(380, 16777215))
+        self.control_panel.setMinimumSize(QtCore.QSize(340, 0))  # -~10mm from the original 380px
+        self.control_panel.setMaximumSize(QtCore.QSize(340, 16777215))
         self.control_panel.setObjectName("control_panel")
         self.verticalLayout_14 = QtWidgets.QVBoxLayout(self.control_panel)
         self.verticalLayout_14.setContentsMargins(16, 16, 16, 16)
@@ -810,7 +830,7 @@ QLabel[cssClass="sysFieldValue"] {{
         self.verticalLayout_5.setObjectName("verticalLayout_5")
         self.verticalLayout_5.setContentsMargins(40, 40, 40, 40)
         self.systemGrid = QtWidgets.QHBoxLayout()
-        self.systemGrid.setSpacing(20)
+        self.systemGrid.setSpacing(14)
         self.verticalLayout_5.addLayout(self.systemGrid)
 
         def _sys_card(title_text, object_name):

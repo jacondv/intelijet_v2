@@ -288,7 +288,7 @@ QPushButton[cssClass="rowPrimaryBtn"]:disabled {{ background-color: #e2e8f0; col
     def _build_top_bar_widgets(self, frm_ReportPage):
         self.rootLayout = QtWidgets.QVBoxLayout(frm_ReportPage)
         self.rootLayout.setContentsMargins(40, 40, 40, 40)
-        self.rootLayout.setSpacing(28)
+        self.rootLayout.setSpacing(18)
 
         # ---- Top bar: title + job picker ----
         self.reportTopBar = QtWidgets.QWidget(frm_ReportPage)
@@ -333,7 +333,7 @@ QPushButton[cssClass="rowPrimaryBtn"]:disabled {{ background-color: #e2e8f0; col
         self.filesCard.setObjectName("reportCard")
         self.filesCardLayout = QtWidgets.QVBoxLayout(self.filesCard)
         self.filesCardLayout.setContentsMargins(36, 36, 36, 36)
-        self.filesCardLayout.setSpacing(20)
+        self.filesCardLayout.setSpacing(14)
 
         self.filesCardHeader = QtWidgets.QWidget(self.filesCard)
         self.filesCardHeader.setObjectName("reportCardTitleRow")

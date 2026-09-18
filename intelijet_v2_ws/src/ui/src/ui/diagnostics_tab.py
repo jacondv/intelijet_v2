@@ -96,7 +96,7 @@ class DiagnosticsTab(QWidget):
 
         layout = QVBoxLayout(self)
         layout.setContentsMargins(40, 40, 40, 40)
-        layout.setSpacing(32)
+        layout.setSpacing(20)
 
         layout.addWidget(self._build_header())
         layout.addWidget(self._build_filter_toolbar())

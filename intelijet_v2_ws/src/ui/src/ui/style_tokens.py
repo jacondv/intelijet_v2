@@ -51,6 +51,9 @@ CHEVRON_ICON_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "ic
 # Job/Project row "Delete" button icon (replaces the text label to save row width).
 DELETE_ICON_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "icons", "delete.svg").replace("\\", "/")
 
+# Project card title icon (folder), shown before the project name.
+FOLDER_ICON_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "icons", "folder.svg").replace("\\", "/")
+
 # Work Schedule "Remove" button icon - a plain X, not a trash can, since
 # this only unschedules the job (it stays in the project/job list) and a
 # trash icon here was read as "this deletes the job".
