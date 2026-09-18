@@ -427,16 +427,17 @@ class DiagnosticsTab(QWidget):
         wrapper = QWidget()
         wrapper.setStyleSheet("background-color: transparent;")
         wlayout = QHBoxLayout(wrapper)
-        wlayout.setContentsMargins(6, 4, 6, 4)
+        wlayout.setContentsMargins(6, 10, 6, 10)
         btn_view = QPushButton("View")
+        btn_view.setFixedHeight(ROW_HEIGHT - 20)  # comfortable gap above/below, not touching the row edge
         btn_view.setStyleSheet(
             f"QPushButton {{"
             f"    background-color: {BG_CARD_ALT};"
             f"    color: {TEXT_PRIMARY};"
             f"    border: 1px solid {BORDER};"
             f"    border-radius: {FIELD_RADIUS};"
-            f"    padding: 6px 16px;"
-            f"    font-size: 18px;"
+            f"    padding: 10px 20px;"
+            f"    font-size: 24px;"
             f"    font-weight: bold;"
             f"}}"
             f"QPushButton:hover {{ border: 1px solid {ACCENT}; }}"
