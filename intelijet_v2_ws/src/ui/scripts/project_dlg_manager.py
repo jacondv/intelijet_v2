@@ -5,7 +5,7 @@ from PyQt5 import QtCore
 from PyQt5.QtGui import QIcon
 from PyQt5.QtCore import QSize
 from PyQt5.QtWidgets import (
-    QApplication, QWidget, QFrame, QMessageBox, QHBoxLayout, QVBoxLayout,
+    QApplication, QWidget, QFrame, QMessageBox, QHBoxLayout, QVBoxLayout, QGridLayout,
     QLabel, QPushButton, QLineEdit, QSpinBox, QComboBox, QStyledItemDelegate,
     QSizePolicy,
 )
@@ -15,7 +15,7 @@ from ui.project_dlg_ui import Ui_frm_ProjectPage
 from ui.models.job_info import JobInfo
 from ui.services import project_repository as repo
 from ui.services.job_store import JobStore
-from ui.style_tokens import DELETE_ICON_PATH, UNSCHEDULE_ICON_PATH
+from ui.style_tokens import DELETE_ICON_PATH, UNSCHEDULE_ICON_PATH, FOLDER_ICON_PATH, FONT_SUBTEXT
 
 ROW_ICON_SIZE = QSize(40, 40)
 DELETE_ICON_SIZE = QSize(48, 48)
@@ -114,20 +114,44 @@ class ProjectManager(QWidget, Ui_frm_ProjectPage):
         lbl.setAlignment(QtCore.Qt.AlignCenter)
         return lbl
 
+    # (badge background, border, text, dot) - pill-with-dot style matching
+    # the "Scheduled"/"Pending"/"Finished" status chips in the mock-up.
     _STATUS_BADGE_COLORS = {
-        JobInfo.PENDING: ("#fef3c7", "#92400e"),   # amber
-        JobInfo.ACTIVE: ("#dbeafe", "#1e40af"),     # blue ("Scheduled")
-        JobInfo.FINISHED: ("#dcfce7", "#166534"),   # green
+        JobInfo.PENDING: ("#fffbeb", "#fde68a", "#b45309", "#f59e0b"),   # amber
+        JobInfo.ACTIVE: ("#f0f9ff", "#bae6fd", "#0369a1", "#0ea5e9"),     # sky ("Scheduled")
+        JobInfo.FINISHED: ("#ecfdf5", "#a7f3d0", "#047857", "#10b981"),  # emerald
     }
 
+    def _divider(self):
+        """A faint horizontal rule - used under a job/schedule card's title
+        to visually separate it from the info+actions area below."""
+        line = QFrame()
+        line.setObjectName("rowDivider")
+        line.setFixedHeight(1)
+        return line
+
     def _status_badge(self, status):
-        bg, fg = self._STATUS_BADGE_COLORS.get(status, ("#e2e8f0", "#334155"))
-        badge = QLabel((status or "Unknown").capitalize())
-        badge.setAlignment(QtCore.Qt.AlignCenter)
+        bg, border, fg, dot = self._STATUS_BADGE_COLORS.get(status, ("#f1f5f9", "#e2e8f0", "#334155", "#94a3b8"))
+        badge = QWidget()
         badge.setStyleSheet(
-            f"background-color: {bg}; color: {fg}; font-weight: 700; "
-            "border-radius: 8px; padding: 2px 12px;"
+            f"background-color: {bg}; border: 1px solid {border}; border-radius: 8px;"
         )
+        layout = QHBoxLayout(badge)
+        layout.setContentsMargins(10, 3, 12, 3)
+        layout.setSpacing(6)
+
+        dot_label = QLabel()
+        dot_label.setFixedSize(9, 9)
+        dot_label.setStyleSheet(f"background-color: {dot}; border-radius: 4px; border: none;")
+        layout.addWidget(dot_label)
+
+        # Matches jobRowSubtext/scheduleSubtext's font size (FONT_SUBTEXT)
+        # so the badge reads at the same scale as the Created/Target lines
+        # right next to it, instead of looking like fine print.
+        text_label = QLabel((status or "Unknown").capitalize())
+        text_label.setStyleSheet(f"background: transparent; border: none; color: {fg}; font-size: {FONT_SUBTEXT}; font-weight: 700;")
+        layout.addWidget(text_label)
+
         badge.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
         return badge
 
@@ -191,17 +215,31 @@ class ProjectManager(QWidget, Ui_frm_ProjectPage):
         card = QFrame()
         card.setObjectName("projectCard")
         v = QVBoxLayout(card)
-        v.setContentsMargins(28, 24, 28, 24)
-        v.setSpacing(16)
+        v.setContentsMargins(24, 20, 24, 20)
+        v.setSpacing(12)
 
         if self._renaming_project == project:
             v.addLayout(self._build_rename_project_header(project))
         else:
             header = QHBoxLayout()
             header.setSpacing(12)
+            folder_icon = QLabel()
+            folder_icon.setStyleSheet("background: transparent; border: none;")
+            # QIcon(...).pixmap(size) rasterizes the SVG at the target size
+            # directly (sharp) - QPixmap(path).scaled(...) would instead
+            # scale up the SVG's native small bitmap and come out blurry.
+            folder_icon.setPixmap(QIcon(FOLDER_ICON_PATH).pixmap(72, 72))
             title = QLabel(f"Project: {project}")
             title.setObjectName("projectHeaderLabel")
-            header.addWidget(title)
+            # Icon and title share their own tight-spaced group so the
+            # bigger icon doesn't push the title away from it - header's
+            # own spacing (12) still applies between this group and the
+            # buttons on the right.
+            icon_title = QHBoxLayout()
+            icon_title.setSpacing(4)
+            icon_title.addWidget(folder_icon)
+            icon_title.addWidget(title)
+            header.addLayout(icon_title)
             header.addStretch(1)
 
             btn_add_job = QPushButton("+ Add Job")
@@ -267,14 +305,17 @@ class ProjectManager(QWidget, Ui_frm_ProjectPage):
         return header
 
     def _build_new_project_card(self):
+        # Same "jobEditPanel" look as the New/Edit Job form - a visible
+        # accent border around the whole card so it's obvious this is the
+        # thing currently being edited, not just another project row.
         card = QFrame()
-        card.setObjectName("projectCard")
+        card.setObjectName("jobEditPanel")
         v = QVBoxLayout(card)
         v.setContentsMargins(28, 24, 28, 24)
         v.setSpacing(12)
 
         title = QLabel("New Project")
-        title.setObjectName("projectHeaderLabel")
+        title.setObjectName("jobEditPanelTitle")
         v.addWidget(title)
 
         edit = QLineEdit()
@@ -317,14 +358,21 @@ class ProjectManager(QWidget, Ui_frm_ProjectPage):
         title.setObjectName("jobRowTitle")
         title.setWordWrap(True)
         v.addWidget(title)
+        v.addWidget(self._divider())
+
+        job_info = repo.load_job_info(project, job)
 
         bottom = QHBoxLayout()
         bottom.setSpacing(12)
 
         info = QVBoxLayout()
-        info.setSpacing(4)
+        info.setSpacing(2)
 
-        job_info = repo.load_job_info(project, job)
+        badge_row = QHBoxLayout()
+        badge_row.addWidget(self._status_badge(job_info.status if job_info else None), 0)
+        badge_row.addStretch(1)
+        info.addLayout(badge_row)
+
         created = job_info.created if job_info else "--"
         subtext = QLabel(f"Created: {created}")
         subtext.setObjectName("jobRowSubtext")
@@ -336,14 +384,6 @@ class ProjectManager(QWidget, Ui_frm_ProjectPage):
         target_label = QLabel(f"Target: {target_thickness}±{tolerance} mm")
         target_label.setObjectName("jobRowSubtext")
         info.addWidget(target_label)
-
-        status_row = QHBoxLayout()
-        status_row.setSpacing(6)
-        status_row.addWidget(QLabel("Status:"), 0)
-        status_row.itemAt(0).widget().setObjectName("jobRowSubtext")
-        status_row.addWidget(self._status_badge(job_info.status if job_info else None), 0)
-        status_row.addStretch(1)
-        info.addLayout(status_row)
         bottom.addLayout(info, 1)
 
         buttons = QHBoxLayout()
@@ -388,11 +428,11 @@ class ProjectManager(QWidget, Ui_frm_ProjectPage):
         panel = QFrame()
         panel.setObjectName("jobEditPanel")
         v = QVBoxLayout(panel)
-        v.setContentsMargins(24, 20, 24, 20)
-        v.setSpacing(10)
+        v.setContentsMargins(28, 24, 28, 24)
+        v.setSpacing(18)
 
         title = QLabel("Edit Job" if job else "New Job")
-        title.setObjectName("jobRowTitle")
+        title.setObjectName("jobEditPanelTitle")
         v.addWidget(title)
 
         name_edit = QLineEdit(job_info.name if job_info else "")
@@ -420,22 +460,27 @@ class ProjectManager(QWidget, Ui_frm_ProjectPage):
         tolerance_spin.setMinimumHeight(50)
         tolerance_spin.setValue(job_info.parameters.get("tolerance", 10) if job_info else 10)
 
-        # Each field stacked as its own label-above-field block (not a
-        # QFormLayout's side-by-side columns) - at this panel's width, a
-        # 2-column form squeezed the field column too narrow and the
-        # combo/spinbox text overlapped its own label. Full-width fields
-        # stacked vertically can't collide with anything next to them.
-        for caption, field in (
+        # Right-aligned label / field columns (a real 2-column form) instead
+        # of the previous label-above-field stack - this panel has plenty
+        # of width at its position in the layout for a label column without
+        # squeezing the fields, and it matches the reference mock-up.
+        grid = QGridLayout()
+        grid.setHorizontalSpacing(16)
+        grid.setVerticalSpacing(14)
+        grid.setColumnStretch(1, 1)
+        for row, (caption, field) in enumerate((
             ("Job Name:", name_edit),
             ("Status:", status_combo),
             ("Description:", description_edit),
             ("Target Thickness:", thickness_spin),
             ("Tolerance:", tolerance_spin),
-        ):
+        )):
             label = QLabel(caption)
             label.setObjectName("jobEditFieldLabel")
-            v.addWidget(label)
-            v.addWidget(field)
+            label.setAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)
+            grid.addWidget(label, row, 0)
+            grid.addWidget(field, row, 1)
+        v.addLayout(grid)
 
         btn_row = QHBoxLayout()
         btn_row.addStretch(1)
@@ -472,19 +517,34 @@ class ProjectManager(QWidget, Ui_frm_ProjectPage):
             layout.insertWidget(layout.count() - 1, self._build_schedule_card(j["project"], j["job"]))
 
     def _build_schedule_card(self, project, job):
+        # Same layout as a job row (_build_job_row): title on its own full
+        # width line on top, then a bottom strip split into info (left) and
+        # actions (right) - kept consistent across both lists instead of
+        # this card using its own header/footer-with-dividers arrangement.
         card = QFrame()
         card.setObjectName("scheduleCard")
-        h = QHBoxLayout(card)
-        h.setContentsMargins(28, 24, 28, 24)
-        h.setSpacing(12)
-
-        info = QVBoxLayout()
-        info.setSpacing(4)
-        title = QLabel(f"{project} / {job}")
-        title.setObjectName("scheduleTitle")
-        info.addWidget(title)
+        v = QVBoxLayout(card)
+        v.setContentsMargins(20, 12, 20, 12)
+        v.setSpacing(6)
 
         job_info = repo.load_job_info(project, job)
+
+        title = QLabel(f"{project} / {job}")
+        title.setObjectName("scheduleTitle")
+        title.setWordWrap(True)
+        v.addWidget(title)
+        v.addWidget(self._divider())
+
+        bottom = QHBoxLayout()
+        bottom.setSpacing(12)
+
+        info = QVBoxLayout()
+        info.setSpacing(2)
+
+        badge_row = QHBoxLayout()
+        badge_row.addWidget(self._status_badge(job_info.status if job_info else None), 0)
+        badge_row.addStretch(1)
+        info.addLayout(badge_row)
 
         params = job_info.parameters if job_info else {}
         target_thickness = params.get("target_thickness", 60)
@@ -492,22 +552,21 @@ class ProjectManager(QWidget, Ui_frm_ProjectPage):
         target_label = QLabel(f"Target: {target_thickness}±{tolerance} mm")
         target_label.setObjectName("scheduleSubtext")
         info.addWidget(target_label)
+        bottom.addLayout(info, 1)
+        # Info here is just one short line, much shorter than the fixed-
+        # height buttons next to it - vertically center it in the row
+        # instead of top-aligning, so it doesn't read as floating in a
+        # mostly-empty column next to the buttons.
+        bottom.setAlignment(info, QtCore.Qt.AlignVCenter)
 
-        status_row = QHBoxLayout()
-        status_row.setSpacing(6)
-        status_row.addWidget(QLabel("Status:"), 0)
-        status_row.itemAt(0).widget().setObjectName("scheduleSubtext")
-        status_row.addWidget(self._status_badge(job_info.status if job_info else None), 0)
-        status_row.addStretch(1)
-        info.addLayout(status_row)
-        h.addLayout(info)
-        h.addStretch(1)
+        buttons = QHBoxLayout()
+        buttons.setSpacing(12)
 
         btn_finish = QPushButton("Done")
         btn_finish.setProperty("cssClass", "rowActionBtn")
         btn_finish.setFixedHeight(ROW_BUTTON_HEIGHT)
         btn_finish.clicked.connect(lambda _checked, p=project, j=job: self.finish_job(p, j))
-        h.addWidget(btn_finish)
+        buttons.addWidget(btn_finish)
 
         btn_remove = QPushButton()
         btn_remove.setIcon(QIcon(UNSCHEDULE_ICON_PATH))
@@ -516,7 +575,10 @@ class ProjectManager(QWidget, Ui_frm_ProjectPage):
         btn_remove.setProperty("cssClass", "rowActionIconBtn")
         btn_remove.setFixedHeight(ROW_BUTTON_HEIGHT)
         btn_remove.clicked.connect(lambda _checked, p=project, j=job: self.remove_job_from_active(p, j))
-        h.addWidget(btn_remove)
+        buttons.addWidget(btn_remove)
+
+        bottom.addLayout(buttons, 0)
+        v.addLayout(bottom)
 
         return card
 
