@@ -105,14 +105,18 @@ LEVEL_COLORS = {
 
 def set_device_label(label, state):
     """Set a device status QLabel's text + color based on its connection
-    state (DeviceStatus.CONNECTED / DISCONNECTED / anything else -> unknown).
-    Rendered as a pill badge (light bg + colored text/border), matching
-    docs/ui_sample/App.html's .status-badge."""
+    state (DeviceStatus.CONNECTED / DISCONNECTED / ERROR / anything else ->
+    unknown). Rendered as a pill badge (light bg + colored text/border),
+    matching docs/ui_sample/App.html's .status-badge."""
     state_text = (state or "UNKNOWN").upper()
     if state_text == "CONNECTED":
         bg, fg, border = "#ecfdf5", "#059669", "#a7f3d0"
     elif state_text == "DISCONNECTED":
         bg, fg, border = "#fef2f2", "#dc2626", "#fecaca"
+    elif state_text == "ERROR":
+        # Distinct from DISCONNECTED (red) - e.g. Lidar network reachable
+        # but the driver isn't streaming data (see LidarMonitor).
+        bg, fg, border = "#fffbeb", "#d97706", "#fde68a"
     else:
         bg, fg, border = "#f1f5f9", "#64748b", "#e2e8f0"
     label.setText(state_text)
