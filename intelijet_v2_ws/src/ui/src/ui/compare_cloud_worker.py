@@ -29,15 +29,15 @@ class CompareWorker(QThread):
     progress = pyqtSignal(float, str)
     finished = pyqtSignal(bool, str, str)  # success, postscan_path, error_code ("" on success)
 
-    def __init__(self, prescan_path, postscan_path, do_pre_process, do_2d_keypoint, do_align, do_post_process, do_upsample):
+    def __init__(self, prescan_path, postscan_path, do_pre_process, do_remove_back_wall, do_2d_keypoint, do_align, do_post_process):
         super().__init__()
         self.prescan_path = prescan_path
         self.postscan_path = postscan_path
         self.do_pre_process = do_pre_process
+        self.do_remove_back_wall = do_remove_back_wall
         self.do_align = do_align
         self.do_post_process=do_post_process
         self.do_2d_keypoint = do_2d_keypoint
-        self.do_upsample = do_upsample
         self._result_lock = threading.Lock()
         self._result_emitted = False
 
@@ -67,10 +67,10 @@ class CompareWorker(QThread):
         goal.prescan_path = self.prescan_path
         goal.postscan_path = self.postscan_path
         goal.do_pre_process = self.do_pre_process
+        goal.do_remove_back_wall = self.do_remove_back_wall
         goal.do_2d_keypoint = self.do_2d_keypoint
         goal.do_post_process = self.do_post_process
         goal.do_align = self.do_align
-        goal.do_upsample = self.do_upsample
 
         client.send_goal(
             goal,
