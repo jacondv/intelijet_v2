@@ -1,8 +1,23 @@
 import numpy as np
 import rospy
-from scipy.spatial import ConvexHull
-from matplotlib.path import Path
 from scipy.spatial import cKDTree
+
+from shared.config_loader import CONFIG as cfg
+
+
+def _cfg(*names, default=None):
+    """Safe nested getattr on CONFIG - returns `default` if any level is
+    missing, so this keeps working on a machine whose last_used.yaml
+    predates the `tunnel_processing:` section in runtime.yaml. Mirrors
+    pps.cloud_processing.compare_pipeline._cfg() - kept as a separate local
+    copy per that file's own precedent (Phase 6), rather than a shared util."""
+    obj = cfg
+    for name in names:
+        obj = getattr(obj, name, None)
+        if obj is None:
+            return default
+    return obj
+
 
 class TunnelProcessing:
     """
@@ -378,17 +393,24 @@ class TunnelProcessing:
         return self.pcd
 
 
-    def get_plane(self,
+    def _detect_wall_plane(self,
         pcd,
         normal_angle_threshold: float = 8.0,
         radius: float = 0.2,
         reference_plane: str = "xy",
         min_bound: np.ndarray = [0.0,-5.0,-1.0],
-        max_bound: np.ndarray =  [15.0,5.0,10.0]
+        max_bound: np.ndarray =  [15.0,5.0,10.0],
+        tree: cKDTree = None
     ):
         """
-        Remove ground plane from a point cloud using PCA-based normal estimation,
-        restricted to points inside a given bounding box.
+        Detect a wall-like plane (ground, back, left, right or front wall - whichever
+        one `reference_plane`/`min_bound`/`max_bound` are set up for) using PCA-based
+        normal estimation, restricted to points inside a given bounding box.
+
+        This is the shared primitive behind detect_ground()/detect_back_wall()/
+        detect_left_wall()/detect_right_wall()/detect_front_wall() - see
+        run_processing_pipeline(). It only detects the plane and reports which
+        points belong to it; it does not decide the final crop bounds.
 
         Parameters
         ----------
@@ -405,6 +427,11 @@ class TunnelProcessing:
                 - "xz" → ground normal aligned with Y axis
         crop_box : o3d.geometry.AxisAlignedBoundingBox or o3d.geometry.OrientedBoundingBox, optional
             Bounding box to restrict ground detection. If None, the whole cloud is used.
+        tree : scipy.spatial.cKDTree, optional
+            KDTree pre-built over self.pcd.points. run_processing_pipeline() builds
+            this once and passes it into every call so it isn't rebuilt identically
+            5 times per pipeline run. If None, a tree is built internally here
+            (kept for callers that use this method standalone).
 
         Returns
         -------
@@ -462,7 +489,8 @@ class TunnelProcessing:
             return pcd, None, None, None
                
         ground = pcd_down.select_by_index(np.where(mask)[0])
-        tree = cKDTree(self.pcd.points)
+        if tree is None:
+            tree = cKDTree(self.pcd.points)
         if ground is not None:
             all_idx = tree.query_ball_point(ground.points, r=radius)  # trả về list list
             all_idx = np.unique(np.hstack(all_idx))
@@ -479,6 +507,71 @@ class TunnelProcessing:
             ground_center=None
         
         return non_ground_plane, ground_plane, ground_center, ground_plane_normal
+
+    # ------------------------------
+    # Named wall-detection wrappers (used by run_processing_pipeline)
+    # ------------------------------
+    # These only detect a wall plane (center + normal) - they don't remove
+    # anything themselves; the actual crop/removal happens once at the end
+    # of run_processing_pipeline() via self.crop(). Each wrapper is just
+    # _detect_wall_plane() pinned to the box/reference-plane for that one
+    # wall. Box/threshold values default to the exact constants
+    # this file used before they were parameterized (see runtime.yaml's
+    # `tunnel_processing:` section) - so behavior is unchanged.
+    def detect_ground(self, tree: cKDTree = None):
+        return self._detect_wall_plane(
+            self.pcd,
+            normal_angle_threshold=_cfg("tunnel_processing", "plane_detection", "normal_angle_threshold", default=5),
+            radius=_cfg("tunnel_processing", "plane_detection", "radius", default=0.15),
+            reference_plane="xy",
+            min_bound=_cfg("tunnel_processing", "boxes", "bottom", "min", default=(2.5, -5.0, -1.5)),
+            max_bound=_cfg("tunnel_processing", "boxes", "bottom", "max", default=(11.0, 5.0, 1.5)),
+            tree=tree,
+        )
+
+    def detect_back_wall(self, tree: cKDTree = None):
+        return self._detect_wall_plane(
+            self.pcd,
+            normal_angle_threshold=_cfg("tunnel_processing", "plane_detection", "normal_angle_threshold", default=5),
+            radius=_cfg("tunnel_processing", "plane_detection", "radius", default=0.15),
+            reference_plane="yz",
+            min_bound=_cfg("tunnel_processing", "boxes", "back", "min", default=(4.0, -5.0, 0.0)),
+            max_bound=_cfg("tunnel_processing", "boxes", "back", "max", default=(11.0, 5.0, 8.0)),
+            tree=tree,
+        )
+
+    def detect_right_wall(self, tree: cKDTree = None):
+        return self._detect_wall_plane(
+            self.pcd,
+            normal_angle_threshold=_cfg("tunnel_processing", "plane_detection", "normal_angle_threshold", default=5),
+            radius=_cfg("tunnel_processing", "plane_detection", "radius", default=0.15),
+            reference_plane="xz",
+            min_bound=_cfg("tunnel_processing", "boxes", "right", "min", default=(2.5, -5.0, -0.5)),
+            max_bound=_cfg("tunnel_processing", "boxes", "right", "max", default=(8.0, 0.0, 8.0)),
+            tree=tree,
+        )
+
+    def detect_left_wall(self, tree: cKDTree = None):
+        return self._detect_wall_plane(
+            self.pcd,
+            normal_angle_threshold=_cfg("tunnel_processing", "plane_detection", "normal_angle_threshold", default=5),
+            radius=_cfg("tunnel_processing", "plane_detection", "radius", default=0.15),
+            reference_plane="xz",
+            min_bound=_cfg("tunnel_processing", "boxes", "left", "min", default=(2.5, 0.0, -0.5)),
+            max_bound=_cfg("tunnel_processing", "boxes", "left", "max", default=(8.0, 5.0, 8.0)),
+            tree=tree,
+        )
+
+    def detect_front_wall(self, tree: cKDTree = None):
+        return self._detect_wall_plane(
+            self.pcd,
+            normal_angle_threshold=_cfg("tunnel_processing", "plane_detection", "normal_angle_threshold", default=5),
+            radius=_cfg("tunnel_processing", "plane_detection", "radius", default=0.15),
+            reference_plane="yz",
+            min_bound=_cfg("tunnel_processing", "boxes", "front", "min", default=(0, -5.0, -0.5)),
+            max_bound=_cfg("tunnel_processing", "boxes", "front", "max", default=(3.5, 5.0, 8.0)),
+            tree=tree,
+        )
 
     # ------------------------------
     # Utilities
@@ -542,59 +635,22 @@ class TunnelProcessing:
 
     def run_processing_pipeline(self):
 
-   
-        FRONT_BOX = [(0, -5.0, -0.5), 
-                     (3.5, 5.0, 8.0)]
-        BACK_BOX = [(4.0, -5.0, 0.0), 
-                    (11.0, 5.0, 8.0)]
-        LEFT_BOX = [(2.5, 0.0, -0.5), 
-                    (8.0, 5.0, 8.0)]
-        RIGHT_BOX = [(2.5, -5.0, -0.5), 
-                    (8.0, 0.0, 8.0)]
-        BOTTOM_BOX = [(2.5, -5.0, -1.5), 
-                      (11.0, 5.0, 1.5)]
-        TOP_BOX = [(2.5, -5.0, 4.0), 
-                    (11.0, 5.0, 8.0)] 
+        # KNOWN ISSUE (not fixed in this pass - see
+        # docs/plan/phase_12_tunnel_processing_cleanup.md): a ceiling/top box
+        # ("top" in runtime.yaml's tunnel_processing.boxes) is configured but
+        # no remove_*_wall() call uses it - maxbound[2] below stays a fixed
+        # constant instead of a detected ceiling plane.
 
-        _, _, ground_center, self.ground_plane_normal = self.get_plane(self.pcd,
-                                normal_angle_threshold=5,
-                                radius=0.15, 
-                                reference_plane="xy",
-                                min_bound=BOTTOM_BOX[0],
-                                max_bound=BOTTOM_BOX[1]
-                                )
+        # Build the KDTree over the full cloud once and share it across all 5
+        # wall-plane detections below - they all query the same self.pcd, so
+        # rebuilding it 5 times (once per remove_*() call) was pure waste.
+        tree = cKDTree(self.pcd.points)
 
-        _, _, back_center, self.back_plane_normal = self.get_plane(self.pcd,
-                                normal_angle_threshold=5,
-                                radius=0.15, 
-                                reference_plane="yz",
-                                min_bound=BACK_BOX[0],
-                                max_bound=BACK_BOX[1]
-                                )
-
-        _, _, right_center, self.right_wall_normal = self.get_plane(self.pcd,
-                        normal_angle_threshold=5,
-                        radius=0.15, 
-                        reference_plane="xz",
-                        min_bound=RIGHT_BOX[0],
-                        max_bound=RIGHT_BOX[1]
-                        )
-        
-        _, _, left_center, self.left_wall_normal = self.get_plane(self.pcd,
-                        normal_angle_threshold=5,
-                        radius=0.15, 
-                        reference_plane="xz",
-                        min_bound=LEFT_BOX[0],
-                        max_bound=LEFT_BOX[1]
-                        )
-        
-        _, _, front_center, self.front_wall_normal = self.get_plane(self.pcd,
-                        normal_angle_threshold=5,
-                        radius=0.15, 
-                        reference_plane="yz",
-                        min_bound=FRONT_BOX[0],
-                        max_bound=FRONT_BOX[1]
-                        )
+        _, _, ground_center, self.ground_plane_normal = self.detect_ground(tree)
+        _, _, back_center, self.back_plane_normal = self.detect_back_wall(tree)
+        _, _, right_center, self.right_wall_normal = self.detect_right_wall(tree)
+        _, _, left_center, self.left_wall_normal = self.detect_left_wall(tree)
+        _, _, front_center, self.front_wall_normal = self.detect_front_wall(tree)
         
 
         def safe_bound_value(center, idx, offset, default_center):
@@ -639,44 +695,3 @@ class TunnelProcessing:
         cloud_combine = self.fill_null_distances(cloud_combine)
         cloud_combine = cloudconverter.voxel_down_sample_spatial(cloud_combine,voxel_size=min_gap)
         return cloud_combine
-
-
-    def remove_point(self, plane, radius=0.2):
-        """
-        Chọn điểm trong pcd_origin gần mặt phẳng ground và nằm trong polygon footprint của ground.
-        """
-        # --- 1. Fit mặt phẳng từ ground ---
-        pcd_origin = self.pcd
-        plane_model, _ = plane.segment_plane(
-            distance_threshold=0.01,
-            ransac_n=3,
-            num_iterations=1000
-        )
-        a, b, c, d = plane_model
-        normal = np.array([a, b, c]) / np.linalg.norm([a, b, c])
-        centroid = np.mean(np.asarray(plane.points), axis=0)
-
-        # --- 2. Định nghĩa hệ toạ độ local trên mặt phẳng ---
-        u = np.array([1, 0, 0]) if abs(normal[0]) < 0.9 else np.array([0, 1, 0])
-        x_axis = np.cross(normal, u); x_axis /= np.linalg.norm(x_axis)
-        y_axis = np.cross(normal, x_axis); y_axis /= np.linalg.norm(y_axis)
-
-        # --- 3. Chiếu ground vào 2D ---
-        ground_points = np.asarray(plane.points) - centroid
-        ground_xy = np.stack([ground_points @ x_axis, ground_points @ y_axis], axis=1)
-
-        # convex hull để tạo polygon
-        hull = ConvexHull(ground_xy)
-        polygon = Path(ground_xy[hull.vertices])
-
-        # --- 4. Xử lý point cloud gốc ---
-        points = np.asarray(pcd_origin.points)
-        dist = np.abs(points @ normal + d)  # khoảng cách tới mặt phẳng
-
-        shifted = points - centroid
-        proj_xy = np.stack([shifted @ x_axis, shifted @ y_axis], axis=1)
-
-        inside = polygon.contains_points(proj_xy)
-        mask = (dist < radius) & inside
-
-        return pcd_origin.select_by_index(np.where(mask)[0]), mask

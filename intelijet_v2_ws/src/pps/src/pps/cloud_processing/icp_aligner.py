@@ -1,7 +1,6 @@
 import open3d as o3d
 import numpy as np
 from pps.cloud_processing.base_aligner import CloudAligner, AlignMethodConfig
-from pps.helper import crop_pointcloud_by_box
 from dataclasses import dataclass, field
 from typing import List, Optional, Tuple, Union
 
