@@ -175,14 +175,15 @@ class App(QMainWindow):
             self.ui.cbbAutoCompare,
             self.ui.cbbAutoReport,
             self.ui.cbbRemoveGround,
+            self.ui.cbbRemoveBackWall,
             self.ui.cbbUseKeypoint,
-            self.ui.cbbUpsample,
             self.ui.cbbTrimToPrescan,
         ]
 
         for item in processing_switches:
             item.setEnabled(False)
         self.ui.cbbRemoveGround.setEnabled(True)
+        self.ui.cbbRemoveBackWall.setEnabled(True)
         self.ui.cbbAutoReport.setEnabled(True)
 
 
@@ -391,8 +392,8 @@ class App(QMainWindow):
         settings.setValue("cbbDebugMode_on", self.ui.cbbDebugMode.isChecked())
         settings.setValue("cbbAutoReport_on", self.ui.cbbAutoReport.isChecked())
         settings.setValue("cbbRemoveGround_on", self.ui.cbbRemoveGround.isChecked())
+        settings.setValue("cbbRemoveBackWall_on", self.ui.cbbRemoveBackWall.isChecked())
         settings.setValue("cbbUseKeypoint_on", self.ui.cbbUseKeypoint.isChecked())
-        settings.setValue("cbbUpsample_on", self.ui.cbbUpsample.isChecked())
         settings.setValue("cbbTrimToPrescan_on", self.ui.cbbTrimToPrescan.isChecked())
 
     def load_ui_state(self):
@@ -405,8 +406,12 @@ class App(QMainWindow):
         self.ui.cbbAutoCompare.setChecked(settings.value("cbbAutoCompare_on", True, type=bool))
         self.ui.cbbAutoReport.setChecked(settings.value("cbbAutoReport_on", True, type=bool))
         self.ui.cbbRemoveGround.setChecked(settings.value("cbbRemoveGround_on", True, type=bool))
+        # Default True - independent from Remove Ground, but back wall was
+        # always cropped alongside ground before this switch existed (both
+        # were one combined, non-toggleable step), so an operator who's
+        # never touched this setting keeps that same behavior.
+        self.ui.cbbRemoveBackWall.setChecked(settings.value("cbbRemoveBackWall_on", True, type=bool))
         self.ui.cbbUseKeypoint.setChecked(settings.value("cbbUseKeypoint_on", True, type=bool))
-        self.ui.cbbUpsample.setChecked(settings.value("cbbUpsample_on", True, type=bool))
         # Default False, unlike the switches above - this exposes a step
         # (goal.do_post_process) that was hardcoded off in every real
         # compare run before this switch existed (see compare_pipeline.py's
@@ -433,8 +438,8 @@ class App(QMainWindow):
             "/runtime/auto_compare": self.ui.cbbAutoCompare.isChecked(),
             "/runtime/auto_report": self.ui.cbbAutoReport.isChecked(),
             "/runtime/do_pre_process": self.ui.cbbRemoveGround.isChecked(),
+            "/runtime/do_remove_back_wall": self.ui.cbbRemoveBackWall.isChecked(),
             "/runtime/do_2d_keypoint": self.ui.cbbUseKeypoint.isChecked(),
-            "/runtime/do_upsample": self.ui.cbbUpsample.isChecked(),
             "/runtime/do_post_process": self.ui.cbbTrimToPrescan.isChecked(),
         }
 
@@ -572,7 +577,6 @@ class App(QMainWindow):
 
         def _on_auth_changed(level):
             self.ui.cbbAutoAlign.setEnabled(level >= security.ADMIN)
-            self.ui.cbbUpsample.setEnabled(level >= security.ADMIN)
             self.ui.cbbAutoCompare.setEnabled(level >= security.ADMIN)
             self.ui.cbbUseKeypoint.setEnabled(level >= security.ADMIN)
             self.ui.cbbTrimToPrescan.setEnabled(level >= security.ADMIN)
@@ -734,9 +738,9 @@ class App(QMainWindow):
             postscan_path=postscan_path,
             do_2d_keypoint=self.ui.cbbUseKeypoint.isChecked(),
             do_pre_process=self.ui.cbbRemoveGround.isChecked(),
+            do_remove_back_wall=self.ui.cbbRemoveBackWall.isChecked(),
             do_align=self.ui.cbbAutoAlign.isChecked(),
             do_post_process=self.ui.cbbTrimToPrescan.isChecked(),
-            do_upsample=self.ui.cbbUpsample.isChecked(),
         )
         self.worker.progress.connect(self.on_compare_process)
         self.worker.finished.connect(self.on_compare_done)

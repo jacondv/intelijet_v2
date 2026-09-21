@@ -92,10 +92,16 @@ class CloudComparePipeline:
                 post_cloud.transform(T)
 
 
-        # ===== PRE PROCESS (Crop ground)=====
-        if goal.do_pre_process:
+        # ===== PRE PROCESS (Crop ground / back wall) =====
+        # do_pre_process (ground) and do_remove_back_wall are independent
+        # on/off switches - the pass runs if either is on, and each only
+        # tightens its own crop bound (see TunnelProcessing.run_processing_pipeline).
+        if goal.do_pre_process or goal.do_remove_back_wall:
             fb("pre-process", 0.5)
-            post_cloud = TunnelProcessing(post_cloud).run_processing_pipeline()
+            post_cloud = TunnelProcessing(post_cloud).run_processing_pipeline(
+                remove_ground=goal.do_pre_process,
+                remove_back_wall=goal.do_remove_back_wall,
+            )
 
 
         # ===== POST PROCESS =====

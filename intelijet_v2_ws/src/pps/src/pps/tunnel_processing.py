@@ -115,249 +115,6 @@ class TunnelProcessing:
         return cropped
 
 
-    def slice_cloud_vectorized(self,pcd, axis='x', layer_thickness=0.01):
-        """
-        Chia point cloud thành layer theo một trục, ép Z về center layer, 
-        hoàn toàn vectorized, rất nhanh cho clouds lớn.
-        
-        Args:
-            pcd (o3d.t.geometry.PointCloud): point cloud đầu vào
-            axis (str): trục để chia ('x','y','z')
-            layer_thickness (float): độ dày mỗi layer
-
-        Returns:
-            layers (list of o3d.t.geometry.PointCloud)
-        """
-
-        import open3d as o3d
-
-        if not isinstance(pcd, o3d.t.geometry.PointCloud):
-            pcd = o3d.t.geometry.PointCloud.from_legacy(pcd)
-        
-        # Lấy points và colors
-        points = pcd.point.positions.cpu().numpy()
-        has_colors = "colors" in pcd.point
-        colors = pcd.point.colors.cpu().numpy() if has_colors else None
-
-        has_distances = "distances" in pcd.point
-        distances = pcd.point.distances.cpu().numpy() if has_distances else None
-
-        axis_idx = {"x":0, "y":1, "z":2}[axis.lower()]
-        min_val = points[:, axis_idx].min()
-        max_val = points[:, axis_idx].max()
-        num_layers = int(np.ceil((max_val - min_val) / layer_thickness))
-
-        # Tính layer index cho từng point
-        layer_idx = np.floor((points[:, axis_idx] - min_val) / layer_thickness).astype(int)
-        layer_idx[layer_idx >= num_layers] = num_layers - 1  # fix điểm max
-
-        # Tính Z center cho từng point
-        center_vals = min_val + (layer_idx + 0.5) * layer_thickness
-        points[:, axis_idx] = center_vals
-
-        # Sắp xếp points theo layer_idx để gom points cùng layer
-        sort_idx = np.argsort(layer_idx)
-        points_sorted = points[sort_idx]
-        if has_colors:
-            colors_sorted = colors[sort_idx]
-        
-        if has_distances:
-             dists_sorted = distances[sort_idx]
-        
-        layer_idx_sorted = layer_idx[sort_idx]
-
-        # Tìm các điểm bắt đầu layer mới
-        unique_layers, first_idx = np.unique(layer_idx_sorted, return_index=True)
-        # Thêm chỉ số kết thúc cho slicing
-        last_idx = np.append(first_idx[1:], len(points_sorted))
-
-        layers = []
-        for start, end in zip(first_idx, last_idx):
-            slice_pcd = o3d.t.geometry.PointCloud(o3d.core.Device("CPU:0"))
-            slice_pcd.point.positions = o3d.core.Tensor(points_sorted[start:end], dtype=o3d.core.Dtype.Float32)
-            if has_colors:
-                slice_pcd.point.colors = o3d.core.Tensor(colors_sorted[start:end], dtype=o3d.core.Dtype.Float32)
-
-            if has_distances:
-                slice_pcd.point.distances = o3d.core.Tensor(dists_sorted[start:end], dtype=o3d.core.Dtype.Float32)
-
-            slice_pcd = slice_pcd.voxel_down_sample(0.01)
-            layers.append(slice_pcd)
-
-        print(f"✅ Generated {len(layers)} layers along {axis.upper()} axis")
-        return layers
-        
-
-    def combine_pointcloud_list(self, clouds):
-        """
-        Gộp danh sách o3d.t.geometry.PointCloud thành 1 PointCloud CPU duy nhất.
-        Hỗ trợ 'positions', 'colors' và 'distances' (nếu có).
-        Cực nhanh, không vòng lặp thừa.
-        """
-        import open3d as o3d
-        import numpy as np
-
-        # --- Gộp các mảng numpy ---
-        all_pts  = np.vstack([pc.point.positions.cpu().numpy() for pc in clouds])
-        all_cols = np.vstack([pc.point.colors.cpu().numpy() for pc in clouds if 'colors' in pc.point]) \
-                if any('colors' in pc.point for pc in clouds) else None
-        all_dist = np.vstack([pc.point.distances.cpu().numpy() for pc in clouds if 'distances' in pc.point]) \
-                if any('distances' in pc.point for pc in clouds) else None
-
-        # --- Tạo cloud kết quả ---
-        cloud = o3d.t.geometry.PointCloud(o3d.core.Device("CPU:0"))
-        cloud.point.positions = o3d.core.Tensor(all_pts.astype(np.float32))
-
-        if all_cols is not None:
-            cloud.point.colors = o3d.core.Tensor(all_cols.astype(np.float32))
-        if all_dist is not None:
-            cloud.point.distances = o3d.core.Tensor(all_dist.astype(np.float32))
-
-        return cloud
-
-
-    def upsample(self, pcd, min_gap=0.02, step=0.01, axis='x', max_gap=0.5):
-        """
-        Nội suy thêm điểm còn thiếu vào cloud 2D theo thứ tự góc quanh trục chỉ định.
-        Giữ lại tất cả field (colors, distances, ...), 
-        và trả về cloud gốc + các điểm nội suy thêm.
-        """
-        import open3d as o3d
-        import numpy as np
-
-        # --- Kiểm tra trục ---
-        axis_map = {'x': 0, 'y': 1, 'z': 2}
-        if axis not in axis_map:
-            raise ValueError("axis phải là 'x', 'y' hoặc 'z'")
-        main_axis = axis_map[axis]
-        other_axes = [i for i in range(3) if i != main_axis]
-
-        # --- Lấy dữ liệu ---
-        pts = pcd.point.positions.cpu().numpy()
-        fields = list(pcd.point)
-        field_data = {k: pcd.point[k].cpu().numpy() for k in fields if k != "positions"}
-
-        if len(pts) < 2:
-            return pcd
-
-        # --- Tính góc quanh trục ---
-        center = np.mean(pts[:, other_axes], axis=0)
-        vecs = pts[:, other_axes] - center
-        angles = np.arctan2(vecs[:, 1], vecs[:, 0])
-        sort_idx = np.argsort(angles)
-
-        pts = pts[sort_idx]
-        for k in field_data:
-            field_data[k] = field_data[k][sort_idx]
-
-        # --- Nội suy ---
-        new_pts = []
-        new_fields = {k: [] for k in field_data}
-
-        for i in range(1, len(pts)):
-            p0, p1 = pts[i - 1], pts[i]
-            gap = np.linalg.norm(p1[other_axes] - p0[other_axes])
-            if gap > max_gap:
-                continue
-            n = int(np.ceil(gap / step))
-            if gap > min_gap and n > 1:
-                interps = p0 + (p1 - p0) * np.linspace(1 / n, (n - 1) / n, n - 1)[:, None]
-                interps[:, main_axis] = p0[main_axis]
-                new_pts.extend(interps)
-                for k in field_data:
-                    if k == "distances":
-                        fill_val = -1 * np.ones_like(field_data[k][0])
-                    else:
-                        fill_val = np.zeros_like(field_data[k][0])
-                    new_fields[k].extend([fill_val] * len(interps))
-
-        # --- Gộp cloud gốc + điểm mới ---
-        all_pts = np.vstack([pts, np.array(new_pts)]) if new_pts else pts
-        all_fields = {}
-        for k in field_data:
-            all_fields[k] = np.vstack([
-                field_data[k],
-                np.array(new_fields[k]) if len(new_fields[k]) > 0 else np.empty((0, field_data[k].shape[1]))
-            ])
-
-        # --- Loại trùng toàn bộ ---
-        all_pts_rounded = np.round(all_pts, 6)
-        _, unique_idx = np.unique(all_pts_rounded, axis=0, return_index=True)
-        all_pts = all_pts[unique_idx]
-        for k in all_fields:
-            all_fields[k] = all_fields[k][unique_idx]
-
-        # --- Xuất point cloud ---
-        pcd_new = o3d.t.geometry.PointCloud()
-        pcd_new.point.positions = o3d.core.Tensor(all_pts, o3d.core.Dtype.Float32)
-        for k, v in all_fields.items():
-            pcd_new.point[k] = o3d.core.Tensor(v, o3d.core.Dtype.Float32)
-
-        return pcd_new
-
-
-
-    def fill_null_distances(self,pcd_tensor, k=4, eps=1e-8, null_value=-1):
-        """
-        Điền các khoảng cách = -1 bằng weighted average của k-lân cận hợp lệ (vectorized version).
-        Nhanh hơn bản vòng for rất nhiều.
-
-        Args:
-            pcd_tensor: o3d.t.geometry.PointCloud, có trường 'distances'
-            k: số lân cận để trung bình
-            eps: số nhỏ tránh chia 0
-            null_value: giá trị biểu thị khoảng cách bị thiếu (-1)
-
-        Returns:
-            o3d.t.geometry.PointCloud mới với distances đã điền
-        """
-        import open3d as o3d
-        import numpy as np
-        from scipy.spatial import cKDTree
-
-        if "distances" not in pcd_tensor.point:
-            return pcd_tensor.clone()
-
-        device = pcd_tensor.device
-        points = pcd_tensor.point.positions.cpu().numpy()
-        distances = pcd_tensor.point["distances"].cpu().numpy()
-
-        # mask các điểm cần điền
-        if distances.ndim == 1:
-            mask_null = distances == null_value
-        else:
-            mask_null = np.all(distances == null_value, axis=1)
-        if not np.any(mask_null):
-            return pcd_tensor.clone()
-
-        # Tách hợp lệ / không hợp lệ
-        valid_points = points[~mask_null]
-        valid_dists = distances[~mask_null]
-        null_points = points[mask_null]
-
-        # --- Build tree từ điểm hợp lệ ---
-        tree = cKDTree(valid_points)
-
-        # --- Query k-lân cận hợp lệ ---
-        dists, idxs = tree.query(null_points, k=min(k, valid_points.shape[0]))
-
-        neighbor_vals = valid_dists[idxs][:, None] if valid_dists[idxs].ndim == 1 else valid_dists[idxs]
-        filled_vals = np.mean(neighbor_vals, axis=1)
-
-        # --- Gộp lại ---
-        new_distances = distances.copy()
-        new_distances[mask_null] = filled_vals
-
-        # --- Tạo PointCloud mới ---
-        new_pcd = o3d.t.geometry.PointCloud()
-        new_pcd.point.positions = o3d.core.Tensor(points, device=device)
-        if "colors" in pcd_tensor.point:
-            new_pcd.point.colors = pcd_tensor.point.colors.clone()
-        new_pcd.point["distances"] = o3d.core.Tensor(new_distances, device=device)
-
-        return new_pcd
-
-
     # ------------------------------
     # Ground & plane operations
     # ------------------------------
@@ -633,7 +390,21 @@ class TunnelProcessing:
         return normal
 
 
-    def run_processing_pipeline(self):
+    def run_processing_pipeline(self, remove_ground: bool = True, remove_back_wall: bool = True):
+        """
+        remove_ground / remove_back_wall let the caller independently turn off
+        tightening that one wall's crop bound - see docs/plan/00_INDEX.md P12
+        follow-up. left/right/front are not (yet) independently toggleable and
+        always get detected+cropped when this runs, matching prior behavior.
+
+        Ground is always detected regardless of `remove_ground`: besides its own
+        Z bound, self.ground_plane_normal is also what self.crop() uses to
+        auto-level the whole cloud before cropping on ANY axis - back/left/
+        right/front's crops depend on that leveling too, not just ground's.
+        `remove_ground=False` only drops the ground_center used to tighten the
+        Z bound (falls back to the same default used when ground can't be
+        detected at all), it does not skip detecting the normal.
+        """
 
         # KNOWN ISSUE (not fixed in this pass - see
         # docs/plan/phase_12_tunnel_processing_cleanup.md): a ceiling/top box
@@ -641,13 +412,20 @@ class TunnelProcessing:
         # no remove_*_wall() call uses it - maxbound[2] below stays a fixed
         # constant instead of a detected ceiling plane.
 
-        # Build the KDTree over the full cloud once and share it across all 5
+        # Build the KDTree over the full cloud once and share it across all
         # wall-plane detections below - they all query the same self.pcd, so
-        # rebuilding it 5 times (once per remove_*() call) was pure waste.
+        # rebuilding it once per detection was pure waste.
         tree = cKDTree(self.pcd.points)
 
         _, _, ground_center, self.ground_plane_normal = self.detect_ground(tree)
-        _, _, back_center, self.back_plane_normal = self.detect_back_wall(tree)
+        if not remove_ground:
+            ground_center = None
+
+        if remove_back_wall:
+            _, _, back_center, self.back_plane_normal = self.detect_back_wall(tree)
+        else:
+            back_center, self.back_plane_normal = None, None
+
         _, _, right_center, self.right_wall_normal = self.detect_right_wall(tree)
         _, _, left_center, self.left_wall_normal = self.detect_left_wall(tree)
         _, _, front_center, self.front_wall_normal = self.detect_front_wall(tree)
@@ -681,17 +459,3 @@ class TunnelProcessing:
         cloud = self.crop(pcd=self.pcd, min_bound=minbound, max_bound=maxbound, normal=self.ground_plane_normal)
 
         return cloud
-
-
-    def run_upsample(self, pcd, axis='x', min_gap=0.02,max_gap=0.5):
-        from pps.data_converter import cloudconverter
-        slices = self.slice_cloud_vectorized(pcd, axis=axis, layer_thickness=0.01)
-        slice_upsample = []
-        for s in slices:
-            one_slice = self.upsample(s,min_gap=min_gap, step=min_gap, axis=axis, max_gap=max_gap)
-            slice_upsample.append(one_slice)
-
-        cloud_combine  = self.combine_pointcloud_list(slice_upsample)
-        cloud_combine = self.fill_null_distances(cloud_combine)
-        cloud_combine = cloudconverter.voxel_down_sample_spatial(cloud_combine,voxel_size=min_gap)
-        return cloud_combine

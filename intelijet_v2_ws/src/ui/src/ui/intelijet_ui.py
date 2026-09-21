@@ -937,19 +937,19 @@ QLabel[cssClass="sysFieldValue"] {{
 
         self.cbbAutoAlign = _switch_checkbox("cbbAutoAlign")
         self.cbbRemoveGround = _switch_checkbox("cbbRemoveGround")
+        self.cbbRemoveBackWall = _switch_checkbox("cbbRemoveBackWall")
         self.cbbAutoCompare = _switch_checkbox("cbbAutoCompare")
         self.cbbUseKeypoint = _switch_checkbox("cbbUseKeypoint")
         self.cbbAutoReport = _switch_checkbox("cbbAutoReport")
-        self.cbbUpsample = _switch_checkbox("cbbUpsample")
         self.cbbTrimToPrescan = _switch_checkbox("cbbTrimToPrescan")
 
         processing_rows = [
             ("Align Cloud", self.cbbAutoAlign),
             ("Remove Ground", self.cbbRemoveGround),
+            ("Remove Back Wall", self.cbbRemoveBackWall),
             ("Auto Compare", self.cbbAutoCompare),
             ("Use Keypoint", self.cbbUseKeypoint),
             ("Auto Export Report", self.cbbAutoReport),
-            ("Upsample", self.cbbUpsample),
             ("Trim Edges to Pre-Scan", self.cbbTrimToPrescan),
         ]
         self.processingRowLabels = []
