@@ -123,7 +123,36 @@ def create_project(name):
     os.makedirs(p)
 
 
+def _has_scan_data(directory):
+    """True if `directory` contains anything besides job_info.json and
+    Syncthing junk - i.e. actual scan output, not just bookkeeping."""
+    if not os.path.isdir(directory):
+        return False
+    for name in os.listdir(directory):
+        if name == "job_info.json" or is_sync_junk(name):
+            continue
+        return True
+    return False
+
+
+def job_has_data(project, job):
+    """True if this job's folder already has scan files in it."""
+    return _has_scan_data(job_path(project, job))
+
+
+def project_has_data(project):
+    """True if any job under this project already has scan files. A
+    project that only has empty job folders (no scans run yet) doesn't
+    count - only actual scan output blocks a rename."""
+    return any(job_has_data(project, job) for job in list_jobs(project))
+
+
 def rename_project(old_name, new_name):
+    if project_has_data(old_name):
+        raise ProjectError(
+            f"Cannot rename '{old_name}': one or more of its jobs already has scan "
+            "data. Renaming is only allowed before any job has been scanned."
+        )
     old_p, new_p = project_path(old_name), project_path(new_name)
     if os.path.exists(new_p):
         raise ProjectError(f"Project '{new_name}' already exists.")
@@ -148,6 +177,11 @@ def create_job(project, job_info):
 
 
 def rename_job(project, old_name, new_name):
+    if job_has_data(project, old_name):
+        raise ProjectError(
+            f"Cannot rename '{old_name}': it already has scan data. Renaming is "
+            "only allowed before any scan has been run for this job."
+        )
     old_p, new_p = job_path(project, old_name), job_path(project, new_name)
     if os.path.exists(new_p):
         raise ProjectError(f"Job '{new_name}' already exists.")

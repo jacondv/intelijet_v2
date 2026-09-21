@@ -105,7 +105,7 @@ COMPARE-002:
   level: error
   message: "Compare timed out"
   guide: |
-    1. Check the compare_cloud_action_server node is running and not stuck.
+    1. Check the compare_cloud_action_manual_server node is running and not stuck.
     2. Check CPU load - a very large point cloud can make ICP/keypoint steps slow.
     3. Retry the compare; consider lowering upsample/keypoint settings if this repeats.
 
