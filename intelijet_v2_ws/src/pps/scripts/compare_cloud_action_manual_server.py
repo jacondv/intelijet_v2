@@ -8,7 +8,6 @@ from sensor_msgs.msg import PointCloud2
 from pps.msg import CompareCloudAction, CompareCloudResult, CompareCloudFeedback
 from pps.data_converter import cloudconverter
 from pps.cloud_processing.compare_pipeline import CloudComparePipeline
-from pps.tunnel_processing import TunnelProcessing
 
 from shared.config_loader import CONFIG as cfg
 from shared.notify import notify
@@ -63,7 +62,7 @@ class CompareCloudManualServer:
                 self.server.set_aborted(CompareCloudResult(), "Missing file")
                 return
 
-            cloud, dist = self.pipeline.run(pre, post, goal, feedback_cb=self.fb)
+            cloud, _dist = self.pipeline.run(pre, post, goal, feedback_cb=self.fb)
 
             self.fb("publish", 0.85)
 

@@ -95,7 +95,6 @@ class CloudComparePipeline:
         # ===== PRE PROCESS (Crop ground)=====
         if goal.do_pre_process:
             fb("pre-process", 0.5)
-            # pre_cloud = TunnelProcessing(pre_cloud).run_processing_pipeline()
             post_cloud = TunnelProcessing(post_cloud).run_processing_pipeline()
 
 

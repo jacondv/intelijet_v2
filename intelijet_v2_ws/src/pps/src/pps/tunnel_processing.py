@@ -1,4 +1,3 @@
-# import open3d as o3d
 import numpy as np
 import rospy
 from scipy.spatial import ConvexHull
@@ -327,19 +326,7 @@ class TunnelProcessing:
         # --- Query k-lân cận hợp lệ ---
         dists, idxs = tree.query(null_points, k=min(k, valid_points.shape[0]))
 
-        # --- Weighted average vectorized ---
-        w = 1.0 / (dists + eps)
-        w = w[:, :, None] 
-        if w.ndim == 1:
-            w = w[:, :, None] 
-            neighbor_vals = valid_dists[idxs][:, None]
-        else:
-            neighbor_vals = valid_dists[idxs]
-
-        # weighted_sum = np.sum(w * neighbor_vals, axis=1)
-        
-        # sum_w = np.sum(w, axis=1)
-        # filled_vals = weighted_sum / sum_w
+        neighbor_vals = valid_dists[idxs][:, None] if valid_dists[idxs].ndim == 1 else valid_dists[idxs]
         filled_vals = np.mean(neighbor_vals, axis=1)
 
         # --- Gộp lại ---
@@ -494,21 +481,8 @@ class TunnelProcessing:
         return non_ground_plane, ground_plane, ground_center, ground_plane_normal
 
     # ------------------------------
-    # Registration & alignment
-    # ------------------------------
-    def align(self, target_pcd,
-                  init_transformation: np.ndarray = np.eye(4)):
-        """Align this cloud with target using ICP."""
-        pass
-
-    # ------------------------------
     # Utilities
     # ------------------------------
-    def get_center(self) -> np.ndarray:
-        """Return centroid of current cloud."""
-        pass
-
-
     def get_bounding_box_bounds(self):
         """
         Return the min and max bounds (corner points) of the axis-aligned bounding box.
