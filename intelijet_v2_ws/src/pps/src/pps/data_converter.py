@@ -465,43 +465,6 @@ class CloudConverter:
     # ------------------------------------------------------------------------------
 
     @staticmethod
-    def crop(pcd, min_bound, max_bound):
-        """
-        Crop point cloud theo giới hạn min/max.
-        Hỗ trợ cả legacy và tensor PointCloud.
-        """
-
-        import open3d as o3d
-        # --- Nếu là legacy (numpy) ---
-
-        min_bound = np.asarray(min_bound, dtype=np.float32)
-        max_bound = np.asarray(max_bound, dtype=np.float32)
-
-        if isinstance(pcd, o3d.geometry.PointCloud):
-            points = np.asarray(pcd.points)
-            mask = np.all((points >= min_bound) & (points <= max_bound), axis=1)
-
-            cropped = o3d.geometry.PointCloud()
-            cropped.points = o3d.utility.Vector3dVector(points[mask])
-
-            if pcd.has_colors():
-                cropped.colors = o3d.utility.Vector3dVector(np.asarray(pcd.colors)[mask])
-            if pcd.has_normals():
-                cropped.normals = o3d.utility.Vector3dVector(np.asarray(pcd.normals)[mask])
-            return cropped
-
-        # --- Nếu là tensor (GPU/CPU Tensor) ---
-        elif isinstance(pcd, o3d.t.geometry.PointCloud):
-            points = pcd.point["positions"]
-            mask = ((points >= min_bound) & (points <= max_bound)).all(dim=1)
-            return pcd.select_by_mask(mask)
-
-        else:
-            raise TypeError(f"Error {type(pcd)}")
-
-    # ------------------------------------------------------------------------------
-
-    @staticmethod
     def crop_cloud_by_hull(hull_cloud, cloud_to_crop):
         """
         Trả về source chỉ giữ các điểm nằm trong convex hull của target.

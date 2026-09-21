@@ -47,6 +47,7 @@
 | P9 | `phase_09_ux_polish.md` | Giảm dialog xác nhận, sửa các điểm khó thao tác | P3, P5 | Thấp |
 | P10 | `phase_10_notification_channel.md` | Kênh Notification riêng (thay hack `/rosout`-JSON) + `SystemStatus` đánh kiểu + `StatusBinder` hợp nhất 3 cơ chế push widget | P2, P3 | Vừa |
 | P11 | `phase_11_pps_error_logging_diagnostics_tab.md` | Bổ sung `notify()` còn thiếu trong `pps/` (kể cả 2 bug im lặng/severity sai) + tab "DIAGNOSTICS" (HMI-style alarm log) trong UI chính | P3, P10 | Thấp-Vừa |
+| P12 | `phase_12_tunnel_processing_cleanup.md` | Tổ chức lại wall-removal logic trong `TunnelProcessing` (remove ground/back/left/right/front wall) + tham số hoá box qua CONFIG + dọn code chết liên quan | P6 | Vừa |
 
 Ghi chú thứ tự:
 - P1 làm **đầu tiên** (khác kế hoạch sơ bộ): giảm ~4000 dòng nhiễu trước khi đụng vào phần khó, giúp các phiên sau đỡ tốn token và đỡ nhầm lẫn giữa code sống/chết.
@@ -69,6 +70,7 @@ Ghi chú thứ tự:
 | P9 | ⬜ Chưa làm | |
 | P10 | ✅ Xong (code + test thật qua roscore) | Branch `dev/v3.2`. Commit `750362b`/`eae49ae`/`925b1eb`. **Chưa chạy prescan/postscan/compare thật trên phần cứng** — xem "Chưa kiểm chứng được" trong phase_10. Máy kiosk có sẵn `config/last_used.yaml` cũ cần thêm thủ công `NOTIFICATION_TOPIC` (file này gitignore, không nằm trong commit). |
 | P11 | ✅ Xong (code + verify thật qua roscore/pytest) | Branch `feature/alarm`. 6 điểm bổ sung `notify()` trong `pps/` (kể cả sửa 2 bug: status bị ghi đè về IDLE trong `sick_2d_assemble.py`, severity hardcode `[INFO]` trong `compare_cloud_base_client.py`) + tab "DIAGNOSTICS" mới (`ui/src/ui/diagnostics_tab.py`) trong `app.py`. Verify thật: roscore cho Phần A (fake object cho từng nhánh except), pytest+PyQt5 thật cho Phần B (17/17 test pass). Chưa chạy prescan/postscan/compare thật trên phần cứng — xem "Chưa kiểm chứng được" trong phase_11. |
+| P12 | ✅ Xong (code), ⚠️ CHƯA import/run thật, CHƯA commit | `get_plane()` → `_detect_wall_plane()` dùng chung 1 `cKDTree` (trước đó build lại 5 lần/pipeline) + 5 wrapper `detect_ground/detect_back_wall/detect_left_wall/detect_right_wall/detect_front_wall`; 6 box + ngưỡng detect chuyển vào `runtime.yaml` (`tunnel_processing:`) qua `_cfg()`, default = hardcode cũ. Dọn 5 điểm code chết liên quan (`CloudConverter.crop`, `TunnelProcessing.remove_point`, 3 import chết). `TOP_BOX`/ceiling: theo yêu cầu người dùng, giữ nguyên hành vi (chưa bật crop theo trần thật) — ghi trong phase_12. py_compile + grep pass; không có ROS/Open3D trong sandbox nên chưa chạy compare thật. |
 
 ## Quyết định đã chốt (Sonnet không cần hỏi lại)
 
