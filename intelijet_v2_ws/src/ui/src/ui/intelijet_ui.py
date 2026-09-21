@@ -941,6 +941,7 @@ QLabel[cssClass="sysFieldValue"] {{
         self.cbbUseKeypoint = _switch_checkbox("cbbUseKeypoint")
         self.cbbAutoReport = _switch_checkbox("cbbAutoReport")
         self.cbbUpsample = _switch_checkbox("cbbUpsample")
+        self.cbbTrimToPrescan = _switch_checkbox("cbbTrimToPrescan")
 
         processing_rows = [
             ("Align Cloud", self.cbbAutoAlign),
@@ -949,6 +950,7 @@ QLabel[cssClass="sysFieldValue"] {{
             ("Use Keypoint", self.cbbUseKeypoint),
             ("Auto Export Report", self.cbbAutoReport),
             ("Upsample", self.cbbUpsample),
+            ("Trim Edges to Pre-Scan", self.cbbTrimToPrescan),
         ]
         self.processingRowLabels = []
         for i, (text, cb) in enumerate(processing_rows):

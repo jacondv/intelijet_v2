@@ -176,7 +176,8 @@ class App(QMainWindow):
             self.ui.cbbAutoReport,
             self.ui.cbbRemoveGround,
             self.ui.cbbUseKeypoint,
-            self.ui.cbbUpsample
+            self.ui.cbbUpsample,
+            self.ui.cbbTrimToPrescan,
         ]
 
         for item in processing_switches:
@@ -392,6 +393,7 @@ class App(QMainWindow):
         settings.setValue("cbbRemoveGround_on", self.ui.cbbRemoveGround.isChecked())
         settings.setValue("cbbUseKeypoint_on", self.ui.cbbUseKeypoint.isChecked())
         settings.setValue("cbbUpsample_on", self.ui.cbbUpsample.isChecked())
+        settings.setValue("cbbTrimToPrescan_on", self.ui.cbbTrimToPrescan.isChecked())
 
     def load_ui_state(self):
         # New keys (cbb*_on, bool) - deliberately not reusing the old
@@ -405,6 +407,12 @@ class App(QMainWindow):
         self.ui.cbbRemoveGround.setChecked(settings.value("cbbRemoveGround_on", True, type=bool))
         self.ui.cbbUseKeypoint.setChecked(settings.value("cbbUseKeypoint_on", True, type=bool))
         self.ui.cbbUpsample.setChecked(settings.value("cbbUpsample_on", True, type=bool))
+        # Default False, unlike the switches above - this exposes a step
+        # (goal.do_post_process) that was hardcoded off in every real
+        # compare run before this switch existed (see compare_pipeline.py's
+        # crop_cloud_by_hull() call), so an operator who's never touched
+        # this setting keeps getting exactly the same behavior as before.
+        self.ui.cbbTrimToPrescan.setChecked(settings.value("cbbTrimToPrescan_on", False, type=bool))
 
         # Default True - matches the startup terminal's behavior before
         # this switch existed (always shown), so nothing changes for an
@@ -427,6 +435,7 @@ class App(QMainWindow):
             "/runtime/do_pre_process": self.ui.cbbRemoveGround.isChecked(),
             "/runtime/do_2d_keypoint": self.ui.cbbUseKeypoint.isChecked(),
             "/runtime/do_upsample": self.ui.cbbUpsample.isChecked(),
+            "/runtime/do_post_process": self.ui.cbbTrimToPrescan.isChecked(),
         }
 
         for key, value in params.items():
@@ -566,6 +575,7 @@ class App(QMainWindow):
             self.ui.cbbUpsample.setEnabled(level >= security.ADMIN)
             self.ui.cbbAutoCompare.setEnabled(level >= security.ADMIN)
             self.ui.cbbUseKeypoint.setEnabled(level >= security.ADMIN)
+            self.ui.cbbTrimToPrescan.setEnabled(level >= security.ADMIN)
             # self.ui.cbbAutoReport.setEnabled(level >= security.ADMIN)
             # self.ui.cbbRemoveGround.setEnabled(level >= security.ADMIN)
             
@@ -718,15 +728,14 @@ class App(QMainWindow):
 
         # Read processing flags straight from the SYSTEM tab widgets -
         # both flows now run in-process (App), so there's no need to
-        # round-trip through ROS params anymore. do_post_process has no
-        # SYSTEM-tab control (never did); keep it always off to match.
+        # round-trip through ROS params anymore.
         self.worker = CompareWorker(
             prescan_path=prescan_path,
             postscan_path=postscan_path,
             do_2d_keypoint=self.ui.cbbUseKeypoint.isChecked(),
             do_pre_process=self.ui.cbbRemoveGround.isChecked(),
             do_align=self.ui.cbbAutoAlign.isChecked(),
-            do_post_process=False,
+            do_post_process=self.ui.cbbTrimToPrescan.isChecked(),
             do_upsample=self.ui.cbbUpsample.isChecked(),
         )
         self.worker.progress.connect(self.on_compare_process)
