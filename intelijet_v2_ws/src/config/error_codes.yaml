@@ -140,3 +140,59 @@ COMPARE-006:
     1. Check the ALARM history for the exact exception text right after this entry.
     2. Check that both selected files in the REPORT tab are valid scans.
     3. Retry Compare Selected.
+
+# ---- Device connectivity (SYSTEM tab devices) ----
+# Every code below shares the same 5-step recovery sequence on purpose (see
+# CLAUDE.md/config over hardcode discussion): check physical connectivity
+# first, then Restart App, then power-cycle the whole system + Restart App
+# as a last resort. Only steps 2-3 (which device/cable to check) differ.
+
+DEVICE-LIDAR-001:
+  level: error
+  message: "Lidar disconnected (network unreachable)"
+  guide: |
+    1. Check the Tablet is connected to the Router's correct WiFi/LAN.
+    2. Check power to the Router and to the Lidar.
+    3. Check the Ethernet cable between the Lidar and the Router.
+    4. Restart App.
+    5. If it still fails: power-cycle the whole system (turn off, turn back on), then Restart App.
+
+DEVICE-LIDAR-002:
+  level: error
+  message: "Lidar network is reachable but no scan data is coming in"
+  guide: |
+    1. Check the Tablet is connected to the Router's correct WiFi/LAN.
+    2. Check power to the Router and to the Lidar.
+    3. Check the Ethernet cable between the Lidar and the Router.
+    4. Restart App.
+    5. If it still fails: power-cycle the whole system (turn off, turn back on), then Restart App.
+
+DEVICE-ENCODER-001:
+  level: error
+  message: "Encoder disconnected"
+  guide: |
+    1. Check the Tablet is connected to the Router's correct WiFi/LAN.
+    2. Check power to the Router, the PCAN Gateway, and the Encoder.
+    3. Check the CAN cable between the Encoder and the PCAN Gateway.
+    4. Restart App.
+    5. If it still fails: power-cycle the whole system (turn off, turn back on), then Restart App.
+
+DEVICE-PLC-001:
+  level: error
+  message: "PLC disconnected"
+  guide: |
+    1. Check the Tablet is connected to the Router's correct WiFi/LAN.
+    2. Check power to the Router, the PCAN Gateway, and the PLC.
+    3. Check the CAN cable between the PLC and the PCAN Gateway.
+    4. Restart App.
+    5. If it still fails: power-cycle the whole system (turn off, turn back on), then Restart App.
+
+DEVICE-PCAN-001:
+  level: error
+  message: "PCAN Ethernet Gateway disconnected"
+  guide: |
+    1. Check the Tablet is connected to the Router's correct WiFi/LAN.
+    2. Check power to the Router and to the PCAN Gateway.
+    3. Check the network cable between the PCAN Gateway and the Router.
+    4. Restart App.
+    5. If it still fails: power-cycle the whole system (turn off, turn back on), then Restart App.

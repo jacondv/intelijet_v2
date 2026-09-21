@@ -7,8 +7,12 @@ devices.yaml:
     within `timeout` seconds. Used for CAN-based devices (encoder, pcan, plc).
   - PingMonitor: CONNECTED while periodic ICMP ping to `ip` succeeds. Runs
     ping in a background thread so it never blocks the ROS timer/spin loop.
-    Used for network devices (lidar) where "connected" should reflect actual
+    Used for network devices where "connected" should reflect actual
     reachability rather than whether a scan happens to be running.
+  - LidarMonitor: PingMonitor's reachability probe plus a TopicAlive check
+    on the raw cloud topic, so "network is up but the driver isn't
+    streaming" (DISCONNECTED vs ERROR) gets reported separately - see
+    config/error_codes.yaml DEVICE-LIDAR-001/002.
   - StateEchoMonitor: device_state mirrors the last message payload (e.g.
     /pps/state), but still goes DISCONNECTED if no message arrives within
     `timeout` seconds (prevents getting stuck on a stale state forever).
@@ -21,6 +25,15 @@ devices.yaml:
 To add a new device/process: add an entry to devices.yaml with a `type:`
 matching one of the classes registered in MONITOR_CLASSES below, then
 add/extend a monitor class here if none of the existing types fit.
+
+Alarming on a transition: add a `disconnected_code:` and/or `error_code:`
+field to that device's entry in devices.yaml, set to a code from
+config/error_codes.yaml. Monitor.update_status() below reads these and
+calls notify() itself, so raising/removing an alarm for any device is a
+devices.yaml/error_codes.yaml edit only - no Python change needed.
+device_state (Connected/Disconnected/Error) is a generic state shared by
+every device; the code is what's specific to a given device being in that
+state - the two are looked up together, the state itself is not a code.
 """
 import rospy
 import rosnode
@@ -30,6 +43,7 @@ import threading
 from shared.msg import DeviceStatus
 from genpy.message import Message
 from shared.config_loader import load_config
+from shared.notify import notify
 
 
 def ros_msg_to_dict(msg):
@@ -65,6 +79,17 @@ def ros_msg_to_dict(msg):
     return result
 
 
+# devices.yaml field name -> DeviceStatus value it alarms on. Flat scalar
+# fields (disconnected_code/error_code), not a nested map, matching every
+# other field in devices.yaml being a plain key: value. Add a row here only
+# if a new device_state value ever needs alarming (CONNECTED deliberately
+# has none - a device coming back up isn't an alarm).
+_ALARM_CODE_FIELDS = {
+    DeviceStatus.DISCONNECTED: "disconnected_code",
+    DeviceStatus.ERROR: "error_code",
+}
+
+
 class Monitor:
     def __init__(self, cfg, on_transition=None):
         # Khởi tạo DeviceStatus từ config
@@ -77,16 +102,28 @@ class Monitor:
 
         self.timeout = cfg.timeout
         self.check_interval = max(self.timeout / 2.0, 0.5)
+        # Optional devices.yaml disconnected_code/error_code fields (see
+        # _ALARM_CODE_FIELDS above and module docstring) - a device that
+        # doesn't set them just isn't alarmed on, same as before.
+        self._alarm_codes = {
+            state: getattr(cfg, field, None)
+            for state, field in _ALARM_CODE_FIELDS.items()
+            if getattr(cfg, field, None)
+        }
         # Called with (device_name, old_device_state, new_device_state) only
         # when device_state actually changes (not on every poll tick) - see
         # update_status() below. Lets a composition root (StatusReader)
         # react to real transitions without every Monitor subclass needing
-        # to know how/whether that gets surfaced to the user.
+        # to know how/whether that gets surfaced to the user. Separate from
+        # (and in addition to) the alarm_codes notify() below.
         self._on_transition = on_transition
-        # Suppress the transition fired by the very first check_status()
-        # call (constructor default DISCONNECTED -> whatever's actually
-        # observed) - that's an initial observation, not a real transition.
-        self._first_update = True
+        # The constructor default above (DISCONNECTED) is just a sentinel,
+        # not a real observation - so the very first check_status() call
+        # must fire (alarm_codes/on_transition) even if the real state it
+        # finds also happens to be DISCONNECTED (dev_state != old_state
+        # would otherwise be False and silently swallow "already broken at
+        # startup", e.g. Lidar powered off before the app was launched).
+        self._has_observed = False
 
         self._setup(cfg)
         rospy.Timer(rospy.Duration(self.check_interval), self.check_status)
@@ -112,9 +149,17 @@ class Monitor:
         # giữ timestamp local
         self.status.last_update = rospy.Time.now()
 
-        if self._on_transition is not None and not self._first_update and dev_state != old_state:
+        is_first_observation = not self._has_observed
+        self._has_observed = True
+        is_transition = is_first_observation or dev_state != old_state
+
+        if is_transition:
+            code = self._alarm_codes.get(dev_state)
+            if code:
+                notify(code=code, source=self.status.name)
+
+        if self._on_transition is not None and is_transition:
             self._on_transition(self.status.name, old_state, dev_state)
-        self._first_update = False
 
 
 class TopicAliveMonitor(Monitor):
@@ -219,6 +264,62 @@ class PingMonitor(_BackgroundPollMonitor):
             return False
 
 
+class LidarMonitor(_BackgroundPollMonitor):
+    """Lidar-specific: combines PingMonitor's network-reachability probe
+    with a TopicAlive check on the raw cloud topic, to distinguish two
+    failure modes the operator needs different guidance for (see
+    config/error_codes.yaml DEVICE-LIDAR-001/002):
+      - ping fails -> DISCONNECTED. Network/cable/router/Lidar-power issue -
+        check the physical link, not the driver.
+      - ping OK but `topic` has gone stale -> ERROR. The sick_lms_511
+        driver process is stuck/crashed even though the network link
+        itself is fine.
+    """
+
+    thread_name_prefix = "LidarMonitor"
+
+    def _setup_probe(self, cfg):
+        self.ip = cfg.ip
+        self.topic = cfg.topic
+        self.topic_timeout = cfg.topic_timeout
+        self.last_msg_time = None
+
+        pkg, msg = cfg.msg_type.split("/")
+        module = importlib.import_module(pkg + ".msg")
+        msg_class = getattr(module, msg)
+        rospy.Subscriber(self.topic, msg_class, self._handle_cloud_message)
+
+    def _handle_cloud_message(self, msg):
+        self.last_msg_time = rospy.Time.now()
+
+    def _probe(self):
+        try:
+            result = subprocess.run(
+                ["ping", "-c", "1", "-W", "1", self.ip],
+                stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
+            )
+            return result.returncode == 0
+        except Exception as e:
+            rospy.logwarn(f"[LidarMonitor] ping to {self.ip} failed to run: {e}")
+            return False
+
+    def check_status(self, event):
+        with self._lock:
+            ping_ok = self._connected
+
+        if not ping_ok:
+            self.update_status(DeviceStatus.DISCONNECTED, detail="Network unreachable")
+            return
+
+        now = rospy.Time.now()
+        topic_stale = (self.last_msg_time is None or
+                       (now - self.last_msg_time).to_sec() > self.topic_timeout)
+        if topic_stale:
+            self.update_status(DeviceStatus.ERROR, detail=f"No data on {self.topic}")
+        else:
+            self.update_status(DeviceStatus.CONNECTED)
+
+
 class RosnodeAliveMonitor(_BackgroundPollMonitor):
     """CONNECTED while the named ROS node process answers an XML-RPC ping
     (rosnode_ping) - i.e. the process itself is still running. Unlike
@@ -268,6 +369,7 @@ class StateEchoMonitor(Monitor):
 MONITOR_CLASSES = {
     "TopicAliveMonitor": TopicAliveMonitor,
     "PingMonitor": PingMonitor,
+    "LidarMonitor": LidarMonitor,
     "StateEchoMonitor": StateEchoMonitor,
     "RosnodeAliveMonitor": RosnodeAliveMonitor,
 }

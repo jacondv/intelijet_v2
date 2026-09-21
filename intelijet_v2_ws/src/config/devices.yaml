@@ -5,30 +5,49 @@
 # type: TopicAliveMonitor -> connected while messages keep arriving on `topic`
 #                             within `timeout` seconds (CAN devices).
 # type: PingMonitor        -> connected while ICMP ping to `ip` succeeds.
+# type: LidarMonitor       -> PingMonitor's `ip` check plus a TopicAlive
+#                             check on `topic`/`topic_timeout` - DISCONNECTED
+#                             if ping fails (network/cable/power issue),
+#                             ERROR if ping succeeds but `topic` has gone
+#                             stale (driver stuck/crashed).
 # type: StateEchoMonitor   -> device_state mirrors last message payload, still
 #                             goes disconnected if no message within `timeout`.
 # type: RosnodeAliveMonitor -> connected while the ROS node named `node`
 #                             (its graph name, e.g. "/compare_cloud_action_server")
 #                             answers an XML-RPC ping - catches a crashed/hung
 #                             node process itself, not just a stale topic.
+#
+# disconnected_code / error_code: (optional) a code from error_codes.yaml.
+# When set, a transition into that device_state (or already being in it on
+# the very first check, e.g. still broken from before the app was
+# launched) is pushed to the Notification/Alarm stream with that code's
+# message+guide - not just the SYSTEM tab badge. Devices without these
+# fields keep the old passive-badge-only behavior.
 devices:
   - name: lidar
-    type: PingMonitor
+    type: LidarMonitor
     ip: 192.168.82.121  # from sick_scan/launch/sick_lms_511.launch arg "hostname"
+    topic: /cloud  # raw scan cloud published continuously by sick_lms_511 (see pps/launch/pps.launch)
+    msg_type: sensor_msgs/PointCloud2
+    topic_timeout: 5.0
     timeout: 3.0
     mode: continuous
+    disconnected_code: DEVICE-LIDAR-001
+    error_code: DEVICE-LIDAR-002
   - name: encoder
     type: TopicAliveMonitor
     topic: /encoder01/can_msg
     msg_type: can_msgs/Frame
     timeout: 3.0
     mode: continuous
+    disconnected_code: DEVICE-ENCODER-001
   - name: pcan
     type: TopicAliveMonitor
     topic: /pcan_received_messanges
     msg_type: can_msgs/Frame
     timeout: 3.0
     mode: continuous
+    disconnected_code: DEVICE-PCAN-001
   - name: pps
     type: StateEchoMonitor
     topic: /pps/state
@@ -41,6 +60,7 @@ devices:
     msg_type: can_msgs/Frame
     timeout: 3.0
     mode: continuous
+    disconnected_code: DEVICE-PLC-001
 
   # ---- ROS node process liveness (see pps/launch/pps.launch for the full
   # roster of launched nodes). Each entry pings the node's own graph name
