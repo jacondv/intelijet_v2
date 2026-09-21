@@ -13,7 +13,6 @@ from shared.config_loader import CONFIG as cfg
 from shared.notify import notify
 
 CLOUD_OUT = cfg.CLOUD_COMPARED_TOPIC + "_manual"
-CLOUD_UP = f"{CLOUD_OUT}/upsample"
 
 
 class CompareCloudManualServer:
@@ -34,7 +33,6 @@ class CompareCloudManualServer:
         )
 
         self.pub = rospy.Publisher(CLOUD_OUT, PointCloud2, queue_size=1, latch=True)
-        self.pub2 = rospy.Publisher(CLOUD_UP, PointCloud2, queue_size=1, latch=True)
 
         self.server.start()
         rospy.loginfo("MANUAL compare server started")
@@ -55,12 +53,11 @@ class CompareCloudManualServer:
             # ONLY FILE MODE
             self.fb("load", 0.1)
 
+            # cloudconverter.load_ply (CloudConverter, not the pps.cloud_utils.io_utils
+            # shim) never returns None on failure - it always raises
+            # (FileNotFoundError/RuntimeError), caught by the except block below.
             pre = cloudconverter.load_ply(goal.prescan_path, as_legacy=True)
             post = cloudconverter.load_ply(goal.postscan_path, as_legacy=True)
-
-            if pre is None or post is None:
-                self.server.set_aborted(CompareCloudResult(), "Missing file")
-                return
 
             cloud, _dist = self.pipeline.run(pre, post, goal, feedback_cb=self.fb)
 
@@ -69,17 +66,6 @@ class CompareCloudManualServer:
             msg = cloudconverter.o3d_tensor_to_pointcloud2(cloud, "base_link")
             self.pub.publish(msg)
             rospy.loginfo("Published compared cloud to %s", CLOUD_OUT)
-
-            # if goal.do_upsample:
-            #     self.fb("upsample", 0.9)
-
-            #     up = TunnelProcessing(cloud).run_upsample(cloud)
-            #     msg2 = cloudconverter.o3d_tensor_to_pointcloud2(up, "base_link")
-            # else:
-            #     msg2 = msg
-            # self.pub2.publish(msg2)
-
-            rospy.loginfo("Published compared cloud to %s", CLOUD_UP)
 
             self.fb("done", 1.0)
 
