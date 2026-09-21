@@ -634,6 +634,7 @@ class ProjectManager(QWidget, Ui_frm_ProjectPage):
             return
 
         self.job_store.rename_active_job_project(old_name, new_name)
+        self.job_store.rename_current_job_project(old_name, new_name)
         self._renaming_project = None
         self.render_projects()
         self.render_schedule()
@@ -718,6 +719,7 @@ class ProjectManager(QWidget, Ui_frm_ProjectPage):
                     QMessageBox.warning(self, "Exists", str(e))
                     return
                 self.job_store.rename_active_job(project, job, name)
+                self.job_store.rename_current_job(project, job, name)
 
             job_info.name = name
             job_info.status = status

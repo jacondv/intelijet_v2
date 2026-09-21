@@ -98,6 +98,29 @@ class JobStore:
             _atomic_write_json(self._active_job_file, self._active_jobs_cache)
         return changed
 
+    def rename_current_job(self, project, old_job, new_job):
+        """If current_job.json currently points at project/old_job (called
+        after a job folder rename), repoint it at project/new_job instead
+        - otherwise it would keep referencing a folder name that no longer
+        exists on disk. Returns False (no-op) if it wasn't pointing there."""
+        if self.get_current_job() == f"{project}/{old_job}":
+            self.set_current_job(f"{project}/{new_job}")
+            return True
+        return False
+
+    def rename_current_job_project(self, old_project, new_project):
+        """Same as rename_current_job, but for a project folder rename -
+        repoints current_job.json's project half if it referenced
+        old_project, keeping whatever job half it already had."""
+        current = self.get_current_job()
+        if not current or "/" not in current:
+            return False
+        project, job = current.split("/", 1)
+        if project == old_project:
+            self.set_current_job(f"{new_project}/{job}")
+            return True
+        return False
+
     def get_current_job(self):
         """Return the 'project/job' string of the currently selected job,
         or None if unset/unreadable."""
