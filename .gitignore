@@ -1,9 +1,5 @@
 # === HÌNH ẢNH VÀ FILE DỮ LIỆU LỚN ===
-*.jpg
-*.jpeg
-*.png
-*.bmp
-*.gif
+
 *.tiff
 *.tif
 *.webp
