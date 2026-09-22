@@ -46,21 +46,30 @@ compare_pipeline:
     max_cluster_size_pass2: 0
 
 # Parameters for pps.tunnel_processing.TunnelProcessing.run_processing_pipeline()
-# (wall/ground plane detection boxes - default = current hardcoded values, see
-# docs/plan/phase_12_tunnel_processing_cleanup.md). `top` is defined for parity
-# with the other 5 walls but not used yet by any remove_*() call - known issue,
-# left for a future phase.
+# (wall/ground plane detection via RANSAC - see TunnelProcessing._detect_wall_plane()).
+# Only ground/front/back are detected - right/left/top wall detection was
+# removed; the Y crop bound is a fixed constant in run_processing_pipeline()
+# instead. distance_threshold carries over the old "radius" parameter's
+# value for continuity, but its geometric meaning changed (point-to-plane
+# distance now, not point-to-point proximity) - re-validate against real
+# scans before trusting 0.15 as tuned for the new meaning.
 tunnel_processing:
   plane_detection:
     normal_angle_threshold: 5
-    radius: 0.15
+    distance_threshold: 0.15
+    num_iterations: 1000
   boxes:
     front:  {min: [0, -5.0, -0.5], max: [3.5, 5.0, 8.0]}
     back:   {min: [4.0, -5.0, 0.0], max: [11.0, 5.0, 8.0]}
-    left:   {min: [2.5, 0.0, -0.5], max: [8.0, 5.0, 8.0]}
-    right:  {min: [2.5, -5.0, -0.5], max: [8.0, 0.0, 8.0]}
     bottom: {min: [2.5, -5.0, -1.5], max: [11.0, 5.0, 1.5]}
-    top:    {min: [2.5, -5.0, 4.0], max: [11.0, 5.0, 8.0]}
+  # Final crop bound offsets applied on top of each detected plane's center
+  # (run_processing_pipeline()). When a plane wasn't detected/toggled off,
+  # the bound falls back to compare_pipeline.crop_box instead of a separate
+  # default here - that's already the "safe compare area" boundary.
+  crop_offsets:
+    front_x: -0.5
+    back_x: -0.1
+    ground_z: 0.3
 
 report:
   sitename: "Jacon Equipment (test only)"
