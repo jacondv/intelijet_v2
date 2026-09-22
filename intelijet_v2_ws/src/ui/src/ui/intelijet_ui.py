@@ -423,6 +423,16 @@ QLabel {{
     border: 1px solid #e2e8f0;
     border-radius: 10px;
 }}
+/* Scroll wrapper around processingCard - transparent so #processingCard's
+   own border/background (above) still reads as the card, not the wrapper.
+   The 2nd selector is the QScrollArea's internal viewport widget (a plain
+   QWidget, auto-created between the scroll area and #processingCard) -
+   without it, the viewport's own default fill paints a different shade
+   than the other two cards' white background. */
+#processingCardScroll, #processingCardScroll > QWidget {{
+    background-color: transparent;
+    border: none;
+}}
 #sysCardTitle {{
     background: transparent;
     border: none;
@@ -858,7 +868,7 @@ QLabel[cssClass="sysFieldValue"] {{
             return lbl
 
         # ---- Device Hardware Status card ----
-        self.deviceCard, self.deviceCardLayout = _sys_card("Device Hardware Status", "deviceCard")
+        self.deviceCard, self.deviceCardLayout = _sys_card("Hardware Status", "deviceCard")
 
         self.lblPLCStatus = QtWidgets.QLabel("--", self.deviceCard)
         self.lblPLCStatus.setObjectName("lblPLCStatus")
@@ -911,7 +921,7 @@ QLabel[cssClass="sysFieldValue"] {{
         self.systemGrid.addWidget(self.deviceCard)
 
         # ---- Processing Stages Configuration card ----
-        self.processingCard, self.processingCardLayout = _sys_card("Processing Stages Configuration", "processingCard")
+        self.processingCard, self.processingCardLayout = _sys_card("Processing Stages", "processingCard")
         self.processingGrid = QtWidgets.QGridLayout()
         self.processingGrid.setSpacing(12)
         self.processingCardLayout.addLayout(self.processingGrid)
@@ -943,14 +953,16 @@ QLabel[cssClass="sysFieldValue"] {{
         self.cbbAutoReport = _switch_checkbox("cbbAutoReport")
         self.cbbTrimToPrescan = _switch_checkbox("cbbTrimToPrescan")
 
+        # Grouped by function rather than insertion order: crop/trim switches
+        # together, then alignment, then automation triggers.
         processing_rows = [
-            ("Align Cloud", self.cbbAutoAlign),
-            ("Remove Ground", self.cbbRemoveGround),
-            ("Remove Back Wall", self.cbbRemoveBackWall),
-            ("Auto Compare", self.cbbAutoCompare),
-            ("Use Keypoint", self.cbbUseKeypoint),
-            ("Auto Export Report", self.cbbAutoReport),
-            ("Trim Edges to Pre-Scan", self.cbbTrimToPrescan),
+            ("Ground", self.cbbRemoveGround),
+            ("Back Wall", self.cbbRemoveBackWall),
+            ("Edge Trim", self.cbbTrimToPrescan),
+            ("Align", self.cbbAutoAlign),
+            ("Keypoint", self.cbbUseKeypoint),
+            ("Auto Compare", self.cbbAutoCompare),  # "Auto" kept - distinguishes from the manual Compare on REPORT tab
+            ("Auto Report", self.cbbAutoReport),    # same reason
         ]
         self.processingRowLabels = []
         for i, (text, cb) in enumerate(processing_rows):
@@ -966,7 +978,20 @@ QLabel[cssClass="sysFieldValue"] {{
             self.processingRowLabels.append(lbl)
             self.processingGrid.addWidget(row_widget, i // 2, i % 2)
 
-        self.systemGrid.addWidget(self.processingCard)
+        # processingCard's own natural height grows with every switch row
+        # added (each is a fixed-size button) - without a scroll area, that
+        # height feeds straight into tab_system's/the window's minimum size,
+        # and once it exceeds the real screen height, showMaximized() can no
+        # longer actually reach the required size and the whole layout
+        # overlaps ("broken" look, full-screen toggle stops working). The
+        # scroll area absorbs any excess height instead of forcing the window
+        # to grow, and gets more headroom to add switches later for free.
+        self.processingCardScroll = QtWidgets.QScrollArea(self.tab_system)
+        self.processingCardScroll.setObjectName("processingCardScroll")
+        self.processingCardScroll.setWidgetResizable(True)
+        self.processingCardScroll.setFrameShape(QtWidgets.QFrame.NoFrame)
+        self.processingCardScroll.setWidget(self.processingCard)
+        self.systemGrid.addWidget(self.processingCardScroll)
 
         # ---- Storage & Data card ----
         self.storageCard, self.storageCardLayout = _sys_card("Storage & Data", "storageCard")
