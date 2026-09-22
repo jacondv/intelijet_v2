@@ -50,6 +50,7 @@ class CloudComparePipeline:
         # ===== 2D KEYPOINT =====
         source_patch = None
         target_patch = None
+        T = None
 
         if goal.do_2d_keypoint:
             fb("extract-2d-keypoint", 0.3)
@@ -76,20 +77,21 @@ class CloudComparePipeline:
                 filename = f"{folder_path}/{int(time.time())}_keypoints.png"
                 cv2.imwrite(filename, image_out)
 
-            # ===== ALIGN 2nd TIME =====
-            if goal.do_align:
-                fb("align", 0.4)
+        # ===== ALIGN 2nd TIME ===== (independent of do_2d_keypoint - align_cloud
+        # already falls back to post_crop when no keypoint patch was found)
+        if goal.do_align:
+            fb("align", 0.4)
 
-                src = source_patch if source_patch is not None else post_crop
+            src = source_patch if source_patch is not None else post_crop
 
-                T = align_cloud(
-                    pre_cloud=pre_cloud,
-                    post_cloud=src,
-                    return_transform_only=True
-                )
+            T = align_cloud(
+                pre_cloud=pre_cloud,
+                post_cloud=src,
+                return_transform_only=True
+            )
 
-            if check_transform(T):
-                post_cloud.transform(T)
+        if T is not None and check_transform(T):
+            post_cloud.transform(T)
 
 
         # ===== PRE PROCESS (Crop ground / back wall) =====
