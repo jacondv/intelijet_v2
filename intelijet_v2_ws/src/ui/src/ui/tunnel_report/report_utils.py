@@ -1,7 +1,9 @@
 
 import os
+import time
 import numpy as np
-from pps.helper import surface_area, filter_pcd_by_distance
+import rospy
+from pps.cloud_utils.geometry import surface_area_split
 
 
 class PLYProcessor:
@@ -95,14 +97,17 @@ class PLYProcessor:
         _min_reached_thickness_mm = max(self.target_thickness - 1 * self.tolerance, 0)
         _mask_reached_target = distances > _min_reached_thickness_mm
 
-        _reached_pcd = filter_pcd_by_distance(self.pcd, d_min=_min_reached_thickness_mm, d_max=1000)
-        if len(_reached_pcd.point.positions) < 100:  # ngưỡng tùy chọn
-            reached_area = 0.0
-        else:
-            reached_area = surface_area(_reached_pcd, radii=(0.03, 0.05))  # m²
+        t0 = time.perf_counter()
+        areas = surface_area_split(
+            self.pcd, distances, _min_reached_thickness_mm, radii=(0.1, 0.15)
+        )  # m² - single mesh for both total_area and reached_area, see surface_area_split() docstring
+        total_area = areas["total_area"]
+        reached_area = areas["reached_area"] if areas["reached_area"] is not None else 0.0
+        t1 = time.perf_counter()
+        rospy.loginfo("[PLYProcessor] surface_area_split(radii=0.1/0.15): %.2fs", t1 - t0)
 
         avg_thickness_mm = distances[_mask_reached_target].mean() if np.sum(_mask_reached_target) > 1000 else 0
-        total_area = surface_area(self.pcd, radii=(0.1, 0.15))
+
         volume_m3 = reached_area * avg_thickness_mm/1000
         
         return {
