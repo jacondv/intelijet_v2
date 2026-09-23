@@ -1,5 +1,7 @@
 import os
+import time
 import traceback
+import rospy
 from weasyprint import HTML
 from ui.tunnel_report.template_manager import render_template
 from ui.tunnel_report.report_data_model import ReportData
@@ -48,8 +50,14 @@ class ReportGenerator:
         try:
             os.makedirs(os.path.dirname(output_path), exist_ok=True)
 
+            t0 = time.perf_counter()
             html_content = render_template('tunnel_report.html', data=report_data)
+            t1 = time.perf_counter()
+            rospy.loginfo("[ReportGenerator] render_template: %.2fs", t1 - t0)
+
             HTML(string=html_content, base_url='.').write_pdf(output_path)
+            t2 = time.perf_counter()
+            rospy.loginfo("[ReportGenerator] weasyprint write_pdf: %.2fs", t2 - t1)
 
             if debug_html:
                 debug_path = output_path.replace(".pdf", ".html")
@@ -85,7 +93,7 @@ class ReportGenerator:
         tolerance = self.tolerance
         applied_thickness = self.applied_thickness
         date =  self.date
-        time = self.time
+        scan_time = self.time  # renamed from `time` - was shadowing the `time` module used for perf_counter() below
         bins = [applied_thickness-tolerance, applied_thickness+tolerance]
 
         processor = PLYProcessor()
@@ -94,12 +102,20 @@ class ReportGenerator:
             target_thickness=applied_thickness,
             tolerance=tolerance
         )
+        t0 = time.perf_counter()
         thickness_metrics = processor.compute_thickness_metrics()
+        t1 = time.perf_counter()
+        rospy.loginfo("[ReportGenerator] compute_thickness_metrics: %.2fs", t1 - t0)
 
         #---------------------
         thickness_chart_img = processor.export_distribution_chart(bins=bins)
+        t2 = time.perf_counter()
+        rospy.loginfo("[ReportGenerator] export_distribution_chart: %.2fs", t2 - t1)
+
         tunnel_view_img = processor.export_tunnel_view_image(out_path=None)
-        
+        t3 = time.perf_counter()
+        rospy.loginfo("[ReportGenerator] export_tunnel_view_image: %.2fs", t3 - t2)
+
         shotcrete_volume = round(thickness_metrics["volume_m3"],1)
         avg_thickness = round(thickness_metrics["avg_thickness_mm"],0)
         reached_area = round(thickness_metrics["reached_area_m2"],1)
@@ -119,10 +135,11 @@ class ReportGenerator:
             tunnel_view=tunnel_view_img,
             thickness_chart=thickness_chart_img,
             date=date,
-            time=time
+            time=scan_time
         )
         try:
             self.create_pdf(report_data=data.to_json(), output_path=output_path, debug_html=False)
+            rospy.loginfo("[ReportGenerator] export() total: %.2fs", time.perf_counter() - t0)
             return True
         except Exception as e:
             print(f"[ReportGenerator] Error exporting report: {e}")
