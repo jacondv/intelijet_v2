@@ -1,0 +1,39 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>services</name>
+  <version>0.0.0</version>
+  <description>
+    Background business services (report export, and future similar
+    features) that don't belong in pps (scan/cloud processing only) or
+    shared (lightweight cross-cutting infra utilities only). Each service
+    gets its own subfolder under src/services/ and, if it needs one, its
+    own actionlib action - see src/services/report/ for the first one.
+  </description>
+
+  <maintainer email="danhvohoai2@gmail.com">danhvo</maintainer>
+  <license>TODO</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <build_depend>rospy</build_depend>
+  <build_depend>std_msgs</build_depend>
+  <build_depend>actionlib</build_depend>
+  <build_depend>actionlib_msgs</build_depend>
+  <build_depend>message_generation</build_depend>
+
+  <build_export_depend>rospy</build_export_depend>
+  <build_export_depend>std_msgs</build_export_depend>
+  <build_export_depend>actionlib</build_export_depend>
+  <build_export_depend>actionlib_msgs</build_export_depend>
+
+  <exec_depend>rospy</exec_depend>
+  <exec_depend>std_msgs</exec_depend>
+  <exec_depend>actionlib</exec_depend>
+  <exec_depend>actionlib_msgs</exec_depend>
+  <exec_depend>message_runtime</exec_depend>
+  <!-- services/report/report_utils.py uses pps.cloud_utils.geometry.surface_area_split -->
+  <exec_depend>pps</exec_depend>
+
+  <export>
+  </export>
+</package>

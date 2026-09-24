@@ -82,10 +82,10 @@ def _find_matching_compared(ply_path):
 
 def _find_matching_report(ply_path):
     """Given any scan .ply path, return the path of its matching PDF
-    report if one exists (report_service.py names the report file by
-    swapping .ply for .pdf on the compared cloud's own name, so we
-    match the same way _find_matching_compared does: scan_id + index,
-    on a file whose type contains "compared")."""
+    report if one exists (scan_pipeline_worker.py's report export step
+    names the report file by swapping .ply for .pdf on the compared
+    cloud's own name, so we match the same way _find_matching_compared
+    does: scan_id + index, on a file whose type contains "compared")."""
     parsed = parse_filename(ply_path)
     folder = os.path.dirname(ply_path)
     return _find_latest(folder, parsed, "pdf", lambda t: "compared" in t)
