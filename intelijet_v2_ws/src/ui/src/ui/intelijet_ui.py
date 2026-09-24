@@ -326,6 +326,10 @@ QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {{ height: 0; }}
     outline: none;
 }}
 #cbbJobSelect QAbstractItemView::item {{ padding: 16px 14px; min-height: 26px; margin: 3px 0px; border-radius: 8px; }}
+#lblClock {{
+    background: transparent; border: none;
+    font-weight: 700;
+}}
 #btnLogin, #btnFullScreen {{
     background-color: {BTN_NEUTRAL};
     border: 1px solid {PANEL_BORDER};
@@ -549,6 +553,16 @@ QLabel[cssClass="sysFieldValue"] {{
         self.headerLayout.addWidget(self.jobSelectorBox)
 
         self.headerLayout.addStretch(1)
+
+        self.lblClock = QtWidgets.QLabel(self.header)
+        self.lblClock.setObjectName("lblClock")
+        self.lblClock.setAlignment(QtCore.Qt.AlignCenter)
+        self.headerLayout.addWidget(self.lblClock)
+
+        # Fixed gap (not another addStretch - that pushed the clock all the
+        # way toward center, too far from the login/fullscreen/shutdown
+        # cluster) so it just sits a bit clear of btnLogin.
+        self.headerLayout.addSpacing(28)
 
         self.btnLogin = QtWidgets.QPushButton(self.header)
         self.btnLogin.setMinimumSize(QtCore.QSize(76, 76))

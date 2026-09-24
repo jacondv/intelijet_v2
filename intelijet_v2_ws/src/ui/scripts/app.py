@@ -30,7 +30,7 @@ from ui.status_binder import StatusBinder
 
 from shared.pps_command import PPSCommand
 
-from ui.intelijet_ui import Ui_MainWindow
+from ui.intelijet_ui import Ui_MainWindow, ACCENT_YELLOW, TEXT_MUTED
 from ui.keyboard import TouchKeyboard
 
 from ui.notification_center import NotificationCenter, LEVEL_COLORS
@@ -232,6 +232,12 @@ class App(QMainWindow):
         self._job_refresh_timer = QTimer(self)
         self._job_refresh_timer.timeout.connect(self._refresh_active_jobs)
         self._job_refresh_timer.start(30000)
+
+        # --- Header clock ---
+        self._clock_timer = QTimer(self)
+        self._clock_timer.timeout.connect(self._update_clock)
+        self._clock_timer.start(1000)
+        self._update_clock()
 
         # --- Cloud service --- (report export now runs as its own ROS node,
         # called via actionlib from scan_pipeline_worker.py - see
@@ -504,12 +510,14 @@ class App(QMainWindow):
 
     def _on_scan_cloud_ready(self, polydata, metadata):
         self._show_cloud_in_viewer(polydata, metadata.get("filepath"))
-        # If a report export is about to run for this cloud, hold off
-        # switching to 3D MAIN until it's actually done (see
-        # _on_scan_report_done/_on_scan_report_failed) - otherwise switch
-        # right away, same as before.
-        if not metadata["report_pending"]:
-            self.show_3d_main_page()
+        # Switch to 3D MAIN as soon as the compared cloud itself is ready -
+        # report export (if any) now runs on its own ROS node/process (see
+        # scan_pipeline_worker.py's _export_report()) and no longer risks
+        # freezing the UI, so there's no reason to keep the operator staring
+        # at the old page while it renders. _on_scan_report_done/_failed
+        # still call show_3d_main_page() too, for the case where the
+        # operator navigated elsewhere in the meantime.
+        self.show_3d_main_page()
 
         if metadata["report_name"] is not None:
             self.report_name = metadata["report_name"]
@@ -545,6 +553,18 @@ class App(QMainWindow):
                                            file=os.path.basename(getattr(self, "report_name", "") or ""))
         self.show_3d_main_page()
 
+
+    def _update_clock(self):
+        now = datetime.now()
+        # Rich text for a 2-tone look (bigger/bolder time, muted date) on
+        # one line - plainer than styling this via QSS alone, since a single
+        # QLabel can't give its own text 2 different font sizes/colors any
+        # other way. No year - not useful at a glance on a kiosk touchscreen.
+        self.ui.lblClock.setText(
+            f"<span style='color:{ACCENT_YELLOW}; font-size:34px; font-weight:800;'>{now.strftime('%H:%M:%S')}</span>"
+            f"&nbsp;&nbsp;"
+            f"<span style='color:{TEXT_MUTED}; font-size:22px; font-weight:700;'>{now.strftime('%d-%b')}</span>"
+        )
 
     def show_3d_main_page(self):
         """Switch the stacked content to 3D MAIN and keep the side-nav
