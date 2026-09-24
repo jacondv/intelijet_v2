@@ -41,7 +41,6 @@ from ui.diagnostics_tab import DiagnosticsTab
 from ui.services.job_store import JobStore
 from ui.services import project_repository
 from ui.services.cloud_pipeline import CloudPipelineService
-from ui.services.report_service import ReportService
 from ui.scan_pipeline_worker import ScanPipelineWorker
 
 from shared.config_loader import CONFIG as cfg, load_config as load_yaml_config
@@ -234,9 +233,10 @@ class App(QMainWindow):
         self._job_refresh_timer.timeout.connect(self._refresh_active_jobs)
         self._job_refresh_timer.start(30000)
 
-        # --- Cloud/report services ---
+        # --- Cloud service --- (report export now runs as its own ROS node,
+        # called via actionlib from scan_pipeline_worker.py - see
+        # services/report_export_action_server.py)
         self.cloud_pipeline = CloudPipelineService()
-        self.report_service = ReportService()
 
         # --- Status bar / notifications ---
         # Left: a "Connected"/"Disconnected" pill badge - driven live off
@@ -305,7 +305,6 @@ class App(QMainWindow):
         # --- Scan pipeline worker (runs convert/color/VTK/save/report off the GUI thread) ---
         self.scan_worker = ScanPipelineWorker(
             cloud_pipeline=self.cloud_pipeline,
-            report_service=self.report_service,
             job_store=self.job_store,
             topics={
                 "pre_scan": PRE_SCAN_CLOUD_TOPIC,
