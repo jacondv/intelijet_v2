@@ -3,9 +3,9 @@ import time
 import traceback
 import rospy
 from weasyprint import HTML
-from ui.tunnel_report.template_manager import render_template
-from ui.tunnel_report.report_data_model import ReportData
-from ui.tunnel_report.report_utils import PLYProcessor
+from services.report.template_manager import render_template
+from services.report.report_data_model import ReportData
+from services.report.report_utils import PLYProcessor
 from shared.config_loader import CONFIG as cfg
 from datetime import datetime
 
@@ -131,7 +131,7 @@ class ReportGenerator:
             shotcrete_volume=shotcrete_volume,
             total_area_m2=total_area,
             reached_area_m2=reached_area,
-            logo=f"{BASE_DIR}/intelijet_v2_ws/src/ui/src/ui/tunnel_report/assets/images/logo.png",
+            logo=f"{BASE_DIR}/intelijet_v2_ws/src/services/src/services/report/assets/images/logo.png",
             tunnel_view=tunnel_view_img,
             thickness_chart=thickness_chart_img,
             date=date,

@@ -15,15 +15,29 @@ Threading contract:
   - submit() is called from the GUI thread only.
   - run() (and everything it calls) executes on the worker thread and must
     NEVER touch a QWidget, self.ui.*, or vtk_viewer. It only touches
-    CloudPipelineService / ReportService / JobStore (all widget-free, see
-    Phase 4) and emits signals - all UI updates happen in App's slots.
+    CloudPipelineService / JobStore (all widget-free, see Phase 4), the
+    /export_report actionlib server (see report export section below), and
+    emits signals - all UI updates happen in App's slots.
 """
 import os
 import threading
+from datetime import datetime
 
+import rospy
+import actionlib
 from PyQt5.QtCore import QThread, pyqtSignal
 
 from shared.error_codes import lookup as lookup_error_code
+from services.msg import ExportReportAction, ExportReportGoal
+
+# Report export server must accept the goal and finish within this long -
+# mirrors CompareWorker's SERVER_WAIT_TIMEOUT_SEC/RESULT_WAIT_TIMEOUT_SEC
+# (ui/compare_cloud_worker.py) so a dropped connection/dead server surfaces
+# as a clear failure instead of hanging this worker (and therefore ANY
+# further cloud processing, since submit()'s 1-slot queue depends on run()
+# returning) forever.
+REPORT_SERVER_WAIT_TIMEOUT_SEC = 120
+REPORT_RESULT_WAIT_TIMEOUT_SEC = 120
 
 
 class ScanPipelineWorker(QThread):
@@ -42,11 +56,10 @@ class ScanPipelineWorker(QThread):
     # (see shared/error_codes.py).
     notify = pyqtSignal(str, str, str, str)
 
-    def __init__(self, cloud_pipeline, report_service, job_store, topics,
+    def __init__(self, cloud_pipeline, job_store, topics,
                  project_dir, thickness_default, tolerance_default, parent=None):
         super().__init__(parent)
         self.cloud_pipeline = cloud_pipeline
-        self.report_service = report_service
         self.job_store = job_store
         self.topics = topics  # dict: pre_scan, post_scan, compared, compared_upsample, compared_manual, compared_upsample_manual
         self.project_dir = project_dir
@@ -228,7 +241,13 @@ class ScanPipelineWorker(QThread):
                     else:
                         self.compare_requested.emit(prescan_path, f_name)
 
-        # 4. Export Report
+        # 4. Export Report - via the /export_report actionlib server (see
+        # services/report_export_action_server.py), not in-process: PDF
+        # rendering (weasyprint/matplotlib/Open3D offscreen rendering) is
+        # mostly-Python and CPU-heavy enough to hold the GIL for seconds,
+        # which used to freeze the whole UI even from this background
+        # QThread - every thread in one Python process shares one GIL. A
+        # separate ROS node has its own interpreter/GIL, so it can't.
         if topic_name in (topics["compared"], topics["compared_manual"]):
             if job["auto_compare_off"] or job["auto_report_off"]:
                 return  # only export report when auto compare AND auto report are on
@@ -236,9 +255,72 @@ class ScanPipelineWorker(QThread):
             # metadata["report_name"] is None if save_ply() failed - .replace()
             # then raises, same as the original App.on_cloud_received did; the
             # exception is caught by run()'s wrapper and surfaced via notify().
-            filename = metadata["report_name"].replace(".ply", ".pdf")
+            ply_path = metadata["report_name"]
+            pdf_path = ply_path.replace(".ply", ".pdf")
             try:
-                final_path = self.report_service.export(o3d_cloud, filename)
+                final_path = self._export_report(ply_path, pdf_path, jobs_folder)
                 self.report_done.emit(final_path)
             except Exception as e:
                 self.report_failed.emit(str(e))
+
+    def _export_report(self, ply_path, pdf_path, jobs_folder):
+        """Send an ExportReport goal to /export_report and block (this is
+        already the background worker thread) until it finishes. Raises on
+        failure/timeout so run()'s caller-side except handles it exactly
+        like the old in-process ReportService.export() did."""
+        from ui.models.job_info import JobInfo
+
+        # site_name/job_name/date/time: parsed straight from the filename,
+        # same convention ui.services.report_service.ReportService.export()
+        # used to (job_folder's parent dir name = project/site name, "#"
+        # separated basename = job_name#timestamp#type#scan_id).
+        basename = os.path.basename(pdf_path)
+        basename_parts = basename.split("#")
+        site_name = os.path.basename(os.path.dirname(jobs_folder))
+        job_name = basename_parts[0] if basename_parts else "Unknown"
+        date_str, time_str = None, None
+        if len(basename_parts) > 1:
+            try:
+                dt = datetime.strptime(basename_parts[1], "%Y%m%d_%H%M%S")
+                date_str = dt.strftime("%d-%b-%Y")
+                time_str = dt.strftime("%H:%M:%S")
+            except ValueError:
+                pass
+
+        # Independent from step 1's target_thickness/tolerance lookup above
+        # (not reused) so a failure there can't also take report export down
+        # with it - same isolation the old standalone ReportService.export()
+        # had.
+        job_info = JobInfo.load(jobs_folder)
+        if job_info:
+            applied_thickness = job_info.parameters.get("target_thickness", self.thickness_default)
+            tolerance = job_info.parameters.get("tolerance", self.tolerance_default)
+        else:
+            applied_thickness = self.thickness_default
+            tolerance = self.tolerance_default
+
+        client = actionlib.SimpleActionClient('/export_report', ExportReportAction)
+        if not client.wait_for_server(rospy.Duration(REPORT_SERVER_WAIT_TIMEOUT_SEC)):
+            raise RuntimeError("Report export server not available")
+
+        goal = ExportReportGoal(
+            compared_ply_path=ply_path,
+            output_pdf_path=pdf_path,
+            site_name=site_name,
+            job_name=job_name,
+            applied_thickness=applied_thickness,
+            tolerance=tolerance,
+            date=date_str or "",
+            time=time_str or "",
+        )
+        client.send_goal(goal)
+
+        if not client.wait_for_result(rospy.Duration(REPORT_RESULT_WAIT_TIMEOUT_SEC)):
+            client.cancel_goal()
+            raise RuntimeError(f"Report export timed out for {pdf_path}")
+
+        result = client.get_result()
+        if not result or not result.success:
+            raise RuntimeError(f"Report export failed for {pdf_path}")
+
+        return result.report_path
