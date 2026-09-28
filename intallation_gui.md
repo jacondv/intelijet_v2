@@ -209,9 +209,9 @@ sudo systemctl restart usb-copier.service
 ## Overview
 
 - Tablet A and Tablet B are peers (no more VIP/keepalived — each has its own fixed IP).
-- Two folders need syncing between them:
-  - `/data/scanner_config` — small YAML config files, needs near-instant sync, versioned for safety.
-  - `/data/scanner_results` — large scan result files, can tolerate more delay, lower priority.
+- Two folders need syncing between them (see their real paths in sections 6-7 below - not the same as their Syncthing folder labels used here):
+  - `scanner_config` — small YAML config files, needs near-instant sync, versioned for safety.
+  - `scanner_results` — large scan result files, can tolerate more delay, lower priority.
 - Syncthing runs as a background service on both tablets and syncs bidirectionally via its own P2P protocol (not plain rsync).
 
 ## 1. Install Syncthing (run on BOTH tablets)
@@ -285,20 +285,20 @@ On **Tablet A**:
 6. Go to **Advanced** → set **Rescan Interval** to a low value (e.g. `10` seconds) so config changes propagate quickly.
 7. Save.
 
-On **Tablet B**: a folder-share request for `scanner_config` will appear — accept it, and confirm the local path is `/data/scanner_config`.
+On **Tablet B**: a folder-share request for `scanner_config` will appear — accept it, and confirm the local path is `/home/jacon/intelijet_v2/intelijet_v2_ws/src/config/` (same path as Tablet A - adjust if Tablet B's repo clone lives at a different location/username).
 
 ## 7. Add the Results folder (do this on BOTH tablets)
 
 On **Tablet A**:
 1. **Add Folder** again.
 2. **Folder Label**: `scanner_results`
-3. **Folder Path**: `/home/jacon/data/Projects`
+3. **Folder Path**: `/home/jacon/intelijet_v2/data/Projects`
 4. **Sharing** tab → tick `Tablet-B`.
 5. **File Versioning**: choose **None** or **Staggered File Versioning** depending on whether you want history kept for result files.
 6. **Advanced** → Rescan Interval can stay at default (e.g. `60`s) since large files don't need the same urgency as config.
 7. Save.
 
-On **Tablet B**: accept the `scanner_results` share request, confirm local path `/data/Projects`.
+On **Tablet B**: accept the `scanner_results` share request, confirm local path `/home/jacon/intelijet_v2/data/Projects` (same path as Tablet A - adjust if Tablet B's repo clone lives at a different location/username).
 
 ## 8. Verify sync is working
 
