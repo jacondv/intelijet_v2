@@ -7,6 +7,10 @@ import rospy
 
 from pps.data_converter import CloudConverter
 from pps.helper import assign_colors
+from shared.config_loader import CONFIG as cfg
+
+# Fallback when last_used.yaml predates runtime.yaml's thickness.max_measurable.
+DEFAULT_MAX_MEASURABLE_THICKNESS_MM = 300
 
 # Display-only cap (see CloudConverter.o3d_to_vtk_polydata): clouds bigger
 # than this get evenly-subsampled before being handed to VTK for rendering.
@@ -26,7 +30,10 @@ class CloudPipelineService:
 
     def assign_colors_for_highlight(self, o3d_cloud, highlight_range):
         """Color an already-converted Open3D cloud by `highlight_range` (min, max)."""
-        return assign_colors(o3d_cloud, highlight_range=highlight_range)
+        clip_max = getattr(getattr(cfg, "thickness", None), "max_measurable", None)
+        if clip_max is None:
+            clip_max = DEFAULT_MAX_MEASURABLE_THICKNESS_MM
+        return assign_colors(o3d_cloud, clip_max=clip_max, highlight_range=highlight_range)
 
     def process_incoming(self, msg, highlight_range=None):
         """Convert `msg` to an Open3D cloud, optionally color it by
