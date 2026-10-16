@@ -26,6 +26,7 @@ housing_close_speed_slow : 105 # speed in hz
 thickness:
   target: 30  # target thickness in mm
   tolerance: 10 # allowable tolerance in mm
+  max_measurable: 300 # maximum thickness the machine can measure, in mm - used as clip_max when coloring the compared cloud (above this = out-of-range color)
 
 # Parameters for pps.cloud_processing.compare_pipeline.CloudComparePipeline.run()
 # (used via shared.config_loader.CONFIG with these exact values as fallback
