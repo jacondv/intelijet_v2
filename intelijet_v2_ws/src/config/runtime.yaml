@@ -79,3 +79,13 @@ report:
   tolerance: 10
   thickness_avg: 0
   shotcrete_vol: 0
+  # Camera for the cloud image on the PDF report (services/report/report_utils.py
+  # __render_pointcloud_to_image). Coordinates in metres, cloud frame; the camera
+  # always looks at the cloud's bounding-box center.
+  tunnel_view:
+    eye: [-5.0, 0.0, 0.0]   # camera position - more negative x = farther back (shows more), closer to 0 = closer in
+    up: [0, 0, 1]           # image "up" direction
+    fov_deg: 60.0           # view angle - bigger = wider (zoom out), smaller = zoom in
+    point_size: 2.0
+    width: 800              # image resolution (px)
+    height: 600
