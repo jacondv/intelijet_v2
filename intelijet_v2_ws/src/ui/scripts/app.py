@@ -29,6 +29,8 @@ from report_page_manager import ReportPageManager
 from ui.status_binder import StatusBinder
 
 from shared.pps_command import PPSCommand
+from shared.timezone_check import check_timezone_matches_host
+from shared.error_codes import lookup as lookup_error_code
 
 from ui.intelijet_ui import Ui_MainWindow, ACCENT_YELLOW, TEXT_MUTED
 from ui.keyboard import TouchKeyboard
@@ -303,6 +305,16 @@ class App(QMainWindow):
             )
         )
         self.lblNotification.mousePressEvent = self._open_notification_history
+
+        # Scan filenames/report times use this container's local time - warn
+        # once at startup if its time zone doesn't match the host's (see
+        # shared/timezone_check.py, run_docker.sh's TZ/HOST_UTC_OFFSET).
+        tz_problem = check_timezone_matches_host()
+        if tz_problem:
+            rospy.logwarn(f"[App] {tz_problem}")
+            entry = lookup_error_code("SYSTEM-TIME-001")
+            self.notification_center.push("system", f"{entry['message']} ({tz_problem})",
+                                          entry["level"], "SYSTEM-TIME-001")
 
         # --- Tab Diagnostics (HMI-style alarm log, read-only) ---
         self.diagnostics_tab = DiagnosticsTab(self.notification_center, parent=self.ui.stacked)

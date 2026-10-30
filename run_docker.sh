@@ -83,6 +83,15 @@ $COMPOSE_CMD down
 READY_FILE="$REPO_DIR/data/.ui_ready"
 rm -f "$READY_FILE"
 
+# Give the container the host's time zone explicitly (docker-compose.yml's
+# TZ/HOST_UTC_OFFSET) - scan filenames, report times and the header clock
+# all come from the container's local time, and must match the host's.
+# Read fresh every launch, so a host time zone change (e.g. machine shipped
+# to another country) is picked up without editing anything.
+TZ="$(cat /etc/timezone 2>/dev/null || timedatectl show -p Timezone --value 2>/dev/null)"
+export TZ
+export HOST_UTC_OFFSET="$(date +%z)"
+
 $COMPOSE_CMD up -d
 
 echo "Intelijet container restarted. Live logs: $COMPOSE_CMD logs -f"
