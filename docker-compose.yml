@@ -26,6 +26,14 @@ services:
       QT_X11_NO_MITSHM: "1"
       XDG_RUNTIME_DIR: /tmp/runtime-root
       DISABLE_ROS1_EOL_WARNINGS: "1"
+      # Host time zone, exported by run_docker.sh. Fallback ":/etc/localtime"
+      # = use the host file bind-mounted below - NOT an empty TZ, which glibc
+      # treats as UTC.
+      TZ: ${TZ:-:/etc/localtime}
+      # Host's UTC offset at launch (run_docker.sh) - the app compares its own
+      # offset against this at startup and warns if they differ (see
+      # shared/timezone_check.py). Empty when launched without run_docker.sh.
+      HOST_UTC_OFFSET: ${HOST_UTC_OFFSET:-}
     volumes:
       - .:/root/intelijet_v2
       - ${XAUTHORITY:-~/.Xauthority}:/root/.Xauthority:ro
