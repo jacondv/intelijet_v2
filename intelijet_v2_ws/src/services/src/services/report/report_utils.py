@@ -4,6 +4,23 @@ import time
 import numpy as np
 import rospy
 from pps.cloud_utils.geometry import surface_area_split
+from shared.config_loader import CONFIG as cfg
+
+
+def _cfg(*names, default=None):
+    """Safe nested getattr on CONFIG - `default` if any level is missing
+    (e.g. a last_used.yaml that predates runtime.yaml's report.tunnel_view)."""
+    obj = cfg
+    for name in names:
+        obj = getattr(obj, name, None)
+        if obj is None:
+            return default
+    return obj
+
+
+def _view_value(view, key, default):
+    value = getattr(view, key, None) if view is not None else None
+    return default if value is None else value
 
 
 class PLYProcessor:
@@ -58,7 +75,16 @@ class PLYProcessor:
 
     def export_tunnel_view_image(self, out_path=None):
         
-        img_base64 = self.__render_pointcloud_to_image(self.pcd, out_path=out_path)
+        view = _cfg("report", "tunnel_view")
+        img_base64 = self.__render_pointcloud_to_image(
+            self.pcd, out_path=out_path,
+            width=_view_value(view, "width", 800),
+            height=_view_value(view, "height", 600),
+            fov_deg=_view_value(view, "fov_deg", 60.0),
+            point_size=_view_value(view, "point_size", 2.0),
+            eye=_view_value(view, "eye", [-4.0, 0.0, 0.0]),
+            up=_view_value(view, "up", [0, 0, 1]),
+        )
         return img_base64
     
 
@@ -208,6 +234,8 @@ class PLYProcessor:
                                     width=800, height=600,
                                     fov_deg=60.0,
                                     point_size=2.0,
+                                    eye=(-4.0, 0.0, 0.0),
+                                    up=(0, 0, 1),
                                     background=(255.0, 255.0, 255.0, 1.0)):
         """
         Render an Open3D pointcloud to an image (base64 + optional file).
@@ -259,8 +287,8 @@ class PLYProcessor:
             extent = bounds.get_extent()
             radius = np.linalg.norm(extent) * 0.5
             # eye = center + np.array([0, 0, radius * 3.0])
-            eye = np.array([-4.0, 0.0, 0.0])
-            up = np.array([0, 0, 1])
+            eye = np.array(eye, dtype=np.float64)
+            up = np.array(up, dtype=np.float64)
 
             cam = renderer.scene.camera
             cam.set_projection(fov_deg, width / height, 0.1, 1000.0,
