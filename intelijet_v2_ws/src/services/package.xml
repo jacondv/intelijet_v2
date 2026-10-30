@@ -10,7 +10,7 @@
     own actionlib action - see src/services/report/ for the first one.
   </description>
 
-  <maintainer email="danhvohoai2@gmail.com">danhvo</maintainer>
+  <maintainer email="danhvo@todo.todo">danhvo</maintainer>
   <license>TODO</license>
 
   <buildtool_depend>catkin</buildtool_depend>
