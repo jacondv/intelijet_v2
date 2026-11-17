@@ -175,7 +175,15 @@ class ScanPipelineWorker(QThread):
             # scan_id differ, not the "type" segment).
             scan_type = topics["compared"] if topic_name == topics["compared_manual"] else topic_name
 
-            if not job["is_manual"]:
+            # A compared cloud (auto or manual) always takes the post-scan
+            # file's own name - same timestamp/index/scan_id, only the type
+            # token changes - so the compare file's time is the post-scan
+            # time, not the (later) moment the compare finished. The report
+            # PDF is named from the compared file, so its Time follows too
+            # (see _export_report). Fresh names are only for new scans.
+            is_compared = topic_name in (topics["compared"], topics["compared_manual"])
+            reuse_post_scan_name = job["is_manual"] or (is_compared and job["post_scan_path_snapshot"])
+            if not reuse_post_scan_name:
                 filepath = generate_filename(
                     folder=jobs_folder,
                     job=job_number,

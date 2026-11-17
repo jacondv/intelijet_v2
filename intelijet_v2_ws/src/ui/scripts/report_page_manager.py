@@ -43,11 +43,11 @@ from ui.widgets.picker_item_delegate import PickerItemDelegate
 
 def _matches(parsed, candidate_parsed):
     """A compared-cloud/report file is considered "produced from" a given
-    scan when it shares the same scan_id + index - NOT timestamp: auto
-    compare re-stamps a fresh timestamp when it writes the compared
-    cloud (only manual compare reuses the source file's exact timestamp,
-    see scan_pipeline_worker.py's filepath= branch), so timestamp can't
-    be part of the identity check here.
+    scan when it shares the same scan_id + index. Timestamp is no longer
+    needed for this (compared clouds now reuse the post-scan file's exact
+    timestamp, see scan_pipeline_worker.py's reuse_post_scan_name), but
+    older compared files on disk were stamped at compare time, so it
+    still can't be part of the identity check.
     """
     return (candidate_parsed["scan_id"] == parsed["scan_id"]
             and candidate_parsed["index"] == parsed["index"])
