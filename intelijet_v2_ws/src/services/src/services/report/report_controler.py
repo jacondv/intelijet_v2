@@ -136,6 +136,7 @@ class ReportGenerator:
             thickness_chart=thickness_chart_img,
             date=date,
             time=scan_time,
+            source_file=os.path.basename(pcd) if isinstance(pcd, str) else "",
             out_of_range_points=thickness_metrics["out_of_range_points"],
             total_points=thickness_metrics["total_points"],
             max_measurable_mm=thickness_metrics["max_measurable_mm"],
