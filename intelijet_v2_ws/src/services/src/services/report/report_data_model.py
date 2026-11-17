@@ -50,6 +50,9 @@ class ReportData:
         self.thickness_chart = None
         self.total_area_m2 = None
         self.reached_area_m2 = None
+        self.out_of_range_points = 0
+        self.total_points = 0
+        self.max_measurable_mm = None
 
     @classmethod
     def from_inputs(cls, site_name, job_name, applied_thickness, tolerance, avg_thickness, shotcrete_volume, logo,tunnel_view,thickness_chart, **kwargs):
@@ -62,6 +65,9 @@ class ReportData:
         obj.shotcrete_volume = shotcrete_volume
         obj.total_area_m2 = kwargs.get("total_area_m2", 0)
         obj.reached_area_m2 = kwargs.get("reached_area_m2", 0)
+        obj.out_of_range_points = kwargs.get("out_of_range_points", 0)
+        obj.total_points = kwargs.get("total_points", 0)
+        obj.max_measurable_mm = kwargs.get("max_measurable_mm")
 
 
         # Optional
@@ -131,8 +137,10 @@ class ReportData:
             "thickness_chart_uri": self.thickness_chart,
             "create_date": datetime.now().strftime("%d-%b-%Y %H:%M"),
             "total_area_m2": self.total_area_m2,
-            "reached_area_m2": self.reached_area_m2
-
+            "reached_area_m2": self.reached_area_m2,
+            "out_of_range_points": self.out_of_range_points,
+            "out_of_range_percent": round(100.0 * self.out_of_range_points / self.total_points, 1) if self.total_points else 0,
+            "max_measurable_mm": self.max_measurable_mm,
         }
         return data
 

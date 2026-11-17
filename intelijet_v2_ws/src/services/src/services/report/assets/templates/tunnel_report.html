@@ -150,6 +150,11 @@
         <div class="image-container">
             <img src="{{ data.thickness_chart_uri }}" alt="Thickness Chart">
         </div>
+        {% if data.out_of_range_points %}
+        <div style="font-size: 12px; color: #555; text-align: center; margin-top: 6px;">
+            {{ "{:,}".format(data.out_of_range_points) }} points ({{ data.out_of_range_percent }}%) exceed the measurable range ({{ data.max_measurable_mm }} mm) and were excluded from the thickness figures - possibly noise.
+        </div>
+        {% endif %}
     </div>
 
     <!-- SECTION 2: TUNNEL VIEW -->

@@ -94,7 +94,10 @@ class PLYProcessor:
                 "avg_thickness_mm": None,
                 "total_area_m2": None,
                 "reached_area_m2": None,
-                "volume_m3": None
+                "volume_m3": None,
+                "out_of_range_points": 0,
+                "total_points": 0,
+                "max_measurable_mm": _cfg("thickness", "max_measurable", default=300),
             }
         distances = self.distances
         # mask = (distances > -20) & (distances < 20)
@@ -117,8 +120,34 @@ class PLYProcessor:
         # volume_m3 = valid_area * mean_thickness_mm/1000
 
 
-        distances[np.abs(distances) < 12] = 0 # set thickness < 12mm to 0, consider as no damage (tùy chỉnh ngưỡng này)
-        distances[np.abs(distances) > 500] = 0 # set thickness > 500mm to 0, consider as noise
+        # ---- Cleaning rules (how the numbers below are derived) -----------
+        # 1. |d| < 12mm            -> no damage: set to 0 (tunable threshold).
+        # 2. |d| > max_measurable  -> beyond what the machine can measure
+        #    (thickness.max_measurable, 300mm; the same limit the cloud
+        #    coloring uses for its light-blue "out of range" color): most
+        #    likely noise or a pre/post-scan misalignment. Set to 0 so it
+        #    can't count as "reached", and COUNTED so the report can say how
+        #    many points were dropped (a silent drop would hide a bad scan).
+        # The cloud itself is untouched - only this report-side copy of the
+        # distances is cleaned. self.distances is replaced by the cleaned
+        # copy, so the distribution chart (drawn after this) shows them in
+        # its lowest bin, same as before.
+        # Everything after this works on `distances`:
+        #   - reached mask    : distances > target - tolerance (0s never pass)
+        #   - avg thickness   : mean over the reached points (0 if < 1000 points)
+        #   - volume          : reached_area * avg thickness
+        #   - total_area      : BPA mesh over ALL points, out-of-range included
+        #                       (dropping them would punch holes and shrink it)
+        #   - reached_area    : mesh triangles whose vertices mostly pass the
+        #                       reached mask (see surface_area_split)
+        max_measurable_mm = _cfg("thickness", "max_measurable", default=300)
+        out_of_range_points = int(np.count_nonzero(np.abs(distances) > max_measurable_mm))
+        total_points = int(distances.size)
+
+        distances = distances.copy()
+        distances[np.abs(distances) < 12] = 0
+        distances[np.abs(distances) > max_measurable_mm] = 0
+        self.distances = distances
 
         _min_reached_thickness_mm = max(self.target_thickness - 1 * self.tolerance, 0)
         _mask_reached_target = distances > _min_reached_thickness_mm
@@ -140,7 +169,10 @@ class PLYProcessor:
                 "avg_thickness_mm": avg_thickness_mm,
                 "total_area_m2": total_area,
                 "reached_area_m2": reached_area,
-                "volume_m3": volume_m3
+                "volume_m3": volume_m3,
+                "out_of_range_points": out_of_range_points,
+                "total_points": total_points,
+                "max_measurable_mm": max_measurable_mm,
             }
         
     def __plot_distance_distribution(self, distances, bins):

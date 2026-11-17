@@ -135,7 +135,10 @@ class ReportGenerator:
             tunnel_view=tunnel_view_img,
             thickness_chart=thickness_chart_img,
             date=date,
-            time=scan_time
+            time=scan_time,
+            out_of_range_points=thickness_metrics["out_of_range_points"],
+            total_points=thickness_metrics["total_points"],
+            max_measurable_mm=thickness_metrics["max_measurable_mm"],
         )
         try:
             self.create_pdf(report_data=data.to_json(), output_path=output_path, debug_html=False)
