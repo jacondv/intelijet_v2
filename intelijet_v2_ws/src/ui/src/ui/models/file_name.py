@@ -12,6 +12,8 @@ def is_sync_junk(name: str) -> bool:
     """True nếu name là file/thư mục rác do Syncthing tạo ra (conflict copy, marker
     folder, hoặc file tạm), cần loại khỏi mọi danh sách hiển thị/xử lý.
     """
+    if name.startswith("."):
+        return True  # ẩn mọi file/thư mục ẩn (.cache, .config, .stfolder...) - không phải project/job
     lname = name.lower()
     if lname in (".stfolder", ".stversions", ".stignore"):
         return True
