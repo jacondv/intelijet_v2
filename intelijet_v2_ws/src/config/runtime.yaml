@@ -28,6 +28,13 @@ thickness:
   tolerance: 10 # allowable tolerance in mm
   max_measurable: 300 # maximum thickness the machine can measure, in mm - used as clip_max when coloring the compared cloud (above this = out-of-range color)
 
+# Header network indicator (ui/network_indicator.py, readings from shared/network_status.py).
+# Code falls back to these same values if last_used.yaml predates this section.
+network_status:
+  refresh_sec: 4 # how often the Wi-Fi/LAN state is re-read
+  signal_good_dbm: -60 # Wi-Fi at/above this = 3 bars
+  signal_fair_dbm: -70 # at/above this = 2 bars, below = 1 bar
+
 # Parameters for pps.cloud_processing.compare_pipeline.CloudComparePipeline.run()
 # (used via shared.config_loader.CONFIG with these exact values as fallback
 # defaults in code, so a machine whose last_used.yaml predates this section
