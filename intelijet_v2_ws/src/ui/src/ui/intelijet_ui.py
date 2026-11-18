@@ -9,6 +9,7 @@ import math
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 
+from ui.network_indicator import NetworkIndicator
 from ui.style_tokens import (
     FONT_SECTION_TITLE, FONT_ROW_TITLE, FONT_VALUE, FONT_FIELD_LABEL, FONT_BUTTON_PRIMARY,
     CARD_BG as LIGHT_CARD_BG, BORDER as LIGHT_BORDER, TEXT as LIGHT_TEXT, TEXT_MUTED as LIGHT_TEXT_MUTED,
@@ -553,6 +554,10 @@ QLabel[cssClass="sysFieldValue"] {{
         self.headerLayout.addWidget(self.jobSelectorBox)
 
         self.headerLayout.addStretch(1)
+
+        self.networkIndicator = NetworkIndicator(self.header, text_color=TEXT_LIGHT, alert_color=ACCENT_RED)
+        self.headerLayout.addWidget(self.networkIndicator)
+        self.headerLayout.addSpacing(20)
 
         self.lblClock = QtWidgets.QLabel(self.header)
         self.lblClock.setObjectName("lblClock")
