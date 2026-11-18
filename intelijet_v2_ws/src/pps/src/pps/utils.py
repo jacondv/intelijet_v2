@@ -2,8 +2,9 @@ import os
 import yaml
 import rospy
 import rospkg
+from box import Box
 
-def load_config(default_filename="config/lidar.yaml", param_name="~lidar_config_file"):
+def load_config1(default_filename="config/lidar.yaml", param_name="~lidar_config_file"):
     """
     Load configuration file in order of priority:
     1. ROS param ~config_file (absolute path or relative to package)
@@ -25,8 +26,8 @@ def load_config(default_filename="config/lidar.yaml", param_name="~lidar_config_
             pkg_path = rospack.get_path(caller_package)
             default_path = os.path.join(pkg_path, default_filename)
             if os.path.isfile(default_path):
-                rospy.loginfo(f"Loading config from default path: {default_path}")
-                return yaml.safe_load(open(default_path, 'r'))
+                rospy.loginfo(f"Loading config from default path   : {default_path}")
+                return Box(yaml.safe_load(open(default_path, 'r')))
 
         raise FileNotFoundError("Config file not found via any method.")
 

@@ -1,0 +1,329 @@
+import os
+import re
+import time
+
+FILENAME_TEMPLATE = "{job}#{timestamp_str}#{type}_{index}#SCAN{scan_id}.{ext}"
+# example: job1#20240601_153000#prescan#01#SCAN01.ply
+
+_SYNC_JUNK_RE = re.compile(r"\.sync-conflict-\d{8}-\d{6}-[A-Z0-9]+", re.IGNORECASE)
+
+
+def is_sync_junk(name: str) -> bool:
+    """True nếu name là file/thư mục rác do Syncthing tạo ra (conflict copy, marker
+    folder, hoặc file tạm), cần loại khỏi mọi danh sách hiển thị/xử lý.
+    """
+    if name.startswith("."):
+        return True  # ẩn mọi file/thư mục ẩn (.cache, .config, .stfolder...) - không phải project/job
+    lname = name.lower()
+    if lname in (".stfolder", ".stversions", ".stignore"):
+        return True
+    if _SYNC_JUNK_RE.search(name):
+        return True
+    if lname.startswith("~syncthing~") or lname.endswith(".tmp"):
+        return True
+    return False
+# def generate_filename(folder: str, job: str, scan_type: str, ext="ply"):
+#     """
+#     scan_type: 'pre_scan' | 'post_scan' | 'compared'
+#     """
+
+#     os.makedirs(folder, exist_ok=True)
+
+#     scan_type = re.sub(r'[^a-zA-Z0-9_-]', '', scan_type)
+
+#     files = [f for f in os.listdir(folder) if f.endswith(f".{ext}")]
+
+#     # --- 1. Tìm scan_id hiện tại ---
+#     scan_ids = []
+
+#     for f in files:
+#         match = re.search(r"#SCAN(\d+)", f)
+#         if match:
+#             scan_ids.append(int(match.group(1))) 
+
+#     scan_ids = sorted(scan_ids)
+#     current_scan_id = scan_ids[-1] if scan_ids else 0
+
+#     # --- 2. Nếu prescan → tạo scan_id mới ---
+#     if "pre" in scan_type:
+#         new_scan_id = current_scan_id+1
+#     else:
+#         new_scan_id = current_scan_id
+
+#     # --- 3. Đếm index postscan ---
+#     pattern = re.compile(
+#         rf"^{job}#.*#post_scan_cloud_(\d{{2}})#SCAN(\d{{3}})\.{ext}$"
+#     )
+
+#     indices = []
+#     for f in files:
+#         m = pattern.match(f)
+#         if m:
+#             indices.append(int(m.group(1)))
+
+#     if "post" in scan_type:       
+#         next_index = max(indices) + 1 if indices else 1
+#     else:
+#         next_index = max(indices) if indices else 1
+#     index = f"{next_index:02d}"
+
+#     # --- 4. Timestamp riêng từng file ---
+#     timestamp_str = time.strftime("%Y%m%d_%H%M%S")
+    
+#     # --- 5. Format filename ---
+#     filename = FILENAME_TEMPLATE.format(
+#         job=job,
+#         timestamp_str=timestamp_str,
+#         type=scan_type,
+#         index=index,
+#         scan_id=f"{int(new_scan_id):03d}",
+#         ext=ext
+#     )
+
+#     return os.path.join(folder, filename)
+
+# def generate_filename(folder: str, job: str, scan_type: str, ext="ply"):
+#     """
+#     scan_type: 'pre_scan' | 'post_scan' | 'compared'
+#     """
+
+#     os.makedirs(folder, exist_ok=True)
+
+#     scan_type = re.sub(r'[^a-zA-Z0-9_-]', '', scan_type)
+
+#     files = [f for f in os.listdir(folder) if f.endswith(f".{ext}")]
+
+#     # --- 1. Tìm scan_id hiện tại ---
+#     scan_ids = []
+
+#     for f in files:
+#         match = re.search(r"#SCAN(\d+)", f)
+#         if match:
+#             scan_ids.append(int(match.group(1))) 
+
+#     scan_ids = sorted(scan_ids)
+#     current_scan_id = scan_ids[-1] if scan_ids else 0
+
+#     # --- 2. Nếu prescan → tạo scan_id mới ---
+#     if "pre" in scan_type:
+#         new_scan_id = current_scan_id + 1
+#     else:
+#         new_scan_id = current_scan_id
+
+#     # --- 3. Đếm index postscan theo SCAN ID hiện tại ---
+#     pattern = re.compile(
+#         rf"^{job}#.*#post_scan_cloud_(\d{{2}})#SCAN(\d{{3}})\.{ext}$"
+#     )
+
+#     indices = []
+#     for f in files:
+#         m = pattern.match(f)
+#         if m:
+#             post_index = int(m.group(1))
+#             scan_id_in_file = int(m.group(2))
+#             if scan_id_in_file == new_scan_id:      # ← chỉ lấy cùng SCAN ID
+#                 indices.append(post_index)
+
+#     if "post" in scan_type:
+#         next_index = max(indices) + 1 if indices else 1
+#     else:
+#         next_index = max(indices) if indices else 1
+#     index = f"{next_index:02d}"
+
+#     # --- 4. Timestamp riêng từng file ---
+#     timestamp_str = time.strftime("%Y%m%d_%H%M%S")
+
+#     # --- 5. Format filename ---
+#     filename = FILENAME_TEMPLATE.format(
+#         job=job,
+#         timestamp_str=timestamp_str,
+#         type=scan_type,
+#         index=index,
+#         scan_id=f"{int(new_scan_id):03d}",
+#         ext=ext
+#     )
+
+#     return os.path.join(folder, filename)
+
+def generate_filename(folder: str, job: str, scan_type: str, ext="ply", filepath: str = None):
+    """
+    scan_type: 'pre_scan' | 'post_scan' | 'compared'
+    filepath: nếu truyền vào thì chỉ thay scan_type trong tên file, không tạo mới
+    """
+
+    # --- Nếu có filepath → parse ra rồi thay scan_type ---
+    scan_type = re.sub(r'[^a-zA-Z0-9_-]', '', scan_type)
+    if filepath is not None:
+        parsed = parse_filename(filepath)
+        new_filename = FILENAME_TEMPLATE.format(
+            job=parsed["job"],
+            timestamp_str=parsed["timestamp"],
+            type=scan_type,
+            index=f"{int(parsed['index']):02d}",
+            scan_id=f"{int(parsed['scan_id']):03d}",
+            ext=parsed["ext"],
+        )
+        return os.path.join(os.path.dirname(filepath), new_filename)
+
+    # --- Tạo filename mới như bình thường ---
+    os.makedirs(folder, exist_ok=True)
+
+    files = [f for f in os.listdir(folder) if f.endswith(f".{ext}") and not is_sync_junk(f)]
+
+    # --- 1. Tìm scan_id hiện tại ---
+    scan_ids = []
+    for f in files:
+        match = re.search(r"#SCAN(\d+)", f)
+        if match:
+            scan_ids.append(int(match.group(1)))
+
+    scan_ids = sorted(scan_ids)
+    current_scan_id = scan_ids[-1] if scan_ids else 0
+
+    # --- 2. Nếu prescan → tạo scan_id mới ---
+    if "pre" in scan_type:
+        new_scan_id = current_scan_id + 1
+    else:
+        new_scan_id = current_scan_id
+
+    # --- 3. Đếm index postscan theo SCAN ID hiện tại ---
+    pattern = re.compile(
+        rf"^{job}#.*#post_scan_cloud_(\d{{2}})#SCAN(\d{{3}})\.{ext}$"
+    )
+
+    indices = []
+    for f in files:
+        m = pattern.match(f)
+        if m:
+            post_index = int(m.group(1))
+            scan_id_in_file = int(m.group(2))
+            if scan_id_in_file == new_scan_id:
+                indices.append(post_index)
+
+    if "post" in scan_type:
+        next_index = max(indices) + 1 if indices else 1
+    else:
+        next_index = max(indices) if indices else 1
+    index = f"{next_index:02d}"
+
+    # --- 4. Timestamp riêng từng file ---
+    timestamp_str = time.strftime("%Y%m%d_%H%M%S")
+
+    # --- 5. Format filename ---
+    filename = FILENAME_TEMPLATE.format(
+        job=job,
+        timestamp_str=timestamp_str,
+        type=scan_type,
+        index=index,
+        scan_id=f"{int(new_scan_id):03d}",
+        ext=ext
+    )
+
+    return os.path.join(folder, filename)
+
+def find_latest_prescan(folder: str, ext: str = "ply"):
+    """Pre-Scan .ply file directly inside `folder` with the highest
+    SCAN{scan_id} in its filename - e.g. if the job has SCAN001 and
+    SCAN002, the Pre-Scan belonging to SCAN002 is returned. Used by
+    scan_pipeline_worker.py's _resolve_prescan_path() to pick the
+    Pre-Scan a just-finished Post-Scan should be compared against.
+    """
+    try:
+        candidates = os.listdir(folder)
+    except OSError:
+        return None
+    matches = []
+    for name in candidates:
+        if not name.lower().endswith(f".{ext}") or is_sync_junk(name):
+            continue
+        parsed = parse_filename(name)
+        if "pre" in parsed["type"].lower():
+            matches.append((int(parsed["scan_id"]), os.path.join(folder, name)))
+    if not matches:
+        return None
+    matches.sort(key=lambda m: m[0], reverse=True)
+    return matches[0][1]
+
+
+def parse_filename(filename: str):
+    import os
+    import re
+
+    name = os.path.basename(filename)
+
+    pattern = r"""
+        ^(?P<job>[^#]+)
+        \#
+        (?P<timestamp>[^#]+)
+        \#
+        (?P<type>.+?)_(?P<index>\d+)
+        \#
+        SCAN(?P<scan_id>\d+)
+        \.
+        (?P<ext>\w+)$
+    """
+
+    match = re.match(pattern, name, re.VERBOSE)
+
+    # ✅ CASE 1: regex match OK
+    if match:
+        return {
+            "job": match.group("job"),
+            "timestamp": match.group("timestamp"),
+            "type": match.group("type"),
+            "index": int(match.group("index")),
+            "scan_id": int(match.group("scan_id")),
+            "ext": match.group("ext"),
+        }
+
+    # ❗ CASE 2: fallback split "#"
+    parts = name.split("#")
+
+    job = parts[0] if len(parts) > 0 else ""
+    timestamp = parts[1] if len(parts) > 1 else ""
+    type_index = parts[2] if len(parts) > 2 else ""
+    scan_ext = parts[3] if len(parts) > 3 else ""
+
+    # type + index
+    if "_" in type_index:
+        t = type_index.rsplit("_", 1)
+        type_name = t[0]
+        index = int(t[1]) if t[1].isdigit() else -1
+    else:
+        type_name = type_index
+        index = -1
+
+    # scan + ext
+    if "." in scan_ext:
+        scan_part, ext = scan_ext.rsplit(".", 1)
+        scan_id = int(scan_part.replace("SCAN", "")) if scan_part.startswith("SCAN") else -1
+    else:
+        scan_id = -1
+        ext = ""
+
+    result = {
+        "job": job,
+        "timestamp": timestamp,
+        "type": type_name,
+        "index": f"{int(index):02d}",
+        "scan_id": f"{int(scan_id):03d}",
+        "ext": ext,
+    }
+   
+    return result   
+
+if __name__ == "__main__":
+    pass
+    # --- TEST ---
+    filename = "/root/intelijet_v2/data/project1/job1#20240601_153000#pre_scan_cloud_01#SCAN001.ply"
+    parsed = parse_filename(filename)
+    print(parsed)
+
+    new_filename = generate_filename(
+        folder=".",
+        job=parsed["job"],
+        scan_type="cloud_compared",
+        ext=parsed["ext"],
+        filepath=os.path.join(".", filename)
+    )
+    print(new_filename)

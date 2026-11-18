@@ -1,0 +1,809 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+cloud_converter.py
+Module hỗ trợ chuyển đổi giữa ROS PointCloud2 và Open3D (legacy & tensor).
+"""
+import os
+import numpy as np
+import ros_numpy
+from sensor_msgs.msg import PointCloud2
+import sensor_msgs.point_cloud2 as pc2
+
+# The VTK build in this image (python3-vtk7) ships a numpy_support.py that
+# still references the numpy.bool alias, removed in numpy>=1.24 (this repo
+# runs 1.24.4). vtk.util.numpy_support.numpy_to_vtk() calls
+# get_vtk_to_numpy_typemap() unconditionally on every call - even when
+# converting a plain float64/uint8 array that has nothing to do with
+# VTK_BIT/numpy.bool - so without this shim it raises AttributeError
+# immediately for ANY use of numpy_to_vtk in this environment, not just
+# boolean arrays. numpy.bool was always just an alias for the builtin
+# bool, so restoring it is exactly what numpy's own deprecation message
+# recommends - safe, and confined to this one attribute.
+if not hasattr(np, "bool"):
+    np.bool = bool
+
+
+class CloudConverter:
+
+    @staticmethod
+    def pointcloud2_to_o3d(
+        cloud_msg: PointCloud2,
+        remove_nan: bool = True
+    ):
+        """
+        Convert ROS PointCloud2 to Open3D PointCloud
+
+        Supports:
+        - XYZ
+        - XYZ + RGB (float32 or uint32 packed)
+
+        Parameters
+        ----------
+        cloud_msg : PointCloud2
+        remove_nan : bool
+
+        Returns
+        -------
+        o3d.geometry.PointCloud
+        """
+        import open3d as o3d
+
+        assert isinstance(cloud_msg, PointCloud2)
+
+        # ---------- Read points ----------
+        field_names = [f.name for f in cloud_msg.fields]
+
+        use_rgb = "rgb" in field_names or "rgba" in field_names
+
+        points = []
+        colors = []
+
+        for p in pc2.read_points(
+            cloud_msg,
+            skip_nans=remove_nan,
+            field_names=("x", "y", "z", "rgb") if use_rgb else ("x", "y", "z")
+        ):
+            if use_rgb:
+                x, y, z, rgb = p
+                points.append([x, y, z])
+
+                # RGB packed as float32
+                if isinstance(rgb, float):
+                    rgb = np.frombuffer(
+                        np.float32(rgb).tobytes(),
+                        dtype=np.uint8
+                    )
+                    r, g, b = rgb[2], rgb[1], rgb[0]
+                else:
+                    r = (rgb >> 16) & 255
+                    g = (rgb >> 8) & 255
+                    b = rgb & 255
+
+                colors.append([r / 255.0, g / 255.0, b / 255.0])
+            else:
+                x, y, z = p
+                points.append([x, y, z])
+
+        # ---------- Create Open3D cloud ----------
+        cloud_o3d = o3d.geometry.PointCloud()
+        cloud_o3d.points = o3d.utility.Vector3dVector(np.asarray(points))
+
+        if use_rgb and len(colors) == len(points):
+            cloud_o3d.colors = o3d.utility.Vector3dVector(np.asarray(colors))
+
+        return cloud_o3d
+
+
+    @staticmethod
+    def pointcloud2_to_o3d_tensor(msg: PointCloud2):
+        """
+        Convert ROS PointCloud2 message -> Open3D Tensor PointCloud (o3d.t.geometry.PointCloud).
+        Giữ tất cả các field có trong PointCloud2 (x, y, z, rgb, intensity, distance, ...).
+        """
+        import open3d as o3d
+
+        if not isinstance(msg, PointCloud2):
+            print("[convert_pointcloud2_to_o3d_tensor] Input message is not of type PointCloud2.")
+            return None
+
+        # Convert to structured NumPy array
+        cloud_arr = ros_numpy.point_cloud2.pointcloud2_to_array(msg)
+        field_names = cloud_arr.dtype.names
+
+        if field_names is None:
+            print("[pointcloud2_to_o3d_tensor] PointCloud2 message has no fields.")
+            return None
+
+        # Extract XYZ
+        xyz = ros_numpy.point_cloud2.get_xyz_points(cloud_arr, remove_nans=True)
+        pcd_t = o3d.t.geometry.PointCloud()
+        pcd_t.point["positions"] = o3d.core.Tensor(xyz, dtype=o3d.core.Dtype.Float32)
+
+        # Loop over all fields except x,y,z
+        for field in field_names:
+            if field in ["x", "y", "z"]:
+                continue
+
+            data = np.asarray(cloud_arr[field])
+
+            # Handle RGB (float32 packed)
+            if field == "rgb" and data.dtype == np.float32:
+                rgb_view = data.view(np.uint32)
+                r = ((rgb_view >> 16) & 255).astype(np.uint8)
+                g = ((rgb_view >> 8) & 255).astype(np.uint8)
+                b = (rgb_view & 255).astype(np.uint8)
+                colors = np.stack([r, g, b], axis=-1).astype(np.float32) / 255.0
+                pcd_t.point["colors"] = o3d.core.Tensor(colors, dtype=o3d.core.Dtype.Float32)
+                continue
+
+            # Convert to 2D array if needed
+            if data.ndim == 1:
+                data = data.reshape(-1, 1)
+
+            # Map NumPy dtype -> Open3D dtype
+            dtype_map = {
+                np.dtype('float32'): o3d.core.Dtype.Float32,
+                np.dtype('float64'): o3d.core.Dtype.Float64,
+                np.dtype('int8'): o3d.core.Dtype.Int8,
+                np.dtype('int16'): o3d.core.Dtype.Int16,
+                np.dtype('int32'): o3d.core.Dtype.Int32,
+                np.dtype('uint8'): o3d.core.Dtype.UInt8,
+                np.dtype('uint16'): o3d.core.Dtype.UInt16,
+                np.dtype('uint32'): o3d.core.Dtype.UInt32,
+            }
+            dtype = dtype_map.get(data.dtype, o3d.core.Dtype.Float32)
+
+            # Add field
+            pcd_t.point[field] = o3d.core.Tensor(data, dtype=dtype)
+
+        print(f"Converted PointCloud2 to Open3D Tensor Cloud with fields: {list(pcd_t.point)}")
+        return pcd_t
+
+    # --------------------------------------------------------------------------
+
+    @staticmethod
+    def o3d_tensor_to_pointcloud2(pcd_t, frame_id="base_link"):
+        """
+        Convert Open3D Tensor PointCloud (o3d.t.geometry.PointCloud) -> ROS PointCloud2.
+        Giữ tất cả các field có trong pcd_t.point (x, y, z, colors, distance, intensity, ...).
+        """
+        import open3d as o3d
+        import numpy as np
+        import rospy
+        from sensor_msgs.msg import PointCloud2, PointField
+        import std_msgs.msg
+
+        if not isinstance(pcd_t, o3d.t.geometry.PointCloud):
+            print("[o3d_tensor_to_pointcloud2] Input must be o3d.t.geometry.PointCloud")
+            return None
+
+        # Lấy danh sách field
+        point_attrs = list(pcd_t.point)
+
+        # Luôn cần có "positions"
+        if "positions" not in point_attrs:
+            print("[o3d_tensor_to_pointcloud2] Missing 'positions' field in Open3D tensor cloud.")
+            return None
+
+        points = np.asarray(pcd_t.point["positions"].numpy(), dtype=np.float32)
+        n_points = points.shape[0]
+
+        # Khởi tạo dict dữ liệu cho ROS
+        data_dict = {
+            "x": points[:, 0],
+            "y": points[:, 1],
+            "z": points[:, 2],
+        }
+
+        # Các field khác
+        for key in point_attrs:
+            if key == "positions":
+                continue
+
+            arr = np.asarray(pcd_t.point[key].numpy())
+
+            # Màu đặc biệt xử lý
+            if key == "colors" and arr.shape[1] == 3:
+                rgb_uint8 = (arr * 255).astype(np.uint8)
+                rgb_packed = (
+                    (rgb_uint8[:, 0].astype(np.uint32) << 16)
+                    | (rgb_uint8[:, 1].astype(np.uint32) << 8)
+                    | rgb_uint8[:, 2].astype(np.uint32)
+                )
+                rgb_float = rgb_packed.view(np.float32)
+                data_dict["rgb"] = rgb_float
+                continue
+
+            # Thêm các field thông thường khác
+            if arr.ndim == 1:
+                data_dict[key] = arr
+            elif arr.ndim == 2 and arr.shape[1] == 1:
+                data_dict[key] = arr[:, 0]
+            else:
+                print(f"[o3d_tensor_to_pointcloud2] Skip field '{key}' - unsupported shape {arr.shape}")
+
+        # Tạo structured array
+        dtype_list = [(name, np.float32) for name in data_dict.keys()]
+        cloud_arr = np.zeros(n_points, dtype=dtype_list)
+        for name in data_dict.keys():
+            cloud_arr[name] = data_dict[name]
+
+        # Tạo PointCloud2 message
+        header = std_msgs.msg.Header()
+        header.stamp = rospy.Time.now() if rospy.core.is_initialized() else rospy.Time(0)
+        header.frame_id = frame_id
+
+        fields = [PointField(name, i * 4, PointField.FLOAT32, 1)
+                for i, name in enumerate(cloud_arr.dtype.names)]
+
+        msg = PointCloud2()
+        msg.header = header
+        msg.height = 1
+        msg.width = n_points
+        msg.fields = fields
+        msg.is_bigendian = False
+        msg.point_step = 4 * len(cloud_arr.dtype.names)
+        msg.row_step = msg.point_step * n_points
+        msg.is_dense = True
+        msg.data = cloud_arr.tobytes()
+
+        print(f"Converted Open3D Tensor PointCloud to PointCloud2 with fields: {list(cloud_arr.dtype.names)}")
+        return msg
+
+    # --------------------------------------------------------------------------
+    @staticmethod
+    def legacy_o3d_to_pointcloud2(o3d_cloud, frame_id="base_link", rgb=[255, 0, 0]):
+        """
+        Convert a legacy Open3D point cloud (o3d.geometry.PointCloud) -> ROS
+        PointCloud2. For o3d.t.geometry.PointCloud (tensor) clouds, use
+        o3d_tensor_to_pointcloud2() instead.
+        """
+        import open3d as o3d
+        import numpy as np
+        import rospy
+        import ros_numpy
+        import std_msgs.msg
+
+        if not isinstance(o3d_cloud, o3d.geometry.PointCloud):
+            rospy.logerr("Input is not an Open3D PointCloud.")
+            return None
+
+        if not o3d_cloud.has_points():
+            rospy.logerr("Open3D PointCloud has no points.")
+            return None
+
+        rospy.loginfo("Converting Open3D point cloud to PointCloud2 format ply")
+        points = np.asarray(o3d_cloud.points)
+        colors = np.asarray(o3d_cloud.colors)
+
+        if colors.shape[0] == points.shape[0] and colors.shape[1] == 3:
+            rospy.loginfo("Converting Open3D has colors ")
+            colors = (colors * 255).astype(np.uint8)
+        else:
+            rospy.loginfo("Converting Open3D has no colors ")
+            # No colors on the input cloud - fall back to a solid color.
+            colors = np.tile(np.array(rgb, dtype=np.uint8), (points.shape[0], 1))
+
+        rgb_packed = ((colors[:, 0].astype(np.uint32) << 16) |
+                (colors[:, 1].astype(np.uint32) << 8) |
+                colors[:, 2].astype(np.uint32))
+
+        rgb_float = rgb_packed.view(np.float32)
+
+        data = np.zeros(points.shape[0], dtype=[
+            ('x', np.float32), ('y', np.float32), ('z', np.float32),
+            ('rgb', np.float32)
+        ])
+        data['x'] = points[:, 0]
+        data['y'] = points[:, 1]
+        data['z'] = points[:, 2]
+        data['rgb'] = rgb_float
+
+        header = std_msgs.msg.Header()
+        header.stamp = rospy.Time.now()
+        header.frame_id = frame_id
+        msg = ros_numpy.point_cloud2.array_to_pointcloud2(data, frame_id=header.frame_id, stamp=header.stamp)
+        msg.is_bigendian = False  # đảm bảo đúng cho ROS chạy trên x86
+        return msg
+
+    # --------------------------------------------------------------------------
+    @staticmethod
+    def o3d_to_ply(pcd, filepath, write_ascii=False):
+        """
+        Save Open3D point cloud using Open3D writer only.
+        - If pcd is o3d.t.geometry.PointCloud: use o3d.t.io.write_point_cloud (preserve attributes).
+        - If pcd is o3d.geometry.PointCloud: try to convert to tensor and use tensor writer.
+        If conversion or tensor-writer fails, fallback to o3d.io.write_point_cloud (legacy writer).
+        Args:
+            pcd: o3d.geometry.PointCloud or o3d.t.geometry.PointCloud
+            filepath: output .ply path
+            write_ascii: True -> ASCII PLY, False -> Binary PLY (default)
+        Returns:
+            filepath if success, None on failure
+        Note:
+            - Requires Open3D >= ~0.17 for tensor writer to preserve custom attributes.
+            - Use lazy import to reduce chance of import-time conflicts with VTK.
+        """
+        import os
+        os.makedirs(os.path.dirname(os.path.abspath(filepath)), exist_ok=True)
+
+        try:
+            import open3d as o3d
+        except Exception as e:
+            print(f"[o3d_to_ply] Failed to import open3d: {e}")
+            return None
+
+        # If tensor pointcloud, use tensor writer directly
+
+        pcd = CloudConverter.o3d_legacy_to_tensor(pcd)
+
+        try:
+            if isinstance(pcd, o3d.t.geometry.PointCloud):
+                try:
+                    # o3d.t.io.write_point_cloud returns True on success in newer versions
+                    success = o3d.t.io.write_point_cloud(filepath, pcd, write_ascii=write_ascii)
+                    if success is True or success is None:
+                        # Some versions return None; consider it success if no exception
+                        print(f"[o3d_to_ply] Saved tensor pointcloud to {filepath} {success}")
+                        return filepath
+                    else:
+                        # explicit False
+                        print(f"[o3d_to_ply] o3d.t.io.write_point_cloud returned {success}")
+                except Exception as e:
+                    print(f"[o3d_to_ply] Error writing tensor pointcloud via o3d.t.io: {e}")
+                    # fallthrough to try conversion/fallback
+        except Exception:
+            # pcd might not be tensor type
+            pass
+
+        return None
+
+    # --------------------------------------------------------------------------
+
+    @staticmethod
+    def o3d_legacy_to_tensor(pcd_legacy):
+        """Convert legacy -> tensor"""
+        import open3d as o3d
+
+        if isinstance(pcd_legacy, o3d.geometry.PointCloud):
+            return o3d.t.geometry.PointCloud.from_legacy(pcd_legacy)
+        elif isinstance(pcd_legacy, o3d.t.geometry.PointCloud):
+            return pcd_legacy
+        else:
+            return None
+
+    # --------------------------------------------------------------------------
+
+    @staticmethod
+    def tensor_to_o3d_legacy(pcd_t):
+        """Convert tensor -> legacy"""
+        import open3d as o3d
+
+        if isinstance(pcd_t, o3d.t.geometry.PointCloud):
+            return pcd_t.to_legacy()
+        elif isinstance(pcd_t, o3d.geometry.PointCloud):
+            return pcd_t
+        else:
+            return None
+
+    # ------------------------------------------------------------------------------
+
+    @staticmethod    
+    def o3d_to_vtk_polydata(pcd, voxel_size=0.0, max_points=None):
+        import vtk
+        import numpy as np
+        from vtk.util import numpy_support
+
+        pcd = CloudConverter.tensor_to_o3d_legacy(pcd)
+
+        if voxel_size > 0:
+            pcd = pcd.voxel_down_sample(voxel_size)
+
+        points = np.asarray(pcd.points)
+        has_colors = pcd.has_colors()
+        colors = np.asarray(pcd.colors) if has_colors else None
+
+        # Display-only cap: evenly-spaced subsample so on-screen rendering
+        # stays responsive for very large clouds. Does not affect anything
+        # saved to disk/report - callers pass the un-capped pcd for those.
+        if max_points is not None and points.shape[0] > max_points:
+            indices = np.linspace(0, points.shape[0] - 1, max_points).astype(int)
+            points = points[indices]
+            if has_colors:
+                colors = colors[indices]
+
+        # Vectorized via numpy_support instead of a per-point Python loop
+        # (InsertNextPoint/InsertNextTuple3 x N) - for the several hundred
+        # thousand to ~2M points these clouds can have, the loop was the
+        # actual bottleneck in this function; numpy_to_vtk hands the whole
+        # array to VTK in one C call.
+        points = np.ascontiguousarray(points, dtype=np.float64)
+        vtk_points = vtk.vtkPoints()
+        vtk_points.SetData(numpy_support.numpy_to_vtk(points, deep=True))
+
+        if has_colors:
+            color_bytes = np.ascontiguousarray((colors * 255).astype(np.uint8))
+        else:
+            # Default to red (255, 0, 0)
+            color_bytes = np.tile(
+                np.array([255, 0, 0], dtype=np.uint8), (points.shape[0], 1)
+            )
+        vtk_colors = numpy_support.numpy_to_vtk(color_bytes, deep=True)
+        vtk_colors.SetName("Colors")
+
+        polydata = vtk.vtkPolyData()
+        polydata.SetPoints(vtk_points)
+        polydata.GetPointData().SetScalars(vtk_colors)
+
+        return polydata
+
+    # ------------------------------------------------------------------------------
+
+    @staticmethod
+    def load_ply(filepath, as_legacy=False):
+        """
+        Load PLY file -> o3d.t.geometry.PointCloud
+        Raise RuntimeError nếu lỗi
+        """
+        import open3d as o3d
+        if not os.path.exists(filepath):
+            raise FileNotFoundError(f"File not found: {filepath}")
+
+        try:
+            pcd = o3d.t.io.read_point_cloud(filepath)
+        except Exception as e:
+            raise RuntimeError(f"Open3D read failed: {e}")
+
+        if pcd.is_empty():
+            raise RuntimeError("Loaded point cloud is empty")
+        if as_legacy:
+            pcd = pcd.to_legacy()
+        
+        return pcd
+
+    # ------------------------------------------------------------------------------
+
+    @staticmethod
+    def crop_cloud_by_hull(hull_cloud, cloud_to_crop):
+        """
+        Trả về source chỉ giữ các điểm nằm trong convex hull của target.
+        Hỗ trợ cả legacy PointCloud và tensor PointCloud, bảo toàn tất cả field.
+        """
+        import numpy as np
+        import open3d as o3d
+        from scipy.spatial import Delaunay, QhullError
+        # --- Lấy points numpy từ target ---
+        hull_cloud = hull_cloud.voxel_down_sample(voxel_size=0.05)
+        if isinstance(hull_cloud, o3d.geometry.PointCloud):
+            points_target = np.asarray(hull_cloud.points)
+        elif isinstance(hull_cloud, o3d.t.geometry.PointCloud):
+            points_target = hull_cloud.point["positions"].to(o3d.core.Dtype.Float32).numpy()
+
+        else:
+            raise TypeError("hull_cloud must be o3d.geometry.PointCloud or o3d.t.geometry.PointCloud")
+
+        # --- Lấy points numpy từ source ---
+        if isinstance(cloud_to_crop, o3d.geometry.PointCloud):
+            points_source = np.asarray(cloud_to_crop.points)
+        elif isinstance(cloud_to_crop, o3d.t.geometry.PointCloud):
+            points_source = cloud_to_crop.point["positions"].to(o3d.core.Dtype.Float32).numpy()
+
+        else:
+            raise TypeError("source must be o3d.geometry.PointCloud or o3d.t.geometry.PointCloud")
+
+        # --- Tạo Delaunay hull ---
+        try:
+            hull = Delaunay(points_target)
+        except QhullError as e:
+            raise RuntimeError(f"Delaunay hull failed: {e}")
+
+
+        # --- Kiểm tra điểm nằm trong hull ---
+        mask_inside = hull.find_simplex(points_source) >= 0
+        cropped_points = points_source[mask_inside]
+
+        # --- Tạo cloud mới cùng loại với source ---
+        if isinstance(cloud_to_crop, o3d.geometry.PointCloud):
+            cropped_cloud = o3d.geometry.PointCloud()
+            cropped_cloud.points = o3d.utility.Vector3dVector(cropped_points)
+
+            # Tự động detect các field khác và crop
+            for attr in ["colors", "normals"]:
+                if hasattr(cloud_to_crop, attr):
+                    data = np.asarray(getattr(cloud_to_crop, attr))
+                    # Chỉ crop nếu field có cùng số điểm với points
+                    if data.shape[0] == points_source.shape[0]:
+                        setattr(cropped_cloud, attr, o3d.utility.Vector3dVector(data[mask_inside]))
+            return cropped_cloud
+
+        else:  # o3d.t.geometry.PointCloud
+            device = cloud_to_crop.device
+            dtype = cloud_to_crop.point['positions'].dtype
+            cropped_cloud = o3d.t.geometry.PointCloud(device=device)
+            cropped_cloud.point["positions"] = o3d.core.Tensor(cropped_points, dtype=dtype, device=device)
+
+            # Bảo toàn tất cả point_attr khác
+            for attr in cloud_to_crop.point:
+                if attr == "positions":
+                    continue
+                cropped_cloud.point[attr] = cloud_to_crop.point[attr][mask_inside]
+            return cropped_cloud
+
+    @staticmethod
+    def voxel_down_sample(pcd_tensor, voxel_size):
+        """
+        Downsample Open3D Tensor PointCloud bằng voxel grid.
+        Giữ colors và tính lại distances trung bình, vectorized (không loop Python).
+        
+        Args:
+            pcd_tensor: o3d.t.geometry.PointCloud
+            voxel_size: float, kích thước voxel
+        
+        Returns:
+            o3d.t.geometry.PointCloud: point cloud đã downsample
+        """
+
+        import open3d as o3d
+        device = pcd_tensor.device
+
+        # --- 1. Chuyển tensor sang numpy ---
+        points = pcd_tensor.point.positions.cpu().numpy()
+        if points.ndim != 2 or points.shape[1] != 3:
+            points = points.reshape(-1,3)
+        points = points.astype(np.float64)
+
+        colors = None
+        if "colors" in pcd_tensor.point:
+            colors = pcd_tensor.point.colors.cpu().numpy()
+            if colors.ndim != 2 or colors.shape[1] != 3:
+                colors = colors.reshape(-1,3)
+            colors = colors.astype(np.float64)
+
+        distances = None
+        if "distances" in pcd_tensor.point:
+            distances = pcd_tensor.point["distances"].cpu().numpy()
+            if distances.ndim == 1:
+                distances = distances.reshape(-1,1)
+
+        # --- 2. Tạo voxel index ---
+        voxel_idx = np.floor(points / voxel_size).astype(np.int64)
+
+        # --- 3. Lấy unique voxel và mapping point->voxel ---
+        keys, inverse = np.unique(voxel_idx, axis=0, return_inverse=True)
+        num_voxels = keys.shape[0]
+
+        # --- 4. Tính trung bình positions vectorized ---
+        sum_points = np.zeros((num_voxels,3), dtype=np.float64)
+        count = np.zeros((num_voxels,1), dtype=np.int64)
+        np.add.at(sum_points, inverse, points)
+        np.add.at(count, inverse, 1)
+        down_points = sum_points / count
+
+        # --- 5. Tính trung bình colors vectorized ---
+        down_colors = None
+        if colors is not None:
+            sum_colors = np.zeros((num_voxels,3), dtype=np.float64)
+            np.add.at(sum_colors, inverse, colors)
+            down_colors = sum_colors / count
+
+        # --- 6. Tính trung bình distances vectorized ---
+        down_distances = None
+        if distances is not None:
+            dist_dim = distances.shape[1]
+            sum_dist = np.zeros((num_voxels, dist_dim), dtype=np.float64)
+            np.add.at(sum_dist, inverse, distances)
+            down_distances = sum_dist / count
+
+        # --- 7. Tạo lại Tensor point cloud ---
+        new_pcd = o3d.t.geometry.PointCloud()
+        new_pcd.point.positions = o3d.core.Tensor(down_points, device=device)
+        if down_colors is not None:
+            new_pcd.point.colors = o3d.core.Tensor(down_colors, device=device)
+        if down_distances is not None:
+            new_pcd.point["distances"] = o3d.core.Tensor(down_distances, device=device)
+
+        return new_pcd
+        
+                
+    @staticmethod
+    def voxel_down_sample_spatial(pcd, voxel_size):
+
+        import open3d as o3d
+        from scipy.spatial import cKDTree
+
+        """
+        Downsample PointCloud bằng voxel grid, loại bỏ các điểm quá gần nhau theo min_dist.
+        Giữ trung bình tất cả các field có trong point cloud.
+
+        Args:
+            pcd: o3d.geometry.PointCloud hoặc o3d.t.geometry.PointCloud
+            voxel_size: float, kích thước voxel
+
+        Returns:
+            PointCloud đã downsample (giữ dạng tensor nếu input là tensor)
+        """
+        is_tensor = isinstance(pcd, o3d.t.geometry.PointCloud)
+        device = pcd.device if is_tensor else None
+
+        # --- 1. Lấy tất cả các field ---
+        data_dict = {}
+        if is_tensor:
+            fields = list(pcd.point)  # tất cả các field tensor
+            for f in fields:
+                data_dict[f] = pcd.point[f].cpu().numpy()
+        else:
+            # positions luôn có
+            data_dict["positions"] = np.asarray(pcd.points)
+            # colors
+            if pcd.has_colors():
+                data_dict["colors"] = np.asarray(pcd.colors)
+            # normals
+            if pcd.has_normals():
+                data_dict["normals"] = np.asarray(pcd.normals)
+            # các field khác nếu có thể tự xác định từ file PLY sẽ cần chuyển sang tensor trước
+
+        points = data_dict["positions"].reshape(-1,3).astype(np.float64)
+        min_dist = 0.9 * voxel_size
+
+        # --- 2. Tạo voxel index ---
+        voxel_idx = np.floor(points / voxel_size).astype(np.int64)
+        keys, inverse = np.unique(voxel_idx, axis=0, return_inverse=True)
+        num_voxels = keys.shape[0]
+
+        # --- 3. Downsample positions ---
+        sum_points = np.zeros((num_voxels,3), dtype=np.float64)
+        count = np.zeros((num_voxels,1), dtype=np.int64)
+        np.add.at(sum_points, inverse, points)
+        np.add.at(count, inverse, 1)
+        down_points = sum_points / count
+
+        # --- 4. Downsample các field khác ---
+        down_fields = {}
+        for f, arr in data_dict.items():
+            if f == "positions":
+                continue
+            arr = arr.reshape(len(points), -1)
+            sum_arr = np.zeros((num_voxels, arr.shape[1]), dtype=np.float64)
+            np.add.at(sum_arr, inverse, arr)
+            down_fields[f] = sum_arr / count
+
+        # --- 5. Lọc các điểm gần nhau bằng KDTree ---
+        tree = cKDTree(down_points)
+        mask = np.ones(len(down_points), dtype=bool)
+        selected = []
+
+        for i, p in enumerate(down_points):
+            if mask[i]:
+                selected.append(i)
+                idxs = tree.query_ball_point(p, min_dist)
+                mask[idxs] = False
+
+        selected = np.array(selected, dtype=np.int64)
+        final_points = down_points[selected]
+        final_fields = {f: arr[selected] for f, arr in down_fields.items()}
+
+        # --- 6. Tạo PointCloud output ---
+        if is_tensor:
+            new_pcd = o3d.t.geometry.PointCloud()
+            new_pcd.point.positions = o3d.core.Tensor(final_points, device=device)
+            for f, arr in final_fields.items():
+                new_pcd.point[f] = o3d.core.Tensor(arr, device=device)
+        else:
+            new_pcd = o3d.geometry.PointCloud()
+            new_pcd.points = o3d.utility.Vector3dVector(final_points)
+            # cố gắng lưu colors và normals nếu có
+            if "colors" in final_fields:
+                new_pcd.colors = o3d.utility.Vector3dVector(final_fields["colors"])
+            if "normals" in final_fields:
+                new_pcd.normals = o3d.utility.Vector3dVector(final_fields["normals"])
+            # các field khác không hỗ trợ trên PointCloud thường
+
+        return new_pcd
+
+
+    @staticmethod
+    def cloud_to_image(pcd,
+                            filename=None,
+                            width=800,
+                            height=800,
+                            rot_x=0,
+                            rot_y=0,
+                            rot_z=0):
+        """
+        Render point cloud to an image and save to file (workaround Open3D 0.19 PNG issue)
+        Rotation values are in degrees.
+        Returns True nếu lưu thành công, False nếu có lỗi.
+        """
+        import open3d as o3d
+        import copy
+        import cv2
+
+        try:
+            # ---- copy cloud và gán màu ----
+            pcd = copy.deepcopy(pcd)
+
+            if isinstance(pcd, o3d.t.geometry.PointCloud):
+                pcd = pcd.to_legacy()
+
+            # ---- tính normal nếu chưa có ----
+            if not pcd.has_normals():
+                pcd.estimate_normals(search_param=o3d.geometry.KDTreeSearchParamKNN(knn=30))
+
+            pcd.paint_uniform_color([0.7, 0.7, 0.7])
+
+            # ---- rotation ----
+            Rx = pcd.get_rotation_matrix_from_xyz(np.radians([rot_x, 0, 0]))
+            Ry = pcd.get_rotation_matrix_from_xyz(np.radians([0, rot_y, 0]))
+            Rz = pcd.get_rotation_matrix_from_xyz(np.radians([0, 0, rot_z]))
+            pcd.rotate(Rz @ Ry @ Rx, center=pcd.get_center())
+
+            # ---- Visualizer headless ----
+            vis = o3d.visualization.Visualizer()
+            vis.create_window(visible=False, width=width, height=height)
+            vis.add_geometry(pcd)
+
+            opt = vis.get_render_option()
+            opt.background_color = np.array([0, 0, 0])
+            opt.point_size = 2.0
+            opt.light_on = True
+
+            # ----- Camera param ---------
+            ctr = vis.get_view_control()
+            param = ctr.convert_to_pinhole_camera_parameters()
+            intrinsic = param.intrinsic.intrinsic_matrix.copy()
+            extrinsic = np.asarray(param.extrinsic).copy()
+
+            vis.poll_events()
+            vis.update_renderer()
+
+            # ---- capture float buffer và convert sang uint8 ----
+            img = np.asarray(vis.capture_screen_float_buffer(do_render=True))
+            img = (img * 255).astype(np.uint8)
+            img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
+
+            # ---- tạo thư mục nếu chưa tồn tại ----
+            # os.makedirs(os.path.dirname(filename), exist_ok=True)
+
+            # ---- lưu ảnh ----
+            if filename:
+                cv2.imwrite(filename, img)
+
+            vis.destroy_window()
+            return img, intrinsic, extrinsic
+
+        except Exception as e:
+            print(f"[cloud_to_image] Failed to render or save image: {e}")
+            return None
+
+
+
+
+# if __name__ == "__main__":
+#     import open3d as o3d
+#     import numpy as np
+#     import cv2
+
+#     pcd_file = "pcd2.ply"
+#     pcd = o3d.io.read_point_cloud(pcd_file)
+#     pcd.estimate_normals(search_param=o3d.geometry.KDTreeSearchParamKNN(knn=30))
+#     pcd.normalize_normals()
+
+#     render_cloud_to_image(pcd, rot_x=-90, rot_y=90, rot_z=0)
+
+
+# ------------------------------------------------------------------------------
+
+cloudconverter = CloudConverter()
+
+# ------------------------------------------------------------------------------
+# if __name__ == "__main__":
+#     rospy.init_node("cloud_converter_test")
+#     msg = rospy.wait_for_message("/velodyne_points", PointCloud2)
+
+#     converter = CloudConverter()
+#     pcd_t = converter.pointcloud2_to_o3d_tensor(msg)
+#     print("Converted to Open3D Tensor Cloud with fields:", pcd_t.point.keys())
+
+#     msg2 = converter.o3d_tensor_to_pointcloud2(pcd_t, "map")
+#     print("Back to PointCloud2:", type(msg2))

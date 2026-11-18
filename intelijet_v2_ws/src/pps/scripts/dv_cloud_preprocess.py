@@ -2,15 +2,16 @@
 
 # This is the first step after the system receives cloud data from the lidar device
 
-from pps.helper import convert_open3d_to_pointcloud2, crop_pointcloud_by_box, notify_one
-from std_msgs.msg import Empty
+from pps.helper import crop_pointcloud_by_box
+# from pps.tunnel_processing import TunnelProcessing
+# from std_msgs.msg import Empty
+import traceback
 import rospy
 from sensor_msgs.msg import PointCloud2
 import open3d as o3d
 import ros_numpy
-import numpy as np
-from datetime import datetime
-
+from shared.config_loader import CONFIG as cfg
+from shared.notify import notify
 
 PRE_SCAN_RAW_TOPIC = "/pre_scan_0"
 POST_SCAN_RAW_TOPIC = "/post_scan_0"
@@ -28,7 +29,7 @@ class CloudProcessorNode:
         self.sub_pre_topic = sub_pre_topic
         self.sub_post_topic = sub_post_topic
         
-        rospy.init_node("dv_cloud_process")
+        # rospy.init_node("dv_cloud_process")
         
         # Publishers
         self.pub_pre = rospy.Publisher(self.pub_pre_topic, PointCloud2, queue_size=1)
@@ -39,56 +40,80 @@ class CloudProcessorNode:
         rospy.Subscriber(self.sub_post_topic, PointCloud2, self.callback_post)
 
         rospy.loginfo("CloudProcessorNode initialized.")
-        rospy.spin()
+        # rospy.spin()
 
-    def process_cloud(self, msg: PointCloud2):
-
+    def process_cloud(self, msg: PointCloud2, rgb=[255,255,255]) -> PointCloud2:
+        from pps.data_converter import cloudconverter
         # Chuyển sang numpy
         cloud = ros_numpy.point_cloud2.pointcloud2_to_xyz_array(msg, remove_nans=True)
         cloud_o3d = o3d.geometry.PointCloud()
         cloud_o3d.points = o3d.utility.Vector3dVector(cloud)
-
         # aabb = o3d.geometry.AxisAlignedBoundingBox(min_bound, max_bound)
         # cloud_cropped = cloud_o3d.crop(aabb)
 
-        cloud_cropped = crop_pointcloud_by_box(pcd=cloud_o3d, box_type='aabb', min_bound=[-4, -10, -0.5], max_bound=[4, 10, 3])
-
-        # Lọc nhiễu
-        cloud_cropped, _ = cloud_cropped.remove_statistical_outlier(nb_neighbors=5, std_ratio=1)
-
-        # Downsample
-        if not isinstance(cloud_cropped, o3d.geometry.PointCloud):
-            rospy.logerr("cloud_cropped is not an Open3D PointCloud.")
-        else:
-            cloud_cropped = cloud_cropped.voxel_down_sample(voxel_size=0.01)
-        # Chuyển sang PointCloud2
-        # now = datetime.now().strftime("%Y%m%d_%H%M%S") 
-        # o3d.io.write_point_cloud(f"/mnt/c/work/projects/intelijet_v2/data/cloud_{now}.ply", cloud_o3d)
-        return convert_open3d_to_pointcloud2(cloud_cropped, frame_id=msg.header.frame_id)
-
+        # Remove non finite points
+        cloud_o3d = cloud_o3d.remove_non_finite_points()
+        # Crop by box 
+        cloud_o3d = crop_pointcloud_by_box(pcd=cloud_o3d, box_type='aabb', 
+                                        min_bound=[cfg.crop_box.min.x, cfg.crop_box.min.y, cfg.crop_box.min.z], 
+                                        max_bound=[cfg.crop_box.max.x, cfg.crop_box.max.y, cfg.crop_box.max.z])
+        
+        #Downsample        
+        cloud_o3d = cloudconverter.voxel_down_sample_spatial(cloud_o3d, voxel_size=0.015)
+        # Auto crop boundary
+        # tunnel = TunnelProcessing(cloud_o3d)
+        # result = tunnel.run_processing_pipeline()
+        # Cloud after process
+        return cloudconverter.legacy_o3d_to_pointcloud2(cloud_o3d, frame_id=msg.header.frame_id, rgb=rgb)
 
     def callback_pres(self, msg):
-        rospy.logwarn("Received /pre_scan_0")
-        processed = self.process_cloud(msg)
-        self.pub_pre.publish(processed)
-        # notify_one(self.pub_pre_topic + "_trigger")
-
-    def callback_post(self, msg):
-        rospy.logwarn("Received /post_scan_0")
-        processed = self.process_cloud(msg)
+        rospy.loginfo("Received /pre_scan_0")
+        try:
+            processed = self.process_cloud(msg, rgb=[255,255,255])
+        except Exception as e:
+            rospy.logerr(f"{type(e).__name__}: {e}\n{traceback.format_exc()}")
+            notify(message=f"Pre-scan cloud preprocessing failed: {e}", code="SCAN-007")
+            return
         if isinstance(processed, PointCloud2):
-            rospy.loginfo("processed is a PointCloud2 message.")
+            rospy.loginfo("processed is a PointCloud2 message and sent --> pre_scan_0")
         else:
             rospy.logerr("processed is NOT a PointCloud2 message.")
-        self.pub_post.publish(processed)
-        # notify_one(self.pub_post_topic + "_trigger")
+            notify(message="Pre-scan cloud preprocessing returned invalid data", code="SCAN-007")
+            return
 
+        self.pub_pre.publish(processed)
+
+
+    def callback_post(self, msg):
+        rospy.loginfo("Received /post_scan_0")
+        try:
+            processed = self.process_cloud(msg, rgb=[255,255,0])
+        except Exception as e:
+            rospy.logerr(f"{type(e).__name__}: {e}\n{traceback.format_exc()}")
+            notify(message=f"Post-scan cloud preprocessing failed: {e}", code="SCAN-008")
+            return
+        if isinstance(processed, PointCloud2):
+            rospy.loginfo("processed is a PointCloud2 message and sent --> post_scan_0")
+        else:
+            rospy.logerr("processed is NOT a PointCloud2 message.")
+            notify(message="Post-scan cloud preprocessing returned invalid data", code="SCAN-008")
+            return
+
+        self.pub_post.publish(processed)
+
+def main():
+    rospy.init_node("dv_cloud_process", anonymous=False)
+    rospy.loginfo("Cloud processing node started.")
+    
+    CloudProcessorNode(pub_pre_topic=PRE_SCAN_PROCESSED_TOPIC,
+                        pub_post_topic=POST_SCAN_PROCESSED_TOPIC,
+                        sub_pre_topic=PRE_SCAN_RAW_TOPIC,
+                        sub_post_topic=POST_SCAN_RAW_TOPIC)
+
+    rospy.spin()
 
 if __name__ == "__main__":
     try:
-        CloudProcessorNode(pub_pre_topic=PRE_SCAN_PROCESSED_TOPIC,
-                            pub_post_topic=POST_SCAN_PROCESSED_TOPIC,
-                            sub_pre_topic=PRE_SCAN_RAW_TOPIC,
-                            sub_post_topic=POST_SCAN_RAW_TOPIC)
+        main()
     except rospy.ROSInterruptException:
-        pass
+        rospy.logerr("ROS Interrupt Exception occurred. Shutting down the node %s.", rospy.get_name())

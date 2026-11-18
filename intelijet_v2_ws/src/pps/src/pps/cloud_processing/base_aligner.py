@@ -17,3 +17,6 @@ class CloudAligner(ABC):
     @abstractmethod
     def align(self, source, target, init_transform=np.eye(4)):
         pass
+
+    def get_result(self):
+        pass

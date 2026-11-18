@@ -1,0 +1,124 @@
+# This is just an virtual device to collect real devices or real processes status
+# You can add/remove devices in the config/devices.yaml file to monitor them
+# The node will publish the status of each device on the device_name/status topic
+#
+# type: TopicAliveMonitor -> connected while messages keep arriving on `topic`
+#                             within `timeout` seconds (CAN devices).
+# type: PingMonitor        -> connected while ICMP ping to `ip` succeeds.
+# type: LidarMonitor       -> PingMonitor's `ip` check plus a TopicAlive
+#                             check on `topic`/`topic_timeout` - DISCONNECTED
+#                             if ping fails (network/cable/power issue),
+#                             ERROR if ping succeeds but `topic` has gone
+#                             stale (driver stuck/crashed).
+# type: StateEchoMonitor   -> device_state mirrors last message payload, still
+#                             goes disconnected if no message within `timeout`.
+# type: RosnodeAliveMonitor -> connected while the ROS node named `node`
+#                             (its graph name, e.g. "/compare_cloud_action_server")
+#                             answers an XML-RPC ping - catches a crashed/hung
+#                             node process itself, not just a stale topic.
+#
+# disconnected_code / error_code: (optional) a code from error_codes.yaml.
+# When set, a transition into that device_state (or already being in it on
+# the very first check, e.g. still broken from before the app was
+# launched) is pushed to the Notification/Alarm stream with that code's
+# message+guide - not just the SYSTEM tab badge. Devices without these
+# fields keep the old passive-badge-only behavior.
+devices:
+  - name: lidar
+    type: LidarMonitor
+    ip: 192.168.82.121  # from sick_scan/launch/sick_lms_511.launch arg "hostname"
+    topic: /cloud  # raw scan cloud published continuously by sick_lms_511 (see pps/launch/pps.launch)
+    msg_type: sensor_msgs/PointCloud2
+    topic_timeout: 5.0
+    timeout: 3.0
+    mode: continuous
+    disconnected_code: DEVICE-LIDAR-001
+    error_code: DEVICE-LIDAR-002
+  - name: encoder
+    type: TopicAliveMonitor
+    topic: /encoder01/can_msg
+    msg_type: can_msgs/Frame
+    timeout: 3.0
+    mode: continuous
+    disconnected_code: DEVICE-ENCODER-001
+  - name: pcan
+    type: TopicAliveMonitor
+    topic: /pcan_received_messanges
+    msg_type: can_msgs/Frame
+    timeout: 3.0
+    mode: continuous
+    disconnected_code: DEVICE-PCAN-001
+  - name: pps
+    type: StateEchoMonitor
+    topic: /pps/state
+    msg_type: std_msgs/String
+    timeout: 3.0
+    mode: continuous
+  - name: plc
+    topic: /plc/heatbeat
+    type: TopicAliveMonitor
+    msg_type: can_msgs/Frame
+    timeout: 3.0
+    mode: continuous
+    disconnected_code: DEVICE-PLC-001
+
+  # ---- ROS node process liveness (see pps/launch/pps.launch for the full
+  # roster of launched nodes). Each entry pings the node's own graph name
+  # ("/" + the launch file's name="..."); a crash/exit shows DISCONNECTED
+  # here even if the node never published a topic worth watching. The UI
+  # process (ui/app.py) isn't included - it can't usefully alarm on itself.
+  - name: node_dv_cloud_preprocess
+    node: /dv_cloud_preprocess
+    type: RosnodeAliveMonitor
+    timeout: 5.0
+    mode: continuous
+  - name: node_compare_cloud_action_manual_server
+    node: /compare_cloud_action_manual_server
+    type: RosnodeAliveMonitor
+    timeout: 5.0
+    mode: continuous
+  - name: node_hmi_scan_command_handler
+    node: /hmi_scan_command_handler
+    type: RosnodeAliveMonitor
+    timeout: 5.0
+    mode: continuous
+  - name: node_encoder_process_node
+    node: /encoder_process_node
+    type: RosnodeAliveMonitor
+    timeout: 5.0
+    mode: continuous
+  - name: node_ui_can_node
+    node: /ui_can_node
+    type: RosnodeAliveMonitor
+    timeout: 5.0
+    mode: continuous
+  - name: node_assembler_node
+    node: /assembler_node
+    type: RosnodeAliveMonitor
+    timeout: 5.0
+    mode: continuous
+  - name: node_robot_state_publisher
+    node: /robot_state_publisher
+    type: RosnodeAliveMonitor
+    timeout: 5.0
+    mode: continuous
+  - name: node_pcan_gateway_rx_node
+    node: /pcan_gateway_rx_node
+    type: RosnodeAliveMonitor
+    timeout: 5.0
+    mode: continuous
+  - name: node_pcan_gateway_tx_node
+    node: /pcan_gateway_tx_node
+    type: RosnodeAliveMonitor
+    timeout: 5.0
+    mode: continuous
+  - name: node_message_router_node
+    node: /message_router_node
+    type: RosnodeAliveMonitor
+    timeout: 5.0
+    mode: continuous
+  - name: node_image_matcher_service_node
+    node: /image_matcher_service_node
+    type: RosnodeAliveMonitor
+    timeout: 5.0
+    mode: continuous

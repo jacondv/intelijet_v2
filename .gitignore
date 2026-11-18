@@ -1,9 +1,5 @@
 # === HÌNH ẢNH VÀ FILE DỮ LIỆU LỚN ===
-*.jpg
-*.jpeg
-*.png
-*.bmp
-*.gif
+
 *.tiff
 *.tif
 *.webp
@@ -23,8 +19,14 @@
 *.gz
 *.ply
 *.bag
+!**/assets/images/**
+token.txt
+
+config/last_user.yaml
+intelijet_v2_ws/src/config/last_used.yaml
 
 # === FILE ROS VÀ BUILD ===
+qt/
 build/
 devel/
 install/
@@ -38,7 +40,10 @@ log/
 **/devel/
 **/install/
 **/log/
+**/logs/
+**/.catkin_tools/
 
+.catkin_workspace
 
 # === CMAKE ===
 CMakeFiles/
@@ -49,6 +54,9 @@ Makefile
 # === PYTHON ===
 __pycache__/
 *.py[cod]
+
+venv/
+*/venv/
 
 # === VISUAL STUDIO CODE ===
 .vscode/
@@ -67,3 +75,14 @@ __pycache__/
 # === HIDDEN SYSTEM FILES ===
 .DS_Store
 Thumbs.db
+
+# === SYNCTHING ===
+.stfolder/
+.stversions/
+.stignore
+
+# === RUNTIME STATE (Docker bind mount target, not source) ===
+# QSettings("JaconEquipment", "Intelijet") data - see docker-compose.yml
+intelijet_v2_ws/src/config/.config/
+# Container logs saved by run_docker.sh before each restart, under
+# data/logs/ - already covered by **/data/ above, kept only as a pointer.

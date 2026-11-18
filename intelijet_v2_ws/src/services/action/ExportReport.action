@@ -1,0 +1,32 @@
+# Renders and writes the tunnel-compare PDF report for an already-produced
+# compared cloud. Runs in its own node/process (see
+# scripts/report_export_action_server.py) specifically so the heavy,
+# mostly-Python PDF/report rendering (weasyprint, matplotlib, Open3D
+# offscreen rendering) never runs inside the UI process - that used to hold
+# the GIL long enough to fully freeze the UI even though it ran on a
+# background QThread there.
+#
+# site_name/job_name/applied_thickness/tolerance/date/time are computed by
+# the caller (UI already has JobStore/JobInfo for this - see
+# ui/compare_cloud_worker.py's CompareWorker for the same pattern) rather
+# than looked up here, so this node has no dependency on the ui package.
+
+# ===== Goal =====
+string compared_ply_path   # .ply of the compared cloud, already saved to disk
+string output_pdf_path     # where to write the PDF report
+string site_name
+string job_name
+float32 applied_thickness  # mm
+float32 tolerance          # mm
+string date
+string time
+
+---
+# ===== Result =====
+bool success
+string report_path         # final report path ("finalreport" copy if one was made)
+
+---
+# ===== Feedback =====
+float32 progress
+string stage

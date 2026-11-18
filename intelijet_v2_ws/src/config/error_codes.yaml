@@ -1,0 +1,256 @@
+# Registry of operator-facing error/warning codes (see
+# shared/src/shared/error_codes.py's lookup()). Each code maps to a default
+# message, level, and a troubleshooting guide - the ALARM tab's detail popup
+# (ui/src/ui/diagnostics_tab.py) shows the guide for any history entry that
+# carries a matching code.
+#
+# Adding a new code: add an entry below, then pass code="XXX-NNN" to the
+# matching notify() call (or notification_center.push()) - devices use
+# disconnected_code/error_code in devices.yaml instead. Read directly (not
+# merged into last_used.yaml), same convention as machine_info.yaml/
+# storage_cleanup.yaml, so editing the guide text here takes effect
+# immediately, no restart needed.
+#
+# Guides are written for a field technician and ordered cheapest/most likely
+# check first. Hardware layout they assume:
+#
+#   Tablet (this app) --WiFi--> Router (LAN 192.168.82.x)
+#   Router --Ethernet--> Lidar (SICK LMS511, 192.168.82.121)
+#   Router --Ethernet--> PCAN Ethernet Gateway (192.168.82.10)
+#   PCAN Gateway --CAN bus--> PLC --> housing motor (motor's encoder data
+#   comes back up the same CAN bus)
+#
+# So: PCAN down => PLC and Encoder also show down. PCAN up but PLC down =>
+# CAN side between Gateway and PLC. PLC up but Encoder down => motor/encoder
+# side. Lidar is independent of the CAN path.
+
+# ---- Scan process ----
+
+SCAN-001:
+  level: error
+  message: "Failed to assemble point cloud (laser_assembler service call failed or returned no data)"
+  guide: |
+    Meaning: the scan ran but no point cloud came out of the Lidar.
+    1. SYSTEM tab: is Lidar shown CONNECTED? If not, follow DEVICE-LIDAR-001/002 first.
+    2. Make sure the housing actually opened during the scan (Lidar must see the tunnel, not the inside of the housing).
+    3. Retry the scan once.
+    4. Still failing: Restart App.
+    5. Still failing: power-cycle the Lidar (wait ~1 min for it to boot), then Restart App.
+
+SCAN-002:
+  level: warning
+  message: "Encoder did not reach target angle while opening the housing"
+  guide: |
+    Meaning: the motor was told to open the housing, but the encoder angle did not reach the open position in time.
+    1. Look at the housing: is anything physically blocking it (debris, shotcrete build-up, cables)? Clear it.
+    2. SYSTEM tab: is Encoder CONNECTED and is its angle value changing while the housing moves?
+       - Value not changing but housing moves -> encoder/CAN problem, see DEVICE-ENCODER-001.
+       - Housing does not move at all -> motor/PLC problem, see SCAN-005.
+    3. Press OPEN HOUSING manually and watch the angle; it should reach the open angle smoothly.
+    4. If it stops at the same angle every time: check for an obstruction at that point; if none, contact engineering.
+
+SCAN-003:
+  level: warning
+  message: "Encoder did not reach target angle while closing the housing"
+  guide: |
+    Meaning: the motor was told to close the housing, but the encoder angle did not reach the closed position in time.
+    1. Look at the housing: is anything physically blocking it from closing? Clear it.
+    2. SYSTEM tab: is Encoder CONNECTED and is its angle value changing while the housing moves?
+       - Value not changing but housing moves -> encoder/CAN problem, see DEVICE-ENCODER-001.
+       - Housing does not move at all -> motor/PLC problem, see SCAN-005.
+    3. Press CLOSE HOUSING manually and watch the angle; it should return to the zero/closed angle.
+    4. If the closed angle is off (housing physically closed but angle not ~0): run "Set Zero Position" on the SYSTEM tab with the housing fully closed.
+
+SCAN-004:
+  level: error
+  message: "Scan failed"
+  guide: |
+    Meaning: the Pre-Scan/Post-Scan sequence stopped with an error.
+    1. Open the ALARM tab and read the entries just before/after this one - they usually name the real cause (Lidar, encoder, housing).
+    2. SYSTEM tab: Lidar, Encoder, PLC and PCAN Gateway must all be CONNECTED. Fix any that are not (see their DEVICE-* codes).
+    3. Make sure the housing is fully closed, then retry the scan.
+    4. Still failing: Restart App.
+
+SCAN-005:
+  level: error
+  message: "Housing move failed"
+  guide: |
+    Meaning: the command to move the housing did not complete.
+    1. Look at the housing: is it blocked or jammed? Clear any obstruction.
+    2. SYSTEM tab: PLC and PCAN Gateway must be CONNECTED (the move command goes Tablet -> WiFi -> Router -> PCAN Gateway -> CAN -> PLC -> motor).
+       If either is disconnected, follow DEVICE-PCAN-001 / DEVICE-PLC-001 first.
+    3. Check the PLC/motor has power and that no emergency stop is pressed.
+    4. Retry OPEN/CLOSE HOUSING manually.
+    5. Still failing: power-cycle the PLC/motor control box, wait until PLC shows CONNECTED, then retry.
+
+SCAN-006:
+  level: error
+  message: "Unsupported active_lidar value in lidar.yaml"
+  guide: |
+    Meaning: settings error, not a hardware fault. The app is set to a Lidar type it does not support.
+    1. Restart App.
+    2. Still showing: do not change any files - contact engineering.
+
+SCAN-007:
+  level: error
+  message: "Pre-Scan cloud preprocessing failed"
+  guide: |
+    Meaning: the Pre-Scan cloud was received but could not be cleaned up/cropped. The scan is not saved.
+    1. Read the ALARM entry text right after this one for the exact cause.
+    2. If the cloud was empty or tiny: the Lidar saw nothing useful - check the housing opened and nothing covers the Lidar window.
+    3. Retry Pre-Scan.
+    4. Still failing: Restart App.
+
+SCAN-008:
+  level: error
+  message: "Post-Scan cloud preprocessing failed"
+  guide: |
+    Meaning: the Post-Scan cloud was received but could not be cleaned up/cropped. The scan is not saved.
+    1. Read the ALARM entry text right after this one for the exact cause.
+    2. If the cloud was empty or tiny: the Lidar saw nothing useful - check the housing opened and nothing covers the Lidar window.
+    3. Retry Post-Scan.
+    4. Still failing: Restart App.
+
+SCAN-009:
+  level: error
+  message: "Scan pipeline error while processing a scan cloud"
+  guide: |
+    Meaning: the scan cloud arrived but saving/displaying it failed on the tablet.
+    1. Read the error text in this ALARM entry for the exact cause.
+    2. SYSTEM tab: check disk usage (Storage) - a full disk stops files being saved.
+    3. Check a job is selected in the header (CURRENT JOB) - scans are saved into that job's folder.
+    4. Retry the scan; still failing: Restart App.
+
+SCAN-010:
+  level: warning
+  message: "Failed to color point cloud for display"
+  guide: |
+    Meaning: only the on-screen color highlight failed. The saved scan/compare data is still valid.
+    1. You can keep working.
+    2. If it repeats on every cloud: check the job's target thickness/tolerance in the JOB tab are filled in with numbers.
+
+# ---- Compare process ----
+
+COMPARE-001:
+  level: error
+  message: "Compare finished with success=False"
+  guide: |
+    Meaning: the compare ran but could not produce a valid result.
+    1. Read the ALARM entries around this one for more detail.
+    2. Check the Pre-Scan and Post-Scan were taken from the same machine position and cover the same tunnel section.
+    3. Retry the compare from the REPORT tab.
+    4. Still failing: take a new Post-Scan without moving the machine.
+
+COMPARE-002:
+  level: error
+  message: "Compare timed out"
+  guide: |
+    Meaning: no compare result came back within 2 minutes.
+    1. Wait a moment - very large scans can be slow. Then retry once from the REPORT tab.
+    2. Still timing out: Restart App and retry.
+    3. If it keeps happening: contact engineering.
+
+COMPARE-003:
+  level: warning
+  message: "Post-process crop step failed, using the uncropped cloud instead"
+  guide: |
+    Meaning: the "Trim to Pre-Scan" step failed. A compare result was still produced, but its edges were not trimmed to the Pre-Scan area.
+    1. Check the result in the 3D view - extra areas at the edges may be included in the report numbers.
+    2. If the result looks wrong, retry the compare.
+    3. If it keeps failing, you can turn "Trim to Pre-Scan" off in the SYSTEM tab (admin) and report the issue to engineering.
+
+COMPARE-004:
+  level: error
+  message: "Compare failed (auto-compare)"
+  guide: |
+    Meaning: the automatic compare after Post-Scan failed. The Post-Scan itself is saved.
+    1. Read the ALARM entry text right after this one for the exact cause.
+    2. Check the job has a Pre-Scan for this segment (REPORT tab).
+    3. Run the compare manually from the REPORT tab (select the Pre-Scan and Post-Scan, Compare Selected).
+
+COMPARE-005:
+  level: error
+  message: "Compare failed (manual compare)"
+  guide: |
+    Meaning: the compare started from the REPORT tab failed.
+    1. Read the ALARM entry text right after this one for the exact cause.
+    2. Check you selected one Pre-Scan and one Post-Scan from the same segment.
+    3. Retry Compare Selected; still failing: Restart App and retry.
+
+COMPARE-006:
+  level: error
+  message: "Compare failed"
+  guide: |
+    Meaning: the compare server reported a failure.
+    1. Read the ALARM entries around this one for the exact cause.
+    2. Check the two scans are a Pre-Scan and Post-Scan of the same segment.
+    3. Retry the compare; still failing: Restart App and retry.
+
+# ---- Device connectivity (SYSTEM tab devices) ----
+
+DEVICE-LIDAR-001:
+  level: error
+  message: "Lidar disconnected (network unreachable)"
+  guide: |
+    Meaning: the tablet cannot reach the Lidar on the network at all (power, cable or network problem).
+    1. Tablet WiFi: connected to the machine's Router WiFi (not another network)? Check the SYSTEM tab - if PCAN Gateway is also disconnected, the problem is the tablet/Router WiFi, not the Lidar.
+    2. Router: powered on, lights normal.
+    3. Lidar: powered on (status LED on).
+    4. Ethernet cable Lidar <-> Router: plugged in at both ends, link light on at the Router port, cable not damaged.
+    5. Restart App.
+    6. Still failing: power-cycle the whole system (Router + Lidar), wait ~1 min, then Restart App.
+
+DEVICE-LIDAR-002:
+  level: error
+  message: "Lidar network is reachable but no scan data is coming in"
+  guide: |
+    Meaning: the network to the Lidar is fine, but no scan data is coming from the Lidar (still starting up, or stuck).
+    1. If the Lidar was just powered on, wait ~1 minute for it to finish booting.
+    2. Restart App.
+    3. Still failing: power-cycle the Lidar only, wait ~1 min, then Restart App.
+    4. Check the Lidar front window is not covered/dirty and its status LED shows no error.
+
+DEVICE-ENCODER-001:
+  level: error
+  message: "Encoder disconnected"
+  guide: |
+    Meaning: no encoder (housing angle) data is arriving. Encoder data comes from the housing motor through the PLC and PCAN Gateway.
+    1. SYSTEM tab: is the PCAN Gateway CONNECTED? If not, fix DEVICE-PCAN-001 first (that also explains this one).
+    2. Is the PLC CONNECTED? If not, fix DEVICE-PLC-001 first.
+    3. PCAN and PLC both fine, only Encoder down: check power to the housing motor/drive, and the CAN cable to the motor/encoder (connectors seated, no damage).
+    4. Restart App.
+    5. Still failing: power-cycle the whole system, then Restart App.
+
+DEVICE-PLC-001:
+  level: error
+  message: "PLC disconnected"
+  guide: |
+    Meaning: the tablet is not receiving any signal from the PLC (it comes through the PCAN Gateway).
+    1. SYSTEM tab: is the PCAN Gateway CONNECTED? If not, fix DEVICE-PCAN-001 first (that also explains this one).
+    2. PLC: powered on, in RUN mode, no fault light.
+    3. CAN cable PLC <-> PCAN Gateway: plugged in at both ends, not damaged.
+    4. Restart App.
+    5. Still failing: power-cycle the PLC, wait until it boots, then Restart App.
+
+DEVICE-PCAN-001:
+  level: error
+  message: "PCAN Ethernet Gateway disconnected"
+  guide: |
+    Meaning: no CAN data is arriving from the PCAN Gateway, so PLC and Encoder will also show disconnected.
+    1. Tablet WiFi: connected to the machine's Router WiFi? If the Lidar is also disconnected, the problem is the tablet/Router WiFi.
+    2. Router: powered on, lights normal.
+    3. PCAN Gateway: powered on, status LEDs normal.
+    4. Ethernet cable PCAN Gateway <-> Router: plugged in, link light on at the Router port.
+    5. Restart App.
+    6. Still failing: power-cycle the whole system (Router + PCAN Gateway + PLC), then Restart App.
+
+# ---- System ----
+
+SYSTEM-TIME-001:
+  level: warning
+  message: "App time zone does not match the tablet's time zone - file names and report times may be wrong"
+  guide: |
+    Meaning: the time used for scan file names and reports is different from the tablet's clock.
+    1. Close the app and start it again from the desktop icon (not any other way).
+    2. Still showing: check the tablet's own date, time and time zone in Ubuntu Settings > Date & Time, then start the app again.
+    3. Scans/reports made while this warning was shown keep the wrong time in their file name and report.

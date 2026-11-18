@@ -1,0 +1,41 @@
+
+BASE_DIR: "/root/intelijet_v2"
+DATA_DIR: "data"
+# BASE_DIR: "/mnt/c/work/projects/intelijet_v2"
+
+HMI_CMD_TOPIC: "/hmi/cmd"
+PLC_CMD_TOPIC: "/plc/cmd"
+SYSTEM_STATUS: "/system_status"
+
+
+# Raw point cloud data 
+PRE_SCAN_TOPIC: "/pre_scan_0"
+POST_SCAN_TOPIC: "/post_scan_0"
+
+# Preprocess point cloud data
+PRE_SCAN_CLOUD_TOPIC: "/pre_scan_cloud"
+POST_SCAN_CLOUD_TOPIC: "/post_scan_cloud"
+POST_SCAN_CLOUD_ALIGNED_TOPIC: "/post_scan_cloud_aligned"
+
+# Cloud after compare between Pres can and Post scan point cloud
+CLOUD_COMPARED_TOPIC: "/cloud_compared"
+
+ENCODER_JOINT_NAME: "scanner_deploy_retract"
+
+
+# ENCODER PARAMETER
+# Topic mà PCAN sẽ chuyển gói tin sau khi nhận từ mạng CAN.
+ENCODER01_CAN_MSG: "/encoder01/can_msg" 
+# This topic update encoder raw value after decoder CAN Frame
+ENCODER01_DATA:     "/encoder01/data"
+
+# SYSTEM MSG ID 
+# This defined to show messagers to User interface
+NOTIFICATION: "notification"
+NOTIFICATION_TOPIC: "/notification"
+PLC_HEARTBEAT_MSG: "/plc/heatbeat"
+
+# On-screen keyboard window size, remembered across restarts (ui/keyboard.py)
+keyboard:
+  width: 900
+  height: 320

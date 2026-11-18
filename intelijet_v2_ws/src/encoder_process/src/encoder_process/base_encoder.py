@@ -1,0 +1,50 @@
+import struct
+import encoder_process.encoder_utils as solver
+
+class BaseEncoder:
+    """Interface chung cho tất cả encoder"""
+    def decode_angle(self, data: bytes) -> float:
+        """Decode the angle value from the CAN frame"""
+        raise NotImplementedError
+
+    def decode_raw(self, data: bytes) -> int:
+        """Decode raw values ​​from CAN frame"""
+        raise NotImplementedError
+    
+
+class EncoderEROB(BaseEncoder):
+
+    """Encoder return float32 for angle + int32 for raw value"""
+
+    def decode_angle(self, data: bytes) -> float:
+        return struct.unpack('<f', data[0:4])[0]
+
+    def decode_raw(self, data: bytes) -> int:
+        return struct.unpack('<i', data[4:8])[0]
+    
+
+class Encoder58x8(BaseEncoder):
+    """
+    Encoder 58x8: decode CAN frame theo solver
+    - CAN data -> raw encoder value
+    - CAN data -> draw_wire_length -> angle (rad)
+    """
+    
+
+    def decode_angle(self, data: bytes) -> float:
+        """
+        Trả về góc (rad)
+        """
+        # convert bytes sang list of int nếu cần
+        message_data = list(data)
+        draw_wire_length = solver.convert_draw_wire_length(message_data)
+        angle = solver.length_to_angle_polynomial(draw_wire_length)
+        return angle
+
+    def decode_raw(self, data: bytes) -> int:
+        """
+        Trả về raw encoder value (int)
+        """
+        message_data = list(data)
+        raw_val = solver.convert_can_to_encoder_value(message_data)  # nếu hàm cũ trả 1 giá trị
+        return int(raw_val)

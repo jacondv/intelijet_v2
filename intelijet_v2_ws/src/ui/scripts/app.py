@@ -1,0 +1,980 @@
+#!/usr/bin/env python3
+import os
+
+
+#allow create file with full permission
+os.umask(0)
+from pathlib import Path
+
+import re
+import time
+from datetime import datetime
+
+import sys, subprocess
+import rospy
+
+from PyQt5.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QLabel, QWidget
+from PyQt5.QtCore import pyqtSignal, QTimer, Qt
+from PyQt5.QtWidgets import QMessageBox
+from PyQt5.QtCore import QSettings
+from PyQt5.QtGui import QIcon
+
+
+from vtk_viewer import VTKViewer
+from ros_thread import RosThread
+#Import pages manager
+from project_dlg_manager import ProjectManager
+from report_page_manager import ReportPageManager
+
+from ui.status_binder import StatusBinder
+
+from shared.pps_command import PPSCommand
+from shared.timezone_check import check_timezone_matches_host
+from shared.error_codes import lookup as lookup_error_code
+
+from ui.intelijet_ui import Ui_MainWindow, ACCENT_YELLOW, TEXT_MUTED
+from ui.keyboard import TouchKeyboard
+
+from ui.notification_center import NotificationCenter, LEVEL_COLORS
+from ui.widgets.picker_item_delegate import PickerItemDelegate
+from ui.notification_history_dialog import NotificationHistoryDialog
+from ui.diagnostics_tab import DiagnosticsTab
+
+from ui.services.job_store import JobStore
+from ui.services import project_repository
+from ui.services.cloud_pipeline import CloudPipelineService
+from ui.scan_pipeline_worker import ScanPipelineWorker
+
+from shared.config_loader import CONFIG as cfg, load_config as load_yaml_config
+
+
+BASE_DIR = cfg.BASE_DIR
+CLOUD_COMPARED_TOPIC = cfg.CLOUD_COMPARED_TOPIC
+CLOUD_COMPARED_UPSAMPLE_TOPIC = f"{CLOUD_COMPARED_TOPIC}/upsample"
+
+CLOUD_COMPARED_TOPIC_MANUAL = cfg.CLOUD_COMPARED_TOPIC + "_manual"
+CLOUD_COMPARED_UPSAMPLE_TOPIC_MANUAL = f"{CLOUD_COMPARED_TOPIC_MANUAL}/upsample"
+
+
+PRE_SCAN_CLOUD_TOPIC = cfg.PRE_SCAN_CLOUD_TOPIC
+POST_SCAN_CLOUD_TOPIC = cfg.POST_SCAN_CLOUD_TOPIC
+
+DATA_DIR = cfg.DATA_DIR
+# PROJECT_DIR/ACTIVE_JOB_FILE/CURRENT_JOB_FILE: single source of truth is
+# ui.services.project_repository - see that module's docstring for why
+# (this used to be redeclared independently in 5 different files).
+PROJECT_DIR = project_repository.PROJECT_DIR
+ACTIVE_JOB_FILE = project_repository.ACTIVE_JOB_FILE
+CURRENT_JOB_FILE = project_repository.CURRENT_JOB_FILE
+
+THICKNESS_DEFAULT = cfg.thickness.target  # Target thickness in meter -> convert mm to m
+TOLERANCE_DEFAULT = cfg.thickness.tolerance  # Allowable tolerance in meter of thickness
+
+# NotificationCenter history cap - shared by lblNotification, NotificationHistoryDialog,
+# and the DIAGNOSTICS tab (DiagnosticsTab), so all three read from the same store.
+DIAGNOSTICS_HISTORY_CAP = 500
+
+settings = QSettings("JaconEquipment", "Intelijet")
+
+class App(QMainWindow):
+
+    cloud_received_signal = pyqtSignal(object, str)
+    ui_send_cmd_signal = pyqtSignal(int)
+    ui_data_update = pyqtSignal(object)  # ui.system_status.SystemStatus
+    # (source, message, level, code) - see shared/notify.py. code is "" when
+    # the notify() call didn't pass one (see shared/error_codes.py).
+    # Replaces the old /rosout-JSON "notification" key inside
+    # ui_data_update's dict.
+    notification_received = pyqtSignal(str, str, str, str)
+
+    def __init__(self):
+        super().__init__()
+        self.report_name = ""
+        self.current_post_scan_path = ""
+        self.isManualCompare = False
+        # Compare state shared by manual (REPORT tab) and auto (post-scan
+        # pipeline) requests - both now funnel through _start_compare(), see
+        # its docstring for the priority/queueing rules.
+        self.worker = None
+        self.compare_in_progress = False
+        self._pending_compare = None
+        self._superseded_worker = None
+
+
+        # --- UI chính ---
+        self.ui = Ui_MainWindow()
+        self.ui.setupUi(self)
+
+        self.show_3d_main_page()
+
+        # --- Side-nav -> QStackedWidget page switching ---
+        self.ui.btnNav3DMain.clicked.connect(self.show_3d_main_page)
+        self.ui.btnNavJob.clicked.connect(lambda: self.ui.stacked.setCurrentWidget(self.ui.tab_jobnumber))
+        self.ui.btnNavSystem.clicked.connect(lambda: self.ui.stacked.setCurrentWidget(self.ui.tab_system))
+        self.ui.btnNavAlarm.clicked.connect(lambda: self.ui.stacked.setCurrentWidget(self.diagnostics_tab))
+        self.ui.btnNavReport.clicked.connect(lambda: self.ui.stacked.setCurrentWidget(self.ui.tab_report))
+
+        # ------Tab JobSetting ---
+        # JobStore built here (not at its previous spot further down) so
+        # ProjectManager can share this exact instance/cache instead of
+        # opening a second independent JobStore on the same active_jobs.json.
+        self.job_store = JobStore(ACTIVE_JOB_FILE, CURRENT_JOB_FILE)
+        self.project_manager = ProjectManager(job_store=self.job_store)
+        # Refresh the header's CURRENT JOB combobox the instant a job is
+        # Scheduled/Removed in the JOB tab, instead of waiting for
+        # _refresh_active_jobs' own 30s polling timer below to catch up.
+        self.project_manager.active_jobs_changed.connect(self._refresh_active_jobs)
+        if self.ui.tab_jobnumber.layout() is None:
+            self.ui.tab_jobnumber.setLayout(QVBoxLayout())
+        self.ui.tab_jobnumber.layout().addWidget(self.project_manager)
+
+        # ------Tab REPORT (new merged Compare+Report screen) ---
+        # Built alongside the old Compare/Report dialogs without touching
+        # them - review this first, delete the old dialog code after.
+        self.report_page_manager = ReportPageManager(
+            job_store=self.job_store,
+            on_view_3d=self.on_report_view_3d,
+            on_start_compare=self.on_report_start_compare,
+        )
+        if self.ui.tab_report.layout() is None:
+            self.ui.tab_report.setLayout(QVBoxLayout())
+        self.ui.tab_report.layout().addWidget(self.report_page_manager)
+
+        # --- VTK Viewer ---
+
+        self.vtk_viewer = VTKViewer(self.ui.cloudFrame)
+        self.ui.btnZoomCenter.released.connect(self.vtk_viewer.restore_initial_view)
+        # VTKViewer just added its own child widget(s) into cloudFrame -
+        # keep the floating cloud-info overlay (parented to cloudFrame,
+        # not part of its layout) drawn on top of them.
+        self.ui.lblCloudInfo.raise_()
+
+        #TODO
+
+        # --- ROS Thread ---
+        self.ros_thread = RosThread(self.cloud_received_signal,
+                                    self.ui_send_cmd_signal,
+                                    self.ui_data_update,
+                                    self.notification_received)
+        self.ros_thread.start()
+
+        # if not rospy.core.is_initialized():
+        #     rospy.init_node("app_node", anonymous=False)
+
+
+        # --- Signals ---
+        # self.cloud_received_signal.connect(self.update_pointcloud)
+        #Receive cloud and Send align, compare request to ROS if cloud come from postcloud topic
+        self.cloud_received_signal.connect(self.on_cloud_received)
+        #Receive cloud check cloud is come from /compared topic --> export report
+        self.ui_data_update.connect(self.update_data)
+        self.ui_send_cmd_signal.connect(self.ros_thread.send_command)
+
+        # Set rntime parameter for ROS
+        processing_switches = [
+            self.ui.cbbAutoAlign,
+            self.ui.cbbAutoCompare,
+            self.ui.cbbAutoReport,
+            self.ui.cbbRemoveGround,
+            self.ui.cbbRemoveBackWall,
+            self.ui.cbbUseKeypoint,
+            self.ui.cbbTrimToPrescan,
+        ]
+
+        for item in processing_switches:
+            item.setEnabled(False)
+        self.ui.cbbRemoveGround.setEnabled(True)
+        self.ui.cbbRemoveBackWall.setEnabled(True)
+        self.ui.cbbAutoReport.setEnabled(True)
+
+
+        for cb in processing_switches:
+            cb.toggled.connect(self.update_param)
+
+        # --- Control Buttons ---
+        # Pre/Post-Scan need Encoder + Scanner actually connected - start
+        # disabled and let status_binder.py's STATUS_BINDINGS enable them
+        # once the first device status snapshot confirms that.
+        self.ui.btnPreScan.setEnabled(False)
+        self.ui.btnPostScan.setEnabled(False)
+        # self.ui.btnPreScan.released.connect(lambda: self.ui_send_cmd_signal.emit(PPSCommand.START_PRESCAN.value))
+        self.ui.btnPreScan.released.connect(self.confirm_and_send_prescan)
+        self.ui.btnPostScan.released.connect(lambda: self.ui_send_cmd_signal.emit(PPSCommand.START_POSTSCAN.value))
+        # self.ui.btnCompare.released.connect(lambda: self.ui_send_cmd_signal.emit(PPSCommand.START_COMPARE.value))
+        self.ui.btnCancel.released.connect(lambda: self.ui_send_cmd_signal.emit(PPSCommand.CANCEL_JOB.value))
+
+        self.ui.btnOpenScanner.pressed.connect(lambda: self.ui_send_cmd_signal.emit(PPSCommand.OPEN_HOUSING.value))
+        self.ui.btnOpenScanner.released.connect(lambda: self.ui_send_cmd_signal.emit(PPSCommand.PAUSE_HOUSING.value))
+
+        self.ui.btnCloseScanner.pressed.connect(lambda: self.ui_send_cmd_signal.emit(PPSCommand.CLOSE_HOUSING.value))
+        self.ui.btnCloseScanner.released.connect(lambda: self.ui_send_cmd_signal.emit(PPSCommand.PAUSE_HOUSING.value))
+        self.ui.btnShutdown.released.connect(self.on_shutdown)
+
+        self.ui.btnFullScreen.released.connect(self.toggle_full_screen)
+
+        self.ui.btnLogin.released.connect(self.on_login_clicked)
+
+        self.ui.btnSetHome.released.connect(self.confirm_and_send_sethome)
+
+        # --- Select Job to work process ---
+        # Same popup-row delegate as the REPORT tab's Project/Job pickers -
+        # marks the current selection with a checkmark, gives rows real
+        # spacing/height (QSS ::item rules don't reliably apply in this Qt
+        # build - see PickerItemDelegate's docstring).
+        self.ui.cbbJobSelect.setItemDelegate(PickerItemDelegate(self.ui.cbbJobSelect))
+        self._populate_job_combobox()
+        self.load_current_job()
+        # self.ui.cbbJobSelect.currentIndexChanged.connect(self.on_job_changed)
+        self.ui.cbbJobSelect.activated.connect(self.on_job_changed)
+        self.current_job_index = self.ui.cbbJobSelect.currentIndex()
+
+        # active_jobs.json can also be rewritten by another process (the two
+        # tablets sync it via Syncthing), so refresh periodically instead of
+        # only when the dropdown is opened.
+        self._job_refresh_timer = QTimer(self)
+        self._job_refresh_timer.timeout.connect(self._refresh_active_jobs)
+        self._job_refresh_timer.start(30000)
+
+        # --- Header clock ---
+        self._clock_timer = QTimer(self)
+        self._clock_timer.timeout.connect(self._update_clock)
+        self._clock_timer.start(1000)
+        self._update_clock()
+
+        # --- Cloud service --- (report export now runs as its own ROS node,
+        # called via actionlib from scan_pipeline_worker.py - see
+        # services/report_export_action_server.py)
+        self.cloud_pipeline = CloudPipelineService()
+
+        # --- Status bar / notifications ---
+        # Left: a "Connected"/"Disconnected" pill badge - driven live off
+        # actual device connection state by status_binder.py (registered
+        # into self.status_binder below), not hardcoded text. (A plain
+        # colored-dot QLabel was tried first but wasn't visibly rendering
+        # for the user, so a styled text badge is used instead.)
+        self.lblSystemStatus = QLabel("Connected")
+        self.lblSystemStatus.setObjectName("lblSystemStatus")
+        self.ui.statusbar.addWidget(self.lblSystemStatus)
+
+        # Right (permanent): current encoder angle, shown just before the
+        # Mode/Version label - live-updated via status_binder.py's
+        # STATUS_BINDINGS (registered below, same as lblSystemStatus).
+        self.lblEncoderAngle = QLabel("--°")
+        self.lblEncoderAngle.setObjectName("lblEncoderAngle")
+        self.lblEncoderAngle.setStyleSheet(
+            "color: #ffffff; background: transparent; border: none; font-size: 20px; margin-right: 8px;"
+        )
+        self.ui.statusbar.addPermanentWidget(self.lblEncoderAngle)
+
+        # Right (permanent, stays put regardless of the transient
+        # notification message): Mode/Version, hand-edited via
+        # config/machine_info.yaml rather than hardcoded here.
+        try:
+            machine_info = load_yaml_config("machine_info.yaml")
+            mode = getattr(machine_info, "mode", "--")
+            version = getattr(machine_info, "version", "--")
+        except Exception as e:
+            rospy.logwarn(f"Could not load machine_info.yaml: {e}")
+            mode, version = "--", "--"
+        self.lblModeVersion = QLabel(f"Mode: {mode}  |  System Version: {version}")
+        self.lblModeVersion.setStyleSheet(
+            "color: #ffffff; background: transparent; border: none; font-size: 20px; margin-right: 8px;"
+        )
+        self.ui.statusbar.addPermanentWidget(self.lblModeVersion)
+
+        self.lblNotification = QLabel("No Notifications")
+        self.lblNotification.setStyleSheet("margin-left: 5px;")
+        # A long message (e.g. a full error string) makes this QLabel's
+        # sizeHint() grow past the window width, since it's added directly
+        # to the QStatusBar layout with no cap - that widens the status
+        # bar (and with it the whole window) past the screen, breaking
+        # full-screen mode. Cap it and elide instead; full text is still
+        # available via the tooltip and via clicking through to
+        # NotificationHistoryDialog (_open_notification_history below).
+        # Nothing else shares the status bar, so this can safely take most
+        # of the screen width instead of the old 600px (which elided/lost
+        # normal-length messages on this 2560px-wide screen).
+        self.lblNotification.setMaximumWidth(2000)
+        self.ui.statusbar.addWidget(self.lblNotification)
+
+        self.notification_center = NotificationCenter(max_history=DIAGNOSTICS_HISTORY_CAP, parent=self)
+        self.notification_center.label_changed.connect(self._on_notification_label_changed)
+        self.notification_received.connect(
+            lambda source, message, level, code: self.notification_center.push(
+                source, message, level, code or None
+            )
+        )
+        self.lblNotification.mousePressEvent = self._open_notification_history
+
+        # Scan filenames/report times use this container's local time - warn
+        # once at startup if its time zone doesn't match the host's (see
+        # shared/timezone_check.py, run_docker.sh's TZ/HOST_UTC_OFFSET).
+        tz_problem = check_timezone_matches_host()
+        if tz_problem:
+            rospy.logwarn(f"[App] {tz_problem}")
+            entry = lookup_error_code("SYSTEM-TIME-001")
+            self.notification_center.push("system", f"{entry['message']} ({tz_problem})",
+                                          entry["level"], "SYSTEM-TIME-001")
+
+        # --- Tab Diagnostics (HMI-style alarm log, read-only) ---
+        self.diagnostics_tab = DiagnosticsTab(self.notification_center, parent=self.ui.stacked)
+        self.ui.stacked.addWidget(self.diagnostics_tab)
+
+        # --- Scan pipeline worker (runs convert/color/VTK/save/report off the GUI thread) ---
+        self.scan_worker = ScanPipelineWorker(
+            cloud_pipeline=self.cloud_pipeline,
+            job_store=self.job_store,
+            topics={
+                "pre_scan": PRE_SCAN_CLOUD_TOPIC,
+                "post_scan": POST_SCAN_CLOUD_TOPIC,
+                "compared": CLOUD_COMPARED_TOPIC,
+                "compared_upsample": CLOUD_COMPARED_UPSAMPLE_TOPIC,
+                "compared_manual": CLOUD_COMPARED_TOPIC_MANUAL,
+                "compared_upsample_manual": CLOUD_COMPARED_UPSAMPLE_TOPIC_MANUAL,
+            },
+            project_dir=PROJECT_DIR,
+            thickness_default=THICKNESS_DEFAULT,
+            tolerance_default=TOLERANCE_DEFAULT,
+            parent=self,
+        )
+        self.scan_worker.cloud_ready.connect(self._on_scan_cloud_ready)
+        self.scan_worker.compare_requested.connect(
+            lambda pre, post: self._start_compare(pre, post, is_manual=False)
+        )
+        self.scan_worker.report_done.connect(self._on_scan_report_done)
+        self.scan_worker.report_failed.connect(self._on_scan_report_failed)
+        self.scan_worker.notify.connect(
+            lambda source, message, level, code: self.notification_center.push(
+                source, message, level, code or None
+            )
+        )
+
+        # --- Data binder ---
+        self.status_binder = StatusBinder(self.ui.centralFrame)
+        # lblSystemStatus lives on the QMainWindow's own QStatusBar, not
+        # under centralFrame, so it's not picked up by StatusBinder's
+        # automatic findChildren() scan - register it by hand so
+        # STATUS_BINDINGS can still drive it.
+        self.status_binder.register("lblSystemStatus", self.lblSystemStatus)
+        self.status_binder.register("lblEncoderAngle", self.lblEncoderAngle)
+
+        #Load ui state
+        self.load_ui_state()
+        # Send parameters to the ROS on the first boot.
+        self.update_param()
+
+        self._mark_ui_ready()
+
+    def _mark_ui_ready(self):
+        """Touch a marker file the moment the main window is about to show.
+        Bind-mounted to the host at data/.ui_ready - run_docker.sh clears
+        it before each restart, so it's available there as a readiness
+        signal for anything that wants to poll for it (nothing currently
+        does; run_docker.sh's own startup terminal used to auto-close on
+        this but that was removed - see run_docker.sh). Best-effort:
+        startup must never fail because of this."""
+        try:
+            ready_file = os.path.join(BASE_DIR, DATA_DIR, ".ui_ready")
+            os.makedirs(os.path.dirname(ready_file), exist_ok=True)
+            Path(ready_file).touch()
+        except OSError as e:
+            rospy.logwarn(f"Could not write UI-ready marker: {e}")
+
+    def _on_debug_mode_toggled(self, checked):
+        """SYSTEM tab's Debug Mode switch. Writes a flag file run_docker.sh
+        reads (host-side, before the app/container even starts) to decide
+        whether to open the startup log terminal - so this can't take
+        effect on the terminal that's already open for the current run,
+        only the next one (see the note label next to the switch).
+        Written immediately on toggle rather than only at closeEvent,
+        since `docker compose down` (run_docker.sh's restart path) doesn't
+        reliably give this process a chance to run closeEvent first.
+
+        Content, not just presence ("1"/"0"), so run_docker.sh can tell
+        "explicitly turned off" apart from "this file doesn't exist yet"
+        (a brand new install, before the app has ever run once to write
+        it) - the latter must still default to ON to match the terminal's
+        long-standing always-on behavior."""
+        flag_file = os.path.join(BASE_DIR, DATA_DIR, ".debug_mode")
+        try:
+            os.makedirs(os.path.dirname(flag_file), exist_ok=True)
+            Path(flag_file).write_text("1" if checked else "0")
+        except OSError as e:
+            rospy.logwarn(f"Could not update debug-mode marker: {e}")
+
+    # Setting parameter
+    def save_ui_state(self):
+        settings.setValue("cbbAutoAlign_on", self.ui.cbbAutoAlign.isChecked())
+        settings.setValue("cbbAutoCompare_on", self.ui.cbbAutoCompare.isChecked())
+        settings.setValue("cbbDebugMode_on", self.ui.cbbDebugMode.isChecked())
+        settings.setValue("cbbAutoReport_on", self.ui.cbbAutoReport.isChecked())
+        settings.setValue("cbbRemoveGround_on", self.ui.cbbRemoveGround.isChecked())
+        settings.setValue("cbbRemoveBackWall_on", self.ui.cbbRemoveBackWall.isChecked())
+        settings.setValue("cbbUseKeypoint_on", self.ui.cbbUseKeypoint.isChecked())
+        settings.setValue("cbbTrimToPrescan_on", self.ui.cbbTrimToPrescan.isChecked())
+
+    def load_ui_state(self):
+        # New keys (cbb*_on, bool) - deliberately not reusing the old
+        # cbb*_index keys (QComboBox.currentIndex(), 0="On"/1="Off"): a
+        # leftover "0" read back with type=bool via QSettings/QVariant
+        # coerces to False, which would silently flip every switch to OFF
+        # on first run after this combo->checkbox migration.
+        self.ui.cbbAutoAlign.setChecked(settings.value("cbbAutoAlign_on", True, type=bool))
+        self.ui.cbbAutoCompare.setChecked(settings.value("cbbAutoCompare_on", True, type=bool))
+        self.ui.cbbAutoReport.setChecked(settings.value("cbbAutoReport_on", True, type=bool))
+        self.ui.cbbRemoveGround.setChecked(settings.value("cbbRemoveGround_on", True, type=bool))
+        # Default True - independent from Remove Ground, but back wall was
+        # always cropped alongside ground before this switch existed (both
+        # were one combined, non-toggleable step), so an operator who's
+        # never touched this setting keeps that same behavior.
+        self.ui.cbbRemoveBackWall.setChecked(settings.value("cbbRemoveBackWall_on", True, type=bool))
+        self.ui.cbbUseKeypoint.setChecked(settings.value("cbbUseKeypoint_on", True, type=bool))
+        # Default False, unlike the switches above - this exposes a step
+        # (goal.do_post_process) that was hardcoded off in every real
+        # compare run before this switch existed (see compare_pipeline.py's
+        # crop_cloud_by_hull() call), so an operator who's never touched
+        # this setting keeps getting exactly the same behavior as before.
+        self.ui.cbbTrimToPrescan.setChecked(settings.value("cbbTrimToPrescan_on", False, type=bool))
+
+        # Default True - matches the startup terminal's behavior before
+        # this switch existed (always shown), so nothing changes for an
+        # operator who's never touched this setting.
+        self.ui.cbbDebugMode.setChecked(settings.value("cbbDebugMode_on", True, type=bool))
+        # Sync the flag file run_docker.sh reads to match right away -
+        # covers first run (file doesn't exist yet) and the case where the
+        # QSettings value and the flag file drifted apart (e.g. the file
+        # was deleted by hand).
+        self._on_debug_mode_toggled(self.ui.cbbDebugMode.isChecked())
+        self.ui.cbbDebugMode.toggled.connect(self._on_debug_mode_toggled)
+
+
+    # Update runtime param to ROS
+    def update_param(self):
+        params = {
+            "/runtime/do_align": self.ui.cbbAutoAlign.isChecked(),
+            "/runtime/auto_compare": self.ui.cbbAutoCompare.isChecked(),
+            "/runtime/auto_report": self.ui.cbbAutoReport.isChecked(),
+            "/runtime/do_pre_process": self.ui.cbbRemoveGround.isChecked(),
+            "/runtime/do_remove_back_wall": self.ui.cbbRemoveBackWall.isChecked(),
+            "/runtime/do_2d_keypoint": self.ui.cbbUseKeypoint.isChecked(),
+            "/runtime/do_post_process": self.ui.cbbTrimToPrescan.isChecked(),
+        }
+
+        for key, value in params.items():
+            rospy.set_param(key, value)
+
+
+    #confirm_send_prescan_signal
+    def confirm_and_send_prescan(self):
+        # Pre-Scan never overwrites a file on disk (generate_filename always
+        # stamps a fresh timestamp + a new scan_id) - what actually happens
+        # is a new segment starts, and any not-yet-compared Post-Scans from
+        # the PREVIOUS segment stop being this job's "current" Pre-Scan (see
+        # scan_pipeline_worker.py's _resolve_prescan_path), so
+        # they'd no longer auto-pair correctly. That's the real thing worth
+        # confirming, not "overwrite".
+        reply = QMessageBox.question(
+            self,
+            "Start New Segment?",
+            "This starts a new segment with a fresh Pre-Scan.\n\n"
+            "If the current job still has Post-Scans that haven't been "
+            "compared yet, they will no longer be matched against this new "
+            "Pre-Scan automatically. Continue?",
+            QMessageBox.Yes | QMessageBox.No,
+            QMessageBox.No
+        )
+
+        if reply == QMessageBox.Yes:
+            # Gửi signal nếu người dùng xác nhận
+            self.ui_send_cmd_signal.emit(PPSCommand.START_PRESCAN.value)
+
+    def confirm_and_send_sethome(self):
+        reply = QMessageBox.question(
+            self,
+            "Confirm",
+            "This will set current angle to zero. /nDo you want to continue?",
+            QMessageBox.Yes | QMessageBox.No,
+            QMessageBox.No
+        )
+
+        if reply == QMessageBox.Yes:
+            # Gửi signal nếu người dùng xác nhận
+            self.ui_send_cmd_signal.emit(PPSCommand.PLC_SET_HOME_POSITION.value)
+
+    # 1.0--- Update commond data from ROS (packages the job and hands it to
+    # ScanPipelineWorker - the actual convert/color/save/report work runs
+    # off the GUI thread, see scan_pipeline_worker.py) ---
+    def on_cloud_received(self, msg, topic_name):
+        print(f"Received cloud on topic {topic_name}")
+        job = {
+            "msg": msg,
+            "topic_name": topic_name,
+            # Snapshot App state now (GUI thread) so the worker never reads
+            # self.* directly - avoids racing on_compare()/a later cloud
+            # arrival that might change these before the worker gets to run.
+            "is_manual": self.isManualCompare,
+            "post_scan_path_snapshot": self.current_post_scan_path,
+            "auto_compare_on": self.ui.cbbAutoCompare.isChecked(),
+            "auto_compare_off": not self.ui.cbbAutoCompare.isChecked(),
+            "auto_report_off": not self.ui.cbbAutoReport.isChecked(),
+        }
+        self.scan_worker.submit(job)
+
+    def _on_scan_cloud_ready(self, polydata, metadata):
+        self._show_cloud_in_viewer(polydata, metadata.get("filepath"))
+        # Switch to 3D MAIN as soon as the compared cloud itself is ready -
+        # report export (if any) now runs on its own ROS node/process (see
+        # scan_pipeline_worker.py's _export_report()) and no longer risks
+        # freezing the UI, so there's no reason to keep the operator staring
+        # at the old page while it renders. _on_scan_report_done/_failed
+        # still call show_3d_main_page() too, for the case where the
+        # operator navigated elsewhere in the meantime.
+        self.show_3d_main_page()
+
+        if metadata["report_name"] is not None:
+            self.report_name = metadata["report_name"]
+        if metadata["reset_is_manual_compare"]:
+            self.isManualCompare = False
+            # This is the compared cloud itself (not its PDF report) -
+            # when no report export is coming (report_pending False), this
+            # is the earliest point where the compared filename is actually
+            # known, so push "Compare Done" here instead of racing it from
+            # on_compare_done (CompareWorker.finished fires before this).
+            if not metadata["report_pending"] and getattr(self, "_compare_done_pending_report", False):
+                self._compare_done_pending_report = False
+                self.notification_center.push("compare", "✅COMPARE DONE ", "info",
+                                               file=os.path.basename(getattr(self, "report_name", "") or ""))
+        if metadata["reset_post_scan_path"]:
+            self.current_post_scan_path = ""
+
+    def _on_scan_report_done(self, final_path):
+        self.notification_center.push("report", f"Report exported: {os.path.basename(final_path)}", "info",
+                                       file=os.path.basename(final_path))
+        if getattr(self, "_compare_done_pending_report", False):
+            self._compare_done_pending_report = False
+            self.notification_center.push("compare", "✅COMPARE DONE ", "info",
+                                           file=os.path.basename(getattr(self, "report_name", "") or ""))
+        self.show_3d_main_page()
+
+    def _on_scan_report_failed(self, error_message):
+        rospy.logerr(f"[App] Failed to export report: {error_message}")
+        self.notification_center.push("report", f"Report export failed: {error_message}", "error")
+        if getattr(self, "_compare_done_pending_report", False):
+            self._compare_done_pending_report = False
+            self.notification_center.push("compare", "⚠️COMPARE DONE (report export failed) ", "warning",
+                                           file=os.path.basename(getattr(self, "report_name", "") or ""))
+        self.show_3d_main_page()
+
+
+    def _update_clock(self):
+        now = datetime.now()
+        # Rich text for a 2-tone look (bigger/bolder time, muted date) on
+        # one line - plainer than styling this via QSS alone, since a single
+        # QLabel can't give its own text 2 different font sizes/colors any
+        # other way. No year - not useful at a glance on a kiosk touchscreen.
+        self.ui.lblClock.setText(
+            f"<span style='color:{ACCENT_YELLOW}; font-size:34px; font-weight:800;'>{now.strftime('%H:%M:%S')}</span>"
+            f"&nbsp;&nbsp;"
+            f"<span style='color:{TEXT_MUTED}; font-size:22px; font-weight:700;'>{now.strftime('%d-%b')}</span>"
+        )
+
+    def show_3d_main_page(self):
+        """Switch the stacked content to 3D MAIN and keep the side-nav
+        highlight in sync - used both by the nav button click and by
+        code paths that jump here programmatically (a scan/compare cloud
+        becoming ready)."""
+        self.ui.stacked.setCurrentWidget(self.ui.tab_operator)
+        self.ui.btnNav3DMain.setChecked(True)
+
+    def toggle_full_screen(self):
+        if not self.isFullScreen():
+            self.showFullScreen()
+            self.ui.btnFullScreen.setToolTip("Exit Full Screen")
+        else:
+            # Some window managers won't go straight from FullScreen to
+            # Maximized (they just restore to the last windowed geometry
+            # instead) - showNormal() first forces a clean state so
+            # showMaximized() actually lands maximized.
+            self.showNormal()
+            self.showMaximized()
+            self.ui.btnFullScreen.setToolTip("Full Screen")
+
+    def on_login_clicked(self):
+        
+        from ui.widgets.security_manager import security
+        from ui.widgets.login_dialog_view import LoginDialog
+        from PyQt5.QtGui import QIcon
+
+
+        def _on_auth_changed(level):
+            self.ui.cbbAutoAlign.setEnabled(level >= security.ADMIN)
+            self.ui.cbbAutoCompare.setEnabled(level >= security.ADMIN)
+            self.ui.cbbUseKeypoint.setEnabled(level >= security.ADMIN)
+            self.ui.cbbTrimToPrescan.setEnabled(level >= security.ADMIN)
+            # self.ui.cbbAutoReport.setEnabled(level >= security.ADMIN)
+            # self.ui.cbbRemoveGround.setEnabled(level >= security.ADMIN)
+            
+
+        from PyQt5.QtWidgets import QMessageBox
+        if security.level() != security.VIEWER:
+            security.logout()
+            _on_auth_changed(level=security.VIEWER)
+            self.ui.btnLogin.setIcon(QIcon(":/icon/icon/user.png"))
+            return
+
+        dlg = LoginDialog(self)
+        if dlg.exec_() != dlg.Accepted:
+            return
+
+        level = security.login(dlg.password())
+
+        if not level:
+            QMessageBox.warning(self, "Error", "Wrong password")
+            return
+
+        _on_auth_changed(level=level)
+        # self.ui.btnLogin.setText("Logout")
+        self.ui.btnLogin.setIcon(QIcon(":/icon/icon/user-logout.png"))
+
+
+
+    # 1.1--- Update commond data from ROS ---
+    def update_data(self, status):
+        # status: ui.system_status.SystemStatus - see ros_thread.py's
+        # emit_ui_data_update(). Device-state-change notifications are
+        # published from the ROS side now (device_monitor.py's on_transition
+        # hook), not diffed here. All widget pushes live in status_binder.py's
+        # declarative STATUS_BINDINGS/PPS_BUTTON_STAGE_TABLE tables.
+        self.status_binder.apply(status)
+
+    # 3.--- Update pointcloud from available data---
+    def update_pointcloud_from_data(self, data, filename=None):
+        polydata = self.cloud_pipeline.to_vtk(data)
+        if filename:
+            print("updated polydata from file:", filename)
+        self._show_cloud_in_viewer(polydata, filename)
+        self.show_3d_main_page()
+
+    def _show_cloud_in_viewer(self, polydata, filepath=None):
+        """Single entry point for putting a cloud on the 3D MAIN page -
+        both the manual "3D View"/report path (update_pointcloud_from_data)
+        and the live auto-scan path (_on_scan_cloud_ready) call this, so
+        lblCloudInfo always reflects whatever's actually on screen instead
+        of only updating for one of the two sources."""
+        self.vtk_viewer.update(polydata)
+        if filepath:
+            self._update_cloud_info_label(filepath)
+        else:
+            self.ui.lblCloudInfo.hide()
+
+    def _update_cloud_info_label(self, filepath):
+        """Show "Project | Job | Segment | Post-Scan xx | Date-Time" above
+        the 3D viewport so it's clear which cloud is on screen - filepath
+        is expected at .../<project>/<job>/<filename>, matching how
+        report_page_manager/scan_pipeline_worker lay job folders out."""
+        try:
+            from ui.models.file_name import parse_filename
+            parsed = parse_filename(filepath)
+            job_folder = os.path.dirname(filepath)
+            job = os.path.basename(job_folder)
+            project = os.path.basename(os.path.dirname(job_folder))
+
+            type_name = str(parsed["type"]).lower()
+            if "pre" in type_name:
+                scan_label = f"Pre Scan {int(parsed['index']):02d}"
+            elif "post" in type_name:
+                scan_label = f"Post Scan {int(parsed['index']):02d}"
+            else:
+                scan_label = f"Heatmap {int(parsed['index']):02d}"
+
+            date_time = parsed["timestamp"]
+            try:
+                dt = datetime.strptime(str(parsed["timestamp"]), "%Y%m%d_%H%M%S")
+                date_time = dt.strftime("%d/%m/%Y %H:%M:%S")
+            except ValueError:
+                pass
+
+            text = (
+                f"{project}  |  {job}  |  Segment {int(parsed['scan_id']):03d}  |  "
+                f"{scan_label}  |  {date_time}"
+            )
+            self.ui.lblCloudInfo.setText(text)
+            self.ui.lblCloudInfo.adjustSize()
+            self.ui.lblCloudInfo.raise_()
+            self.ui.lblCloudInfo.show()
+        except Exception as e:
+            rospy.logwarn(f"[App] Could not parse cloud info from {filepath}: {e}")
+            self.ui.lblCloudInfo.hide()
+
+
+    # --- New REPORT tab (ReportPageManager) callbacks ---
+    def on_report_view_3d(self, filepath):
+        """"3D View" button on a REPORT-tab row - load that .ply straight
+        into the viewport, same conversion CompareManager.on_file_opened
+        used for the old dialog's equivalent action."""
+        from pps.data_converter import cloudconverter
+        o3d_cloud = cloudconverter.load_ply(filepath)
+        if o3d_cloud is None:
+            self.notification_center.push("report", f"Failed to load point cloud: {filepath}", "error")
+            return
+        self.update_pointcloud_from_data(o3d_cloud, filepath)
+
+    def on_report_start_compare(self, prescan_path, postscan_path):
+        """"Compare Selected" on the REPORT tab - identical manual-compare
+        pipeline as the old on_compare(), just sourced from the new
+        page's own file picker instead of the CompareManager dialog."""
+        self._start_compare(prescan_path, postscan_path, is_manual=True)
+
+    def _start_compare(self, prescan_path, postscan_path, is_manual):
+        """Single entry point for both manual (REPORT tab) and auto
+        (post-scan pipeline, via scan_worker.compare_requested) compare
+        requests - both now drive the same CompareWorker/`/compare_cloud_manual`
+        action, since it's the only one that takes explicit prescan/postscan
+        paths (auto used to go through a separate action driven by a ROS
+        param that only updated once per UI session, causing stale-prescan
+        compares - see git history).
+
+        Only one compare can run at a time (the action server itself
+        serializes goals anyway). Auto-compare has priority: if a manual
+        compare is still in flight when an auto request arrives, the
+        manual result is discarded (not saved/reported) once it comes
+        back, and the auto request runs immediately after. Any other
+        combination (auto already running, or manual already running and
+        another manual/auto request arrives) just queues behind the
+        current one - only the single newest queued request is kept,
+        matching the actionlib SimpleActionServer's own 1-pending-goal
+        behavior.
+        """
+        if self.compare_in_progress:
+            if not is_manual and self.isManualCompare:
+                self._superseded_worker = self.worker
+            if self._pending_compare is not None:
+                self.notification_center.push(
+                    "compare", "A queued compare request was superseded by a newer one", "info"
+                )
+            self._pending_compare = (prescan_path, postscan_path, is_manual)
+            return
+
+        self.compare_in_progress = True
+        self.isManualCompare = is_manual
+        self.current_post_scan_path = postscan_path
+
+        from ui.compare_cloud_worker import CompareWorker
+
+        # Read processing flags straight from the SYSTEM tab widgets -
+        # both flows now run in-process (App), so there's no need to
+        # round-trip through ROS params anymore.
+        self.worker = CompareWorker(
+            prescan_path=prescan_path,
+            postscan_path=postscan_path,
+            do_2d_keypoint=self.ui.cbbUseKeypoint.isChecked(),
+            do_pre_process=self.ui.cbbRemoveGround.isChecked(),
+            do_remove_back_wall=self.ui.cbbRemoveBackWall.isChecked(),
+            do_align=self.ui.cbbAutoAlign.isChecked(),
+            do_post_process=self.ui.cbbTrimToPrescan.isChecked(),
+        )
+        self.worker.progress.connect(self.on_compare_process)
+        self.worker.finished.connect(self.on_compare_done)
+        self.worker.start()
+
+    def on_compare_process(self, progress, stage):
+        progress = max(0.0, min(1.0, progress))  # clamp
+        _string = f"COMPARE {int(progress * 100)}%"
+        print(_string)
+        self.notification_center.push_transient(_string, "info")
+
+
+    def on_compare_done(self, success, job_id, error_code=""):
+        is_superseded = self.worker is self._superseded_worker
+        self._superseded_worker = None
+        self.compare_in_progress = False
+
+        if is_superseded:
+            # An auto-compare request pre-empted this (manual) result while
+            # it was still running - discard it; the queued auto request
+            # below will produce the real result.
+            print("⏭️COMPARE SUPERSEDED (auto-compare priority) ", job_id)
+        elif not success:
+            print("❌COMPARE FAILED ", job_id)
+            if error_code == "COMPARE-002":
+                # Action server never accepted the goal or never returned a
+                # result within CompareWorker's timeout - the connection to
+                # it (network/PLC link, or the server process itself) was
+                # lost mid-compare instead of it just running long.
+                self.notification_center.push(
+                    "compare", "❌COMPARE TIMED OUT (connection lost?) ", "error", "COMPARE-002"
+                )
+            else:
+                self.notification_center.push("compare", "❌COMPARE FAILED ", "error", error_code or "COMPARE-006")
+        else:
+            print("✅COMPARE DONE ", job_id)
+
+            # Either way, hold off pushing "Compare Done" until the compared
+            # cloud actually comes back through scan_worker (ROS topic,
+            # processed off the GUI thread) - self.report_name isn't set
+            # yet at this point, CompareWorker.finished only means the
+            # comparison itself computed, not that the result cloud/its
+            # filename have been produced. If auto-report is off,
+            # _on_scan_cloud_ready pushes it as soon as that cloud arrives;
+            # otherwise _on_scan_report_done/_on_scan_report_failed push it
+            # once the PDF export (which runs after) also finishes.
+            self._compare_done_pending_report = True
+
+        if self._pending_compare is not None:
+            prescan_path, postscan_path, is_manual = self._pending_compare
+            self._pending_compare = None
+            self._start_compare(prescan_path, postscan_path, is_manual)
+
+    def _on_notification_label_changed(self, text, level):
+        color = LEVEL_COLORS.get(level, LEVEL_COLORS["info"])
+        self.lblNotification.setStyleSheet(f"margin-left: 5px; color: {color}; font-weight: bold;")
+        elided = self.lblNotification.fontMetrics().elidedText(
+            text, Qt.ElideRight, self.lblNotification.maximumWidth()
+        )
+        self.lblNotification.setText(elided)
+        self.lblNotification.setToolTip(text)
+
+    def _open_notification_history(self, event):
+        dlg = NotificationHistoryDialog(self.notification_center, parent=self)
+        dlg.exec_()
+
+    # 7.--- Close event handler ---
+    def closeEvent(self, event):
+        # Give a possibly still-running scan pipeline job (report export can
+        # take a while) a chance to finish cleanly; don't hang the app if it
+        # doesn't - just move on and shut down anyway.
+        if self.scan_worker.isRunning():
+            if not self.scan_worker.wait(5000):
+                rospy.logwarn("[App] closeEvent: scan_worker still running after 5s, shutting down anyway")
+
+        # subprocess.call(["/mnt/c/work/projects/intelijet_v2/shutdown.sh"])
+        subprocess.call(["rosnode", "kill", "-a"])
+        subprocess.call("pkill -f ros", shell=True)
+        subprocess.call(["rosclean", "purge", "-y"])
+        event.accept()
+
+
+    # 8.--- Shutdown handler ---
+    def on_shutdown(self):
+        msg = QMessageBox()
+        msg.setWindowTitle("")
+        msg.setText("Are you sure you want to quit?")
+        self.save_ui_state()
+        msg.setStandardButtons(QMessageBox.Yes | QMessageBox.No)
+        msg.setDefaultButton(QMessageBox.No)
+        msg.setWindowModality(True)
+        reply = msg.exec_()
+        if reply == QMessageBox.Yes:
+            self.close()
+
+
+    #10. change current job
+    def on_job_changed(self, index):
+        if index < 0:
+            return  # không chọn gì cả
+
+        if index == self.current_job_index: # Chỉ hỏi khi item khác item hiện tại
+            value = self.ui.cbbJobSelect.itemText(index)
+            try:
+                self.job_store.set_current_job(value)
+                self.current_job_index = self.ui.cbbJobSelect.currentIndex()
+            except Exception as e:
+                QMessageBox.warning(self, "Error", f"Cannot save job: {e}")
+
+            return
+
+        value = self.ui.cbbJobSelect.itemText(index)
+
+        # Hiển thị message box xác nhận
+        reply = QMessageBox.question(
+            self,
+            "Confirm",
+            f"Do you want to select job: {value}?",
+            QMessageBox.Yes | QMessageBox.No,
+            QMessageBox.No
+        )
+
+        if reply == QMessageBox.Yes:
+            try:
+                self.job_store.set_current_job(value)
+                self.current_job_index = self.ui.cbbJobSelect.currentIndex()
+            except Exception as e:
+                QMessageBox.warning(self, "Error", f"Cannot save job: {e}")
+        else:
+            # Nếu user chọn No, quay lại giá trị cũ
+            last_value = self.job_store.get_current_job()
+            if last_value:
+                idx = self.ui.cbbJobSelect.findText(last_value)
+                if idx >= 0:
+                    self.ui.cbbJobSelect.blockSignals(True)
+                    self.ui.cbbJobSelect.setCurrentIndex(idx)
+                    self.ui.cbbJobSelect.blockSignals(False)
+
+
+    def load_job_info_from_file(self, filepath):
+        from ui.models.job_info import JobInfo
+        job_folder = os.path.dirname(filepath)
+        job_info = JobInfo.load(job_folder)
+        return job_info
+
+    def load_current_job(self, text_only=False):
+        """Load giá trị hiện tại của job từ file hoặc gán giá trị đầu tiên."""
+        last_job = self.job_store.get_current_job()
+
+        if text_only:
+            return last_job
+
+        if last_job:
+            idx = self.ui.cbbJobSelect.findText(last_job)
+            if idx >= 0:
+                self.ui.cbbJobSelect.setCurrentIndex(idx)
+                return
+
+        # Nếu không có hoặc giá trị cũ không hợp lệ → chọn giá trị đầu tiên
+        if self.ui.cbbJobSelect.count() > 0:
+            self.ui.cbbJobSelect.setCurrentIndex(0)
+
+        return last_job
+
+    #######################################################
+    def _populate_job_combobox(self):
+        self.ui.cbbJobSelect.clear()
+        for job in self.job_store.list_active_jobs():
+            display_text = f"{job['project']}/{job['job']}"
+            self.ui.cbbJobSelect.addItem(display_text, job)
+
+    def _refresh_active_jobs(self):
+        """Periodic refresh (active_jobs.json can be rewritten by another
+        process/tablet) - preserves the current selection instead of
+        resetting it, since this runs regardless of user interaction."""
+        current_text = self.ui.cbbJobSelect.currentText()
+        self.job_store.reload()
+        self.ui.cbbJobSelect.blockSignals(True)
+        self._populate_job_combobox()
+        idx = self.ui.cbbJobSelect.findText(current_text)
+        if idx >= 0:
+            self.ui.cbbJobSelect.setCurrentIndex(idx)
+        self.ui.cbbJobSelect.blockSignals(False)
+        self.current_job_index = self.ui.cbbJobSelect.currentIndex()
+
+if __name__ == "__main__":
+
+    app = QApplication(sys.argv)
+    # Sets the icon shown in the taskbar/window switcher for every top-level
+    # window that doesn't set its own (main window, dialogs, ...) - PPSicon.png
+    # is also the desktop launcher's Icon= (see install.sh), so startup and
+    # taskbar now show the same icon instead of the drawn "J" placeholder.
+    app_icon = QIcon(f"{BASE_DIR}/PPSicon.png")
+    app.setWindowIcon(app_icon)
+    # Load style QSS tại đây
+
+    keyboard_filter = TouchKeyboard()
+    app.installEventFilter(keyboard_filter)
+
+    with open(f"{BASE_DIR}/intelijet_v2_ws/src/ui/src/ui/app.qss") as f:
+        app.setStyleSheet(f.read())
+
+    viewer = App()
+    viewer.setWindowIcon(app_icon)
+    viewer.showFullScreen()
+    sys.exit(app.exec_())

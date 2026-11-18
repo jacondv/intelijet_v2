@@ -1,81 +1,129 @@
 #!/usr/bin/env python3
 
 import rospy
-import actionlib
-from std_msgs.msg import String, Empty
-from std_srvs.srv import Trigger
-from align_service_client import AlignServiceClient
+from std_msgs.msg import String, Empty, Int32
+# from std_srvs.srv import Trigger
+# from align_service_client import AlignServiceClient
+# from pps.msg import StartScanAction, StartScanGoal
+# from pps.msg import CompareCloudAction, CompareCloudGoal
+from pps.sick_scan_eRob_controller import SickScanErobController
 
-from pps.msg import StartScanAction, StartScanGoal
-from ros_blkarc_msgs.msg import TimedScanAction, TimedScanGoal
-from pps.utils import load_config
+# from ros_blkarc_msgs.msg import TimedScanAction, TimedScanGoal
 
+from shared.pps_command import PPSCommand
+# from shared.log_status import log_status
+from shared.msg import DeviceStatus
+from shared.notify import notify
 
-SCAN_TIME_SECONDS = 10  # Default scan time in seconds, can be overridden by config
-PRE_SCAN_TOPIC = "/pre_scan_0"
-POST_SCAN_TOPIC = "/post_scan_0"
+from shared.config_loader import CONFIG as cfg
+
+def get_scanner_controller(status_callback=None, active_lidar=cfg.active_lidar):
+    # To support a new scanner type (e.g. a direct-3D scanner like
+    # BLK360G2 - see pps/scan_strategies/direct_3d.py): implement its
+    # ScanStrategy, then add a branch here that constructs a
+    # GenericScanController(strategy=<YourStrategy>(), status_callback=...)
+    # for it. No changes needed in GenericScanController itself.
+    if active_lidar == "lms511":
+        controller = SickScanErobController(status_callback=status_callback)
+        return controller
+
+    message = (
+        f"Unsupported active_lidar '{active_lidar}' in lidar.yaml "
+        f"(expected: 'lms511')"
+    )
+    notify(message=message, code="SCAN-006")
+    raise ValueError(message)
+
 
 class ScanManagerNode:
-    def __init__(self, action_server_name= "/scan_scan"):
+    def __init__(self, action_server_name,
+                 scan_time_seconds=10):
         # Action client
+        # action_server_name like "/blk360g2/start_scan" send request scan to device
         rospy.loginfo("Starting HMI")
-        self.__scan_action_client = actionlib.SimpleActionClient(action_server_name, TimedScanAction)
-        rospy.loginfo(f"Waiting for scan action server...{action_server_name}")
-        self.__scan_action_client.wait_for_server()
+        self.state_pub = rospy.Publisher("/pps/state", String, queue_size=10, latch=True)
+        self.current_state = DeviceStatus.IDLE
 
-        self.__align_service_client = AlignServiceClient()
+        # self.scan_time_seconds = scan_time_seconds
+        # self.__scan_action_client = actionlib.SimpleActionClient(action_server_name, TimedScanAction)
+        # rospy.loginfo(f"Waiting for scan action server...{action_server_name}")
+        # self.__scan_action_client.wait_for_server(rospy.Duration(10.0))
 
         # Lắng nghe lệnh từ HMI
-        rospy.Subscriber("/hmi/cmd", String, self.cmd_cb)
-        rospy.loginfo("ScanManager ready. Listening on /hmi/cmd")
+        rospy.Subscriber(cfg.HMI_CMD_TOPIC, Int32, self.cmd_cb)
+        rospy.loginfo("ScanManager ready. Listening on %s", cfg.HMI_CMD_TOPIC)
+
+        # self.__align_service_client = AlignServiceClient()
+        # rospy.logwarn("Starting AlignServiceClient")
+        self.scanner_controller = get_scanner_controller(status_callback=self.set_state)
+
+    def is_state(self, state):
+        return self.current_state == state
+    
+
+    def set_state(self, state):
+        self.current_state = state
+        self.state_pub.publish(String(data=state))
 
     def cmd_cb(self, msg):
-        cmd = msg.data.strip().lower()
-        rospy.loginfo("Received HMI command: %s", cmd)
+        cmd = msg.data
+        rospy.loginfo("[ScanManagerNode] Received HMI command: %d", cmd)
 
-        if cmd == "start_prescan":
-            self.__send_scan_cmd(PRE_SCAN_TOPIC)
+        if cmd == PPSCommand.START_PRESCAN.value:
+            if self.is_state(DeviceStatus.PRESCAN):
+                rospy.logwarn("[ScanManagerNode] Already in PRESCAN state, ignoring command")
+                return
+            
+            self.scanner_controller.run_prescan()
+                   
+        elif cmd == PPSCommand.START_POSTSCAN.value:    
+            if self.is_state(DeviceStatus.POSTSCAN):
+                rospy.logwarn("Already in POSTSCAN state, ignoring command")
+                return
+            
+            self.scanner_controller.run_postscan()
 
-        elif cmd == "start_postscan":
-            if self.__send_scan_cmd(POST_SCAN_TOPIC):
-                # post_scan_cloud_trigger được gọi bằng hàm notify sẽ sinh ra 1 message rỗng sau khi cloud duoc publish
-                # rospy.wait_for_message("/post_scan_cloud_trigger", Empty, timeout=30)
-                rospy.loginfo("Post scan complete")
+        elif cmd == PPSCommand.CANCEL_JOB.value:
+            self.scanner_controller.on_cancel()
+            self.set_state(DeviceStatus.IDLE)
 
-        elif cmd == "start_compare":
-            rospy.loginfo("Start compare command received")
-            success, message = self.__align_service_client.call()
-            if success:
-                rospy.loginfo("Alignment successful: %s", message)
-            else:
-                rospy.logerr("Alignment failed: %s", message)
+        elif cmd == PPSCommand.OPEN_HOUSING.value:
+            if self.is_state(DeviceStatus.OPEN_HOUSING):
+                rospy.logwarn("Already in OPEN_HOUSING state, ignoring command")
+                return
+            self.scanner_controller.open_housing_auto()
+
+        elif cmd == PPSCommand.CLOSE_HOUSING.value:
+            if self.is_state(DeviceStatus.CLOSE_HOUSING):
+                rospy.logwarn("Already in CLOSE_HOUSING state, ignoring command")
+                return  
+            self.scanner_controller.close_housing_auto()
+
+        elif cmd == PPSCommand.PAUSE_HOUSING.value:
+            self.scanner_controller.on_cancel()
+            self.set_state(DeviceStatus.IDLE)
+
+        elif cmd == PPSCommand.PLC_SET_HOME_POSITION.value:
+            self.scanner_controller.set_home_position()
 
         else:
-            rospy.logwarn("Unknown command from HMI: %s", cmd)
+            pass
 
-    def __send_scan_cmd(self, output_topic):
-        
-        goal = TimedScanGoal(output_topic=output_topic,
-                             scan_time_seconds=SCAN_TIME_SECONDS)
 
-        rospy.loginfo("Sending scan goal: %s", output_topic)
-        self.__scan_action_client.send_goal(goal)
-        self.__scan_action_client.wait_for_result()
-        result = self.__scan_action_client.get_result()
-        if result.success:
-            rospy.loginfo("Scan succeeded:")
-            return True
-        else:
-            rospy.logerr("Scan failed:")
-            return False
+def main():
+    rospy.init_node('hmi_scan_command_handler', anonymous=True)
+    active_lidar = cfg.active_lidar
+    #  action_server_name: "/lms511/start_scan is set in config file lidar.yaml"
+    ScanManagerNode(action_server_name=getattr(cfg, active_lidar).action_server_name, 
+                    scan_time_seconds=getattr(cfg, active_lidar).scan_time_seconds)
+    rospy.spin()
 
 if __name__ == '__main__':
-    rospy.init_node('hmi_scan_command_handler')
-    config = load_config(default_filename="config/lidar.yaml")
-    __lidar_type = config.get("active_lidar", "lms511")
-    __action_server_name = config.get(__lidar_type).get("action_server_name", "/start_scan")
-    SCAN_TIME_SECONDS = config.get(__lidar_type).get("scan_time_seconds", 10)
     
-    ScanManagerNode(action_server_name=__action_server_name)
-    rospy.spin()
+    try:
+        main()
+    except rospy.ROSInterruptException:
+        rospy.logerr("ROS Interrupt Exception occurred. Shutting down the node %s.", rospy.get_name())
+
+    
 
